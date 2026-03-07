@@ -1,0 +1,86 @@
+<?php
+/**
+ *
+ * View -- of Realestate/GodownsizeController/indexAction
+ *
+ */
+
+$this->headTitle($this->title);
+?>
+
+<div class="card">
+	<div class="card-header">
+		<div class="row">
+			<form id="#form" method="post" action="<?php echo $this->url('building',array('action'=>'building')); ?>"  enctype="multipart/form-data" >
+				<div class="form-group col-lg-2">
+					<label class="control-label" for="location">Location</label>
+					<select name="location" id="location" class="form-control">
+						<option value="-1" <?php echo ($data['location'] == '-1')?'selected':'';?>>All</option>
+						<?php foreach($this->locationObj->get(array('location_type'=>array(1,2,3,4,10,11)),$admin_location) as $locations):
+							$selected = ($data['location'] == $locations['id'])?'selected':'';?>
+							<option value="<?php echo $locations['id'];?>" <?php echo $selected;?>>
+								<?php echo $locations['location'];?>
+							</option>
+						<?php endforeach; ?>
+					</select>
+				</div>
+				<div class="col-lg-6">
+					<div class="space-12"></div>
+					<button type="submit" class="btn btn-sm btn-primary "><i class="fa fa-refresh"></i> Refresh </button>
+				
+				</div>
+			</form>
+			<div class="btn-group pull-right">
+				<?php echo $this->button(2); ?>
+			</div>
+		</div>
+	</div>
+
+	<div class="table-responsive">
+		<table class="table card-table text-nowrap" id="dataTables">
+			<thead>
+				<tr>
+					<th>#</th>
+					<th>Block</th>
+					<th>Location</th>
+					<th>Asset ID</th>
+					<th>Building</th>
+					<th>Remarks</th>
+				  <th class="no-sort no-printpdf">Action</th>
+				</tr>
+			</thead>
+			<tbody>
+				<?php $i = 1;
+                     foreach ($buildings as $rows):
+                  ?>
+					<tr data-href="<?php echo $this->button(4, $rows['id']); ?>">
+						<td><?php echo $i++; ?> </td>
+						<td><?php echo $this->block->getColumn($rows['block'],'name'); ?></td>
+						<td><?php echo $this->locationObj->getColumn($rows['location'], 'location'); ?></td>
+						<td><strong><?php echo $this->buildingObj->getColumn($rows['asset'],'building_id'); ?></strong></td>
+						<td><?php echo $this->buildingObj->getColumn($rows['asset'],'name'); ?></td>                         
+						<td><?php echo $rows['remarks']; ?></td>
+						<td><?php echo $this->button(1, $rows['id']); ?></td>
+				    </tr>
+				<?php
+					$i++;
+					endforeach;
+				?>
+			</tbody>
+		</table>
+	</div>
+</div>
+<!-- for modal -->
+<div id="modal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+	<div class="modal-dialog">
+		<div class="modal-content">
+		</div>
+	</div>
+</div>
+<script type="text/javascript">
+$('document').ready(function(){
+	$('#dataTables').DataTable({
+		"paging":   true,
+	});
+});
+</script>

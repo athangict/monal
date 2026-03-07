@@ -1,0 +1,137 @@
+<?php
+/**
+ * 
+ * View -- of Hr/MasterController/addapptypeAction
+ * 
+ */
+?>
+<?php foreach($servicetarriff as $row);?>
+<form id="#form" method="post" action="<?php echo $this->url('masterpos', array('action' => 'editservicetarriff','id'=>$row['id'])); ?>"  enctype="multipart/form-data" >
+    <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+        <h4 class="modal-title"> <i class="fa fa-asterisk"></i> Service Tarriff</h4>
+    </div>  <!-- /modal-header -->
+    <div class="modal-body">
+		<div class="panel panel-default">                       
+			<div class="panel-body"> 
+			<div class="form-group">
+					<label for="scope" class="control-label">Scope</label>
+					<select class="form-control" name="scope" id="scope" data-placeholder="Select" required > 
+						<option value=""></option>
+                        <?php foreach($scope as $scopes): ?>
+                            <option value="<?php echo $scopes['id'];?>" <?php echo ($scopes['id'] == $row['scope'])?'selected':'';?>>
+								<?php echo $scopes['scope'];?>
+							</option>
+						<?php
+						endforeach;
+						?>
+					</select>
+				</div>
+				<div class="form-group">
+                    <label for="service" class="control-label">Service</label>
+					<select class="form-control" name="service" id="service" data-placeholder="Select" required > 
+						<option value="-1">None</option>	
+						<?php foreach($service as $services): ?>
+                            <option value="<?php echo $services['id'];?>" <?php echo ($services['id'] == $row['service'])?'selected':'';?>>
+								<?php echo $services['service'];?>
+							</option>
+						<?php
+						endforeach;
+						?>
+					</select>
+				</div>
+				<div class="form-group">
+					<label for="country" class="control-label">Country</label>
+					<select class="form-control" name="country" id="country" data-placeholder="Select" required > 
+						<option value=""></option>
+						<?php foreach($country as $countries): ?>
+                            <option value="<?php echo $countries['id'];?>" <?php echo ($countries['id'] == $row['country'])?'selected':'';?>>
+								<?php echo $countries['name'];?>
+							</option>
+						<?php
+						endforeach;?>
+					</select>
+				</div>
+				<div class="form-group">
+					<label for="city" class="control-label">City</label>
+					<select class="form-control" name="city" id="city" data-placeholder="Select" required>
+						<option value=""></option>
+						<?php foreach ($this->city->get(array('country'=>$row['country'])) as $cities): ?>
+							<option value="<?php echo $cities['id'];?>" <?php echo ($cities['id'] == $row['city'])?'selected':'';?>>
+								<?php echo $cities['city'];?>
+								</option>
+						<?php endforeach; ?>
+					</select>
+				</div>
+			</div>
+		</div>
+    </div> <!-- /modal-body -->
+    <div class="modal-footer">
+        <button type="submit" class="btn btn-success"><i class="fa fa-check"></i> Save </button>
+        <button type="button" class="btn btn-warning" data-dismiss="modal" ><i class="fa fa-times"></i> Cancel </button> 
+    </div>  
+</form>
+<script>
+$('document').ready(function(){
+	$('select#scope').on('change', function () {
+			if ($(this).val() === '1') {
+				$('div#international').hide();
+			} else {
+				$('div#international').show();
+			}
+		});
+		
+	$('select#scope').on('change',function(){
+		$.post(
+			"<?php echo $this->url('postage', array('action' => 'getservice'));?>",
+			{
+				scopeId: $(this).val(),
+			},
+			function(data){
+				$('select#service').html(data.service);
+				$('select#service').trigger('chosen:updated');
+			},
+			'json'
+		);
+	});
+		
+	$('select#country').on('change',function(){
+		$.post(
+			"<?php echo $this->url('masterpos', array('action' => 'getcity'));?>",
+			{
+				countryId: $(this).val(),
+			},
+			function(data){
+				$('select#city').html(data.city);
+				$('select#city').trigger('chosen:updated');
+			},
+			'json'
+		);
+	});
+	const fv = FormValidation.formValidation(document.getElementById('#form'), {
+		fields: {
+			apptype: {
+					validators: {
+						notEmpty: {
+							message: 'Please provide appointment type.'
+						}
+					}
+				},
+		},
+		plugins: {
+			trigger: new FormValidation.plugins.Trigger(),
+			bootstrap3: new FormValidation.plugins.Bootstrap3(),
+			submitButton: new FormValidation.plugins.SubmitButton(),
+			defaultSubmit: new FormValidation.plugins.DefaultSubmit(),
+		},
+	}).on('core.element.validated', function (e) {
+		if (e.valid) {
+			$('div#'+ e.field.replace('[]','') +'_chosen').removeClass('is-invalid');
+			$('div#'+ e.field.replace('[]','') +'_chosen').addClass('is-valid');
+		} else {
+			$('div#'+ e.field.replace('[]','') +'_chosen').removeClass('is-valid');
+			$('div#'+ e.field.replace('[]','') +'_chosen').addClass('is-invalid');
+		}
+	});
+});
+</script>

@@ -1,0 +1,83 @@
+<?php
+/**
+ *
+ * View -- of Realestate/EstateController/indexAction
+ *
+ */
+$this->headTitle($this->title);
+foreach ($buildings as $bid);
+?>
+<?php //echo $this->partial('realestate/building/partial.phtml', array('active' => 'index')); ?>
+<div class="card">
+	<div class="card-header">
+		<div class="btn-group pull-right">
+			<?php echo $this->button(2,$bid['id']); ?>
+		</div>
+	</div>
+	<div class="table-responsive">
+		<table class="table card-table text-nowrap" id="dataTables">
+			<thead>
+				<tr>
+					<th>#</th>
+					<th>Unit number</th>
+					<th>Floor</th>
+					<th>Area sq</th>
+					<th>Remarks</th>
+					<th>action</th>
+	
+					
+					<!-- <th class="no-sort no-printpdf">Action</th> -->
+				</tr>
+			</thead>
+			<tbody>
+				<?php
+				$totalrent = 0;
+				$i = 1;
+              foreach ($leasedrent as $rows):
+			//	$rent = floatval($rows['rent']); 
+				//$totalrent += $rent; 		
+?>
+					<tr data-href="<?php echo $this->button(4, $rows['id']); ?>">
+						<td><?php echo $i++; ?> </td>
+						<td><strong><?php echo $rows['unit_no']; ?></strong></td>
+						<td><?php echo $rows['floor']; ?> </td>
+						<td><?php echo $rows['areasqt']; ?></td>
+						<td><?php echo $rows['remark']; ?></td>
+						
+						<!--td class="action">
+							<a class="btn btn-xs btn-danger" data-toggle="modal" data-target="#modal"
+									href="<?php //echo $this->url('acl', array('action' => 'activitylog', 'id' => "29-".$rows['id'])); ?>" title="View Activity Logs">
+									<i class="ace-icon fa fa-plus smaller-120" ></i>
+							</a>
+						</td--> 
+						<td><?php echo $this->button(1, $rows['id']); ?></td>
+
+					</tr>
+ 			<?php $i++;  endforeach;?>
+			</tbody>
+		</table>
+		
+	</div>
+</div>
+<div id="modal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+	<div class="modal-dialog">
+		<div class="modal-content">
+		</div>
+	</div>
+</div>
+<script type="text/javascript">
+	$("tr[data-href]").each(function(){
+		$(this).find('td').not('td.action').each(function(){
+			$(this).css('cursor','pointer');
+			$(this).bind('click',function() {
+				window.document.location = $(this).closest('tr').attr("data-href");
+			});
+		});
+	});
+
+	$('document').ready(function(){
+		$('#dataTables').DataTable();
+	});
+</script>
+
+

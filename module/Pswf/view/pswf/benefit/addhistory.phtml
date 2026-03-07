@@ -1,0 +1,176 @@
+<?php
+/**
+ * 
+ * View -- of Hr/EmphltController/addAction
+ * 
+ */
+?>
+<div class="row">
+	<div class="col-lg-12">
+        <div class="widget widget-box">
+            <div class="widget-header">
+            	<h5 class="widget-title lighter smaller">
+	            	<i class="fa fa-asterisk"></i> New Record for <b><?php echo $this->employeeObj->getColumn($emp_id,'full_name'); ?></b> 
+	             </h5>
+            </div>
+            <div class="widget-body">
+				<div class="widget-main">
+					<form id="#form" method="post" action="<?php echo $this->url('benefit', array('action' => 'addhistory', 'id'=> $emp_id)); ?>"  enctype="multipart/form-data" >
+						<div class="row">  						
+							<div class="form-group col-lg-4">
+								<label for="date" class="control-label">Date</label>
+								<div class="date input-group" id="date" data-date="<?php echo date('Y-m-d');?>" data-date-format="yyyy-mm-dd" >
+									<input class="form-control span2" name="date" id="date" type="text" placeholder=" Date" readonly required>
+									<span class="input-group-addon add-on"><i class="fa fa-calendar"></i></span>
+								</div>
+							</div>
+                            <div class="form-group col-lg-4">
+								<label for="date" class="control-label">Subject</label>
+								<input class="form-control" type="text" name="subject" id="subject">
+							</div>
+							<div class="form-group col-lg-4">
+								<label for="category" class="control-label" >Category</label>
+								<select class="form-control" id="category" name="category" data-placeholder="Select"  required >
+									<option value=""></option>
+									<?php 
+									foreach ($category as $categorys):
+									?>
+										<option value="<?php echo $categorys['id'];?>">
+											<?php echo $categorys['name'];?>
+										</option>
+									<?php
+									endforeach;
+									?>
+								</select>	
+							</div>						
+							<div class="form-group col-lg-4">
+								<label for="requested_amt">Requested Amount</label>								
+								<input class="form-control" type="text" id="requested_amt" name="requested_amt" placeholder="Requested Amount"  />
+							</div>
+							<div class="form-group col-lg-4">
+								<label for="approved_amt">Approved Amount</label>
+								<input class="form-control" id="approved_amt" name="approved_amt">
+							</div>				
+							<div class="form-group col-lg-4">
+								<label for="description" class="control-label">Description</label>
+								<textarea class="form-control" name="description" id="description" ></textarea>
+							</div>
+						</div>	
+						<div class="row">			
+							<div class="col-lg-12">
+								<button type="submit" class="btn btn-success"><i class="fa fa-check"></i> Save </button>
+								<button type="button" class="btn btn-warning" onclick="javascript:history.back();"><i class="fa fa-times"></i> Cancel </button>  
+							</div>
+						</div>
+					</form>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+<script>
+$('document').ready(function(){
+     $('#date').datepicker();
+	const fv = FormValidation.formValidation(document.getElementById('#form'), {
+		fields: {
+			appointment: {
+				validators:{
+					notEmpty:{
+						message:'Please select appointment type.'
+					}
+				}
+			},
+			activity:{
+				validators:{
+					notEmpty:{
+						message:'Please select activity.'
+					}
+				}
+			},
+			department:{
+				validators:{
+					notEmpty:{
+						message:'Please select department.'
+					}
+				}
+			},
+			region: {
+				validators:{
+					notEmpty:{
+						message:'Please select region.'
+					}
+				}
+			},
+			location: {
+				validators:{
+					notEmpty:{
+						message:'Please select location.'
+					}
+				}
+			},
+			post_title:{
+				validators:{
+					notEmpty:{
+						message:'Please select position title.'
+					}
+				}
+			},
+			post_level:{
+				validators:{
+					notEmpty:{
+						message:'Please select position level.'
+					}
+				}
+			},				
+			start_date:{
+				validators:{
+					notEmpty:{
+						message:'Please select Appointment date.'
+					}
+				}
+			},
+			supervisor:{
+				validators:{
+					notEmpty:{
+						message:'Please select supervisor.'
+					}
+				}
+			},
+			office_order_no:{
+				validators:{
+					notEmpty:{
+						messsage:'Please provide office order no.'
+					}
+				}
+			},
+			office_order_date:{
+				validators:{
+					notEmpty:{
+						message:'Please select office order date.'
+					}
+				}
+			},
+		},
+		plugins: {
+			trigger: new FormValidation.plugins.Trigger(),
+			bootstrap3: new FormValidation.plugins.Bootstrap3(),
+			submitButton: new FormValidation.plugins.SubmitButton(),
+			defaultSubmit: new FormValidation.plugins.DefaultSubmit(),
+		},
+	}).on('core.element.validated', function (e) {
+		if (e.valid) {
+			$('div#'+ e.field.replace('[]','') +'_chosen').removeClass('is-invalid');
+			$('div#'+ e.field.replace('[]','') +'_chosen').addClass('is-valid');
+		} else {
+			$('div#'+ e.field.replace('[]','') +'_chosen').removeClass('is-valid');
+			$('div#'+ e.field.replace('[]','') +'_chosen').addClass('is-invalid');
+		}
+	});
+	$('#start_date').on('changeDate',function(){
+			$('form').formValidation('revalidateField','start_date');
+		});
+	$('#office_order_date').on('changeDate',function(){
+		$('form').formValidation('revalidateField','office_order_date');
+	});
+});
+</script>

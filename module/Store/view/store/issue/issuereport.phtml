@@ -1,0 +1,215 @@
+<STYLE TYPE="text/css">
+TD{font-size:8pt;}
+</STYLE>
+<?php
+	$this->headTitle($this->title);	
+?>
+<?php echo $this->partial('store/issue/partial.phtml', array('active' => 'issuereport')); ?><br/>
+<div class="pull-right tableTools-container"></div>		
+<div class="row">
+	<div class="col-lg-12">					
+		<form id="#form" method="post" action="<?php echo $this->url('inissue', array('action' => 'issuereport')); ?>"  enctype="multipart/form-data" >    
+			<div class="row">						
+				<div class="form-group col-lg-2">
+					<label class="control-label" for="item_group">Item Group</label>
+					<select class="form-control" name="item_group" id="item_group" data-placeholder="Select item group" required>
+						<?php $selected_item_group = ($data['item_group'] == '-1')?'selected':'';?>
+						<option value="-1" <?php echo $selected_item_group;?>>All</option>
+						<?php $groups = $this->groupObj->getAll();
+							foreach ($groups as $group):	
+							 $ig_selected = ($group['id'] == $data['item_group'])?"selected":"";									
+						?>
+							<option value="<?php echo $group['id']; ?>" <?php echo $ig_selected; ?>>
+								<?php echo $group['name']; ?>
+							</option>
+						<?php endforeach;?>
+					</select>
+				</div>
+				<div class="form-group col-lg-2">
+					<label class="control-label" for="source_location">Source Location</label>
+					<select class="form-control" name="source_location" id="source_location" data-placeholder="Source Location" required>
+						<?php $selected_sloc = ($data['source_location'] == '-1')?'selected':'';?>
+						<option value="-1" <?php echo $selected_sloc;?>>All</option>
+						<?php $regions = $this->regionObj->getAll();
+							foreach ($regions as $region): ?>
+							<optgroup label="<?php echo $region['region'];?>">
+								<?php // retrive locations under the above region ID
+									$locations = $locationObj->get(array('l.region'=>$region['id'],'l.location_type'=>array(1,2,4,7,8)));
+									foreach ($locations as $location):
+									$sloc_selected = ($location['id'] == $data['source_location'])?'selected':'';?>
+								 <option value="<?php echo $location['id']; ?>" <?php echo $sloc_selected;?>>
+									<?php echo $location['location']; ?>
+								 </option>
+								<?php endforeach;?>
+						  </optgroup>
+						 <?php endforeach;  ?>	
+					</select>
+				</div>
+				<div class="form-group col-lg-2">
+					<label class="control-label" for="destination_location">Destination Location</label>
+					<select class="form-control" name="destination_location" id="destination_location" data-placeholder="Destination Location" required>
+						<?php echo $selected_dloc = ($data['destination_location'] == '-1')?'selected':'';?>
+						<option value="-1">All</option <?php echo $selected_dloc;?>>
+						<?php $regions = $this->regionObj->getAll();
+							foreach ($regions as $region): ?>
+							<optgroup label="<?php echo $region['region'];?>">
+								<?php // retrive locations under the above region ID
+									$locations = $locationObj->get(array('l.region'=>$region['id'],'l.location_type'=>array(1,2,7,8)));
+									foreach ($locations as $location):
+									$dloc_selected = ($location['id'] == $data['destination_location'])?'selected':'';?>
+								 <option value="<?php echo $location['id']; ?>" <?php echo $dloc_selected;?>>
+									<?php echo $location['location']; ?>
+								 </option>
+								<?php endforeach;?>
+						  </optgroup>
+						 <?php endforeach;  ?>	
+					</select>
+				</div>
+				<div class="col-lg-2">
+					<div class="form-group">
+						<label for="start_date" class="control-label">Start Date</label>
+						<div class="date input-group" id="start_date" data-date-format="yyyy-mm-dd" >
+							<input class="form-control span2" name="start_date" id="start_date" value="<?php echo $data['start_date'];?>" type="text" placeholder="Start Date" readonly required>
+							<span class="input-group-addon add-on"><i class="fa fa-calendar"></i></span>
+						</div>
+					</div>
+				</div>
+				<div class="col-lg-2">
+					<div class="form-group">
+						<label for="end_date" class="control-label">End Date</label>
+						<div class="date input-group" id="end_date" data-date-format="yyyy-mm-dd" >
+							<input class="form-control span2" name="end_date" id="end_date" value="<?php echo $data['end_date'];?>" type="text" placeholder="End Date" readonly required>
+							<span class="input-group-addon add-on"><i class="fa fa-calendar"></i></span>
+						</div>
+					</div>
+				</div>
+				<div class="col-lg-1"></div>
+				<div class="col-lg-1">
+					<div class="space-8"></div>
+					<button type="submit" class="btn btn-primary pull-right"><i class="fa fa-refresh"></i>Refresh</button>
+				</div>
+			</div>
+		</form>
+		<div class="table-header"><?php echo $this->title; ?></div>		
+		<table class="table table-striped table-bordered table-hover bafra-table-medium" id="dataTables">
+			<thead>
+				<tr>
+					<th>#</th>
+					<th>Challan No.</th>
+					<th>Issue Date</th>
+					<th>Item Group</th>
+					<th>Source</th>
+					<th>Destination</th>
+					<th>Item</th>
+					<?php if($data['item_group'] == 1):?>
+					<th>Asset</th>
+					<?php else:?>
+					<th>Stores and Spares</th>
+					<?php endif;?>
+					<th>Uom</th>
+					<th>Issue Qty</th>
+					<th>Accepted Qty</th>
+					<th>Sound Qty</th>
+					<th>Damaged Qty</th>
+					<th>Shortage Qty</th>
+					<th>Vehicle No.</th>
+                                        <th>Amount</th>
+				</tr>
+			</thead>
+			<tbody>
+				<?php $i = 1; 
+					$issues = $this->issueObj->getIssue($data['item_group'],$data['source_location'],$data['destination_location'],$data['start_date'],$data['end_date']);
+					foreach($issues as $row):  ?>
+					<tr>
+					           <td><?php echo $i++; ?></td>
+					      <td><?php echo $row['challan_no']; ?></td>
+						  <td><?php echo $row['issue_date']; ?></td>
+						  <td><?php echo $this->groupObj->getColumn($row['item_group'],'name'); ?></td>
+						  <td><?php echo $this->locationObj->getColumn($row['from_location'],'location'); ?></td>
+						  <td><?php echo $this->locationObj->getColumn($row['to_location'],'location'); ?></td>
+						  <td><?php echo $this->itemObj->getColumn($row['item'],'code'); ?></td>
+						  <td><?php echo ($this->itemObj->getColumn($row['item'],'item_group') == 1)?$this->assetObj->getColumn($row['assetssp'],'asset'):$this->assetsspObj->getColumn($row['assetssp'],'storespare');?></td>
+						  <td><?php echo $this->uomObj->getColumn($row['uom'],'code'); ?></td>
+						  <td><?php echo number_format($row['quantity'], 2, '.', ','); ?></td>
+						  <td><?php echo number_format($row['accepted_quantity'], 2, '.', ','); ?></td>
+						  <td><?php echo number_format($row['sound_quantity'], 2, '.', ','); ?></td>
+						  <td><?php echo number_format($row['damaged_quantity'], 2, '.', ','); ?></td>
+						  <td><?php echo number_format($row['shortage_quantity'], 2, '.', ','); ?></td>
+						  <td><?php echo $row['vehicle_no']; ?></td>
+                                                  <td><?php echo number_format($row['amount'],2,'.',','); ?></td>
+					</tr>
+				<?php endforeach; ?>
+			</tbody>
+		</table>				
+	</div>
+</div>
+<script type="text/javascript">
+		$('document').ready(function(){
+			$('#dataTables').DataTable({"paging":   true,});
+		});
+		$(function() {
+			$('#start_date').datepicker();
+			$('#start_date').on('changeDate', function(){
+				$('form').formValidation('revalidateField', $(this).attr('id'));
+			});
+			$('#end_date').datepicker();
+			$('#end_date').on('changeDate', function(){
+				$('form').formValidation('revalidateField', $(this).attr('id'));
+		});
+		/*** Form Validation ***/
+	const fv = FormValidation.formValidation(document.getElementById('#form'), {
+		fields: {
+			item_group: {
+				validators: {
+					notEmpty: {
+						message: 'Please select item group'
+					}
+				}
+			},
+			from_location: {
+				validators: {
+					notEmpty: {
+						message: 'Please select source location'
+					}
+				}
+			},
+			to_location: {
+				validators: {
+					notEmpty: {
+						message: 'Please select destination location'
+					}
+				}
+			},
+			start_date: {
+				validators: {
+					notEmpty: {
+						message: 'Please select start date'
+					}
+				}
+			},
+			end_date: {
+				validators: {
+					notEmpty: {
+						message: 'Please select end date'
+					}
+				}
+			},
+		},
+		plugins: {
+			trigger: new FormValidation.plugins.Trigger(),
+			bootstrap3: new FormValidation.plugins.Bootstrap3(),
+			submitButton: new FormValidation.plugins.SubmitButton(),
+			defaultSubmit: new FormValidation.plugins.DefaultSubmit(),
+		},
+	}).on('core.element.validated', function (e) {
+		if (e.valid) {
+			$('div#'+ e.field.replace('[]','') +'_chosen').removeClass('is-invalid');
+			$('div#'+ e.field.replace('[]','') +'_chosen').addClass('is-valid');
+		} else {
+			$('div#'+ e.field.replace('[]','') +'_chosen').removeClass('is-valid');
+			$('div#'+ e.field.replace('[]','') +'_chosen').addClass('is-invalid');
+		}
+	});
+});
+</script>
+

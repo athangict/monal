@@ -1,0 +1,68 @@
+<?php
+  $subHeadDtls = $this->subheadObj->get(array('head'=>$this->head), $order='name');
+    if(sizeof($subHeadDtls) > 0){	
+	    ?>		  
+		<div class="col-lg-12">
+		<h3>Budget Forecasting of <?php echo $year; echo " [ ",$this->headObj->getColumn($this->head, 'name'); ?>] </h3>
+			<table class="table" id="trdetails_table" style="border-top:2px solid #ddd;">
+				<thead>
+					<tr>
+						<th>#</th>							
+						<th>Sub Ledger/SubHead</th>
+						<th>Budget Amount</th>
+						<th>January</th>
+						<th>February</th>
+						<th>March</th>
+						<th>April</th>
+						<th>May</th>
+						<th>June</th>
+						<th>July</th>
+						<th>August</th>
+						<th>September</th>
+						<th>October</th>
+						<th>November</th>
+						<th>December</th>
+					</tr>
+				</thead>
+				<tbody>
+				<?php 
+				$i=1;
+				 foreach($subHeadDtls as $row):
+					$result = $this->budgetforecastObj->get(array('year'=>$this->year,'sub_head'=>$row['id']));					  
+					if(sizeof($result) > 0):
+						foreach( $result as $dtl);			
+						$budget_debit = $dtl['budget_dr'] ;
+						$id = $dtl['id'];
+					else:
+						$budget_debit = "0.00";
+						$id = 0;
+					endif;						
+				   ?>
+					<tr> 
+						<td><?php echo $i++; ?> </td>
+						<td><strong><?php echo $row['name']; ?> </strong>
+						<input type ="hidden" name="head[]" value="<?php echo $this->headObj->getColumn($this->head, 'id'); ?>">
+						<input type="hidden" name="sub_head[]" value="<?php echo $row['id'];?>">
+						<input type="hidden" value="<?php echo $id; ?>" name="budget_id[]"> </td>
+						<td><div class="form-group"> <input type="number" name="budget_dr[]" id="debit" class="form-control" value="<?php echo $budget_debit; ?>" step="0.001" required></div></td>
+						<td><div class="form-group"> <input type="number" name="january[]" id="debit" class="form-control" value="<?php echo $january; ?>" step="0.001" required></div></td>
+						<td><div class="form-group"> <input type="number" name="february[]" id="debit" class="form-control" value="<?php echo $january; ?>" step="0.001" required></div></td>
+						<td><div class="form-group"> <input type="number" name="march[]" id="debit" class="form-control" value="<?php echo $january; ?>" step="0.001" required></div></td>
+						<td><div class="form-group"> <input type="number" name="april[]" id="debit" class="form-control" value="<?php echo $january; ?>" step="0.001" required></div></td>
+						<td><div class="form-group"> <input type="number" name="may[]" id="debit" class="form-control" value="<?php echo $january; ?>" step="0.001" required></div></td>
+						<td><div class="form-group"> <input type="number" name="june[]" id="debit" class="form-control" value="<?php echo $january; ?>" step="0.001" required></div></td>
+						<td><div class="form-group"> <input type="number" name="july[]" id="debit" class="form-control" value="<?php echo $january; ?>" step="0.001" required></div></td>
+						<td><div class="form-group"> <input type="number" name="august[]" id="debit" class="form-control" value="<?php echo $january; ?>" step="0.001" required></div></td>
+						<td><div class="form-group"> <input type="number" name="september[]" id="debit" class="form-control" value="<?php echo $january; ?>" step="0.001" required></div></td>
+						<td><div class="form-group"> <input type="number" name="october[]" id="debit" class="form-control" value="<?php echo $january; ?>" step="0.001" required></div></td>
+						<td><div class="form-group"> <input type="number" name="november[]" id="debit" class="form-control" value="<?php echo $january; ?>" step="0.001" required></div></td>
+						<td><div class="form-group"> <input type="number" name="december[]" id="debit" class="form-control" value="<?php echo $january; ?>" step="0.001" required></div></td>
+					</tr>
+				   <?php
+				 endforeach;
+				?>
+				</tbody>
+			</table>
+		</div>
+    <?php			
+    }?>

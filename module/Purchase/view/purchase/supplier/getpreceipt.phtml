@@ -1,0 +1,91 @@
+<?php
+/**
+ * 
+ * View -- of SupplierController\invoice\getpreceiptAction.pthml
+ * 
+ */
+$this->headTitle($this->title);
+?>
+<form id="#form" method="post" action="<?php echo $this->url('supplier', array('action' => 'addsupplierinv'));?>" >
+    <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+        <h4 class="modal-title"> <i class="fa fa-asterisk"></i> Get From Purchase Receipt</h4>
+    </div>  <!-- /modal-header -->
+    <div class="modal-body">
+        <div class="panel panel-default">                       
+            <div class="panel-body"> 
+            	<div class="form-group">
+            		<label class="control-label" for="supplier">Supplier</label>
+            		<select class="form-control" name="supplier" id="supplier" data-placeholder="Select" required>
+            			<option value=""></option>
+            			<?php foreach($suppliers as $supplier):?>
+            				<option value="<?php echo $supplier['id']; ?>">
+            					<?php echo $supplier['name'];?>
+            				</option>
+            			<?php endforeach;?>
+            		</select>
+            	</div>
+                <div class="form-group">
+                    <label for="preceipt" class="control-label">Purchase Receipt</label>
+                     <select id="preceipt" name="preceipt" class="form-control" data-placeholder="Select" required>
+                    </select>
+                </div>                    
+            </div>
+        </div>
+    </div> <!-- /modal-body -->
+    <div class="modal-footer">
+        <button type="submit" class="btn btn-success"><i class="fa fa-check"></i> Get </button>
+        <button type="button" class="btn btn-warning" data-dismiss="modal"><i class="fa fa-times"></i> Cancel </button>
+    </div>  
+</form>
+<script>
+	$('form select').chosen({allow_single_deselect:true});
+	
+	$("#supplier").change(function() { 
+		$.post(
+			"<?php echo $this->url("supplier", array("action" => "getreceiptbysup")); ?>",
+			{
+				supplier_id: $(this).val(),
+			},
+			function(data){
+				$("#preceipt").html(data.prn);
+				$("#preceipt").trigger('chosen:updated');
+				$('form').formValidation('revalidateField','preceipt');
+			},
+			'json'
+		);
+	});
+	
+	const fv = FormValidation.formValidation(document.getElementById('#form'), {
+		fields: {
+			'supplier': {
+				validators: {
+					notEmpty: {
+						message: 'Please select supplier.'
+					},
+				}
+			},
+			'preceipt': {
+				validators: {
+					notEmpty: {
+						message: 'Please select purchase receipt.'
+					}
+				}
+			},
+		},
+		plugins: {
+			trigger: new FormValidation.plugins.Trigger(),
+			bootstrap3: new FormValidation.plugins.Bootstrap3(),
+			submitButton: new FormValidation.plugins.SubmitButton(),
+			defaultSubmit: new FormValidation.plugins.DefaultSubmit(),
+		},
+	}).on('core.element.validated', function (e) {
+		if (e.valid) {
+			$('div#'+ e.field.replace('[]','') +'_chosen').removeClass('is-invalid');
+			$('div#'+ e.field.replace('[]','') +'_chosen').addClass('is-valid');
+		} else {
+			$('div#'+ e.field.replace('[]','') +'_chosen').removeClass('is-valid');
+			$('div#'+ e.field.replace('[]','') +'_chosen').addClass('is-invalid');
+		}
+	});
+</script>

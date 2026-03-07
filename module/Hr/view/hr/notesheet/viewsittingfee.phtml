@@ -1,0 +1,135 @@
+<?php
+/**
+ * 
+ * View -- of Hr/LeaveController/encashmentAction
+ * 
+ */
+$this->headTitle($this->title); 
+foreach($sittings as $sitting);?>
+<div class="card">
+	<div class="card-header">
+	<div class="row">
+		<div class="col-lg-12"> 
+			<div class="widget-box transparent">
+				<div class="widget-header widget-header-smaller">
+					<h4 class="widget-title blue bolder smaller">View Sitting Fee</h4>
+				</div>
+				<div class="widget-body">
+					<div class="widget-main padding-24"> 
+						<div class="row">  
+							<div class="form-group col-lg-3">
+								<label for="date" class="control-label">Date</label>
+								<div class="date input-group" id="date" data-date="" data-date-format="yyyy-mm-dd" >
+									<input class="form-control span2" name="date" id="date" type="text" value="<?php echo $sitting['date'] ?>"  readonly required>
+									<span class="input-group-addon add-on"><i class="fa fa-calendar"></i></span>
+								</div>
+						   </div>
+						 
+						</div>
+						<div class="row">
+						   <div class="col-lg-12"> 
+							  <h4>Service Details</h4>
+								<div>
+								<table class="table card-table text-nowrap" id="dataTables">
+									<thead>
+										<tr>
+											<th>#</th>
+											<th>Employee</th>
+											<th>Actual Amount</th>
+											<th>Deduction</th>
+											<th>Payment Amount</th>
+										</tr>
+									</thead>
+									<tbody>
+										<?php
+										$i = 1; $total_amt=0;$deduction=0;$payment_amount=0;
+										foreach ($sittingdtlsObj->get(array('sitting_id'=>$sitting['id'])) as $row):?>
+											<tr>
+												<td><?php echo $i; ?>. </td>
+												<td><?php echo $this->employeeObj->getColumn($row['employee'],'full_name'); ?></td>							
+												<td><?php echo $row['amount']; ?></td>		
+												<td><?php echo $row['deduction']; ?></td>						
+												<td><?php echo $row['payment_amount']; ?></td>	
+											</tr>
+										<?php 
+										$i++; $total_amt += $row['amount'];$deduction += $row['deduction'];$payment_amount += $row['payment_amount'];
+										endforeach; ?>
+										<tr>
+											<td></td>
+											<td><b>TOTAL(NU.)</b></td>
+											<td><strong><?php echo $total_amt?></strong></td>
+											<td><strong><?php echo $deduction?></strong></td>
+											<td><strong><?php echo $payment_amount?></strong></td>
+										</tr>
+										
+									</tbody>
+								</table>	
+							</div>
+						</div>	
+						<div class="row">
+						<div class="form-group col-lg-12">
+								<label for="purpose" class="control-label">Purpose</label>
+								<textarea type="text" class="form-control" name="purpose" id="purpose" value=""> <?php echo $sitting['purpose'] ?></textarea>
+							</div>
+						</div>
+						
+					</div>
+				</div>
+			</div> 
+		</div>
+	</div> 
+	</div>
+<div class="col-lg-8">
+	&nbsp;
+	</div>
+	<div class="col-lg-4"><br/>&nbsp;
+	<?php
+	// $employeeUser = $this->userObj->getColumn(array('author'=>$emp['id']), 'id');
+	$activity = $this->flowtransactionObj->getMax($column='activity', $where=array('application'=>$sitting['id'],'process'=>526));
+	$flows = $this->flowtransactionObj->get(array('application'=>$sitting['id'],'activity'=>$activity,'process'=>526));
+	foreach($flows as $flow);
+	if($sitting['status']!=8 && $sitting['status']!=4):?>
+			<form method="post" action="<?php echo $this->url('notesheet', array('action' => 'viewsittingfee')); ?>">	
+				<a data-toggle="modal" data-target="#modal" href="<?php echo $this->url('notesheet', array('action'=>'sittingprocess', 'id'=>$sitting['id'].'-'.'3'.'-'.$flow['id']));?>" class="btn btn-success"> 
+				<i class="fa fa-check-square-o"></i>Send for Approval </a>		
+				<a  href="<?php echo $this->url('notesheet', array('action'=>'editsitting', 'id'=>$sitting['id']));?>" class="btn btn-primary"> 
+				<i class="fa fa-check-square-o"></i> Edit </a>								
+			</form>	<?php
+			/*elseif($this->userID == $flow['role_id'] && $sitting['status']!=8):							      
+				$actions = explode('|', $flow['action']);
+				for($i=0; $i < sizeof($actions); $i++):
+					$buttons = $this->flowactionObj->get($actions[$i]);
+					foreach($buttons as $button):?>
+					<span data-bs-toggle='tooltip' data-bs-placement='top' title='<?php echo $button['action']; ?>'>
+					<a data-toggle="modal" data-target="#modal"  class="btn <?php echo $button['class']; ?>"href="<?php echo $this->url('notesheet', array('action' => 'sittingprocess', 'id'=>$sitting['id'].'-'.$button['id'].'-'.$flow['id'])); ?>">
+						<i class="icon <?php echo $button['icon'];?>"></i><?php echo $button['action']; ?>
+					</a></span>
+				<?php
+					endforeach;
+				endfor;*/
+		endif;?>	
+	</div>
+</div>
+<div id="modal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+	<div class="modal-dialog">
+		<div class="modal-content">
+		</div>
+	</div>
+</div>
+<script type="text/javascript">
+	$("tr[data-href]").each(function(){
+		$(this).find('td').not('td.action').each(function(){
+			$(this).css('cursor','pointer');
+			$(this).bind('click',function() {
+				window.document.location = $(this).closest('tr').attr("data-href");
+			});
+		});
+	});
+
+	$('#dataTables').genpdftable({
+		src:"<?php echo $this->url('pdfxls', array('action' => 'pdf'));?>",
+		orentation:"P",//L =landscape, P = potrait
+	});
+</script>
+
+

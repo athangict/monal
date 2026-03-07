@@ -1,0 +1,116 @@
+﻿<?php 
+/**
+ * chophel@athang.com -- 2022
+ * View -- of Acl/AclController/permissionAction
+ */
+	$this->headTitle($this->title);
+?>
+<?php echo $this->partial('realestate/estatereport/partial.phtml',array('active' => 'estatereport'));?>
+<div class="card">
+	<div class="card-header">
+		<div class="row">
+			<div class="col-lg-9">
+				<form method="POST">    
+					<div class="row">
+						<div class="form-group col-lg-4">
+							<label for="region" class="control-label">Region</label>
+							<select id="region" name="region" class="form-control" data-placeholder="Select" onchange='this.form.submit()' >
+								<option value="-1" <?php echo ($data['region'] == '-1')?'selected':'';?>>All</option>
+								<?php foreach($this->regionObj->get(array('status'=>'1')) as $region):?>
+									<option value="<?php echo $region['id']?>"<?php echo ($region['id']==$data['region'])?'selected':'';?>>
+										<?php echo $region['region'];?></option>
+								<?php endforeach;?>
+							</select>
+						</div>
+						<div class="form-group col-lg-4">
+							<label for="location" class="control-label">Location</label>
+							<select id="location" name="location" class="form-control" data-placeholder="Select" onchange='this.form.submit()' >
+								<option value="-1" <?php echo ($data['location'] == '-1')?'selected':'';?>>All</option>
+								<?php foreach($this->locationObj->get(array('region'=>$data['region'])) as $location):?>
+									<option value="<?php echo $location['id']?>"<?php echo ($location['id']==$data['location'])?'selected':'';?>>
+										<?php echo $location['location'];?></option>
+								<?php endforeach;?>
+							</select>
+						</div>
+						<div class="form-group col-lg-4">
+    						<label for="land_type" class="control-label">Land Type</label>
+							<select id="land_type" name="land_type" class="form-control" data-placeholder="Select" onchange='this.form.submit()'>
+								<option value="-1" <?php echo ($data['land_type'] == '-1') ? 'selected' : ''; ?>>All</option>
+								<option value="URC" <?php echo ($data['land_type'] == 'URC') ? 'selected' : ''; ?>>URC</option>
+								<option value="Lagtram" <?php echo ($data['land_type'] == 'Lagtram') ? 'selected' : ''; ?>>Lagtram</option>
+							</select>
+						</div>
+
+
+						<div class="form-group col-lg-1">
+						<label for="redirect" class="control-label">&nbsp;</label>
+						<button type="button" class="btn btn-sm btn-info" onclick="refresh()" ><i class="fa fa-refresh"></i> refresh</button>
+					</div>
+				</div>
+		</form>
+	</div>
+			<div class="col-lg-3 ">
+				<div class="space"></div>
+				<div class="btn-group pull-right">
+					<?php echo $this->button(2,$page);?>
+				</div>
+			</div>
+		</div>
+	</div>
+	<div class="table-responsive">
+		<table class="table card-table text-nowrap" id="dataTables">
+			<thead>
+				<tr>
+					<th>#</th>
+					<th>Region</th>
+					<th>Location</th>
+					<th>Land type</th>
+					<th>Exact Location</th>
+					<th>Area in acres</th>
+					<th>Area in squareft</th>
+					<th>Plot number</th>
+					<th>Thram number</th>
+					<th>Land</th>
+					<th>Land tax</th>
+				</tr>
+			</thead>
+			<tbody>
+			<?php 
+				$i=1;
+				foreach ($paginator as $row):?>				
+				<tr>	
+					<td><?php  echo $i++; ?></td>								       
+					<td><?php echo ($row['region']!='0')?$this->regionObj->getColumn($row['region'],'region'):'-'; ?></td>
+					<td><?php echo $this->locationObj->getColumn($row['location'],'location'); ?></td>
+					<td><?php echo $row['land_type']; ?></td>
+					<td><?php echo $row['exact_location']; ?></td>
+					<td><?php echo $row['area_in_acres']; ?></td>
+					<td><?php echo $row['area_in_sqaureft']; ?></td>
+					<td><?php echo $row['plot_number']; ?></td>
+					<td><?php echo $row['thram_no']; ?></td>
+					<td><?php echo $row['land']; ?></td>
+					<td><?php echo $row['land_tax']; ?></td>
+					<?php if($this->button(1)!=""):?>
+						<td><?php echo $this->button(1, $row['id'].'_'.$page);?></td>
+					<?php endif;?>
+				</tr>
+				<?php endforeach; ?>
+			</tbody>
+		</table>
+	</div>
+	<!-- <div class="card-footer d-flex align-items-center">
+		<?php //echo $this->paginationControl($this->paginator,'Sliding','adm_pagination.phtml', 
+			//array('route' => 'setmaster/paginator','action'=>'location','id'=>$data['region']."_".$data['location_type']));?>
+	</div> -->
+</div>
+<div class="modal fade" id="modal" tabindex="-1" role="dialog" aria-hidden="true">
+	<div class="modal-dialog modal-lg" role="document">
+		<div class="modal-content">
+		</div><!-- /.modal-content -->
+	</div><!-- /.modal-dialog -->
+</div><!-- /.modal -->
+<script>
+$('document').ready(function(){
+	$('#dataTables').DataTable();
+});
+</script>

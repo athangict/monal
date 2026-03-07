@@ -1,0 +1,22 @@
+<?php
+/**
+ * 
+ * View --
+ * 
+ */
+foreach($renew as $row);
+?>
+<form id="#form" method="post" action="<?php echo $this->url('postbox', array('action' => 'deleterenew')); ?>"  enctype="multipart/form-data" >
+    <div class="modal-body">
+		<input type="hidden" name="renew_id" id="renew_id" value="<?php echo $row['id']?>">
+		<div class="panel panel-default">                       
+			<div class="panel-body">   
+				<h5 class="modal-title"> <i class="fa fa-trash red fa-2x"></i> &nbsp Are you sure to delete the Renewal of postbox for the year <?php echo $row['renewal_year'];?>?</h5>
+			</div>
+		</div>
+    </div> <!-- /modal-body -->
+    <div class="modal-footer">
+        <button type="submit" class="btn btn-danger"><i class="fa fa-trash"></i> Delete </button>
+        <button type="button" class="btn btn-warning" data-dismiss="modal" ><i class="fa fa-times"></i> Cancel </button> 
+    </div>  
+</form>

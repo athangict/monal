@@ -1,0 +1,194 @@
+<?php
+/**
+ * 
+ * View -- of Fleet/ReportController/vehiclelogreportAction
+ * 
+ */
+	$this->headTitle($this->title);
+?>
+<?php echo $this->partial('fleet/report/partial.phtml', array('active' => 'vehiclelogreport')); ?>
+<div class="row">
+   	<div class="space-6"></div>
+	<div class = "row col-lg-12">
+	     <h3>Vehicle Log Report</h3>
+	</div>
+    <div class="col-lg-12">
+		<form id="#form" method="post" action="<?php echo $this->url('ftreport', array('action' => 'vehiclelogreport')); ?>"  enctype="multipart/form-data" >    
+			<div class="row">
+				<div class="form-group col-lg-2">
+					<label class="control-label" for="transport">Asset/Transport</label>
+					<select class="form-control" name="transport" id="transport" data-placeholder="select" >
+						<option value="-1" <?php echo ($data['transport']=='-1')?'selected':'';?>>All</option>
+						<?php 
+							$assets = $this->TObject->getAll();
+							foreach($assets as $row):
+								$selected_transport = ($row['id']==$data['transport'])?'selected':'';
+						?>
+						
+							<option value="<?php echo $row['id'];?>" <?php echo $selected_transport;?>>
+								<?php echo $row['code'];?>
+							</option>
+						<?php endforeach;?>
+					</select>
+				</div>
+				<div class="form-group col-lg-2">
+					<label class="control-label" for="start_date">Start Date</label>
+					<div class="date input-group" id="start_date" data-date="<?php echo $data['start_date'];?>" data-date-format="yyyy-mm-dd" >
+						<input class="form-control span2" name="start_date" id="start_date" type="text" placeholder="Start Date" value="<?php echo $data['start_date'];?>" readonly required>
+						<span class="input-group-addon add-on"><i class="fa fa-calendar"></i></span>
+					</div>
+				</div>
+				<div class="form-group col-lg-2">
+					<label class="control-label" for="end_date">End Date</label>
+					<div class="date input-group" id="end_date" data-date="<?php echo $data['end_date'];?>" data-date-format="yyyy-mm-dd" >
+						<input class="form-control span2" name="end_date" id="end_date" type="text" placeholder="End Date" value="<?php echo $data['end_date'];?>" readonly required>
+						<span class="input-group-addon add-on"><i class="fa fa-calendar"></i></span>
+					</div>
+				</div>
+				<div class="form-group col-lg-1"><br>
+					<button type="submit" class="btn btn-sm btn-success pull-right"><i class="fa fa-gear"></i> Generate </button>
+				</div>
+			</div>	
+		</form>
+		<div class="hr hr-dotted"></div>
+		<div class="space-6"></div>
+		<div class="row col-lg-12">
+			<div class="clearfix">
+				<label><i class="blue fa fa-car"></i> <strong>Transport : &nbsp;&nbsp;</strong></label><span><?php echo ($data["transport"] == -1 || !isset($data['transport']))? "All Transport":$this->TObject->getColumn($data['transport'],'code');?></span>.&nbsp;&nbsp;
+				<label><i class="green fa fa-calendar"></i> <strong>Date : &nbsp;&nbsp;</strong></label><span><?php echo (!isset($data['start_date']))?'-select-':$data['start_date'].' to '.$data['end_date'];?></span>
+			</div>
+		</div>
+		<div class="row col-lg-12">
+			<div class="clearfix">
+			<input type="hidden" name="transport" id="transport" value="<?php echo ($data["transport"] == -1 || !isset($data['transport']))? "All Transport":$this->TObject->getColumn($data['transport'],'code');?>">
+			<input type="hidden" name="st_date" id="st_date" value="<?php echo $data['start_date']?>">
+			<input type="hidden" name="ed_date" id="ed_date" value="<?php echo $data['end_date'];?>">
+			</div>
+		</div>
+		<div class ="row">
+			<div class="col-lg-12">
+				<div>
+					<table class="table card-table text-nowrap" id="dataTables">
+						<thead>
+							<tr>
+								<th>Sanction Order No.</th>
+								<th>Sanction Order Date</th> 
+								<th>Kilomer Covered</th> 
+								<th>Refuelling/ Litre</th>							
+								<th>Fuel Consumed </th>
+                                <th>Rate per Litre</th>									
+                                <th>Millage</th>									
+								<th>Pol Expenditure</th>
+								<th>Last Reading</th>
+								<th>Closing Tank</th>
+							</tr>
+						</thead>
+						<tbody>
+							<?php
+							if(sizeof($transport_so) > 0 ):
+							foreach($transport_so as $tran_so):	?>						 
+						    <tr style="border-top:2px solid #ddd;border-bottom:2px solid #ddd;background-color:#FAEBD7;">
+								<td><strong><?php echo $tran_so['transport'];?> , <?php echo $tran_so['location'];?> , <?php echo $tran_so['driver'];?></strong></td>
+								<td ></td>
+								<td ></td>
+								<td ></td>
+								<td ></td>
+								<td ></td>
+								<td ></td>
+								<td ></td>
+								<td ></td>
+								<td ></td>
+							</tr>
+							<tr style="border-top:2px solid #ddd;border-bottom:2px solid #ddd;background-color:#FDF5E6;"> 
+                                <?php foreach($this->sanctionorderObj->getSanctionOrderforPol($data['start_date'],$data['end_date'], array('transport'=>$tran_so['transport_id'])) as $sanctionorder):
+								$total_refuelling = $this->vel_logObj->getSumbySOID($data['start_date'],$data['end_date'], 'refuelling', array('sanction_order'=>$sanctionorder['id']));
+								$total_milage = $this->vel_logObj->getSumbySOID($data['start_date'],$data['end_date'], 'milage', array('sanction_order'=>$sanctionorder['id']));
+								?>								
+								<td class = "green"><?php echo  $sanctionorder['sanction_order_no']; ?></td>
+								<td class = "green"><?php echo  $sanctionorder['sanction_order_date']; ?></td>
+								<td style="text-align:right" class = "green"><?php echo $sanctionorder['total_km']; ?></td>
+								<td style="text-align:right" class = "green"><?php echo $total_refuelling; ?></td>
+								<td style="text-align:right" class = "green"><?php echo $sanctionorder['total_fuel_consumed']; ?></td>
+								<td ></td>
+								<td style="text-align:right" class = "green"><?php echo $total_milage; ?></td>
+								<td style="text-align:right" class = "green"><?php echo $sanctionorder['payment_amt']; ?></td>
+								<td style="text-align:right" class = "green"><?php echo $sanctionorder['present_reading']?></td>
+								<td style="text-align:right" class = "green"><?php echo $sanctionorder['closing_tank'] ?></td>
+							</tr>
+							  <?php 
+							   	$tralog_details = $this->vel_logObj->getTransportLogs($data['start_date'],$data['end_date'],array('sanction_order'=>$sanctionorder['id']));
+							   	$cash_details = $this->cashmemoObj->getCashMemo($data['start_date'],$data['end_date'],array('sanction_order'=>$sanctionorder['id']));
+								foreach($tralog_details as $tralog_detail):
+								foreach($cash_details as $cash_detail);
+								?>
+							<tr>
+								<td style="text-align:left" class = "blue"></td>
+								<td style="text-align:left" class = "blue"></td>
+								<td style="text-align:right" class = "blue"><?php echo $tralog_detail['km_covered']; ?></td>
+								<td style="text-align:right" class = "blue"><?php echo $tralog_detail['refuelling']; ?></td>
+								<td style="text-align:right" class = "blue"><?php echo $tralog_detail['fuel_consumed'];?></td>
+								<td style="text-align:right" class = "blue"><?php echo $cash_detail['fuel_rate']; ?></td>
+								<td style="text-align:right" class = "blue"><?php echo $tralog_detail['milage']; ?></td>
+								<td style="text-align:right" class = "blue"><?php echo $tralog_detail['amount']; ?></td>
+								<td style="text-align:right" class = "blue"><?php echo $tralog_detail['final_reading']; ?></td>
+								<td style="text-align:right" class = "blue"><?php echo $tralog_detail['closing_tank_balance']; ?></td>
+							</tr>
+							<?php endforeach;endforeach;endforeach;endif; ?>
+						</tbody>
+					</table>
+				</div>
+		    </div>
+		</div>
+	</div>
+</div>
+<script type="text/javascript">
+	$(function(){	
+		$('#start_date').datepicker();
+		$('#end_date').datepicker();
+		$('#start_date').on('changeDate',function(){
+			$('form').formValidation('revalidateField', $(this).attr('id'));
+		});
+		$('#end_date').on('changeDate',function(){
+			$('form').formValidation('revalidateField', $(this).attr('id'));
+		});
+		/*** Form Validation ***/
+		const fv = FormValidation.formValidation(document.getElementById('#form'), {
+			fields: {
+				start_date: {
+						validators: {
+							notEmpty: {
+								message: 'Please select start date'
+							}
+						}
+					},
+				end_date: {
+					validators: {
+						notEmpty: {
+							message: 'Please select end date'
+						}
+					}
+				},
+			},
+			plugins: {
+				trigger: new FormValidation.plugins.Trigger(),
+				bootstrap3: new FormValidation.plugins.Bootstrap3(),
+				submitButton: new FormValidation.plugins.SubmitButton(),
+				defaultSubmit: new FormValidation.plugins.DefaultSubmit(),
+			},
+		}).on('core.element.validated', function (e) {
+			if (e.valid) {
+				$('div#'+ e.field.replace('[]','') +'_chosen').removeClass('is-invalid');
+				$('div#'+ e.field.replace('[]','') +'_chosen').addClass('is-valid');
+			} else {
+				$('div#'+ e.field.replace('[]','') +'_chosen').removeClass('is-valid');
+				$('div#'+ e.field.replace('[]','') +'_chosen').addClass('is-invalid');
+			}
+		});
+		var title_table = $('input#transport').val()+' from '+$('input#st_date').val()+' to '+$('input#ed_date').val();
+		
+		$('document').ready(function(){
+			$('#dataTables').DataTable();
+		});
+	});
+</script>
+ 

@@ -1,0 +1,475 @@
+<?php
+/**
+ * View -- of Purchase/PurchaseController/addporderAction
+ */
+  $this->headTitle($this->title);
+?>
+<div class="row">
+	<div class="col-lg-12">
+		<div class="widget widget-box">
+			<div class="widget-header">
+				<h5 class="widget-title lighter smaller">
+					<i class="fa fa-asterisk"></i>&nbsp;&nbsp;Add PBVI
+				</h5>
+			</div><!-- end of widget-header -->
+			<div class="widget-body">
+				<div class="widget-main">
+					<form id="#form" method="post" action="<?php echo $this->url('payroll', array('action' => 'addpbvi')); ?>"  enctype="multipart/form-data" >    
+						<div class="row">	
+							<div class="col-lg-3">    
+								<div class="form-group">
+									<label for="claim_date" class="control-label">Date</label>
+									<div class="date input-group" id="claim_date" data-date="<?php echo date('Y-m-d');?>" data-date-format="yyyy-mm-dd" >
+										<input class="form-control span2" name="claim_date" id="claim_date" type="text" placeholder="claim Date" value="<?php echo date('Y-m-d');?>" readonly required>
+										<span class="input-group-addon add-on"><i class="fa fa-calendar"></i></span>
+									</div>
+								</div>
+							</div>
+							<div class="col-lg-3">    
+								<div class="form-group">
+									<label for="remarks" class="control-label">Remarks</label>
+										<input class="form-control" type="text" name="remarks" id="remarks" >
+								</div>
+							</div>
+                        </div>
+						<div class="row">
+							<div class="col-lg-12"> 
+								<h4>PBVI Details</Details></h4>
+								<hr>
+								<div>
+								<table id="pb_field" class="table small-padding">
+                                    <thead style="border:2px solid #D5D8DC;">
+                                        <tr>
+                                            <th>Employee</th>
+                                            <th>Annual Basic Pay</th>
+                                            <th>Percentage</th>
+                                            <th>Gross Amount</th>
+											<th>TDS</th>
+											<th>Other Deduction</th>
+											<th>Net Amount</th>
+											<th></th>
+                                        </tr>
+                                    </thead>
+									<tbody>
+										<tr>
+											<td class="col-lg-2 input-cell">
+												<div class="form-group">
+												<select class="form-control tr_employee" name="employee[]" id="employee" data-placeholder="Select">
+													<option value="">Select</option>
+												<?php foreach($employee as $emp):?>
+														<option value="<?php echo $emp['id']?>"><?php echo $emp['full_name'].'('.$emp['emp_id'].')'?></option>
+														<?php endforeach;?>
+												</select>
+												</div>
+											</td>
+											<td class="col-lg-2 input-cell">
+												<div class="form-group">
+													<input class="form-control tr_basic" name="basic[]" id="basic" value=0.00>
+												</div>
+											</td>
+											<td class="col-lg-1 input-cell">
+												<div class="form-group">
+														<input class="form-control  tr_percentage" name="percentage[]" id="percentage" type="text" >
+													</div>
+												</div>
+											</td>
+											<td class="col-lg-2 input-cell">
+												<div class="form-group">
+													<input type="text" class="form-control tr_amount" name="amount[]" id="amount"readonly/>
+												</div>
+											</td>
+											<td class="col-lg-1 input-cell">
+												<div class="form-group">
+													<input type="text" class="form-control tr_tds" name="tds[]" id="tds"  readonly/>
+												</div>         
+											</td>
+											</td>
+											<td class="col-lg-2 input-cell">
+												<div class="form-group">
+													<input type="text" class="form-control tr_other_deduction" name="other_deduction[]" id="other_deduction"  value=0.00 />
+												</div>         
+											</td>
+											<td class="col-lg-2 input-cell">
+												<div class="form-group">
+													<input type="text" class="form-control tr_net" name="net[]" id="net"  readonly/>
+												</div>         
+											</td>
+										</tr> 
+									</tbody>
+								</table>
+								<div class="row"> 
+									<div class="col-lg-11"></div>
+									<button class="btn btn-xs btn-success" type="button"  onclick="pb_field();"> <span class="fa fa-plus-square" aria-hidden="true"> Add Row</span> </button>
+								</div>
+									<div class="clear"></div>
+								</div>
+							</div>
+						</div>
+						<div class="row"> 
+						<div class="col-lg-5"></div>
+							<div class="col-lg-2">
+								<div class="form-group">
+									<label for="total_gross"><b>Total Gross</b></label>
+									<input type="text" class="form-control" name="total_gross" id="total_gross" readonly>
+								</div>
+							</div>
+							<div class="col-lg-1">
+								<div class="form-group">
+									<label for="tot_tds"><b>Total TDS</b></label>
+									<input type="text" class="form-control" name="tot_tds" id="tot_tds" readonly>
+								</div>
+							</div>
+							<div class="col-lg-2">
+								<div class="form-group">
+									<label for="tot_other_deduction"><b>Total Other Deduction</b></label>
+									<input type="text" class="form-control" name="tot_other_deduction" id="tot_other_deduction" readonly>
+								</div>
+							</div>
+							<div class="col-lg-2">
+								<div class="form-group">
+									<label for="tot_net"><b>Total Net</b></label>
+									<input type="text" class="form-control" name="tot_net" id="tot_net" readonly>
+								</div>
+							</div>
+						</div>
+						<br>
+						<div class="space-12"></div>
+						<div class="row"> 	
+							<div class="col-lg-9"> 
+								<button type="submit" class="btn btn-success"><i class="fa fa-check"></i> Save </button>
+								<button type="button" class="btn btn-warning" onclick="javascript:history.back();" ><i class="fa fa-times"></i> Cancel </button> 					
+							</div>
+						</div>
+					</form>	
+				</div><!-- widget widget-main -->
+			</div>  <!-- widget widget-body -->   
+		</div> <!-- widget widget-box --> 
+	</div><!-- col-lg-12 -->
+</div><!-- row -->
+
+<script type="text/javascript">	 
+var room = 1;
+	function pb_field() {
+    room++;
+    var objTo = document.getElementById('pb_field');
+    var divtest = document.createElement('tr');
+    divtest.setAttribute('class', 'form-group removeclass' + room);
+    
+	divtest.innerHTML = `
+    <tr>
+	<td class="col-lg-2 input-cell">
+		<div class="form-group">
+		<select class="form-control tr_employee" name="employee[]" id="employee" data-placeholder="Select">
+			<option value="">Select</option>
+		<?php foreach($employee as $emp):?>
+				<option value="<?php echo $emp['id']?>"><?php echo $emp['full_name'].'('.$emp['emp_id'].')'?></option>
+				<?php endforeach;?>
+		</select>
+		</div>
+	</td>
+	<td class="col-lg-2 input-cell">
+		<div class="form-group">
+			<input class="form-control tr_basic" name="basic[]" id="basic" value=0.00>
+		</div>
+	</td>
+	<td class="col-lg-1 input-cell">
+		<div class="form-group">
+				<input class="form-control  tr_percentage" name="percentage[]" id="percentage" type="text" >
+			</div>
+		</div>
+	</td>
+	<td class="col-lg-2 input-cell">
+		<div class="form-group">
+			<input type="text" class="form-control tr_amount" name="amount[]" id="amount" readonly />
+		</div>
+	</td>
+	<td class="col-lg-1 input-cell">
+		<div class="form-group">
+			<input type="text" class="form-control tr_tds" name="tds[]" id="tds" readonly/>
+		</div>         
+	</td>
+	<td class="col-lg-2 input-cell">
+		<div class="form-group">
+			<input type="text" class="form-control tr_other_deduction" name="other_deduction[]" id="other_deduction" value=0.00 />
+		</div>         
+	</td>
+	<td class="col-lg-2 input-cell">
+		<div class="form-group">
+			<input type="text" class="form-control tr_net" name="net[]" id="net" readonly />
+		</div>         
+	</td>
+	<td class="input-cell">
+		<div class="input-group-btn">
+			<button class="btn btn-sm btn-danger" type="button" onclick="remove_pb_field(${room});">
+			<span class="glyphicon-minus" aria-hidden="true">
+			</span>
+		</button>
+		</div>
+	</td>
+</tr>`;
+	objTo.appendChild(divtest);
+		calculateTotalAmount()
+		$(divtest).find("#employee").select2();
+    
+	}
+	function remove_pb_field(rid) {
+	$('.removeclass' + rid).remove();
+	calculateTotalAmount()
+	
+	}
+	$(document).ready(function() {
+    // Initialize select2 on all current "item" dropdowns
+	var relatedItemElement = $(this).closest('tr').find('.tr_employee');
+	relatedItemElement.select2({
+        placeholder: "Select an Employee",
+        allowClear: true
+    });
+});
+// $(document).on('change', '.tr_employee', function() {
+// 		var selectedEmployee = $(this).val(); // get the value of the changed .tr_employee
+// 		var relatedItemElement = $(this).closest('tr').find('.tr_basic'); // find the related .tr_basic in the same row
+// 		console.log(selectedEmployee);
+		
+// 		// Assuming you want to do an AJAX call similar to what you've shown in your initial code:
+// 		$.post(
+// 			"<?php echo $this->url('payroll', array('action' => 'getbasic')); ?>",
+// 			{
+// 				employeeID: $(this).val(),
+// 			},
+			
+// 			function(data) {
+// 				console.log(data);
+// 				relatedItemElement.val(data.basic); // updating the related .tr_basic 
+				
+				
+// 			},
+// 			'json'
+// 		);  
+// 	});
+	
+$(document).on('input', '.tr_percentage', function () {
+		calculateAmount($(this));
+		var selectedAmount = $(this).closest('tr').find('.tr_amount'); // Get the value of the changed .tr_amount
+   		 var relatedItemElement = $(this).closest('tr').find('.tr_tds'); // Find the related .tr_deduction in the same row
+    	var relatedItemElement1 = $(this).closest('tr').find('.tr_employee'); // Find the related .tr_employee
+    
+    // Perform an AJAX request to fetch the deduction (TDS) value
+    $.post(
+        "<?php echo $this->url('payroll', array('action' => 'gettds')); ?>", // Correct URL for getdeduction action
+        {
+            amount: selectedAmount.val(), // Sending the amount
+            employeeID: relatedItemElement1.val(), // Sending the employee ID value
+        },
+        function(data) {
+            console.log(data); // Log the returned data to check the response
+            
+            // Update the deduction field with the TDS value
+            relatedItemElement.val(data.tds); // Assuming .tr_deduction is an input field, use .val() to update it
+			calculateNet(relatedItemElement);
+        },
+        'json'
+    );  
+		
+		});
+		
+		function calculateAmount(element) {
+			
+		var row = element.closest('tr');  // Get the closest table row
+
+		var perInput = row.find('.tr_percentage');  // Adjusted these to use class selectors and scope within the row
+		var basicInput = row.find('.tr_basic');
+		var amountInput = row.find('.tr_amount');
+
+		var per = parseFloat(perInput.val()) || 0;
+		var basic = parseFloat(basicInput.val()) || 0;
+		var amount=(basic*per)/100;
+		//console.log(per);
+		amountInput.val(amount.toFixed(2));  // Assuming you want to show up to two decimal places
+		//calculateTotalAmount();
+		//tds();
+	}
+	$(document).on('input', '.tr_other_deduction', function () {
+		calculateNet($(this));
+		});
+		$(document).on('input', '.tr_other_deduction,.tr_net,tr_tds,tr_amount', function () {
+		calculateTotalamount($(this));
+		});
+	function calculateNet(element) {
+			
+			var row = element.closest('tr');  // Get the closest table row
+	
+			var tdsInput = row.find('.tr_tds');  // Adjusted these to use class selectors and scope within the row
+			var odedInput = row.find('.tr_other_deduction');
+			var amountInput = row.find('.tr_amount');
+			var netInput = row.find('.tr_net');
+	
+			var tds = parseFloat(tdsInput.val()) || 0;
+			var oded = parseFloat(odedInput.val()) || 0;
+			var gross = parseFloat(amountInput.val()) || 0;
+			var net=gross-(tds+oded);
+			//console.log(per);
+			netInput.val(net.toFixed(2));  // Assuming you want to show up to two decimal places
+			calculateTotalAmount();
+			//tds();
+		}
+	function calculateTotalAmount() {
+		var tot_gross = 0.0;
+		var tot_tds=0.0;
+		var tot_net=0.0;
+		var tot_ded=0.0;
+		// Iterate over each amount input field in the table
+		$('.tr_amount').each(function() {
+			var amount = parseFloat($(this).val());
+			if (!isNaN(amount)) { // Make sure it's a valid number
+				tot_gross += amount;
+			}
+		});
+	// Update the #total field with the new sum
+		$('#total_gross').val(tot_gross.toFixed(2));
+		
+		// Iterate over each amount input field in the table
+		$('.tr_tds').each(function() {
+			var amount1 = parseFloat($(this).val());
+			if (!isNaN(amount1)) { // Make sure it's a valid number
+				tot_tds += amount1;
+			}
+		});
+		$('#tot_tds').val(tot_tds.toFixed(2));
+		
+		// Iterate over each amount input field in the table
+		$('.tr_other_deduction').each(function() {
+			var amount2 = parseFloat($(this).val());
+			if (!isNaN(amount2)) { // Make sure it's a valid number
+				tot_ded += amount2;
+			}
+		});
+		$('#tot_other_deduction').val(tot_ded.toFixed(2));
+		// Iterate over each amount input field in the table
+		$('.tr_net').each(function() {
+			var amount4 = parseFloat($(this).val());
+			if (!isNaN(amount4)) { // Make sure it's a valid number
+				tot_net += amount4;
+			}
+		});
+		$('#tot_net').val(tot_net.toFixed(2));
+	}
+	$(document).on('change', '.tr_employee', function() {
+	$('.tr_employee').each(function() {
+			var rowId = $(this).closest('tr').attr('id'); // Get the current row's ID
+			var currentValue = $(this).val(); // Get the selected employee value
+
+			var currentRow = $('#employee-' + rowId).closest('tr'); // Get the current row object
+
+			// Log to check if the event is triggered and the current employee value
+			console.log("Row ID: " + rowId + ", Selected Employee ID: " + currentValue);
+
+			// Loop through all select elements with class .tr_employee except the current one
+			$('select.tr_employee').not('#employee-' + rowId).each(function() {
+				if (currentValue == $(this).val()) { // If the value matches another employee select
+					console.log("Duplicate employee found in row " + rowId); // Log if a duplicate is found
+					opening_reset(currentRow); // Call the opening_reset function for the current row
+				}
+			});
+		});
+	});
+	function opening_reset(obj) {
+    var rowId = obj.attr('id'); // Get the ID of the row
+
+    // Log to verify the row is being reset
+    console.log("Resetting row: " + rowId);
+
+    // Reset the employee dropdown (assuming it uses the Chosen plugin)
+    $('#employee-' + rowId).prop('selectedIndex', 0).trigger('chosen:updated');
+
+    // Clear all hidden inputs in the row
+    obj.find(':input:hidden').each(function() {
+        $(this).val(''); // Clear the hidden input value
+    });
+
+    // Reset form validation for all fields with data-fv-field attribute
+    obj.find(':input[data-fv-field]').each(function() {
+        // Assuming you're using formValidation, uncomment this line to reset the validation field
+        // $('form').formValidation('resetField', $(this));
+    });
+}
+$(document).ready(function()  {
+	$('#date').datepicker();
+	/*** Form Validation ***/
+// Initialize form validation
+const fv = FormValidation.formValidation(document.getElementById('#form'), {
+	fields: {
+		'date': {
+			validators: {
+				notEmpty: {
+					message: 'Please select date'
+				}
+			}
+		},
+		'employee[]': {
+			validators: {
+				notEmpty: {
+					message: 'Please select employee'
+				}
+			}
+		},
+		'percentage[]': {
+			validators: {
+				notEmpty: {
+					message: 'Please enter Percentage'
+				}
+			}
+		},
+		'location': {
+			validators: {
+				notEmpty: {
+					message: 'Please select location'
+				}
+			}
+		}, 
+		'tot_debit': {
+            validators: {
+                notEmpty: {
+                    message: 'Total debit is required'
+                },
+                identical: {
+                    compare: function() {
+                        return document.getElementById('tot_credit').value;
+                    },
+                    message: 'Total credit must be equal to total debit'
+                }
+            }
+        },
+        'tot_credit': {
+            validators: {
+                notEmpty: {
+                    message: 'Total credit is required'
+                },
+                identical: {
+                    compare: function() {
+                        return document.getElementById('tot_debit').value;
+                    },
+                    message: 'Total debit must be equal to total credit'
+                }
+            }
+        }
+	},
+	plugins: {
+		trigger: new FormValidation.plugins.Trigger(),
+		bootstrap3: new FormValidation.plugins.Bootstrap3(),
+		submitButton: new FormValidation.plugins.SubmitButton(),
+		defaultSubmit: new FormValidation.plugins.DefaultSubmit(),
+	}
+}).on('core.element.validated', function (e) {
+	if (e.valid) {
+		$('div#' + e.field.replace('[]','') + '_chosen').removeClass('is-invalid').addClass('is-valid');
+	} else {
+		$('div#' + e.field.replace('[]','') + '_chosen').removeClass('is-valid').addClass('is-invalid');
+	}
+});
+
+	
+	//$('#po_date').on('changeDate',function(){
+	//	$('form').formValidation('revalidateField', $(this).attr('id'));
+	//});
+});      
+</script>

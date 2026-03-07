@@ -1,0 +1,94 @@
+<?php $this->headTitle($this->title);?>
+<?php 
+	foreach($sam_details as $sam_detail):
+		$compare = $sam_detail;
+	endforeach;
+	if($compare > 0): ?>
+	<div class="modal-header">
+		<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+        <h4 class="modal-title red"> <i class="fa fa-question">&nbsp;&nbsp;&nbsp;&nbsp;</i>Please check out</h4>
+	</div>  <!-- /modal-header -->
+	<div class="modal-body">
+		<div class="panel panel-default">                       
+			<div class="panel-body">			
+				<table class="table">
+					<thead>
+						<tr>
+							<th>#</th>
+							<th>Item</th>
+							<th>Existing Quantity</th>
+							<th>Dump Quantity</th>
+						</tr>
+					</thead>
+					<tbody>
+						<?php
+						    $size = 1;
+							$sams = $this->samObj->get($id);
+							foreach($sams as $sam);		
+								for($i=0; $i<sizeof($sam_details); $i++):
+								$sam_detail = $this->samdetailsObj->get(array('s.id' =>$sam_details[$i]));
+								foreach($sam_detail as $sam_dtl);
+								$item_valuation = $this->itemsObj->getColumn($sam_dtl['item'],'valuation');
+								$item_name = $this->itemsObj->getColumn($sam_dtl['item'],'name');
+								if($item_valuation == 0):
+									$existing_qty = $this->batchdtlsObj->getColumn(array('batch'=>$sam_dtl['batch'],'location'=>$sam['location']),'quantity');
+								else:
+									$existing_qty = $this->movingitemsObj->getColumn(array('item'=>$sam_dtl['item'],'location'=>$sam['location']),'quantity');
+								endif;
+							   ?>
+						<tr>
+							<td><?php echo $size++;?></td>
+							<td><?php echo $item_name;?></td>
+							<td><?php echo $existing_qty;?></td>
+							<td><?php echo $sam_dtl['basic_quantity'];?></td>
+						</tr>
+						<?php endfor; ?>
+					</tbody>
+				</table>
+				<div class="row" style="padding:10px 10px 0 10px;">
+					<div class="col-lg-12">
+						<ul class="list-unstyled spaced">
+							<li>
+								<b class="green"><?php echo "You cannot adjust the stock, because the existing quantity in your location for above listed item/items is/are less than 
+								the quantity that you are going to dump,please go back and check."; ?> </b>
+							</li>
+						</ul>
+					</div>
+					<div class="row" style="padding:10px 10px 0 10px;">
+					    <div class="col-lg-6">
+							<a href="<?php echo $this->url('sam', array('action'=>'viewsam', 'id'=>$sam['id']));?>" class="btn btn-success"> <i class="fa fa-arrow-left">&nbsp;&nbsp;&nbsp;</i>Go Back</a>
+						</div>
+					</div>
+					<div class="space-12"></div>
+				</div>
+			</div>
+		</div>
+	</div> <!-- /modal-body --> 
+<?php else: 
+    $sams = $this->samObj->get($id);
+	foreach($sams as $sam);	?>
+    <div class="modal-header">
+		<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+        <h4 class="modal-title red"> <i class="fa fa-check">&nbsp;&nbsp;</i>Please check out</h4>
+	</div>  <!-- /modal-header -->
+	<div class="modal-body">
+		<div class="panel panel-default">
+			<div class="row" style="padding:10px 10px 0 10px;">
+				<div class="col-lg-12">
+					<ul class="list-unstyled spaced">
+						<li>
+							<b class="green"><?php echo "Are you sure, you want to proceed with the Stock Adjustment."; ?> </b>
+						</li>
+					</ul>
+				</div>
+			</div>
+			<div class="row" style="padding:10px 10px 0 10px;">
+				<div class="col-lg-6">
+					<a href="<?php echo $this->url('sam', array('action'=>'commitsam', 'id'=>$id));?>" class="btn btn-success"> <i class="fa fa-check-square-o">&nbsp;&nbsp;&nbsp;</i>YES </a>
+					<button type="button" class="btn btn-warning" onclick="window.location.href='<?php echo $this->url('sam', array('action'=>'viewsam','id'=>$sam['id']));?>'" ><i class="fa fa-times">&nbsp;&nbsp;&nbsp;</i>NO</button> 	
+				</div>
+			</div>
+			<div class="space-12"></div>
+		</div>
+	</div> <!-- /modal-body --> 
+<?php endif; ?>

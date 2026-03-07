@@ -1,0 +1,334 @@
+<?php
+/**
+ * View -- of Purchase/PurchaseController/addporderAction
+ */
+  $this->headTitle($this->title);
+?>
+<div class="row">
+	<div class="col-lg-12">
+		<div class="widget widget-box">
+			<div class="widget-header">
+				<h5 class="widget-title lighter smaller">
+					<i class="fa fa-asterisk"></i>&nbsp;&nbsp;New Purchase Order
+				</h5>
+			</div><!-- end of widget-header -->
+			<div class="widget-body">
+				<div class="widget-main">
+					<form id="#form" method="post" action="<?php echo $this->url('inpurorder', array('action' => 'addporder')); ?>"  enctype="multipart/form-data" >    
+						<div class="row">	
+							<div class="col-lg-3">    
+								<div class="form-group">
+									<label for="purchase_order_date" class="control-label">Purcahes Order Date</label>
+									<div class="date input-group" id="purchase_order_date" data-date="<?php echo date('Y-m-d');?>" data-date-format="yyyy-mm-dd" >
+										<input class="form-control span2" name="purchase_order_date" id="purchase_order_date" type="text" placeholder="PO Date" value="<?php echo date('Y-m-d');?>" readonly required>
+										<span class="input-group-addon add-on"><i class="fa fa-calendar"></i></span>
+									</div>
+								</div>
+							</div>
+							<div class="col-lg-3"> 
+								<div class="form-group">
+									<label for="supplier" class="control-label">Supplier</label>
+									<input type="text" class="form-control" name="supplier" id="supplier" placeholder="Enter supplier"/> 
+								</div>
+							</div>	
+							<div class="col-lg-3"> 
+								<div class="form-group">
+									<label for="group" class="control-label">Item Group</label>
+									<select id="group" name="group" class="form-control" data-placeholder="Select" required>
+										<option value=""></option>
+										<?php foreach ($this->groupObj->getAll() as $group):?>
+											   <option value="<?php echo $group['id'];?>"><?php echo $group['name']; ?></option>
+										<?php endforeach; ?>								
+									</select> 
+								</div>
+							</div>
+							<div class="col-lg-3"> 
+								<div class="form-group">
+									<label for="cost_center" class="control-label">Cost Center</label>
+									<select class="form-control" name="cost_center" id="cost_center" data-placeholder="Select" required>
+										<option value=""></option>
+										<?php foreach($this->activities as $activity): ?>
+											<option value="<?php echo $activity['id'];?>">
+										   		<?php echo $activity['activity']; ?>
+										   	</option>
+										<?php endforeach; ?>								
+									</select>
+								</div>
+							</div>							
+						</div>						
+						<div class="row">
+                            <div class="col-lg-3"> 
+								<div class="form-group">
+									<label for="activity" class="control-label">Location</label>
+									<select id="location" name="location" class="form-control" data-placeholder="Select" required>
+									  <option value=""></option>
+									  <?php foreach ($regions as $region): ?>
+										<optgroup label="<?php echo $region['region'];?>">
+											<?php  
+												 // retrive locations under the above region ID
+												$locations = $locationObj->get(array('l.region'=>$region['id']));
+												 foreach ($locations as $location):
+												 $selected = ($location['id']==$user_location)?"selected":"";
+											?>
+											 <option value="<?php echo $location['id']; ?>" <?php echo $selected;?>>
+												<?php echo $location['location']; ?>
+											 </option>
+											<?php 
+											 endforeach;
+											?>
+									  </optgroup>
+									 <?php endforeach;  ?>									
+									</select> 
+								</div>
+							</div>							
+							<div class="col-lg-3">
+								<div class="form-group">
+									<label for="delivery_location" class="control-label">Delivery Location</label>
+									<select id="delivery_location" name="delivery_location" class="form-control" data-placeholder="Select" required>
+										<option value=""></option>
+										<?php foreach ($regions as $region): ?>
+										<optgroup label="<?php echo $region['region'];?>">
+											<?php  
+												 // retrive locations under the above region ID
+												$locations = $locationObj->get(array('l.region'=>$region['id']));
+												 foreach ($locations as $location):
+											?>
+											<option value="<?php echo $location['id']; ?>">
+												<?php echo $location['location']; ?>
+											</option>
+										<?php endforeach; ?>
+										</optgroup>
+										<?php endforeach;  ?>			
+									</select>  
+								</div> 
+							</div>
+							<div class="col-lg-3">
+								<div class="form-group">
+									<label for="quotation_no" class="control-label">Quotation No.</label>
+									<input type="text" class="form-control" name="quotation_no" id="quotation_no" placeholder="Quotation No."/> 
+								</div>
+							</div> 
+							<div class="col-lg-3">
+								<div class="form-group">
+									<label for="quotation_date" class="control-label">Quotation Date</label>
+									<div class="date input-group" id="quotation_date" data-date="<?php echo date('Y-m-d');?>" data-date-format="yyyy-mm-dd" >
+										<input class="form-control span2" name="quotation_date" id="quotation_date" type="text" placeholder="Quotation Date" readonly>
+										<span class="input-group-addon add-on"><i class="fa fa-calendar"></i></span>
+									</div>
+								</div>
+							</div>
+						</div>
+						<div class="row">
+						   <div class="col-lg-12"> 
+							  <h5>Purchase Order Details</h5>
+								 <div>
+									<table id="trdetails_table" class="table small-padding">
+										<thead>
+											<tr>
+												<th>Item</th>
+												<th>UOM</th>
+												<th>Quantity</th>
+												<th>Rate (<?php echo $this->currency_code();?>)</th>
+												<th>Amount (<?php echo $this->currency_code();?>)</th>
+												<th>Remarks</th>
+												<th>&nbsp;</th>
+											</tr>
+										</thead>
+										<tbody>
+											<tr>
+												<td>
+													<div class="form-group">
+														<select id="item" name="item[]" class="form-control"  data-placeholder="Select" required>
+															<option value=""></option>								
+														</select>
+													</div>
+												</td>
+												<td>
+													<div class="form-group">
+														<select id="uom" name="uom[]" class="form-control" data-placeholder="Select" required>
+															<option value=""></option>
+														</select>
+													</div>
+												</td>
+												<td>
+													<div class="form-group">
+														<input type="text" class="form-control" name="quantity[]" id="quantity" value="0.00" required/>
+													</div>
+												</td>
+												<td>
+													<div class="form-group">
+														<input type="text" class="form-control" name="rate[]" id="rate" value="0.00" required/>
+													</div>         
+												</td>
+												<td>
+													<div class="form-group">
+														<input type="text" class="form-control" name="amount[]" id="amount" value="0.00" readonly/>
+													</div>         
+												</td>
+												<td>
+													<div class="form-group">
+														<input type="text" class="form-control" placeholder="Remarks" name="remarks[]" id="remarks"/>
+													</div>
+												</td>
+												<td></td>											
+											</tr>
+										</tbody>
+									</table>
+								</div>
+							</div>
+						</div>
+						<div class="row"> 
+							<div class="col-lg-9"></div>
+							<div class="col-lg-3">
+								<div class="form-group">
+									<label for="po_amount">Net Amount(<?php echo $this->currency_code();?>)</label>
+									<input type="text" class="form-control tr_po_amount" name="po_amount" id="po_amount" value="0.00" readonly />
+								</div>
+							</div> 
+						</div>	
+						<div class="row">
+							<div class="col-lg-12">
+								<label class="control-label" for="note">Note: </label>
+								<textarea class="form-control" name="note" id="note"></textarea>
+							</div>
+						</div>
+						<div class="space-12"></div>
+						<div class="row"> 	
+							<div class="col-lg-9"> 
+								<button type="submit" class="btn btn-success"><i class="fa fa-check"></i> Save </button>
+								<button type="button" class="btn btn-warning" onclick="javascript:history.back();" ><i class="fa fa-times"></i> Cancel </button> 					
+							</div>
+						</div>
+					</form>	
+				</div><!-- widget widget-main -->
+			</div>  <!-- widget widget-body -->   
+		</div> <!-- widget widget-box --> 
+	</div><!-- col-lg-12 -->
+</div><!-- row -->
+
+<script type="text/javascript">	 
+    $(function() {
+		$('#purchase_order_date').datepicker();
+	  	$('#quotation_date').datepicker();
+		$('#trdetails_table').inporder({
+			getItem:"<?php echo $this->url("inpurorder", array("action" => "getitem"));?>",
+			getUom:"<?php echo $this->url('inpurorder', array('action'=>'getitemuom'));?>",
+		});
+	    /*** Form Validation of PO ***/
+		const fv = FormValidation.formValidation(document.getElementById('#form'), {
+				fields: {
+					purchase_order_date: {
+					validators: {
+						notEmpty: {
+							message: 'Please select PO date'
+						}
+					}
+				},
+				supplier: {
+					validators: {
+						notEmpty: {
+							message: 'Please select supplier'
+						}
+					}
+				},
+				cost_center: {
+					validators: {
+						notEmpty: {
+							message: 'Please select cost center'
+						}
+					}
+				},
+				location: {
+					validators: {
+						notEmpty: {
+							message: 'Please select location'
+						}
+					}
+				}, 
+				delivery_location: {
+					validators: {
+						notEmpty: {
+							message: 'Please select delivery location'
+						}
+					}
+				},
+				quotation_no: {
+					validators: {
+						notEmpty: {
+							message: 'Please enter quotation no. '
+						}
+					}
+				},
+				quotation_date: {
+					validators: {
+						notEmpty: {
+							message: 'Please enter quotation date. '
+						}
+					}
+				},
+				item[]: {
+					validators: {
+						notEmpty: {
+							message: 'Please select item'
+						}
+					}
+				},
+				uom[]: {
+					validators: {
+						notEmpty: {
+							message: 'Please select uom'
+						}
+					}
+				},
+				quantity[]: {
+					validators: {
+						notEmpty: {
+							message: 'Please provide quantity'
+						}
+					}
+				},
+				rate[]: {
+					validators: {
+						notEmpty: {
+							message: 'Please provide rate'
+						}
+					}
+				},
+				amount[]:{
+					validators:{
+						notEmpty:{
+							message:'Please provide amount'
+						},
+					},
+				},
+				po_amount:{
+					validators:{
+						notEmpty:{
+							message:'Please provide Net PO Amount',
+						},
+					},
+				},
+			},
+			plugins: {
+				trigger: new FormValidation.plugins.Trigger(),
+				bootstrap3: new FormValidation.plugins.Bootstrap3(),
+				submitButton: new FormValidation.plugins.SubmitButton(),
+				defaultSubmit: new FormValidation.plugins.DefaultSubmit(),
+			},
+		}).on('core.element.validated', function (e) {
+			if (e.valid) {
+				$('div#'+ e.field.replace('[]','') +'_chosen').removeClass('is-invalid');
+				$('div#'+ e.field.replace('[]','') +'_chosen').addClass('is-valid');
+			} else {
+				$('div#'+ e.field.replace('[]','') +'_chosen').removeClass('is-valid');
+				$('div#'+ e.field.replace('[]','') +'_chosen').addClass('is-invalid');
+			}
+		});
+		$('#purchase_order_date').on('changeDate',function(){
+			$('form').formValidation('revalidateField', $(this).attr('id'));
+		});
+		$('#quotation_date').on('changeDate',function(){
+			$('form').formValidation('revalidateField', $(this).attr('id'));
+		});
+	});    
+</script>

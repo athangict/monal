@@ -1,0 +1,242 @@
+<?php 
+/**
+*
+* View Selling Price  Stock/BatchController/sellingprice
+*
+*/
+	$this->headTitle($this->title);
+?>
+<?php echo $this->partial('stock/batch/partial.phtml', array('active' => 'sp'));?> <br/>
+<div class="row">
+	<div class="col-lg-12">
+		<div class="widget widget-box transparent">
+			<div class="widget-header">
+				<div class="col-lg-12">
+					<h5 class="widget-title lighter smaller">
+						<i class="fa fa-eye"></i> View selling price of products
+					</h5>
+				</div>
+			</div>
+			<div class="widget-body">
+				<div class="widget-main padding-12">
+					<form method="post" action="<?php echo $this->url('batch', array('action' => 'sellingprice')); ?>"  enctype="multipart/form-data" >    
+						<div class="row">
+							<div class="form-group col-lg-3">
+								<label for="item" class="control-label">Stock Items</label>
+								<select id="item" name="item" class="form-control" data-placeholder="Select" required>
+									<option value=""></option>
+									<?php foreach($this->batchObj->getDis() as $items):
+									$selected = ($data['item'] == $items['item_id'])?"selected":"";?>
+										<option value="<?php echo $items['item_id'];?>" <?php echo $selected;?>>
+											<?php echo $items['name'];?>
+										</option>
+									<?php endforeach;?>
+								</select> 
+							</div>
+							
+							<div class="form-group col-lg-3">
+								<label class="control-label" for="start_date">Start Date</label>
+								<div class="date input-group" id="start_date" data-date="<?php echo date('Y-m-d');?>" data-date-format="yyyy-mm-dd" >
+									<input class="form-control span2" name="start_date" id="start_date" type="text" placeholder="Start Date" value="<?php echo $data['start_date'];?>" readonly required>
+									<span class="input-group-addon add-on"><i class="fa fa-calendar"></i></span>
+								</div>
+							</div>
+							<div class="form-group col-lg-3">
+								<label class="control-label" for="end_date">End Date</label>
+								<div class="date input-group" id="end_date" data-date="<?php echo date('Y-m-d');?>" data-date-format="yyyy-mm-dd" >
+									<input class="form-control span2" name="end_date" id="end_date" type="text" placeholder="End Date" value="<?php echo $data['end_date'];?>" readonly required>
+									<span class="input-group-addon add-on"><i class="fa fa-calendar"></i></span>
+								</div>
+							</div>
+						
+							<div class="col-lg-3">
+								<div class="space-12"></div>
+								<button type="submit" class="btn btn-sm btn-primary"><i class="fa fa-refresh"></i> Refresh </button>
+							</div>
+						</div>
+					</form>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+<div class="hr hr-dotted"></div>
+<div id="report-print">
+	<div class="row">
+		<div class="col-lg-12">
+			<div class="clearfix">
+				<div class="pull-right">
+					<a href="#" id="print">
+						<i class="ace-icon fa fa-file-pdf-o fa-lg red"></i>
+					</a>
+				</div>
+			</div>
+			<div class="space-12"></div>
+			<div>
+					<?php 
+						$item_valuation = $this->itemObj->getColumn($data['item'],'valuation');
+						if($item_valuation == 1){
+							$mibatchs = $this->movingitemspObj->getByItemDate($data['item'],$data['start_date'], $data['end_date']);
+							if(sizeof($mibatchs)==0){
+								$mibatchs = $this->movingitemspObj->getBatchByDate(array('m.item' => $data['item']),$data['start_date']);
+							}
+							$batchs = array();
+							foreach($mibatchs as $mibat):
+								$arry = $this->batchObj->getMIbatch(array('id' => $mibat['batch'],'item' => $mibat['item']));
+								foreach($arry as $arry):
+									array_push($batchs, $arry);
+								endforeach;
+							endforeach;
+							
+						}else{
+							$batchs = $this->batchObj->getByItemDate($data['item'],$data['start_date'], $data['end_date']);
+							if(sizeof($batchs)==0){
+								$batchs = $this->batchObj->getBatchByDate(array('m.item' => $data['item']),$data['start_date']);
+							}
+						}
+						foreach($batchs as $bat):
+							$bat_id = $bat['id'];
+							$itemID = $bat['item'];
+						endforeach;
+						if($bat_id > 0):
+					?>
+						<table class="table table-bordered table-hover">
+							<thead>
+								<tr>
+									<th rowspan="2">#</th>
+									<th rowspan="2">Location</th>
+									<th rowspan="2">Stock Balance</th>
+									<?php $uomCOUNT = 0;
+									$itemUOMs = $this->itemuomObj->get(array('item'=>$itemID));
+									foreach($itemUOMs as $itemUOM):
+										$uomCOUNT ++;
+									endforeach;
+									
+									$count = $uomCOUNT + 1;
+									foreach($batchs as $batch):?>
+										<th colspan="<?php echo $count;?>" style="text-align:center">
+											<?php if($item_valuation == '0'):?> <!--FIFO get From Batch -->
+												Batch: <?php echo $batch['batch'];
+												echo "<i>"." ".$batch['batch_date']."</i>";
+											else:
+												$spdate = $this->movingitemspObj->getColumn(array('item' => $batch['item'],'batch' => $batch['id']),'sp_effect_date');
+												echo "<i>".$spdate."</i>";
+											endif;?>
+										</th>
+									<?php endforeach;?>
+								</tr>
+								<tr>
+								<?php foreach($batchs as $batch):
+									$itemUOMs = $this->itemuomObj->get(array('item'=>$itemID));?>
+								<?php $z = 0; //$z just for displaying basic uom once
+								 foreach($itemUOMs as $itemUOM):
+									if($z < 1):?>
+									<th><?php 
+										$basicUom = $this->itemObj->getColumn($itemID, 'uom');
+										echo $this->uomObj->getColumn($basicUom, 'code');?>
+									</th>
+									<?php $z++; 
+									endif;?>
+									<th><?php echo $itemUOM['uom_code'];?></th>
+								<?php endforeach; 
+								endforeach;?>
+								</tr>
+							</thead>
+							<tbody>
+							<?php $i = 1;
+								foreach($this->batchdtlObj->get(array('batch' => $batch['id'])) as $batchdtl):
+							?>
+								<tr>
+							        <td><?php echo $i++;?></td>
+							        <td><?php echo $this->locationObj->getColumn($batchdtl['location'], 'location'); ?></td>
+							        <?php $sumQTY = 0;
+										foreach($batchs as $batch):
+											if($item_valuation == 1):
+												$quantity = $this->movingitemObj->getColumn(array('batch'=>$batch['id'], 'location'=>$batchdtl['location']),'quantity');
+												$sumQTY += $quantity;
+											else:
+												$quantity = $this->batchdtlObj->getColumn(array('batch'=>$batch['id'], 'location'=>$batchdtl['location']),'quantity');
+												$sumQTY += $quantity;
+											endif;											
+										endforeach;?>
+									<td><?php echo $sumQTY;?></td>
+							        <?php 
+							        foreach($batchs as $batch):
+										$sell_price = $this->batchdtlObj->getColumn(array('batch'=>$batch['id'], 'location'=>$batchdtl['location']),'selling_price');
+										$itemUOMs = $this->itemuomObj->get(array('item'=>$itemID));?>
+										<?php $j = 0; $y = 0; //$j for checking conversion and $y for displaying selling price of basic uom once
+										foreach($itemUOMs as $itemUOM):
+										    if($y < 1):?>
+												<td><?php echo $sell_price;?></td>
+											<?php $y++; 
+										    endif;?>
+											<td><?php $price = $sell_price * $itemUOM['conversion'];
+												echo sprintf('%0.3f', $price);?>
+											</td>												
+										<?php
+										endforeach; 
+									endforeach;?>
+						    	</tr>
+						    <?php endforeach;?>
+							</tbody>	
+						</table>	
+						<?php else:?>
+						<div class="alert alert-warning fade in">  
+							<strong><i>No Data Found with item <?php echo $this->itemObj->getColumn($data['item'],'code');?> from 
+							<?php echo $data['start_date']." to ".$data['end_date'];?></i></strong> 
+						 </div>
+						<?php endif;?>
+			</div>
+		</div>
+	</div>
+</div>
+<script type="text/javascript">
+	$('#start_date').datepicker();
+	$('#end_date').datepicker();
+	$('#start_date').on('changeDate',function(){
+		$('form').formValidation('revalidateField', $(this).attr('id'));
+	});
+	$('#end_date').on('changeDate',function(){
+		$('form').formValidation('revalidateField', $(this).attr('id'));
+	});
+	$(function() {
+		$('#print').genpdfinvoice({
+			content: '#report-print',
+			src:"<?php echo $this->url('pdfxls', array('action' => 'pdf'));?>",
+			orentation:"L",//L =landscape, P = potrait
+		});
+	/*** Form Validation ***/
+	$('form').formValidation({
+			framework: 'bootstrap',
+			excluded: ':disabled',
+			message: 'This value is not valid',
+			fields: {
+				'item': {
+					validators: {
+						notEmpty: {
+							message: 'Please select item'
+						}
+					}
+				},
+				'start_date': {
+					validators: {
+						notEmpty: {
+							message: 'Please select start date'
+						}
+					}
+				},
+				'end_date': {
+					validators: {
+						notEmpty: {
+							message: 'Please select end date'
+						}
+					}
+				},
+			}
+		}).on('success.field.fv', function(e, data) {
+			if (data.fv.getInvalidFields().length > 0) {    // There is invalid field
+				data.fv.disableSubmitButtons(true);
+			}
+		});
+	});
+</script>

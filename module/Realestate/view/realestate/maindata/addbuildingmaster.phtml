@@ -1,0 +1,164 @@
+<?php
+/**
+ * 
+ * View -- of Accounts/AssetController/addassetAction
+ * 
+ */
+	$this->headTitle($this->title);
+?>
+<div class="space-12"></div>
+<div class="row">
+	<div class="col-lg-12">
+		<div class="widget widget-box">
+			<div class="widget-header">
+				<h5 class="widget-title lighter smaller">
+					<i class="fa fa-asterisk"></i> Add Building
+				</h5>
+			</div>
+			<div class="widget-body">
+				<div class="widget-main">
+					<form id="#form" method="post" action="<?php echo $this->url('rsdata', array('action' => 'addbuildingmaster')); ?>" enctype="multipart/form-data" >
+						<div class="row">
+						    <div class="form-group col-lg-3">
+								<label for="buildingid" class="control-label"> Building ID</label>
+								<input type="text" class="form-control" name="buildingid" id="buildingid" required>
+							</div>
+							<div class="form-group col-lg-3">
+								<label for="code" class="control-label"> Building Code</label>
+								<input type="text" class="form-control" name="code" id="code" required>
+							</div> 
+							<div class="form-group col-lg-3">
+								<label for="name" class="control-label">Building Name</label>
+								<input type="text" class="form-control" name="name" id="name" required>
+							</div>
+							<div class="form-group col-lg-3">
+								<label for="asset_type">Building Type</label>
+								<select id="asset_type" name="type" class="form-control" data-placeholder="Select" wrap="off"  >
+									<option value=""></option>
+									<?php 
+										foreach ($assettypes as $asttype):
+									?>
+										<option value="<?php echo $asttype['id'];?>"><?php echo $asttype['name'];?></option>
+									<?php 
+										endforeach;
+									?>
+								</select>
+							</div>
+						</div>
+						<div class="row"> 
+					    	<div class="form-group col-lg-3">
+								<label for="region" class="control-label">Region</label>
+								<select class="form-control" id="region" name="region" data-placeholder="Select" required >
+									<option value=""></option>
+									<?php 
+									foreach ($region as $regionrow):
+									?>
+										<option value="<?php echo $regionrow['id'];?>">
+											<?php echo $regionrow['region'];?>
+										</option>
+									<?php
+									endforeach;
+									?>
+								</select>
+							</div>     
+							<div class="form-group col-lg-3">
+								<label for="location" class="control-label">Location</label>
+								<select class="form-control chosen-widget" id="location" name="location" data-placeholder="Select" required >
+									<option value=""></option>
+								</select>
+							</div>
+                            <div class="form-group col-lg-3">
+								<label for="building_value" class="control-label">Purchase Value</label>
+								<input type="text" class="form-control" name="building_value" id="building_value" required>
+							</div>		
+						    <div class="form-group col-lg-3">
+								<label for="custodian">Custodian</label>
+								<select id="custodian" name="custodian" class="form-control" data-placeholder="Select" wrap="off"  >
+									<option value=""></option>
+									<?php 
+										foreach ($employees as $emp):
+									?>
+										<option value="<?php echo $emp['id'];?>"><?php echo $emp['full_name'].'-'.($emp['emp_id'])?></option>
+									<?php 
+										endforeach;
+									?>
+								</select>
+							</div>
+							<div class="form-group col-lg-3">
+								<label for="purchase_date" class="control-label">Purchase Date</label>
+								<div class="date input-group" id="purchase_date" data-date="<?php echo date('Y-m-d');?>" data-date-format="yyyy-mm-dd" data-date-viewmode="years">
+									<input class="form-control span2" name="purchase_date" id="purchase_date" type="text" placeholder="Purchase Date" required>
+									<span class="input-group-addon add-on"><i class="fa fa-calendar"></i></span>
+								</div>
+							</div>  
+							<div class="form-group col-lg-3">
+								<label for="putin_date" class="control-label">PutInUse Date</label>
+								<div class="date input-group" id="putin_date" data-date="<?php echo date('Y-m-d');?>" data-date-format="yyyy-mm-dd" data-date-viewmode="years">
+									<input class="form-control span2" name="putin_date" id="putin_date" type="text" placeholder="putin_date" required>
+									<span class="input-group-addon add-on"><i class="fa fa-calendar"></i></span>
+								</div>
+							</div>  			
+						</div>    
+						<div class="row">
+							<div class="col-lg-12">
+								<button type="submit" class="btn btn-success"><i class="fa fa-check"></i> Save </button>
+								<button type="button" class="btn btn-warning" onclick="javascript:history.back();"><i class="fa fa-times"></i> Cancel </button>
+							</div>
+						</div> 
+					</form>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+<script>
+$('document').ready(function(){
+	$('#region').on('change',function(){
+		//alert($('#region').val());
+		$.post(
+			'<?php echo $this->url('assets', array('action' => 'getlocation')); ?>',
+			{
+				region: $(this).val(),
+			},
+			function(data){
+				//console.log(data);	
+				$('#location').html(data.location);	
+				$("#location").trigger("chosen:updated");			
+			},
+			'json'
+		);
+	});
+	
+	$("#purchase_date").datepicker();	
+	$("#putin_date").datepicker();	
+    const fv = FormValidation.formValidation(document.getElementById('#form'), {
+		fields: {
+			code: {
+				validators: {
+					notEmpty: {
+						message: 'Please select Code.'
+					}
+				}
+			},
+		},
+		plugins: {
+			trigger: new FormValidation.plugins.Trigger(),
+			bootstrap3: new FormValidation.plugins.Bootstrap3(),
+			submitButton: new FormValidation.plugins.SubmitButton(),
+			defaultSubmit: new FormValidation.plugins.DefaultSubmit(),
+		},
+	}).on('core.element.validated', function (e) {
+		if (e.valid) {
+			$('div#'+ e.field.replace('[]','') +'_chosen').removeClass('is-invalid');
+			$('div#'+ e.field.replace('[]','') +'_chosen').addClass('is-valid');
+		} else {
+			$('div#'+ e.field.replace('[]','') +'_chosen').removeClass('is-valid');
+			$('div#'+ e.field.replace('[]','') +'_chosen').addClass('is-invalid');
+		}
+	});
+	$('form select').chosen().change(function () {
+		fv.revalidateField($(this).attr('name'));
+	});
+});
+</script>
+	

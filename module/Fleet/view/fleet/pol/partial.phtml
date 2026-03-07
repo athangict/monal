@@ -1,0 +1,43 @@
+<?php 
+/** 
+ * stock/stock/partial.phtml 
+**/
+	$stock = ($this->active == "stock")?"active":"";
+	$itemclass = ($this->active == "itemclass")?"active":"";
+	$itemgroup = ($this->active == "itemgroup")?"active":"";
+	$itemsubgroup = ($this->active == "itemsubgroup")?"active":"";
+	$items = ($this->active == "index")?"active":"";
+?>
+<br/>
+<ul class="nav nav-tabs padding-18 nav-fixed-top" id="myTab">
+	<li class="<?php echo $stock; ?>">
+		<a href="<?php echo $this->url('stock', array('action' => 'stock')); ?>" title="View Stock">
+			<i class="orange ace-icon fa fa-sitemap bigger-120"></i>
+			<span class="hidden-xs">Veiw Stock Details</span>
+		</a>
+	</li>
+	<li class="<?php echo $itemclass; ?>">
+		<a href="<?php echo $this->url('stock', array('action' => 'itemclass')); ?>" title="Item Class">
+			<i class="grey ace-icon fa fa-suitcase bigger-120"></i>
+			<span class="hidden-xs">Item Class</span>
+		</a>
+	</li>
+	<li class="<?php echo $itemgroup; ?>">
+		<a href="<?php echo $this->url('stock', array('action' => 'itemgroup')); ?>" title="Item Group">
+			<i class="ace-icon fa fa-cubes bigger-120" style="color:#fee188"></i>
+			<span class="hidden-xs">Item Group</span>
+		</a>
+	</li>
+	<li class="<?php echo $itemsubgroup; ?>">
+		<a href="<?php echo $this->url('stock', array('action' => 'itemsubgroup')); ?>" title="Item Sub-Group">
+			<i class="ace-icon fa fa-cube bigger-120" style="color:#9585bf"></i>
+			<span class="hidden-xs">Item Sub-Group</span>
+		</a>
+	</li>
+	<li class="<?php echo $items; ?>">
+		<a href="<?php echo $this->url('stock', array('action' => 'index')); ?>" title="Stock Item">
+			<i class="ace-icon fa fa-shopping-cart bigger-120" style="color:#7C9EB2"></i>
+			<span class="hidden-xs">Stock Items</span>
+		</a>
+	</li>
+</ul>

@@ -1,0 +1,30 @@
+<?php
+/**
+ * 
+ * View -- of Hr/MasterController/editpayslabAction
+ * 
+ */
+?>   
+<?php foreach($goodreqs as $row);?>              
+<form id="#form" method="post" action="<?php echo $this->url('goodsrequest', array('action' => 'deletegoodrequest')); ?>"  enctype="multipart/form-data" >                 
+    <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+        <h4 class="modal-title"><i class="fa fa-pencil"></i> Delete</h4>
+    </div><!-- /modal-header -->
+    <div class="modal-body">
+		<div class="panel panel-default">
+			<div class="panel-body">
+				<div class="form-group">
+					<label  class="control-label">Are you sure, you want to deletez Good request details and Dispatch Details?</label>
+					<input type="hidden" name="id" value="<?php echo $row['id'];?>">
+				</div>
+				</div>
+        </div>
+    </div>
+                    
+    <div class="modal-footer">
+        <button type="submit" class="btn btn-success"><i class="fa fa-check"></i> Delete </button>
+        <button type="reset" class="btn btn-warning" data-dismiss="modal"><i class="fa fa-times"></i> Cancel </button>
+    </div><!-- /modal-footer -->
+</form>
+

@@ -1,0 +1,320 @@
+<?php
+/**
+ * View -- of Purchase/PurchaseController/addporderAction
+ */
+  $this->headTitle($this->title);
+?>
+<div class="row">
+	<div class="col-lg-12">
+		<div class="widget widget-box">
+			<div class="widget-header">
+				<h5 class="widget-title lighter smaller">
+					<i class="fa fa-asterisk"></i>&nbsp;&nbsp;Apply for Travel Authorization
+				</h5>
+			</div><!-- end of widget-header -->
+			<div class="widget-body">
+				<div class="widget-main">
+					<form id="#form" method="post" action="<?php echo $this->url('travel', array('action' => 'addtravel')); ?>"  enctype="multipart/form-data" >    
+						<div class="row">	
+							<div class="col-lg-3">    
+								<div class="form-group">
+									<label for="ta_date" class="control-label">Date</label>
+									<div class="date input-group" id="ta_date" data-date="<?php echo date('Y-m-d');?>" data-date-format="yyyy-mm-dd" >
+										<input class="form-control span2" name="ta_date" id="ta_date" type="text" placeholder="PO Date" value="<?php echo date('Y-m-d');?>" readonly required>
+										<span class="input-group-addon add-on"><i class="fa fa-calendar"></i></span>
+									</div>
+								</div>
+							</div>
+							<div class="col-lg-3"> 
+								<div class="form-group">
+									<label for="supplier" class="control-label">Travel Authorization From</label>
+									<select id="employee" name="employee" class="form-control" data-placeholder="Select" required>
+										<option value="<?php echo $employee;?>"><?php echo $this->employeeObj->getColumn($employee,'full_name')?></option>									
+									</select> 
+								</div>
+							</div>
+							<div class="col-lg-3">
+								<div class="form-group">
+									<label for="type" class="control-label">Type of Travel</label>
+									<select id="type" name="type" class="form-control" data-placeholder="Select" required>
+										<option value="">Select</option>
+										<option value="1"> In Country</option>
+                                        <option value="2"> Ex Country</option>
+										
+									</select>  
+								</div> 
+							</div>
+							<div class="col-lg-3">
+								<div class="form-group">
+									<label for="ta_purpose" class="control-label">Purpose of Travel</label>
+									<select id="ta_purpose" name="ta_purpose" class="form-control" data-placeholder="Select" required>
+                                        <option value="">Select</option>
+                                        <?php foreach($purpose as $purpose):?>
+											<option value="<?php echo $purpose['id'];?>"><?php echo $purpose['purpose'];?>
+                                        <?php endforeach;?>
+                                    </select>
+								</div>
+							</div> 
+                            <div class="col-lg-3">    
+								<div class="form-group">
+									<label for="estimated_expense" class="control-label">Estimated Traveling Expense</label>
+										<input class="form-control" name="estimated_expense" id="estimated_expense" type="number" required>
+								</div>
+							</div>
+                            <div class="col-lg-3">    
+								<div class="form-group">
+									<label for="advance" class="control-label">Advance Requested</label>
+										<input class="form-control" name="advance" id="advance" type="number" value="0.00" required>
+								</div>
+							</div>
+                        </div>
+						<div class="row">
+							<div class="col-lg-12"> 
+								<h4>Travel Details</h4>
+								<div>
+								<table id="ta_field" class="table small-padding">
+								<tbody>
+									<tr>
+										<td class="col-lg-2 input-cell">
+											<div class="form-group">
+											<label for="from_station" class="control-label"><b>From Station </b></label>
+												<input class="form-control tr_from_station" name="from_station[]" id="from_station" placeholder="Enter From Station">
+											</div>
+										</td>
+										<td class="col-lg-2 input-cell">
+											<div class="form-group" >
+												<label for="item" class="control-label"><b> From Date</b></label>
+												<div class="date input-group" id="from_date" data-date="<?php echo date('Y-m-d');?>" data-date-format="yyyy-mm-dd" >
+														<input class="form-control span2 tr_from_date" name="from_date[]" id="from_date" type="text" placeholder="From Date"  >
+														
+													</div>
+											</div>
+										</td>
+										<td class="col-lg-1 input-cell">
+											<div class="form-group">
+											<label for="travel_mode" class="control-label"><b> Mode of Travel</b></label>
+												<select class="form-control tr_travel_mode" name="travel_mode[]" id="travel_mode" data-placeholder="Select" >
+													<option value="">Select</option>
+													<option value="1">Land</option>
+													<option value="2">Air</option>
+											</div>
+										</td>
+											<td class="col-lg-2 input-cell">
+												<div class="form-group">
+												<label for="to_station" class="control-label"><b>To Station</b></label>
+													<input type="text" id="to_station" name="to_station[]" class="form-control tr_to_station" placeholder="Enter TO Station">
+												</div>
+										</td>
+										<td class="col-lg-2 input-cell">
+											<div class="form-group">
+												<label for="to_date" class="control-label"><b>To Date</b></label>
+												<div class="date input-group" id="to_date" data-date="<?php echo date('Y-m-d');?>" data-date-format="yyyy-mm-dd" >
+													<input class="form-control span2 tr_to_date" name="to_date[]" id="to_date" type="text" placeholder="PO Date" required>
+												
+												</div>
+											</div>
+										</td>
+										<td class="col-lg-2 input-cell">
+											<div class="form-group">
+												<label for="halt" class="control-label"><b>Halt</b></label>
+												<input type="text" class="form-control tr_halt" name="halt[]" id="halt"  required/>
+											</div>
+										</td>
+										<td class="col-lg-2 input-cell">
+											<div class="form-group">
+												<label for="purpose" class="control-label"><b>Purpose</b></label>
+												<input type="text" class="form-control tr_purpose" name="purpose[]" id="purpose"  required/>
+											</div>         
+										</td>
+										<td>
+										    <br>
+											<button class="btn btn-sm btn-success" type="button"  onclick="ta_field();"> <span class="fa fa-plus-square" aria-hidden="true"></span> </button>
+										</td>
+									</tr> 
+								</tbody>
+								<table>
+									<div class="clear"></div>
+								</div>
+							</div>
+						</div>
+						<div class="row"> 
+                            <div class="col-lg-3">
+								<div class="form-group">
+									<label for="debit">Debit</label>
+									<select class="form-control" name="debit" id="debit" >
+                                        <option value="0">Select</option>
+											<?php foreach($debit as $debits):?>
+											<option value="<?php echo $debits['id'];?>"><?php echo $debits['name'];?>
+											</option>
+										<?php endforeach;?>
+                                    </select>
+								</div>
+							</div> 
+							<div class="col-lg-3">
+							<div class="form-group">
+									<label for="debit_ref">Reference</label>
+									<input type="text" class="form-control" name="debit_ref" id="debit_ref" >
+								</div>
+							</div>
+						</div>	
+						<div class="row"> 
+							<div class="col-lg-3">
+								<div class="form-group">
+									<label for="credit">Credit</label>
+									<select type="text" class="form-control" name="credit" id="credit" >
+                                        <option value="0">Select</option>
+										<?php foreach($credit as $credits):?>
+											<option value="<?php echo $credits['id'];?>"><?php echo $credits['name'];?>
+											</option>
+										<?php endforeach;?>
+                                        </select>
+								</div>
+							</div>
+							<div class="col-lg-3">
+								<div class="form-group">
+									<label for="credit_ref">Reference</label>
+									<input type="text" class="form-control" name="credit_ref" id="credit_ref" >
+								</div>
+							</div> 
+						</div>
+						<div class="space-12"></div>
+						<div class="row"> 	
+							<div class="col-lg-9"> 
+								<button type="submit" class="btn btn-success"><i class="fa fa-check"></i> Save </button>
+								<button type="button" class="btn btn-warning" onclick="javascript:history.back();" ><i class="fa fa-times"></i> Cancel </button> 					
+							</div>
+						</div>
+					</form>	
+				</div><!-- widget widget-main -->
+			</div>  <!-- widget widget-body -->   
+		</div> <!-- widget widget-box --> 
+	</div><!-- col-lg-12 -->
+</div><!-- row -->
+
+<script type="text/javascript">	 
+var room = 1;
+	function ta_field() {
+    room++;
+    var objTo = document.getElementById('ta_field');
+    var divtest = document.createElement('tr');
+    divtest.setAttribute('class', 'form-group removeclass' + room);
+    
+    divtest.innerHTML = 
+    '<tr><td class="col-lg-2 input-cell"><div class="form-group"><input class="form-control tr_from_station" name="from_station[]" id="from_station" placeholder="Enter From Station"></div></td><td class="col-lg-1 input-cell"><div class="form-group"><div class="date input-group" id="from_date" data-date="<?php echo date('Y-m-d');?>" data-date-format="yyyy-mm-dd" ><input class="form-control span2 tr_from_date" name="from_date[]" id="from_date" type="text" placeholder="from Date" required></div></div></td><td class="col-lg-1 input-cell"><div class="form-group"><select class="form-control tr_travel_mode" name="travel_mode[]" id="travel_mode" data-placeholder="Select" ><option value="">Select</option><option value="1">Land</option><option value="2">Air</option></div></td><td class="col-lg-2 input-cell"><div class="form-group"><input type="text" id="to_station" name="to_station[]" class="form-control tr_to_station" placeholder="Enter TO Station"></div></td><td class="col-lg-1 input-cell"><div class="form-group"><div class="date input-group" id="to_date" data-date="<?php echo date('Y-m-d');?>" data-date-format="yyyy-mm-dd" ><input class="form-control span2 tr_to_date" name="to_date[]" id="to_date" type="text" placeholder="To Date"  required></div></div></td><td class="col-lg-2 input-cell"><div class="form-group"><input type="text" class="form-control tr_halt" name="halt[]" id="halt"  required/></div></td><td class="col-lg-2 input-cell"><div class="form-group"><input type="text" class="form-control tr_purpose" name="purpose[]" id="purpose"  required/></div> </td><td class="col-lg-1 input-cell"><div class="input-group-btn"><button class="btn btn-sm btn-danger" type="button" onclick="remove_ta_field(' + room + ');"><span class="glyphicon-minus" aria-hidden="true"></span></button></div></td></tr>';
+	objTo.appendChild(divtest);
+    $('.tr_to_date').datepicker();
+    $('.tr_from_date').datepicker();
+    
+	}
+	function remove_ta_field(rid) {
+	$('.removeclass' + rid).remove();
+	$('.tr_to_date').datepicker();
+    $('.tr_from_date').datepicker();
+	
+	}
+
+$(document).ready(function()  {
+	$('#ta_date').datepicker();
+	$('.tr_to_date').datepicker();
+    $('.tr_from_date').datepicker();
+	/*** Form Validation of PO ***/
+	const fv = FormValidation.formValidation(document.getElementById('#form'), {
+		fields: {
+			'ta_date': {
+				validators: {
+					notEmpty: {
+						message: 'Please select TA date'
+					}
+				}
+			},
+			'type': {
+				validators: {
+					notEmpty: {
+						message: 'Please select type of travel'
+					}
+				}
+			},
+			'ta_purpose': {
+				validators: {
+					notEmpty: {
+						message: 'Please select ta purpose'
+					}
+				}
+			},
+			'estimated_expense': {
+				validators: {
+					notEmpty: {
+						message: 'Please select estimated expense'
+					}
+				}
+			}, 
+			'to_station[]': {
+				validators: {
+					notEmpty: {
+						message: 'Please provide To Station'
+					}
+				}
+			},
+			'to_date[]': {
+				validators: {
+					notEmpty: {
+						message: 'Please provide To Date'
+					}
+				}
+			},
+			'from_station[]': {
+				validators: {
+					notEmpty: {
+						message: 'Please provide from Station'
+					}
+				}
+			},
+			'from_date[]': {
+				validators: {
+					notEmpty: {
+						message: 'Please provide from Date'
+					}
+				}
+			},
+			'advance': {
+				validators: {
+					notEmpty: {
+						message: 'Advance Request Cannot be empty'
+					}
+				}
+			},
+			'travel_mode[]': {
+				validators: {
+					notEmpty: {
+						message: 'Please Select Mode of Travel'
+					}
+				}
+			},
+			// 'po_amount':{
+			// 	validators:{
+			// 		notEmpty:{
+			// 			message:'Please provide Net PO Amount',
+			// 		},
+			// 	},
+			// },
+		},
+		plugins: {
+			trigger: new FormValidation.plugins.Trigger(),
+			bootstrap3: new FormValidation.plugins.Bootstrap3(),
+			submitButton: new FormValidation.plugins.SubmitButton(),
+			defaultSubmit: new FormValidation.plugins.DefaultSubmit(),
+		},
+	}).on('core.element.validated', function (e) {
+		if (e.valid) {
+			$('div#'+ e.field.replace('[]','') +'_chosen').removeClass('is-invalid');
+			$('div#'+ e.field.replace('[]','') +'_chosen').addClass('is-valid');
+		} else {
+			$('div#'+ e.field.replace('[]','') +'_chosen').removeClass('is-valid');
+			$('div#'+ e.field.replace('[]','') +'_chosen').addClass('is-invalid');
+		}
+	});
+	//$('#po_date').on('changeDate',function(){
+	//	$('form').formValidation('revalidateField', $(this).attr('id'));
+	//});
+});      
+</script>

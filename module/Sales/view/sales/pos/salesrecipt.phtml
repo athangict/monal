@@ -1,0 +1,115 @@
+<?php
+/**
+ * 
+ * View -- of Hr/SalesController/salesreceiptAction
+ * 
+ */
+	$this->headTitle($this->title);
+?>
+<div id="print_receipt" style="padding:3px;overflow:hidden;"> 
+    <div class="print_receipt">
+        <?php echo $this->headLink(array('rel' => 'shortcut icon', 'type' => 'image/vnd.microsoft.icon', 'href' => $this->basePath() . '/img/favicon.png'))
+		->prependStylesheet($this->basePath() . '/receipt.css','print,screen');
+		?> 
+        <?php foreach($sales as $sale): extract($sale); endforeach;?>
+	    <p class="title">FOOD CORPORATION OF BHUTAN LTD<br><?php echo $this->locationObj->getColumn($location,'location');?></p>
+        <hr>
+        Cash Memo No : <?php echo $sales_no;?> </br> Customer : <?php if($credit == 0){echo "NA";}else{echo $this->customerObj->getColumn($sale['customer'],'code'); }?>
+        <hr>
+        <table id="salesTable">
+            <thead>
+	            <tr>
+				    <th>#</th>
+                    <th>Item</th>
+                    <th>UOM</th>
+    	            <th>Rate</th>
+    	            <th>Qty</th>
+    	            <th>Disc</th>
+    	            <th>Amt</th>
+			    </tr>
+		    </thead>
+			<tbody>
+			<?php $sum_amt=0; $i= 1;foreach($sales_details as $sales_detail):?>
+                <tr>
+		            <td><?php echo $i++;?>
+		            <td><?php echo $this->itemObj->getColumn($sales_detail['item'],'code');?></td>
+		            <td><?php echo $this->uomObj->getColumn($sales_detail['uom'],'code');?></td>
+		            <td><?php echo $sales_detail['rate']?></td>
+    		        <td><?php echo $sales_detail['quantity']?></td>
+    		        <td><?php echo ($sales_detail['free_item'] == 0)?$sales_detail['discount_qty']:"0.00";?></td>
+    		        <td><?php $amt = $sales_detail['rate'] * $sales_detail['quantity'];
+					echo $total_amt = $amt - $sales_detail['discount_qty'];?></td>
+		        </tr>
+		        <?php $sum_amt += $total_amt;?>
+		    <?php endforeach;?>
+    		</tbody>
+	    </table>
+	</div>
+	<hr>
+	<div class="net_payment row">
+	    <div class="col-lg-6"></div>
+	    <div class="col-lg-6">
+	        Net Payment : <?php echo $sum_amt;?>
+	    </div>
+	</div>
+	<hr>
+	<?php $freeitemArray = array();
+		foreach ($sales_details as $saledetail):
+			if($saledetail['free_item'] > 0 ){
+				array_push($freeitemArray,$saledetail['free_item']); 
+			}
+		endforeach;
+		if(sizeof($freeitemArray) > 0){?>
+	<div class="print_receipt">
+		Free Items :
+		<table id="salesTable">	
+			<thead>
+				<th>#</th>
+				<th>Free Item</th>
+				<th>UOM</th>
+				<th>Qty</th>
+				<th>On Purchase</th>
+			</thead>
+			<tbody>
+				<?php $i = 1; 
+				foreach ($sales_details as $saledetail):
+					if($saledetail['free_item'] > 0 ):?>
+				<tr>
+					<td><?php echo $i++;?></td>
+					<td><?php echo $this->itemObj->getColumn($saledetail['free_item'], 'code');?></td>
+					<td><?php echo $this->uomObj->getColumn($saledetail['free_item_uom'], 'code');?></td>
+					<td><?php echo $saledetail['discount_qty'];?></td>
+					<td><?php echo substr($this->itemObj->getColumn($saledetail['item'], 'code'), 0, 20);?></td>
+				</tr>
+				<?php 
+					endif; 
+				endforeach;?>
+			</tbody>
+		</table>
+	</div>
+	<?php  } ?>
+	<hr>
+	<div class="date_note row">
+		<div class="col-lg-12">
+		   Date of Sale : <?php echo $sales_date;?><br>
+		   Note : 'Goods once sold are not returnable'<br>
+		   Thank You! Please Vist Again
+		</div>
+	</div>
+</div>
+<div class="space-6"></div>
+<div class="center">
+	<a class="btn btn-xs btn-success" onclick="print();"> print </a>
+	<a class="btn btn-xs btn-warning" data-dismiss="modal" aria-hidden="true"> cancel </a>
+</div>
+<div class="space-6"></div>
+<script>
+function print(){
+	var w = window.open('', '', 'width=400,height=600,resizeable,scrollbars');
+	w.document.write($("#print_receipt").html());
+	w.document.close(); // needed for chrome and safari
+	javascript:w.print();
+	w.close();
+	return false;	
+}
+</script>

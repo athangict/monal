@@ -1,0 +1,70 @@
+<?php
+/**
+ * 
+ * View -- of Humanresource/EmployeeController/viewawardAction
+ * 
+ */
+    $this->headTitle($this->title);
+?>
+
+<?php 
+    foreach ($employee as $emp):
+            extract($emp);
+    endforeach;        
+?>
+<?php echo $this->partial('hr/employee/partial.phtml', array('active' => 'viewaward', 'id' => $id)); ?>
+<div class="card">
+	<div class="card-header">
+		<div class="btn-group pull-right">
+			<?php echo $this->button(2,$id);?>
+		</div>
+	</div>
+	<div class="table-responsive">
+		<div class="table-header col-lg-4"> Awards of <?php echo $full_name; ?> </div>
+		<table class="table card-table text-nowrap" id="dataTables">
+				<thead>
+					<tr>
+						<th>#</th>
+						<th>Particular</th>
+						<th>Award</th>
+						<th>Award Date</th>
+						<th>Authority</th>
+						<th class="no-sort">Action</th>
+					</tr>
+				</thead>
+				<tbody>
+					<?php
+						$i = 1; 
+						foreach ($this->award as $rows):
+					?>
+						<tr>
+							<td><?php echo $i; ?> </td>
+							<td><?php echo $rows['particular']; ?></td>
+							<td><?php echo $rows['award']; ?></td>
+							<td><?php echo $rows['award_date']; ?></td>
+							<td><?php echo $rows['authority']; ?></td>
+							<?php if($this->button(1)!=""):?>
+							<td><?php echo $this->button(1,$rows['id']);?></td>
+							<?php endif;?>                                                              
+							</td>
+						</tr>
+					<?php 
+					$i++;
+					endforeach;  
+					?>
+				</tbody>
+			</table>
+		</div>
+	</div>
+</div>
+<!--for modal -->
+<div id="modal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content"> </div>
+    </div>
+</div>
+<script>
+$('document').ready(function(){
+	$('#dataTables').DataTable({"paging":   true,});
+});
+</script>

@@ -1,0 +1,871 @@
+<?php
+/**
+ * 
+ * View -- of Sales/MasterController/addschemetype
+ * 
+ */
+$this->headTitle($this->title);
+?>
+<style>
+	body {
+		font-size: 14px;
+	}
+
+	h3,
+	h5 {
+		font-size: 18px;
+	}
+
+	.btn {
+		font-size: 12px;
+		padding: 5px 10px;
+	}
+
+	label,
+	input,
+	select,
+	button {
+		font-size: 12px;
+	}
+</style>
+<form id="#form" method="post" action="<?php echo $this->url('postage', array('action' => 'addpostage')); ?>"
+	enctype="multipart/form-data">
+	<div class="form-group col-lg-3">
+		<h3 class="grey">
+			<i class="fa fa-envelope purple"></i>
+			Counter Services
+		</h3>
+	</div>
+	<div>
+		<div class="panel panel-default">
+			<div class="panel-body">
+				<div class="form-group col-lg-3">
+					<label for="scope" class="col-md-4  control-label" style="padding-top:7px">Scope</label>
+					<select class="form-control " id="scope" name="scope" data-placeholder="Select">
+						<option value=""></option>
+						<?php
+						foreach ($scope as $scopes): ?>
+							<option value="<?php echo $scopes['id']; ?>">
+								<?php echo $scopes['scope']; ?>
+							</option>
+							<?php
+						endforeach; ?>
+					</select>
+				</div>
+				<div class="form-group col-lg-3">
+					<label for="service" class="col-md-4 control-label" style="padding-top:7px">Service</label>
+					<select class="form-control" id="service" name="service" data-placeholder="Select">
+						<option value=""></option>
+					</select>
+				</div>
+			</div>
+		</div>
+		<div class="row">
+    <div class="col-lg-12">
+        <div class="form-group col-lg-2">
+            <label for="article_no" class="control-label">Article Number</label>
+            <input type="text" class="form-control" name="article_no" id="article_no" placeholder="Article Number"
+                required />
+        </div>
+        <div class="form-group col-lg-2">
+            <label for="weight" class="control-label">Weight(Grams)/Value(NU)</label>
+            <input type="decimal" class="form-control" name="weight" id="weight" placeholder="Weight" required />
+            <span id="weight-message"></span>
+        </div>
+        <div id="advice" class="form-group col-lg-2">
+            <label for="btn" class="control-label">Advice of Delivery</label>
+            <div class="checkbox">
+                <label>
+                    <input class="ace" type="radio" name="btn" id="ad" value="1" />
+                    <span class="lbl" style="margin-left: -20px;">Yes</span>
+                </label>
+                <label>
+                    <input class="ace" type="radio" name="btn" id="ad" value="0"  checked />
+                    <span class="lbl">No</span>
+                </label>
+            </div>
+        </div>
+        <div class="form-group col-lg-2">
+            <label for="btn1" class="control-label">Prepaid Mode</label>
+            <div class="checkbox">
+                <label>
+                    <input class="ace" type="radio" name="btn1" id="pm" value="1" />
+                    <span class="lbl" style="margin-left: -20px;">Yes</span>
+                </label>
+                <label>
+                    <input class="ace" type="radio" name="btn1" id="pm" value="0" checked />
+                    <span class="lbl">No</span>
+                </label>
+            </div>
+        </div>
+        <div class="form-group col-lg-2">
+            <label for="btn2" class="control-label">Insurance</label>
+            <div class="checkbox">
+                <label>
+                    <input class="ace" type="radio" name="btn2" id="in" value="1" />
+                    <span class="lbl" style="margin-left: -20px;">Yes</span>
+                </label>
+                <label>
+                    <input class="ace" type="radio" name="btn2" id="in" value="0"  checked />
+                    <span class="lbl">No</span>
+                </label>
+            </div>
+        </div>
+		 <div class="form-group col-lg-2">
+            <label for="btn2" class="control-label">Merchandise/Document</label>
+            <div class="checkbox">
+                <label>
+                    <input class="ace" type="radio" name="merchandise" id="merchandise" value="1" />
+                    <span class="lbl" style="margin-left: -20px;">Mer</span>
+                </label>
+                <label>
+                    <input class="ace" type="radio" name="merchandise" id="merchandise" value="0"  checked />
+                    <span class="lbl">Doc</span>
+                </label>
+            </div>
+        </div>
+        <div  class="form-group col-lg-2">
+            <label for="btn3" class="control-label">Bulk</label>
+            <div class="checkbox">
+                <label>
+                    <input class="ace" type="radio" name="btn3" id="bb" value="1" />
+                    <span class="lbl" style="margin-left: -20px;">Yes</span>
+                </label>
+                <label>
+                    <input class="ace" type="radio" name="btn3" id="bb" value="0" checked />
+                    <span class="lbl">No</span>
+                </label>
+            </div>
+        </div>
+		 <div id="bulk" class="form-group col-lg-1">
+            <label for="bulk_no" class="control-label">Bulk Number</label>
+            <input type="text" class="form-control" name="bulk_no" id="bulk_no" placeholder="Number" />
+        </div>
+    </div>
+</div>
+
+		<div class="row">
+
+			<div class="col-lg-4">
+				<div class="panel panel-default">
+					<div class="panel-body">
+						<h5 class="widget-title grey lighter">
+							<i class="ace-icon fa fa-home fa-x green"></i>
+							<b>To Address</b>
+						</h5>
+						<div class="form-group row">
+							<label for="to_name" class="col-sm-4 col-form-label">Name</label>
+							<div class="col-sm-8">
+								<input type="text" class="form-control" name="to_name" id="to_name"
+								style="text-transform: uppercase;"	placeholder="Name" />
+							</div>
+						</div>
+						<div class="form-group row">
+							<label for="to_address" class="col-sm-4 col-form-label">Address</label>
+							<div class="col-sm-8">
+								<input type="text" class="form-control" name="to_address" id="to_address"
+								style="text-transform: uppercase;"	placeholder="Address" />
+							</div>
+						</div>
+						<div  id="international"  class="form-group row">
+							<label for="country" class="col-sm-4 col-form-label">Country</label>
+							<div class="col-sm-8">
+								<select class="form-control" id="country" name="country" data-placeholder="Select">
+									<option value=""></option>
+									<?php
+									foreach ($country as $countrys): ?>
+										<option value="<?php echo $countrys['id']; ?>">
+											<?php echo $countrys['name']; ?>
+										</option>
+									<?php endforeach; ?>
+								</select>
+							</div>
+						</div>
+						<div  id="international"   class="form-group row">
+							<label for="city" class="col-sm-4 col-form-label">City</label>
+							<div class="col-sm-8">
+								<select class="form-control" id="city" name="city" data-placeholder="Select" >
+									<option value=""></option>
+								</select>
+							</div>
+						</div>
+						<div id="noninternational" class="form-group row">
+							<label for="po_name" class="col-sm-4 col-form-label">Post Name</label>
+							<div class="col-sm-8">
+								<select class="form-control" id="po_name" name="po_name" data-placeholder="Select">
+									<option value=""></option>
+									<?php
+									foreach ($poffice as $poffices): ?>
+										<option value="<?php echo $poffices['id']; ?>">
+											<?php echo $poffices['post_office']; ?>
+										</option>
+									<?php endforeach; ?>
+								</select>
+							</div>
+						</div>
+						<div  id="international" class="form-group row">
+							<label for="zip_code" class="col-sm-4 col-form-label">Zip Code</label>
+							<div class="col-sm-8">
+								<input type="text" class="form-control" name="zip_code" id="zip_code"
+									placeholder="Post Code" />
+							</div>
+						</div>
+						<div id="noninternational" class="form-group row">
+							<label for="post_code" class="col-sm-4 col-form-label">Post Code</label>
+							<div class="col-sm-8">
+								<input type="text" class="form-control" name="post_code" id="post_code"
+									placeholder="Post Code" />
+							</div>
+						</div>
+						<div class="form-group row">
+							<label for="to_mobile_number" class="col-sm-4 col-form-label">Mobile Number</label>
+							<div class="col-sm-8">
+								<input type="text" class="form-control" name="to_mobile_number" id="to_mobile_number"
+									placeholder="Mobile Number" />
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+			<div class="col-lg-4">
+				<div class="panel panel-default">
+					<div class="panel-body">
+						<h5 class="widget-title grey lighter">
+							<i class="ace-icon fa fa-plane fa-x red"></i>
+							<b>From Address</b>
+						</h5>
+						<div class="form-group row">
+							<label for="from_name" class="col-sm-4 col-form-label">Name</label>
+							<div class="col-sm-8">
+							<input type="text" class="form-control" name="from_name" id="from_name"
+							style="text-transform: uppercase;"	placeholder="Name" />
+							</div>
+						</div>
+						<div class="form-group row">
+							<label for="from_address" class="col-sm-4 col-form-label">Address</label>
+							<div class="col-sm-8">
+							<input type="text" class="form-control" name="from_address" id="from_address"
+							style="text-transform: uppercase;"	placeholder="Address" />
+							</div>
+						</div>
+						<div class="form-group row">
+							<label for="email" class="col-sm-4 col-form-label">Email Address</label>
+							<div class="col-sm-8">
+							<input type="email" class="form-control" name="from_email_address" id="from_email_address"
+								placeholder="Email Address" />
+							</div>
+						</div>
+						<div class="form-group row">
+							<label for="from_mobile_number" class="col-sm-4 col-form-label">Mobile Number</label>
+							<div class="col-sm-8">
+							<input type="tel" class="form-control" name="from_mobile_number" id="from_mobile_number"
+								placeholder="Mobile Number" />
+							</div>
+						</div>
+						<div class="form-group row">
+							<label for="content" class="col-sm-4 col-form-label">Content of Package</label>
+							<div class="col-sm-8">
+								<textarea class="form-control" name="content" id="content" rows="4" placeholder="Enter content here"></textarea>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+			<div class="col-lg-4">
+				<div class="panel panel-default">
+					<div class="row">
+						<div class="col-lg-12">
+							<form id="calculationForm" style="display: none;">
+								<div class="panel-body">
+									<div class="form-group">
+										<h5 class="widget-title grey lighter">
+											<i class="ace-icon fa fa-calculator fa-x orange"></i>
+											<b>Calculations</b>
+										</h5>
+										<div class="form-group row">
+											<label for="postage_rate" class="col-md-4 col-form-label">Postage
+												Rate</label>
+											<div class="col-md-8">
+												<input type="decimal" class="form-control" name="postage_rate"
+													id="postage_rate" placeholder="Postage Rate" readonly/>
+											</div>
+										</div>
+										<div id="other_service" class="form-group">
+											<div id="advice_fee" class="form-group row">
+												<label for="advice_delivery_fee" class="col-md-4 col-form-label">Advice
+													of delivery</label>
+												<div class="col-md-8">
+													<input type="decimal" class="form-control"
+														name="advice_delivery_fee" id="advice_delivery_fee"
+														placeholder="Advice of Delivery" />
+												</div>
+											</div>
+											<div class="form-group row">
+												<label for="registration_fee"
+													class="col-md-4 col-form-label">Registration Fee</label>
+												<div class="col-md-8">
+													<input type="decimal" class="form-control" name="registration_fee"
+														id="registration_fee" placeholder="Registration Fee" readonly />
+												</div>
+											</div>
+										</div>
+										<div id="prepaid" class="form-group row">
+											<label for="prepaid_mode" class="col-md-4 col-form-label">Prepaid
+												Mode</label>
+											<div class="col-md-8">
+												<input type="decimal" class="form-control" name="prepaid_mode"
+													id="prepaid_mode" placeholder="Ngultrum"  />
+											</div>
+										</div>
+										<div id="insurance" class="form-group row">
+											<label for="insurance_amt" class="col-md-4 col-form-label">Insurance
+												Amount</label>
+											<div class="col-md-8">
+												<input type="decimal" class="form-control" name="insurance_amt"
+													id="insurance_amt" placeholder="Insurance Amount"  />
+											</div>
+										</div>
+										<div class="form-group row">
+											<label for="other_charges" class="col-md-4 col-form-label">Other
+												Charges</label>
+											<div class="col-md-8">
+												<input type="decimal" class="form-control" name="other_charges"
+													id="other_charges" placeholder="Other Charges" />
+											</div>
+										</div>
+										<div class="form-group row">
+											<label for="total_amt" class="col-md-4 col-form-label">Total Amount</label>
+											<div class="col-md-8">
+												<input type="decimal" class="form-control" name="total_amt"
+													id="total_amt" placeholder="Total Amount" readonly/>
+											</div>
+										</div>
+										<div  id="notbulk" class="form-group col-lg-12">
+											<label for="cash" class="control-label">Payment</label>
+											<div class="radio">
+												<label>  
+													<input class="ace" type="radio" name="cash" id="cash"  value="1"/>
+													<span class="lbl"> Cash </span>
+												</label> 
+												<label>  
+													<input class="ace" type="radio" name="cash" id="cash" value="0"/>
+													<span class="lbl"> Bank </span>
+												</label> 
+												<label> 
+													<input class="ace" type="radio" name="cash" id="cash" value="2" /> 
+													<span class="lbl"> Credit </span>
+												</label>
+											</div>
+										</div>
+										<div class="form-group row" id="journal" style="display:none;">
+											<label for="journal_no" class="col-md-4 col-form-label">Journal No</label>
+											<div class="col-md-8">
+												<input type="text" class="form-control" name="journal_no"
+													id="journal_no" placeholder="Journal No" />
+											</div>
+										</div>
+										<div class="form-group row" id="phone" style="display:none;">
+											<label for="phone" class="col-md-4 col-form-label">Phone No</label>
+											<div class="col-md-8">
+												<input type="text" class="form-control" name="phone" value="0"
+													id="phone" placeholder="Phone No" />
+											</div>
+										</div>
+										<div class="form-group row" id="party" style="display:none;">
+											<label for="party" class="col-md-4 col-form-label">Credit Customer</label>
+											<div class="col-md-8">
+												<select class="form-control" id="party" name="party">
+												<option value="0"></option>
+												<?php foreach($party as $partys):?>
+													<option value="<?php echo $partys['id'];?>"><?php echo $partys['code']. '-' .$partys['name'];?>
+													</option>
+												<?php endforeach;?>
+												</select>
+											</div>
+										</div>
+										<div class="form-group row" id="ref_no" style="display:none;">
+											<label for="ref_no" class="col-md-4 col-form-label">Reference No</label>
+											<div class="col-md-8">
+												<input type="text" class="form-control" name="ref_no" value="0"
+													id="ref_no" placeholder="Phone No" />
+											</div>
+										</div>
+									</div>
+								</div>
+							</form>
+						</div>
+					</div>
+				</div>
+			</div>
+			<div id="saveButton" style="padding-left:600px; padding-top: 10px;">
+				<button type="submit" class="btn btn-success"><i class="fa fa-check"></i> Save </button>
+				<button type="button" class="btn btn-warning" data-dismiss="modal"><i class="fa fa-times"></i> Cancel
+				</button>
+			</div>
+		</div>
+	</div>
+
+</form>
+<script>
+	$('document').ready(function () {
+	
+		$('#scope').on('change', function () {
+			if ($(this).val() === '1') {
+				$('div#international').hide();
+				$('div#noninternational').show();
+			} else {
+				$('div#international').show();
+				$('div#noninternational').hide();
+			}
+		});
+
+		
+		/**Show or Hide Advice of delivery fee field */
+		$('input[name="btn"]').on('change', function () {
+			if ($(this).val() === '1') {
+				$('div#advice_fee').show();
+			} else {
+				$('div#advice_fee').hide();
+			}
+		});
+		$('input[name="btn"]').trigger('change');
+		$('input[name="btn1"]').on('change', function () {
+			if ($(this).val() === '1') {
+				$('div#prepaid').show();
+			} else {
+				$('div#prepaid').hide();
+			}
+
+		});
+		$('input[name="btn1"]').trigger('change');
+		$('input[name="btn2"]').on('change', function () {
+			if ($(this).val() === '1') {
+				$('div#insurance').show();
+			} else {
+				$('div#insurance').hide();
+			}
+
+		});
+		$('input[name="btn2"]').trigger('change');
+
+		$('input[type="checkbox"]').on('change', function () {
+        if ($(this).is(':checked')) {
+            const name = $(this).attr('name');
+            const value = $(this).val();
+            $(`input[name="${name}"][value="${value === "1" ? "0" : "1"}"]`).prop('checked', false);
+        }
+    });
+	$('input[name="btn3"]').on('change', function () {
+			if ($(this).val() === '1') {
+				$('div#bulk').show();
+				$('div#notbulk').hide();
+			} else {
+				$('div#bulk').hide();
+				$('div#notbulk').show();
+			}
+
+		});
+		$('input[name="btn3"]').trigger('change');
+		$('select#scope').on('change', function () {
+			$.post(
+				"<?php echo $this->url('postage', array('action' => 'getservice')); ?>", {
+				scopeId: $(this).val(),
+			},
+				function (data) {
+					$('select#service').html(data.service);
+					$('select#service').trigger('chosen:updated');
+				},
+				'json'
+			);
+		});
+		$('select#service').on('change', function () {
+			$.post(
+				"<?php echo $this->url('postage', array('action' => 'getfees')); ?>", {
+				service: $(this).val(),
+			},
+				function (data) {
+					$('#advice_delivery_fee').val(data.advice_delivery_fee);
+					$('#registration_fee').val(data.registration_fee);
+					$('#transmission_fee').val(data.transmission_fee);
+				},
+				'json'
+			);
+		});
+		$('select#country').on('change', function () {
+			$.post(
+				"<?php echo $this->url('masterpos', array('action' => 'getcity')); ?>",{
+				countryId: $(this).val(),
+			},
+				function (data) {
+					$('select#city').html(data.city);
+					$('select#city').trigger('chosen:updated');
+				},
+				'json'
+			);
+		});
+		$('select#po_name').on('change', function () {
+			$.post(
+				"<?php echo $this->url('postage', array('action' => 'getpostoffice')); ?>",{
+				po_name: $(this).val(),
+			},
+				function (data) {
+					$('#post_code').val(data.post_code);
+				},
+				'json'
+			);
+		});
+		/**
+		 * Checking limit  of weight  
+		 */
+
+		$('#service, #weight, #country,#city').on('input', function () {
+			if ($('#country').val() > 0 && $('#city').val() > 0) {
+				let serviceVal = parseInt($('#service').val(), 10);
+				if ([4, 6, 13, 14, 15, 17, 18, 19, 25].includes(serviceVal)){	
+					$.post(
+						"<?php echo $this->url('postage', array('action' => 'getchecklimit1')); ?>", {
+						service: $('#service').val(),
+						weight: $('#weight').val(),
+						country: $('#country').val(),
+						city: $('#city').val(),
+					},
+						function (data) {
+							$('#weight-message').text(data.message);
+							$('#weight-message').css('color', data.fontColor);
+							if (data.message === "Exceeded The Limit") {
+								$('#postage_rate').hide();
+								$('#saveButton').hide();
+							} else {
+								$('#postage_rate').show();
+								$('#saveButton').show();
+							}
+						},
+						'json'
+					);
+				}else{
+					$.post(
+						"<?php echo $this->url('postage', array('action' => 'getchecklimit')); ?>", {
+						service: $('#service').val(),
+						weight: $('#weight').val(),
+					
+					},
+						function (data) {
+							$('#weight-message').text(data.message);
+							$('#weight-message').css('color', data.fontColor);
+							if (data.message === "Exceeded The Limit") {
+								$('#postage_rate').hide();
+								$('#saveButton').hide();
+							} else {
+								$('#postage_rate').show();
+								$('#saveButton').show();
+							}
+						},
+						'json'
+					);
+				}
+			} else {
+				$.post(
+					"<?php echo $this->url('postage', array('action' => 'getchecklimit')); ?>", {
+					service: $('#service').val(),
+					weight: $('#weight').val()
+				},
+					function (data) {
+						$('#weight-message').text(data.message);
+						$('#weight-message').css('color', data.fontColor);
+						if (data.message === "Exceeded The Limit") {
+								$('#postage_rate').hide();
+								$('#saveButton').hide();
+							} else {
+								$('#postage_rate').show();
+								$('#saveButton').show();
+							}
+					},
+					'json'
+				);
+			}
+
+		});
+		/**
+		 *End  Checking limit  of weight  
+		 */
+
+		/**
+		 * Calculating the postage Rate  
+		 */
+		$('#service,#country,#city,#weight').on('input', function () {
+			if ($('#country').val() > 0 && $('#city').val() > 0) {
+				let serviceVal = parseInt($('#service').val(), 10);
+				if ([4, 6, 13, 14, 15, 17, 18, 19, 25].includes(serviceVal)){
+					$.post(
+						"<?php echo $this->url('postage', array('action' => 'getpostagerate1')); ?>", {
+						service: $('#service').val(),
+						weight: $('#weight').val(),
+						country: $('#country').val(),
+						city: $('#city').val(),
+
+					},
+						function (data) {
+							$('#postage_rate').val(data.postage_rate);
+							//console.log(postage_rate);
+							// Continue with the calculation using the retrieved postage_rate
+							var postage_rate_val = parseFloat(data.postage_rate);
+							calculateTotal(postage_rate_val);
+						},
+						'json'
+					);
+				}else{
+					$.post(
+						"<?php echo $this->url('postage', array('action' => 'getpostagerate')); ?>", {
+						service: $('#service').val(),
+						weight: $('#weight').val(),
+						
+					},
+						function (data) {
+							$('#postage_rate').val(data.postage_rate);
+							//console.log(postage_rate);
+							// Continue with the calculation using the retrieved postage_rate
+							var postage_rate_val = parseFloat(data.postage_rate);
+							calculateTotal(postage_rate_val);
+						},
+						'json'
+					);
+				}	
+			}  else {
+				$.post(
+					"<?php echo $this->url('postage', array('action' => 'getpostagerate')); ?>", {
+					service: $('#service').val(),
+					weight: $('#weight').val(),
+					
+
+				},
+					function (data) {
+						//console.log(data.postage_rate);
+						$('#postage_rate').val(data.postage_rate);
+						
+						// Continue with the calculation using the retrieved postage_rate
+						var postage_rate_val = parseFloat(data.postage_rate);
+						calculateTotal(postage_rate_val);
+					},
+					'json'
+				);
+			}
+		});
+		/**
+		 * End to Calculating the postage Rate  
+		 */
+
+
+		/**calculation of total amount based on the given variables**/
+
+		var postage_rate = $('#postage_rate');
+		var advice_delivery_fee = $('#advice_delivery_fee');
+		var registration_fee = $('#registration_fee');
+		var other_charges = $('#other_charges');
+		var insurance_amt = $('#insurance_amt');
+		var prepaid_mode = $('#prepaid_mode');
+		var radio = $('input[name="btn"]');
+
+		// Add an event listener for changes in the rate and quantity inputs
+		postage_rate.on('input', calculateTotal);
+		advice_delivery_fee.on('input', calculateTotal);
+		registration_fee.on('input', calculateTotal);
+		insurance_amt.on('input', calculateTotal);
+		other_charges.on('input', calculateTotal);
+		prepaid_mode.on('input', calculateTotal);
+		radio.on('input', calculateTotal);
+
+		// Trigger the calculateTotal function initially when the page loads
+		calculateTotal();
+		// Function to calculate the total and update the total input field
+		function calculateTotal(postage_rate_val) {
+			var postage_rate_val = parseFloat(postage_rate.val().replace(',', '')) || 0;
+			var advice_delivery_fee_val = parseFloat(advice_delivery_fee.val().replace(',', '')) || 0;
+			var registration_fee_val = parseFloat(registration_fee.val().replace(',', '')) || 0;
+			var insurance_amt_val = parseFloat(insurance_amt.val().replace(',', '')) || 0;
+			var other_charges_val = parseFloat(other_charges.val().replace(',', '')) || 0;
+			var prepaid_mode_val = parseFloat(prepaid_mode.val().replace(',', '')) || 0;
+			var radio_val = parseFloat(radio.filter(':checked').val());
+
+			if (isNaN(insurance_amt_val)) {
+				insurance_amt_val = 0;
+			}
+			if (isNaN(other_charges_val)) {
+				other_charges_val = 0;
+			}
+			if (isNaN(radio_val)) {
+				radio_val = 0;
+			}
+			if (isNaN(prepaid_mode_val)) {
+				prepaid_mode_val = 0;
+			}
+			if (isNaN(advice_delivery_fee_val) || radio_val == 0) {
+				advice_delivery_fee_val = 0;
+			}
+			//console.log("Postage Rate:", postage_rate_val);
+
+			var total = (postage_rate_val + advice_delivery_fee_val + registration_fee_val + insurance_amt_val +
+				other_charges_val) - prepaid_mode_val;
+			// Check if the total is a valid number
+			if (!isNaN(total)) {
+				$('#total_amt').val(total.toFixed(2)); // Display the total with 2 decimal places
+			}
+		}
+		/**
+		 * End of Calculation
+		 */
+		/**
+		 * **************************************************Money Order**********************************************************
+		 */
+		/**
+		 * Hide and sho fields
+		 */
+		$('#service').on('change', function () {
+			if ($(this).val() === '7' || $(this).val() === '12') {
+				$('div#money_order').show();
+				$('div#other_service').hide();
+			} else {
+				$('div#money_order').hide();
+				$('div#other_service').show();
+			}
+		});
+		
+
+		/**calculation of total amount based on the given variables*
+			 
+			var postage_rate = $('#postage_rate');
+			var transmission_fee = $('#transmission_fee');
+			var other_charges=$('#other_charges');
+			
+			// Add an event listener for changes in the rate and quantity inputs
+			postage_rate.on('input', calculateTotalMoneyOrder);
+			transmission_fee.on('input', calculateTotalMoneyOrder);
+			other_charges.on('input', calculateTotalMoneyOrder);
+			
+			// Trigger the calculateTotal function initially when the page loads
+			calculateTotalMoneyOrder();
+			// Function to calculate the total and update the total input field
+			function calculateTotalMoneyOrder(postage_rate_val){
+				var postage_rate_val = parseFloat(postage_rate.val().replace(',', '')) || 0;
+				var transmission_fee_val = parseFloat(transmission_fee.val().replace(',', '')) || 0;
+				var other_charges_val = parseFloat(other_charges.val().replace(',', '')) || 0;
+				
+			
+			if (isNaN(other_charges_val)) {
+				other_charges_val = 0;
+			}
+			if (isNaN(postage_rate_val)) {
+				postage_rate_val = 0;
+			}
+			//console.log("Postage Rate:", postage_rate_val);
+		
+			var total = (postage_rate_val + transmission_fee_val + other_charges_val);
+				// Check if the total is a valid number
+				if (!isNaN(total)) {
+					$('#total_amt').val(total.toFixed(2)); // Display the total with 2 decimal places
+				}
+			}
+			
+			 * End of Calculation
+			 */
+		$('input[type=radio][name=cash]').change(function(){
+        if ($(this).val() == "0") {
+			$('#journal').show();
+			 $('#phone').show();
+			 $('#party').hide();
+			 $('#ref_no').hide();
+        } 
+		else if($(this).val() == "1"){
+			$('#journal').hide();
+			 $('#phone').hide();
+			 $('#party').hide();
+			  $('#ref_no').hide();
+			
+		}else {
+           $('#journal').hide();
+			 $('#phone').hide();
+			 $('#party').show();
+			 $('#ref_no').show();
+        } 
+    });
+	$('form input, form select').on('keydown', function (e) {
+        // Check for the Enter key
+        if (e.which === 13) {
+            e.preventDefault(); // Prevent form submission
+
+            // Get all input elements in form
+            var inputs = $(this).closest('form').find(':input:visible:not([disabled])');
+
+            // Find the next input element
+            var nextInput = inputs.eq(inputs.index(this) + 1);
+            
+            if (nextInput.length) {
+                nextInput.focus();
+            } else {
+                // If there's no next input, you might want to trigger form submission
+                // $(this).closest('form').submit(); 
+            }
+        }
+    });
+	
+		/**Form Validation */
+		const fv = FormValidation.formValidation(document.getElementById('#form'), {
+			fields: {
+				article_no: {
+						validators: {
+							notEmpty: {
+								message: 'Please provide Artical No.'
+						},
+						stringLength: {
+									max: 13,
+									min:13,
+									message: 'The Article No. must be 13 digits long.'
+								},
+						remote: {
+							data: {
+								type:'article_no',
+							},
+							message: 'This article_no has been already used.',
+							method: 'POST',
+							url: "<?php echo $this->url('postage', array('action' => 'getcheckavailability'));?>",
+						}
+					}
+				},
+				service: {
+					validators: {
+						notEmpty: {
+							message: 'Please select a service'
+						}
+					}
+				},
+			/*	cash: {
+					validators: {
+						notEmpty: {
+							message: 'Please select a Payment Mode'
+						}
+					}
+				},*/
+				weight: {
+					validators: {
+						notEmpty: {
+							message: 'Please enter weight'
+						}
+					}
+				},
+			},
+			plugins: {
+				trigger: new FormValidation.plugins.Trigger(),
+				bootstrap3: new FormValidation.plugins.Bootstrap3(),
+				submitButton: new FormValidation.plugins.SubmitButton(),
+				defaultSubmit: new FormValidation.plugins.DefaultSubmit(),
+			},
+		}).on('core.element.validated', function (e) {
+			if (e.valid) {
+				$('div#' + e.field.replace('[]', '') + '_chosen').removeClass('is-invalid');
+				$('div#' + e.field.replace('[]', '') + '_chosen').addClass('is-valid');
+			} else {
+				$('div#' + e.field.replace('[]', '') + '_chosen').removeClass('is-valid');
+				$('div#' + e.field.replace('[]', '') + '_chosen').addClass('is-invalid');
+			}
+		});
+	});
+</script>

@@ -1,0 +1,60 @@
+<?php
+/**
+ *
+ * 	view -- of Realestate/MaindataController/indexAction
+ *
+ */?>
+<?php echo $this->partial('realestate/maindata/partial.phtml',array('active' => 'operator'));?>
+<div class="card">
+	<div class="card-header">
+		<div class="btn-group pull-right">
+			<?php echo $this->button(2);?>
+		</div>
+	</div>
+	<div class="table-responsive">
+		<table class="table card-table text-nowrap" id="dataTables">
+			<thead>
+				<tr>
+					<th>#</th>
+					<th>Operator</th>
+					<th>Action</th>
+				</tr>
+			</thead>
+			<tbody>
+				<?php $i=1;					
+				  foreach ($operators as $rows):
+				?>
+					<tr data-href="<?php echo $this->button(4, $rows['id']); ?>">
+						<td><?php echo $i++; ?> </td>
+						<td><strong><?php echo $rows['operator']; ?></strong></td>
+						<td><?php echo $this->button(1, $rows['id']); ?></td>
+					
+					</tr>
+				<?php
+				endforeach;  
+				?>
+			</tbody>
+		</table>
+	</div>
+</div>
+<div id="modal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+	<div class="modal-dialog">
+		<div class="modal-content">
+		</div>
+	</div>
+</div>
+<script type="text/javascript">
+	$("tr[data-href]").each(function(){
+		$(this).find('td').not('td.action').each(function(){
+			$(this).css('cursor','pointer');
+			$(this).bind('click',function() {
+				window.document.location = $(this).closest('tr').attr("data-href");
+			});
+		});
+	});
+
+	$('document').ready(function(){
+		$('#dataTables').DataTable();
+	});
+</script>
+ 

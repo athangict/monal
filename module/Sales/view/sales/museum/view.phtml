@@ -1,0 +1,90 @@
+<?php
+/**
+ * View -- of Stock/BatchController/viewbatchAction
+ */
+ $this->headTitle($this->title);
+?>
+<style>
+	.mytable tr th,.mytable tr td {
+		padding:5px;
+	}
+</style>
+<?php foreach($collection as $collection):
+	extract($collection);
+endforeach;?>
+<div class="row">
+	<div class="col-lg-12">
+		<div class="widget widget-box">
+			<div class="widget-header">
+			<h5 class="widget-title grey lighter">
+				<i class="ace-icon fa fa-shopping-cart green"></i>
+				Fee COllection Details
+			</h5>
+			<?php if($status==1):?>
+				<span class="label label-danger"> Draft </span>
+			<?php else: $this->status($status); endif;?>
+		</div>
+		<div class="widget-body">
+			<div class="widget-main">
+				<div id="report-print">
+					<div class="row" id="convert-tb0">
+						<div class="col-lg-8" id="convert-tb1">
+							<ul class="list-unstyled spaced">
+							<li>
+									<i class="ace-icon fa fa-caret-right blue"></i>Date: <b class="red"><?php echo $date; ?> </b>
+								</li>
+								<li>
+									<i class="ace-icon fa fa-caret-right blue"></i>Payment Mode: <b class="red"><?php if($payment_mode==0){echo "Cash";}else{echo "Bank";}?></b>
+								</li>
+								<li>
+									<i class="ace-icon fa fa-caret-right blue"></i>Total: <b class="red"><?php echo $total?></b>
+								</li>
+							</ul>
+						</div>
+						<div class="col-lg-4" id="convert-tb2">
+							<ul class="list-unstyled spaced">
+							<li>
+									<i class="ace-icon fa fa-caret-right blue"></i>Category: <b class="red"><?php echo $this->category->getcolumn($category,'category')?></b>
+								</li>
+							<li>
+									<i class="ace-icon fa fa-caret-right blue"></i>Fees:<b class="red"><?php echo $fees;?> </b>
+								</li>
+								<li>
+									<i class="ace-icon fa fa-caret-right blue"></i>No of heads: <b class="red"><?php echo $heads?></b>
+								</li>
+		
+							</ul>
+						</div>
+					</div>
+					<div class="row">
+						<div class="col-lg-5" style="text-align: right"></div>
+						<div class="col-lg-7" style="text-align: right">
+							<?php if($status==4):?>	
+							<button type="button" class="btn btn-default btn-sm"  onclick="javascript:history.back();"><i class="fa fa-arrow-left"></i> Back </button>
+							<?php else:?>
+							<?php echo $this->button(2,$id);?>
+							<button type="button" class="btn btn-default btn-sm"  onclick="javascript:history.back();"><i class="fa fa-arrow-left"></i> Back </button> 
+							<?php endif;?>
+						</div>
+					</div>
+
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+<!-- for modal -->
+<!--for modal -->
+<div id="modal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content"> </div>
+    </div>
+</div>
+<script type="text/javascript">
+$('document').ready(function(){
+	$('#dataTables').DataTable({
+		"paging":   true,
+	});
+});
+</script>
+

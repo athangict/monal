@@ -1,0 +1,11 @@
+<?php if($this->elc_source == 1): ?>
+ 	  <option>Select Purchase Order</option>
+ 	  <?php foreach ($this->elcSourceDtls as $dtls):?>
+	        <option value="<?php echo $dtls['id']; ?>"><?php echo $dtls['po_no']; ?> | <?php echo $dtls['po_date']; ?> | <?php echo $dtls['activity']; ?></option>
+	  <?php endforeach;  ?>
+<?php elseif($this->elc_source == 2):?>
+      <option>Select Supplier Invoice</option>
+	  <?php foreach ($this->elcSourceDtls as $dtls):?>
+	        <option value="<?php echo $dtls['id']; ?>"><?php echo $dtls['invoice_no']; ?> | <?php echo $dtls['inv_date'];?> | <?php echo $dtls['activity'];?></option>
+	  <?php endforeach;  ?>
+<?php endif; ?>

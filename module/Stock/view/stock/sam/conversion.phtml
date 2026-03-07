@@ -1,0 +1,113 @@
+<?php
+/**
+ * View -- of Stock/GoodsrequestController/indexAction
+*/
+	$this->headTitle($this->title);
+?>
+<?php echo $this->partial('stock/sam/partial.phtml', array('active' => 'conversion')); ?><br/>
+<?php $minYear=0;
+ $minYear = date('Y', strtotime($minYear)); ?>
+<div class="card">
+	<div class="card-header">
+		<div class="row">
+			<form method="post" action="<?php echo $this->url('sam', array('action' => 'conversion')); ?>"  enctype="multipart/form-data" >
+				<div class="form-group col-lg-3">
+					<label class="control-label" for="year">Year</label>
+					<select class="form-control" id="year" name="year" data-placeholder="Select" onchange='this.form.submit()'>
+						<option value=""></option>
+						<?php
+							for($year=date('Y');$year>=$minYear;$year--):
+								$selected = ($year == $data['year'])?"selected":"";
+						?>
+							<option value="<?php echo $year;?>" <?php echo $selected;?> >
+								<?php echo $year;?>
+							</option>
+						<?php endfor; ?>
+					</select>
+				</div>
+				<div class="form-group col-lg-3">
+					<label class="control-label" for="month">Month</label>
+					<select class="form-control" id="month" name="month" data-placeholder="Select" onchange='this.form.submit()'>
+						<?php for($month=1; $month<=12; $month++):?>
+							<?php $selected = ($month == $data['month'])?'selected':'';?>
+							<option value="<?php echo $month;?>" <?php echo $selected; ?>>
+								<?php echo DateTime::createFromFormat('!m', $month)->format('F');?>
+							</option>
+						<?php endfor;?>
+					</select>
+				</div>
+			</form><br />
+			<div class="form-group col-lg-6">
+				<div class="clearfix">
+                   <div class="pull-right tableTools-container"></div>
+		                  	<?php echo $this->button(2);?>
+				   </div>
+			</div>
+		</div>
+		<div>
+			<table class="table table-bordered table-striped table-hover" id="dataTables">
+				<thead>
+					<tr>
+					    <th>#</th>
+						<th>Conversion No.</th>
+						<th>Date</th>
+						<th>Location</th>
+						<th>Item</th>
+						<th>Basic Qty</th>
+						<th>Converted Item </th>
+                        <th>Basic Converted Qty</th>
+						<th class="no-sort no-printpdf">Action</th>
+					</tr>
+				</thead>
+				<tbody>
+					<?php $i=1;foreach($this->details as $dtl): ?>
+						<tr data-href="<?php echo $this->url('sam', array('action'=>'viewconversion', 'id'=>$dtl['id']));?>">
+							<td><?php echo $i++;?></td>
+							<td><?php echo $dtl['conversion_no'];?>&nbsp;
+							<i>
+								&nbsp;
+								<?php  echo $this->status($dtl['status']); ?>
+							</i>
+							</td>
+							<td><?php echo $dtl['conversion_date'];?></td>
+                            <td><?php echo $this->locationObj->getColumn($dtl['location'], 'location');?></td>
+							<td><?php echo $this->itemObj->getColumn($dtl['item'],'name'); ?></td>
+							<td><?php echo $dtl['basic_qty']; ?></td>
+                            <td><?php echo $this->itemObj->getColumn($dtl['converted_item'],'name'); ?></td>
+                            <td><?php echo $dtl['converted_basic_qty']; ?></td>
+                            <td class="action">
+								<div class="btn-group">
+									<a class="btn btn-xs btn-danger" data-toggle="modal" data-target="#modal" href="<?php echo $this->url('acl', array('action' => 'activitylog', 'id' => "27-".$dtl['id'])); ?>" title="View Activity Logs">
+										<i class="ace-icon fa fa-plus bigger-120" ></i>
+							  		</a>
+						  		</div>
+							</td>
+						</tr>
+					<?php endforeach;?>
+				</tbody>
+			</table>
+		</div>
+	</div>
+</div>
+<div id="modal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+	<div class="modal-dialog">
+		<div class="modal-content">
+		</div>
+	</div>
+</div>
+<script type="text/javascript">
+$('document').ready(function(){
+	$('#dataTables').DataTable({
+		"paging":   true,
+	});
+	$("tr[data-href]").each(function(){
+		$(this).find('td').not('td.action').each(function(){
+			$(this).css('cursor','pointer');
+			$(this).bind('click',function() {
+				window.document.location = $(this).closest('tr').attr("data-href");
+			});
+		});
+	});
+});
+</script>
+

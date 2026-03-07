@@ -1,0 +1,136 @@
+<?php
+/**
+ * 
+ * View -- of Stock/StockController/itemAction
+ * 
+ */
+	$this->headTitle($this->title);
+?>
+<?php echo $this->partial('stock/stock/partial.phtml', array('active' => 'index')); ?>
+<div class="card">
+	<div class="card-header">
+		<div class="space-4"></div>
+		<form method="post"> 
+			<div class="row">
+				<div class="form-group col-lg-3">
+					<label for="item_subgroup" class="label-control">Item Sub-Group</label>
+					<select class="form-control" data-placeholder="Select" name="item_subgroup" id="item_subgroup" onchange='this.form.submit()' >
+						<option value=""></option>
+						<option value="-1" <?php echo ($subgroup_id == '-1')?"selected":""; ?>>All</option>
+						<?php 
+							$itemclasses = $this->itemclassObj->getAll();
+							foreach ($itemclasses as $itemclass):  
+								$itemgroups = $itemgroupObj->get(array('item_class'=>$itemclass['id']));
+								foreach($itemgroups as $itemgroup):
+							?>
+							<optgroup label="<?php echo $itemclass['item_class']." | ".$itemgroup['item_group'];?>">
+								<?php 
+									$itemsubgroups = $this->itemsubgroupObj->get(array('item_group'=>$itemgroup['id']));
+									foreach($itemsubgroups as $itemsubgroup):
+										$selected_subgrp = ($itemsubgroup['id'] == $subgroup_id)?'selected':'';
+								?>
+									<option value="<?php echo $itemsubgroup['id']; ?>" <?php echo $selected_subgrp;?>>
+										<?php echo $itemsubgroup['item_subgroup']; ?>
+									</option>
+								<?php endforeach;
+								endforeach; ?>
+							</optgroup>
+						<?php endforeach; ?>			
+					</select>		
+				</div> 
+				<div class="form-group col-lg-6">
+					<div class="clearfix">
+						<div class="pull-right tableTools-container"></div>
+						<?php echo $this->button(2);?>
+					</div>
+				</div>
+			</div>
+		</form>	
+		<div class="space-4"></div>
+		<table class="table table-bordered table-striped table-hover" id="dataTables">
+			<thead>
+				<tr>
+					<th>#</th>
+					<th>Stock Items</th>
+					<th>Basic Uom</th>
+					<th>Net Weight</th>
+					<th>Valuation</th>
+					<th>Sub-Group</th>
+					<th>Group</th>
+					<th>Class</th>
+					<th>Action</th>
+				</tr>
+			</thead>
+			<tbody>
+				<?php  $i = 1; 
+				foreach ($this->items as $item):?>
+				 <tr data-href="<?php echo $this->button(4, $item['id']); ?>">
+					<td><?php echo $i++;?></td>
+					<td>
+						<b><?php echo $item['name']; ?></b>&nbsp;&nbsp;&nbsp;
+						<?php if($item['status'] == '1'):?>
+							<span class="badge badge-success">Active</span>
+						<?php else:?>
+							<span class="badge badge-danger">Inactive</span>
+						<?php endif;?>
+					</td>
+					<td>
+						<?php echo $this->uomObj->getColumn($item['uom'],'code');?>
+					</td>
+					<td>
+						<?php echo $item['net_weight']; ?>&nbsp;<?php echo $this->uomObj->getColumn($item['scalar_uom'],'code');?>
+					</td>
+					<td>	
+						<?php if($item['valuation'] == '1'):?>
+							Wt.Moving Avg
+						<?php else:?>
+							FIFO
+						<?php endif;?>
+					</td>
+					<td>
+						<?php echo $this->itemsubgroupObj->getColumn($item['item_subgroup'],'item_subgroup'); ?>
+					</td>
+					<td>
+						<?php 
+							$item_group = $this->itemsubgroupObj->getColumn($item['item_subgroup'],'item_group');
+							echo $this->itemgroupObj->getColumn($item_group,'item_group');
+						?>
+					</td>
+					<td>
+						<?php 
+							$item_class = $this->itemgroupObj->getColumn($item_group,'item_class');
+							echo $this->itemclassObj->getColumn($item_class,'item_class');
+						?>
+					</td>
+					<td><?php echo $this->button(1,$item['id'])?></td>                           
+				</tr>
+				<?php endforeach;?>
+			</tbody>
+		</table>
+	</div>
+</div>
+<div id="modal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+	<div class="modal-dialog">
+		<div class="modal-content">
+		</div>
+	</div>
+</div>
+<script type="text/javascript">
+$('document').ready(function(){
+	$('#dataTables').DataTable({
+		"paging":   true,
+	});
+	$("tr[data-href]").each(function(){
+		$(this).find('td').not('td.action').each(function(){
+			$(this).css('cursor','pointer');
+			$(this).bind('click',function() {
+				window.document.location = $(this).closest('tr').attr("data-href");
+			});
+		});
+	});
+
+	
+});
+</script>
+
+ 

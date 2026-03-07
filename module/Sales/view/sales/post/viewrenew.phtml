@@ -1,0 +1,131 @@
+<?php
+
+/**
+ * View -- of Hr/MasterController/apptypeAction
+ */
+$this->headTitle($this->title);
+?>
+
+<div class="card">
+	<div class="card-header">
+		<div class="row">
+			<div class="col-lg-12">
+				<form method="POST" action="<?php echo $this->url('postbox', array('action' => 'viewrenew')); ?>" enctype="multipart/form-data" >    
+						<div class="row">
+							<!-- <div class="form-group col-lg-2">
+								<label class="control-label" for="start_date">Start Date</label>
+								<div class="date input-group" id="start_date" data-date="<?php echo $data['start_date'];?>" data-date-format="yyyy-mm-dd" >
+									<input class="form-control span2" name="start_date" id="start_date" type="text" placeholder="Start Date" value="<?php echo $data['start_date'];?>"  onchange='this.form.submit()' required>
+									<span class="input-group-addon add-on"><i class="fa fa-calendar"></i></span>
+								</div>
+							</div>
+							<div class="form-group col-lg-2">
+								<label class="control-label" for="end_date">End Date</label>
+								<div class="date input-group" id="end_date" data-date="<?php echo $data['end_date'];?>" data-date-format="yyyy-mm-dd" >
+									<input class="form-control span2" name="end_date" id="end_date" type="text" placeholder="End Date" value="<?php echo $data['end_date'];?>"  onchange='this.form.submit()' required>
+									<span class="input-group-addon add-on"><i class="fa fa-calendar"></i></span>
+								</div>
+							</div> -->
+							<div class="form-group col-lg-2">
+							<label for="location" class="control-label">Location</label>
+							<select class="form-control" id="location" name="location" data-placeholder="Select" onchange='this.form.submit()'>
+								<option value="-1">All</option>
+									<?php foreach($this->locationObj->get(array('status'=>'1')) as $location):?>
+										<option value="<?php echo $location['id']?>"<?php echo ($location['id']==$data['location'])?'selected':'';?>>
+										<?php echo $location['location'];?></option>
+									<?php endforeach;?>
+							</select>
+							</div>
+							<div class="form-group col-lg-2">
+								<label for="postbox" class="control-label">Post Box Number</label>
+								<select class="form-control" id="postbox" name="postbox" data-placeholder="Select" onchange='this.form.submit()'>
+									<option value="-1">All</option>
+									<?php foreach ($this->ponumberObj->get(array('location'=>$data['location'])) as $postbox):?>
+										<option value="<?php echo $postbox['id']?>"<?php echo ($postbox['id']==$data['postbox'])?'selected':'';?>>
+										<?php echo $postbox['po_number'];?>	</option>
+									<?php endforeach; ?>
+								</select>
+							</div>
+							<div class="form-group col-lg-2">
+								<label for="status" class="control-label">Status</label>
+								<select class="form-control" id="status" name="status" data-placeholder="Select" onchange='this.form.submit()'>
+									<option value="-1">All</option>
+									<?php foreach ($this->statusObj->get(array('id'=>array('1','5'))) as $status):?>
+										<option value="<?php echo $status['id']?>"<?php echo ($status['id']==$data['status'])?'selected':'';?>>
+										<?php echo $status['status'];?>	</option>
+									<?php endforeach; ?>
+								</select>
+							</div>
+						</div>
+					</form>
+				</div>
+			<div class="col-lg-3 ">
+				<div class="space"></div>
+				<div class="btn-group pull-right">
+					<?php //echo $this->button(2,$page);?>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<div class="table-responsive">
+		<table class="table card-table text-nowrap" id="dataTables">
+			<thead>
+				<tr>
+					<th>#</th>
+					<th>Name</th>
+					<th>Post Box No</th>
+					<th>Registration Year</th>
+					<th>Renewal year</th>
+					<th>Renewal Date</th>
+					<th>Renewal Amount</th>
+					<th>Status</th>
+					<th class="no-sort no-printpdf">Action</th>
+				</tr>
+			</thead>
+			<tbody>
+			<?php
+$i = 1; 
+foreach ($this->postboxTable as $postbox): ?>
+    <?php
+    //foreach ($this->renews->get(array('t.registration_id' =>$postbox['id'])) as $renew):
+    $count = $this->renews->getCount(array('registration_id' => $postbox['id']));
+  //  if ($count < 0 || empty($count)) :
+  $renew=$this->renews->getMax('id',array('registration_id' => $postbox['id']));
+$curent_year= date('Y');
+$renewYear=$this->renews->getCount(array('registration_id' => $postbox['id'],'renewal_year'=>$curent_year));
+  //$registrationYear=$this->renews->getColumn(array('registration_id' => $postbox['id']),'registration_year');
+ // print_r($postbox['year']);
+    ?>
+       <tr>
+            <td><?php echo $i++; ?></td>
+            <td><?php echo $postbox['name']; ?></td>
+			<td><?php echo $this->ponumberObj->getColumn($postbox['postbox_no'],'po_number'); ?></td>
+            <td><?php echo $postbox['year']; ?></td>
+			<td><?php if ($count < 0 || empty($count)):echo ''; else:echo $this->renews->getColumn($renew,'renewal_year');endif;?></td>
+			<td><?php if ($count < 0 || empty($count)):echo ''; else:echo $this->renews->getColumn($renew,'renewal_date');endif;?></td>
+            <td><?php if ($count < 0 || empty($count)):echo ''; else:echo $this->renews->getColumn($renew,'renewal_amount');endif;?></td>
+            <td><?php echo $this->status($postbox['status']) ?></td>
+            <td class="action"><?php if($postbox['year']!=$curent_year ):if (($renewYear < 0 || empty($renewYear)) && $postbox['status']==1): echo $this->button(1, $postbox['id']);endif;endif;echo $this->button(6, $postbox['id'],'','1447') ?></td>
+        </tr>
+<?php endforeach;?>
+</tbody>
+		</table>
+	</div>
+</div>
+<div id="modal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+	<div class="modal-dialog">
+		<div class="modal-content"></div>
+	</div>
+</div>
+<script>
+$('document').ready(function () {
+	$('#dataTables').DataTable({ "paging": true });
+	//$('#start_date').datepicker();
+	//$('#end_date').datepicker();
+	// Handle row click event
+	$(".clickable-row").click(function() {
+		window.location = $(this).data("href");
+	});
+});
+</script>

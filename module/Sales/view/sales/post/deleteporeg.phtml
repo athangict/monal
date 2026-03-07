@@ -1,0 +1,23 @@
+<?php
+/**
+ * 
+ * View --
+ * 
+ */
+foreach($postboxreg as $row);
+?>
+<form id="#form" method="post" action="<?php echo $this->url('postbox', array('action' => 'deleteporeg')); ?>"  enctype="multipart/form-data" >
+    <div class="modal-body">
+		<input type="hidden" name="post_id" id="post_id" value="<?php echo $row['id']?>">
+		<input type="hidden" name="postbox_no" id="postbox_no" value="<?php echo $row['postbox_no']?>">
+		<div class="panel panel-default">                       
+			<div class="panel-body">   
+				<h5 class="modal-title"> <i class="fa fa-trash red fa-2x"></i> &nbsp If you continue, yo will delete Registration details?</h5>
+			</div>
+		</div>
+    </div> <!-- /modal-body -->
+    <div class="modal-footer">
+        <button type="submit" class="btn btn-danger"><i class="fa fa-trash"></i> Delete </button>
+        <button type="button" class="btn btn-warning" data-dismiss="modal" ><i class="fa fa-times"></i> Cancel </button> 
+    </div>  
+</form>

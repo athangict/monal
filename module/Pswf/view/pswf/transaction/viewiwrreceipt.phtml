@@ -1,0 +1,188 @@
+<?php
+/**
+ * 
+ * View -- of Accounts/TransactionController/viewtransactionAction
+ * 
+ */
+?>
+<?php 
+	foreach($this->transactionrow as $row ):
+		extract($row);
+		$bank_ref_type_id = $row['bank_ref_type'];
+	endforeach;
+?>
+<div class="space"></div>
+<div class="col-lg-12">
+	<div class="widget-box transparent">
+		<div class="widget-header widget-header-large">
+			<h5 class="widget-title grey lighter">
+				<i class="ace-icon fa fa-file-text-o green"></i>
+				<b><?php echo $voucher_type;?> | <?php echo $voucher_no;?></b>
+			</h5>
+			<?php $this->status($status);?>
+			<div class="widget-toolbar hidden-xs">
+				<a style='cursor:pointer' id="print">
+					<i class="ace-icon fa fa-file-pdf-o red"></i>
+				</a>
+			</div>
+			<div class="widget-toolbar hidden-xs">
+				<a class="btn btn-white btn-warning btn-bold btn-xs" title="Add new Transaction"
+					href="<?php echo $this->url('transaction', array('action'=>'addiwrreceipt')); ?>">
+				&nbsp;<i class="fa fa-plus"></i>&nbsp;</a>
+			</div>
+			<div class="widget-toolbar hidden-xs">
+				<a id="printreceipt"  target = "_blank" href="<?php echo $this->url('transaction', array('action'=>'receiptprint', 'id'=>$id));?>" class="cursor:pointer">
+				   <i class="">Receipt</i>
+			    </a>		    
+			</div>
+		</div>
+		<div class="widget-body">
+			<div class="widget-main padding-24">
+				<div id="report-print">
+					<div class="row" id="convert-tb0">
+						<div class="col-lg-9" id="convert-tb1">
+							<ul class="list-unstyled spaced">
+							    <li>
+									<i class="ace-icon fa fa-caret-left blue"></i><b>Journal Name :</b> <?php echo $voucher_type; ?>
+								</li>
+							    <li>
+									<i class="ace-icon fa fa-caret-left blue"></i><b>Voucher Date :</b> <?php echo $voucher_date; ?> 
+								</li>
+								<li>
+									<i class="ace-icon fa fa-caret-left blue"></i><b>Document ID : </b> <?php echo $doc_id; ?>
+								</li>
+								<li>
+									<i class="ace-icon fa fa-caret-left blue"><b></i>Document Type :</b> <?php echo $doc_type; ?> 
+								</li>
+							</ul>
+						</div>
+						<div class="col-lg-3" id="convert-tb3">
+							<ul class="list-unstyled spaced">
+							    <li>
+									<i class="ace-icon fa fa-caret-left blue"></i><b>Voucher No :</b> <?php echo $voucher_no; ?>
+								</li>
+								<li>
+									<i class="ace-icon fa fa-caret-left blue"></i><b>Voucher Amount :	<?php echo $this->currency($voucher_amount);?> </b>
+								</li>
+                                <li>
+									<i class="ace-icon fa fa-caret-left blue"></i><b>Bank Reference Type :</b> <?php echo $this->bank_ref_typeObj->getColumn($bank_ref_type_id,'bank_ref_type'); ?> 
+								</li>
+								<li>
+									<i class="ace-icon fa fa-caret-left blue"></i><b>Cheque No :</b>	 <?php echo $row['cheque_no']?> 
+								</li>
+							</ul>
+						</div>
+					</div>
+					<div class="row">
+						<div class="col-lg-12">
+							<ul class="list-unstyled spaced">
+								<li>
+									<i class="ace-icon fa fa-caret-right blue"><b></i>Naration : </b> <?php echo $remark;?>
+								</li>
+							</ul>
+						</div>
+					</div>
+					<div class="row">
+					    <div class="col-lg-12">
+							<table class="table table-striped table-bordered table-condensed">	
+								<thead>
+									<th style="font-size:14px">Location</th>
+									<th style="font-size:14px">Head Name</th>
+									<th style="font-size:14px">Sub Head Account</th>
+									<th style="font-size:14px">Amount Dr</th>
+									<th style="font-size:14px">Amount Cr</th>
+								</thead>
+								<tbody>
+									<?php $total_debit =0; $total_credit=0;?>
+									<?php foreach($this->transactiondetails as $tdrow):?>
+										<tr>
+											<td style="font-size:13px; font-famiyl:Times New Roman"><?php echo $tdrow['location'];?></td>
+											<td style="font-size:13px"><?php echo $tdrow['head'];?></td>
+											<td style="font-size:13px"><?php echo $tdrow['sub_head'].'-'.$tdrow['sub_head_name'];?></td>
+											<td style="font-size:13px; text-align:right"><?php echo $tdrow['debit'];?></td>
+											<td style="font-size:13px; text-align:right"><?php echo $tdrow['credit'];?></td>
+										</tr>
+										<?php 
+											$total_debit += $tdrow['debit'];
+											$total_credit += $tdrow['credit'];
+										?>
+									<?php endforeach;?>
+									<tr style="border-top:2px solid #ddd;border-bottom:2px solid #ddd;">
+										<th colspan="3" style="font-size:13px"> Total : </th>
+										<th style="font-size:13px; text-align:right"><?php  echo number_format((float)$total_debit, 2, '.', ',');?></th>
+										<th style="font-size:13px; text-align:right"><?php  echo number_format((float)$total_credit, 2, '.', ',');?></th>
+									</tr>
+								</tbody>
+							</table>
+						</div>
+						<div class="col-lg-9" id="convert-tb0">
+							<ul class="list-unstyled spaced">
+							    <?php foreach($this->commissionObj->getSum($id,'`commission_amt`', '`decimal_amt`', '`remitance_amt`') as $com);?>
+							    <li>
+									<i class="ace-icon glyphicon glyphicon-ok"></i><b>Commission -Inbound Transfer WU:</b> <?php echo $com['sumcommission']; ?>
+								</li>
+							    <li>
+									<i class="ace-icon glyphicon glyphicon-ok"></i><b>Bank Charges on Remittance WU :</b> <?php  echo $com['sumremitance']; ?> 
+								</li>
+								<li>
+									<i class="ace-icon glyphicon glyphicon-ok"></i><b>Decimal Gain WU: </b> <?php  echo $com['sumdecimal']; ?>
+								</li>
+								<li>
+									<i class="ace-icon glyphicon glyphicon-ok"></i><b>Actual Commission: </b> <?php echo $camount;?>
+								</li>
+							</ul>
+						</div>
+					</div>
+					<br/>
+					<div class="row">
+						<div class="col-lg-3">
+						    <?php //echo $this->partial('partial/attachment.phtml', array('process' => '431', 'process_id'=> $row['id'], 'applicationNO'=>$row['voucher_no'], 'login_id' =>$login_id,'status'=>$status));?>
+						</div>
+						<div class="col-lg-6">
+						   &nbsp; 
+						</div>
+						<div class="col-lg-3">
+							<?php if($status < 3):?>
+								<?php echo $this->button(3, $id);?>
+							<?php endif;?>
+						</div>
+					</div>
+					<div class="row" id="convert-tb0">
+					    <div class="col-lg-4" id="convert-tb1">
+							<ul class="list-unstyled spaced pull-left">
+								<li>
+									<label style="font-size:13px"> Prepared by:<strong> <?php echo $this->userObj->getColumn($author,'name');?> </strong>on:(<i><?php echo $created?></i>)</label>
+								</li>
+							</ul>
+						</div>
+						<div class="col-lg-4" id="convert-tb2">
+						    <?php if($voucher_id == 8):?>
+						    <ul class="list-unstyled spaced center"><li><label> Received By Signatory </label></li></ul>
+						    <?php endif;?>
+						</div>
+						<div class="col-lg-4" id="convert-tb3">
+							<ul class="list-unstyled spaced pull-right">
+								<li>
+									<label> Authorized Signatory </label>
+								</li>
+							</ul>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+<div class="modal fade" id="modal" tabindex="-1" role="dialog" aria-hidden="true">
+	<div class="modal-dialog modal-lg" role="document">
+		<div class="modal-content">
+		</div><!-- /.modal-content -->
+	</div><!-- /.modal-dialog -->
+</div><!-- /.modal -->
+<script type="text/javascript">
+	$('#print').genpdfinvoice3({
+		content: '#report-print',
+		src:"<?php echo $this->url('pdfxls', array('action' => 'pdf'));?>",
+		orentation:"L",//L =landscape, P = potrait
+	});
+</script>

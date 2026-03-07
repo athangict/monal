@@ -1,0 +1,247 @@
+<?php
+/**
+ * 
+ * View -- of Humanresource/EmployeeController/editemployeeAction
+ * 
+ */
+$this->headTitle($this->title);
+?>
+<?php 
+foreach($land as $rows):
+	//extract($rows);
+	
+endforeach; //exit;
+?>
+
+
+<form id="#form" method="post" action="<?php echo $this->url('building', array('action' => 'editland', 'id' => $rows['id'])); ?>" enctype="multipart/form-data">
+<div class="row">
+	<div class="col-lg-12"> 
+		<div class="widget-box transparent">
+			<div class="widget-header widget-header-smaller">
+				<h4 class="widget-title blue bolder smaller"> Edit Details </h4>
+			</div>
+			<div class="widget-body">
+				<div class="widget-main padding-24"> 
+				    <div class="row">
+						  <div class="form-group col-lg-4">
+								<label for="region" class="control-label">Region</label>
+								<select class="form-control" id="region" name="region" data-placeholder="Select" required >
+									<option value=""></option>
+									<?php 
+									foreach ($region as $regions):
+									?>
+										<option value="<?php echo $regions['id'];?>">
+											<?php echo $regions['region'];?>
+										</option>
+									<?php
+									endforeach;
+									?>
+								</select>
+							</div>        
+							<div class="form-group col-lg-4">
+								<label for="location" class="control-label">location</label>
+								<select class="form-control chosen-widget" id="location" name="location" data-placeholder="Select" required >
+									<option value=""></option>
+								</select>
+							</div>
+						<div class="form-group col-lg-4">
+							<label for="land_type" class="control-label">land_type</label>
+							<select class="form-control" name="land_type" id="land_type" required>
+								<option value="URC" <?php if ($rows['land_type'] === 'URC') echo 'selected'; ?>>URC </option>
+								<option value="Lagtram" <?php if ($rows['land_type'] === 'Lagtram') echo 'selected'; ?>>Lagtram </option>
+							</select>
+                      </div>
+							
+                     
+						<div class="form-group col-lg-4">
+							<label for="exact_location" class="control-label">Exact location</label>
+							<input type="text" class="form-control" name="exact_location" id="exact_location" value="<?php echo $rows['exact_location'];?>" required />
+						</div>
+			
+						<div class="form-group col-lg-4">
+							<label for="area_in_acres" class="control-label"> Area in acres </label>
+							<input type="text" class="form-control" name="area_in_acres" id="area_in_acres" value="<?php echo $rows['area_in_acres'];?>" required />
+						</div>
+								
+						<div class="form-group col-lg-4">
+							<label for="area_in_sqaureft" class="control-label">Area in sq</label>
+							<input type="text" class="form-control" name="area_in_sqaureft" id="area_in_sqaureft" value="<?php echo $rows['area_in_sqaureft'];?>" required />
+						</div>
+
+					
+					    <div class="form-group col-lg-4">
+							<label for="plot_number" class="control-label">Plot number</label>
+							<input type="text" class="form-control" name="plot_number" id="plot_number" value="<?php echo $rows['plot_number'];?>" required />
+						</div>
+				
+					
+						<div class="form-group col-lg-4">
+							<label for="thram_no" class="control-label"> Thram no </label>
+							<input type="text" class="form-control" name="thram_no" id="thram_no" style="text-transform: capitalize;" value="<?php echo $rows['thram_no'];?>" required />
+						</div>
+					
+						<div class="form-group col-lg-4">
+							<label for="land" class="control-label">Land </label>
+							<input type="text" class="form-control" name="land" id="land" style="text-transform: capitalize;" value="<?php echo $rows['land'];?>" required />
+						</div>
+					
+						<div class="form-group col-lg-4">
+							<label for="land_tax" class="control-label"> Land tax </label>
+							<input type="text" class="form-control" name="land_tax" id="land_tax" style="text-transform: capitalize;" value="<?php echo $rows['land_tax'];?>" required />
+						</div>
+						<div class="form-group col-lg-4">
+							<label for="land_income" class="control-label"> Land icome </label>
+							<input type="text" class="form-control" name="land_income" id="land_income" style="text-transform: capitalize;" value="<?php echo $rows['land_income'];?>" required />
+						</div>
+						<div class="form-group col-lg-4">
+							<label for="pp" class="control-label"> Purchase price </label>
+							<input type="text" class="form-control" name="pp" id="pp" style="text-transform: capitalize;" value="<?php echo $rows['pp'];?>" required />
+						</div>
+					</div>
+				</div>	
+			</div>
+		</div>
+	</div>
+</div>
+
+<button type="submit" class="btn btn-success"><i class="fa fa-check"></i> Save </button>
+<button type="button" class="btn btn-warning" onclick="javascript:history.back();"><i class="fa fa-times"></i> Cancel </button>  
+</form>
+<script>
+	$('document').ready(function(){
+		const fv = FormValidation.formValidation(document.getElementById('#form'), {
+		
+			fields: {
+			region: {
+				validators: {
+					notEmpty: {
+						message: 'Please provide region type.'
+					}
+				}
+			},
+			location: {
+				validators: {
+					notEmpty: {
+						message: 'Please provide location.'
+					}
+				}
+			},
+			land_type: {
+				validators: {
+					notEmpty: {
+						message: 'Please select if there is land type.'
+					}
+				}
+			},
+			exact_location: {
+				validators: {
+					notEmpty: {
+						message: 'Please provide exact location.'
+					}
+				}
+			},
+			status: {
+				validators: {
+					notEmpty: {
+						message: 'Please select status.'
+					}
+				}
+			},
+			area_in_acres: {
+				validators: {
+					notEmpty: {
+						message: 'Please provide acres.'
+					}
+				}
+			},
+			area_in_sqaureft: {
+				validators: {
+					notEmpty: {
+						message: 'Please provide status.'
+					}
+				}
+			},
+			plot_number: {
+				validators: {
+					notEmpty: {
+						message: 'Please provide plot number.'
+					}
+				}
+			},
+			area_in_sqaureft: {
+				validators: {
+					notEmpty: {
+						message: 'Please provide status.'
+					}
+				}
+			},
+		
+			thram_no: {
+				validators: {
+					notEmpty: {
+						message: 'Please provide thram number.'
+					}
+				}
+			},
+			
+			thram_no: {
+				validators: {
+					notEmpty: {
+						message: 'Please provide thram number.'
+					}
+				}
+			},
+			land: {
+				validators: {
+					notEmpty: {
+						message: 'Please provide land.'
+					}
+				}
+			},
+			land_tax: {
+				validators: {
+					notEmpty: {
+						message: 'Please provide land tax.'
+					}
+				}
+			},
+			
+		},
+			plugins: {
+				trigger: new FormValidation.plugins.Trigger(),
+				bootstrap3: new FormValidation.plugins.Bootstrap3(),
+				submitButton: new FormValidation.plugins.SubmitButton(),
+				defaultSubmit: new FormValidation.plugins.DefaultSubmit(),
+			},
+		}).on('core.element.validated', function (e) {
+			if (e.valid) {
+				$('div#'+ e.field.replace('[]','') +'_chosen').removeClass('is-invalid');
+				$('div#'+ e.field.replace('[]','') +'_chosen').addClass('is-valid');
+			} else {
+				$('div#'+ e.field.replace('[]','') +'_chosen').removeClass('is-valid');
+				$('div#'+ e.field.replace('[]','') +'_chosen').addClass('is-invalid');
+			}
+		});
+		$('form select').chosen().change(function () {
+			fv.revalidateField($(this).attr('name'));
+		});
+
+		$('select#region').on('change',function(){
+			$.post(
+				"<?php echo $this->url('building', array('action' => 'getlocation'));?>",
+				{
+					regId: $(this).val(),
+				},
+				function(data){
+					$('select#location').html(data.location);
+					$('select#location').trigger('chosen:updated');
+				},
+				'json'
+			);
+		});
+	});
+</script>
+
+	
+	

@@ -1,0 +1,689 @@
+<?php
+/**
+ * chophel@athang.com 
+ * View -- of Stock/StockmovementController/stockmovementAction
+ */
+	$this->headTitle($this->title);
+?>
+<style>
+	tr.group,
+	tr.group:hover {
+		background-color: #ddd !important;
+		font: 15px "Open Sans","Helvetica Neue",Helvetica,Arial,sans-serif;
+	}
+</style>
+<?php
+	$time = microtime();
+	$time = explode(' ', $time);
+	$time = $time[1] + $time[0];
+	$start = $time;
+?>
+<div class="row">
+	<div class="col-lg-12">
+		<form method="post" action="<?php echo $this->url('stockreport', array('action' => 'stockmovement')); ?>"  enctype="multipart/form-data" >    
+			<div class="row">
+				<div class="form-group col-lg-2">
+					<label class="control-label" for="location">Location</label>
+					<input type="hidden" name="location_name" id="location_name" value="<?php echo $this->locationObj->getColumn($data['location'],'location');?>" >
+					<select class="form-control" name="location" id="location" data-placeholder="select" >
+						<option value="-1">All</option>
+						<?php foreach($regions as $region):?>
+							<optgroup label="<?php echo $region['region'];?>">
+							<?php  
+								$locations = $locationObj->get(array('l.region'=>$region['id'],'l.location_type'=>array(1,2,7,8)));
+								foreach ($locations as $location):
+									$selected_loc = ($location['id']==$data['location'])?"selected":"";
+							?>
+								<option value="<?php echo $location['id']; ?>" <?php echo $selected_loc;?>>
+									<?php echo $location['location']; ?>
+								</option>
+							<?php endforeach;?>
+							</optgroup>
+						<?php endforeach;  ?>									
+					</select>
+				</div>
+				<div class="form-group col-lg-2">
+					<label class="control-label" for="activity">Activity</label>
+					<input type="hidden" name="activity_name" id="activity_name" value="<?php echo $this->activityObj->getColumn($data['activity'],'activity');?>" >
+					<select class="form-control" name="activity" id="activity" data-placeholder="select" >
+						<option value=""></option>
+						<?php 
+							$activities = $this->activityObj->getAll();
+							foreach($activities as $activity):
+							$selected_act = ($activity['id']==$data['activity'])?"selected":"";
+						?>
+							<option value="<?php echo $activity['id'];?>" <?php echo $selected_act;?>>
+								<?php echo $activity['activity'];?>
+							</option>
+						<?php endforeach;?>
+					</select>
+				</div>
+				<div class="form-group col-lg-2">
+					<label class="control-label" for="start_date">Start Date</label>
+					<div class="date input-group" id="start_date" data-date="<?php echo $data['start_date'];?>" data-date-format="yyyy-mm-dd" >
+						<input class="form-control span2" name="start_date" id="start_date" type="text" placeholder="Start Date" value="<?php echo $data['start_date'];?>" readonly required>
+						<span class="input-group-addon add-on"><i class="fa fa-calendar"></i></span>
+					</div>
+				</div>
+				<div class="form-group col-lg-2">
+					<label class="control-label" for="end_date">End Date</label>
+					<div class="date input-group" id="end_date" data-date="<?php echo $data['end_date'];?>" data-date-format="yyyy-mm-dd" >
+						<input class="form-control span2" name="end_date" id="end_date" type="text" placeholder="End Date" value="<?php echo $data['end_date'];?>" readonly required>
+						<span class="input-group-addon add-on"><i class="fa fa-calendar"></i></span>
+					</div>
+				</div>
+				<div class="form-group col-lg-2">
+					<label class="control-label" for="item">Stock Item</label>
+					<select class="form-control" name="item" id="item" data-placeholder="select" >
+						<option value="-1" <?php echo ($data['item'] == '-1')?'selected':'';?>>All</option>
+						<?php foreach($stock_items as $stock_item):
+							$selected_item = ($stock_item['item_id'] == $data['item'])?'selected':'';
+						?>
+							<option value="<?php echo $stock_item['item_id'];?>" <?php echo $selected_item;?> >
+								<?php echo $stock_item['code'];?>
+							</option>
+						<?php endforeach;?>
+					</select>
+				</div>
+				<div class="col-lg-2">
+					<div class="space-8"></div>
+					<button type="submit" class="btn btn-primary pull-right"><i class="fa fa-refresh"></i>Refresh</button>
+				</div>
+			</div>
+		</form>
+		<div class="hr hr-dotted"></div>
+		<div class="space-4"></div>
+		<div>
+			<table class="table table-striped table-condensed table-bordered table-hover" id="example">
+				<thead>
+					<tr>
+						<th>Item</th>
+						<?php if($data['activity'] == '1' || $data['activity'] == 7): ?>
+						<th>Batch</th>
+						<th>Supplier</th>
+						<?php endif;?>
+						<th>Opening</th>
+						<th>Purchase</th>
+						<th>IntRecpt</th>
+						<th>Dispatch</th>
+						<th>Dumped</th>
+						<?php if($data['activity'] == '1' || $data['activity'] == 7): ?>
+						<th>Scheme</th>
+						<?php endif; ?>
+						<th>Adjusted</th>
+						<th>Shortage</th>
+						<th>Credit</th>
+						<th>Cash</th>
+						<th>Intransit</th>
+						<th>Closing</th>
+						<th>Actual Qty</th>
+						<th>ELC</th>
+						<?php if($data['location'] != '-1'):?>
+						<th>SP</th>
+						<?php endif;?>
+						<th>Stock Value</th>
+					</tr>
+				</thead>
+				<tbody>
+					<?php 
+					if($data['activity'] == 1 || $data['activity'] == 7):
+						$lists = $this->batchObj->filterSMBatch($data['location'],array('i.activity'=>$data['activity'], 'i.valuation'=>0, 'b.status' => 3),'d.location',$data['item']);
+						//echo "From batch=".sizeof($lists)."<br>";
+						$array = array();
+						foreach($lists as $list):
+							array_push($array, $list['id']);
+						endforeach;
+						$opening_list = $this->openingObj->filterSMBatch($data['start_date'],$data['location'],array('i.activity'=>$data['activity']),'o.opening_date','od.location',$array,$data['item']);
+						//echo "Opening=".sizeof($opening_list)."<br>";
+						$pur_list = $this->pur_receiptObj->filterSMBatch($data['end_date'],$data['location'],array('p.status'=>3,'p.activity'=>$data['activity']),'p.prn_date','p.location',$array,$data['item']);
+						//echo "Purchase=".sizeof($pur_list)."<br>";
+						$disp_list = $this->dispatchObj->filterSMBatch($data['start_date'],$data['end_date'],$data['location'],array('d.status'=>array(2,10,3),'d.activity'=>$data['activity']),'d.dispatch_date','d.from_location',$array,$data['item']);
+						//echo "dispatch=".sizeof($disp_list)."<br>";
+						$rept_list = $this->dispatchObj->filterSMReceiptBatch($data['end_date'],$data['location'],array('d.status'=>array(3),'d.activity'=>$data['activity']),'d.received_on','d.to_location',$array,$data['item']);
+						//echo "receipt=".sizeof($rept_list)."<br>";
+						$tras_list_date = $this->dispatchObj->filterSMBatchTransitDate($data['end_date'],$data['location'],array('d.activity'=>$data['activity'],'d.status'=>array(2,3)),'d.dispatch_date','d.received_on','d.to_location',$array,$data['item']);
+						//echo "In-Transit-Date=".sizeof($tras_list_date)."<br>";
+						$tras_list_status = $this->dispatchObj->filterSMBatchTransitStatus($data['end_date'],$data['location'],array('d.activity'=>$data['activity'],'d.status'=>array(2,10)),'d.dispatch_date','d.to_location',$array,$data['item']);
+						//echo "In-Transit-Status=".sizeof($tras_list_status)."<br>";
+						$converted_to_list = $this->itemconversionObj->filterSMBatchto($data['start_date'],$data['end_date'],$data['location'],array('c.status'=>array(3),'i.activity'=>$data['activity']),'c.conversion_date','c.location',$array,$data['item']);
+						//echo "converted to list =".sizeof($converted_to_list)."<br>";
+						$converted_from_list = $this->itemconversionObj->filterSMBatchfrom($data['start_date'],$data['end_date'],$data['location'],array('c.status'=>array(3),'i.activity'=>$data['activity']),'c.conversion_date','c.location',$array,$data['item']);
+						//echo "converted from list=".sizeof($converted_from_list)."<br>";	
+						$sale_list = $this->salesObj->filterSMBatch($data['start_date'],$data['end_date'],$data['location'],array('i.activity'=>$data['activity'],'s.status'=>3),'s.sales_date','s.location',$array,$data['item']);
+						//echo "Sales=".sizeof($sale_list)."<br>";
+						$sam_list = $this->samObj->filterSMBatch($data['start_date'],$data['end_date'],$data['location'],array('s.activity'=>$data['activity'],'s.status'=>3),'s.sam_date','s.location',$array,$data['item']);
+						//echo "Sam=".sizeof($sam_list)."<br>";
+						$row_list = array_merge($lists,$opening_list,$pur_list,$disp_list,$rept_list,$tras_list_date,$tras_list_status,$converted_to_list,$converted_from_list,$sale_list,$sam_list);
+						//echo "Merge = ".sizeof($row_list)."<br>";
+						$row_unique = array_unique($row_list, SORT_REGULAR);
+						//echo "Unique = ".sizeof($row_unique)."<br>"; exit;
+						$total_stock_value = 0;
+						$total_credit_value = 0;
+						$total_cash_value = 0;
+						foreach($row_unique as $list): 
+						    if($list['id'] > 0):
+							$batches = $this->batchObj->fetchSMBatchDetails($list['id']);
+							foreach($batches as $batch):
+							
+							if($data['location'] != '-1'):
+								$batch_elc = $this->batch_dtlsObj->getColumn(array('batch'=>$batch['id'],'location'=>$data['location']),'landed_cost');
+								//$batch_elc = $batch['landed_cost'];
+								$batch_elc = $batch_elc/$batch['unit_uom'];
+								$batch_sp = $this->batch_dtlsObj->getColumn(array('batch'=>$batch['id'],'location'=>$data['location']),'selling_price');
+								
+								$total_qty = $this->batch_dtlsObj->getColumn(array('batch'=>$batch['id'],'location'=>$data['location']),'quantity');
+							else:
+								$total_elc = $this->batch_dtlsObj->getSUM(array('batch'=>$batch['id']),'landed_cost');
+								$total_no = $this->batch_dtlsObj->getCount(array('batch'=>$batch['id']));
+								$batch_elc = $total_elc/$total_no;
+								$batch_elc = $batch_elc/$batch['unit_uom'];
+								
+								$total_sp = $this->batch_dtlsObj->getSUM(array('batch'=>$batch['id']),'selling_price');
+								$batch_sp = $total_sp/$total_no;
+								
+								$total_qty = $this->batch_dtlsObj->getSUM(array('batch'=>$batch['id']),'quantity');
+							endif;
+							//Opening Stock Table
+							$op_stock_openings = $this->openingObj->fetchSMOpeningSUM($data['start_date'],$data['location'],array('o.batch'=>$batch['batch'],'o.item'=>$batch['item']));
+							
+							$op_purchases = $this->pur_receiptObj->fetchSMOpeningSUM($data['start_date'],$data['location'],array('pd.batch'=>$batch['id'],'pd.item'=>$batch['item'],'p.status'=>3),'p.prn_date','p.location','pd.basic_sound_qty');
+							
+							$op_dispatch = $this->dispatchObj->fetchSMOpeningSUM($data['start_date'],$data['location'],array('dd.batch'=>$batch['id'],'dd.item'=>$batch['item'],'d.status'=>array(2,10,3)),'d.dispatch_date','d.from_location','dd.basic_quantity');
+							$op_in_receipt = $this->dispatchObj->fetchSMOpeningSUM($data['start_date'],$data['location'],array('dd.batch'=>$batch['id'],'dd.item'=>$batch['item'],'d.status'=>3),'d.received_on','d.to_location','dd.accepted_qty');
+							
+							$op_credit = $this->salesObj->fetchSMOpeningSUM($data['start_date'],$data['location'],array('sd.batch'=>$batch['id'],'sd.item'=>$batch['item'],'credit'=>1,'s.status'=>3),'s.sales_date','s.location','sd.basic_quantity');
+							$op_cash = $this->salesObj->fetchSMOpeningSUM($data['start_date'],$data['location'],array('sd.batch'=>$batch['id'],'sd.item'=>$batch['item'],'credit'=>0,'s.status'=>3),'s.sales_date','s.location','sd.basic_quantity');
+							$op_disqty = $this->salesObj->fetchFIOpeningSUM($data['start_date'],$data['location'],array('sd.batch'=>$batch['id'],'sd.item'=>$batch['item'],'s.status'=>3,'sd.free_item' => $batch['item']),'s.sales_date','s.location','sd.discount_qty');
+							
+							$op_dump = $this->samObj->fetchSMOpeningSUM($data['start_date'],$data['location'],array('sd.batch'=>$batch['id'],'sd.item'=>$batch['item'],'sam_type'=>array(1,2),'s.status'=>3),'s.sam_date','s.location','sd.basic_quantity');
+							$op_shortage = $this->samObj->fetchSMOpeningSUM($data['start_date'],$data['location'],array('sd.batch'=>$batch['id'],'sd.item'=>$batch['item'],'sam_type'=>3,'s.status'=>3),'s.sam_date','s.location','sd.basic_quantity');
+							$op_sales_promotion = $this->samObj->fetchSMOpeningSUM($data['start_date'],$data['location'],array('sd.batch'=>$batch['id'],'sd.item'=>$batch['item'],'sam_type'=>4,'s.status'=>3),'s.sam_date','s.location','sd.basic_quantity');
+							$op_adjustment = $this->samObj->fetchSMOpeningSUM($data['start_date'],$data['location'],array('sd.batch'=>$batch['id'],'sd.item'=>$batch['item'],'sam_type'=>5,'s.status'=>3),'s.sam_date','s.location','sd.basic_quantity');
+							
+							$opening = $op_stock_openings + $op_purchases + $op_adjustment - $op_dispatch + $op_in_receipt + $op_converted_to - $op_converted_from - $op_credit - $op_cash - $op_dump - $op_shortage -$op_sales_promotion - $op_disqty;
+							
+							//Purchase Receipt Table
+							$purchases = $this->pur_receiptObj->fetchSMQuantitySUM($data['start_date'],$data['end_date'],$data['location'],array('pd.batch'=>$batch['id'],'pd.item'=>$batch['item'],'p.status'=>3),'p.prn_date','p.location','pd.basic_sound_qty');
+							
+							//Dispatch Table
+							$dispatch = $this->dispatchObj->fetchSMQuantitySUM($data['start_date'],$data['end_date'],$data['location'],array('dd.batch'=>$batch['id'],'dd.item'=>$batch['item'],'d.status'=>array(2,10,3)),'d.dispatch_date','d.from_location','dd.basic_quantity');
+							//$dispatch_shortage = $this->dispatchObj->fetchSMQuantitySUM($data['start_date'],$data['end_date'],$data['location'],array('dd.batch'=>$batch['id'],'dd.item'=>$batch['item'],'d.status'=>array(3)),'d.dispatch_date','d.from_location','dd.shortage_qty');
+							$in_receipt = $this->dispatchObj->fetchSMQuantitySUM($data['start_date'],$data['end_date'],$data['location'],array('dd.batch'=>$batch['id'],'dd.item'=>$batch['item'],'d.status'=>3),'d.received_on','d.to_location','dd.accepted_qty');
+							$in_transit_date = $this->dispatchObj->fetchSMTransitQtyDateSUM($data['end_date'],$data['location'],array('dd.batch'=>$batch['id'],'dd.item'=>$batch['item'],'d.status'=>array(2,3)),'d.dispatch_date','d.received_on','d.to_location','dd.basic_quantity');
+							$in_transit_status = $this->dispatchObj->fetchSMTransitQtyStatusSUM($data['end_date'],$data['location'],array('dd.batch'=>$batch['id'],'dd.item'=>$batch['item'],'d.status'=>array(2,10)),'d.dispatch_date','d.received_on','d.to_location','dd.basic_quantity');
+							$in_transit = $in_transit_date + $in_transit_status;
+						
+							//Sales Table
+							$credit = $this->salesObj->fetchSMQuantitySUM($data['start_date'],$data['end_date'],$data['location'],array('sd.batch'=>$batch['id'],'sd.item'=>$batch['item'],'credit'=>1,'s.status'=>3),'s.sales_date','s.location','sd.basic_quantity');
+							$cash = $this->salesObj->fetchSMQuantitySUM($data['start_date'],$data['end_date'],$data['location'],array('sd.batch'=>$batch['id'],'sd.item'=>$batch['item'],'credit'=>0,'s.status'=>3),'s.sales_date','s.location','sd.basic_quantity');
+							$free_item_qty = $this->salesObj->fetchFIQuantitySUM($data['start_date'],$data['end_date'],$data['location'],array('sd.batch'=>$batch['id'],'sd.item'=>$batch['item'],'credit'=>0,'s.status'=>3,'sd.free_item' => $batch['item']),'s.sales_date','s.location','sd.discount_qty');
+							
+							//SAM Table
+							$dump = $this->samObj->fetchSMQuantitySUM($data['start_date'],$data['end_date'],$data['location'],array('sd.batch'=>$batch['id'],'sd.item'=>$batch['item'],'sam_type'=>array(1,2),'s.status'=>3),'s.sam_date','s.location','sd.basic_quantity');
+							$shortage = $this->samObj->fetchSMQuantitySUM($data['start_date'],$data['end_date'],$data['location'],array('sd.batch'=>$batch['id'],'sd.item'=>$batch['item'],'sam_type'=>3,'s.status'=>3),'s.sam_date','s.location','sd.basic_quantity');
+							$sales_promotion = $this->samObj->fetchSMQuantitySUM($data['start_date'],$data['end_date'],$data['location'],array('sd.batch'=>$batch['id'],'sd.item'=>$batch['item'],'sam_type'=>4,'s.status'=>3),'s.sam_date','s.location','sd.basic_quantity');
+							$adjustment = $this->samObj->fetchSMQuantitySUM($data['start_date'],$data['end_date'],$data['location'],array('sd.batch'=>$batch['id'],'sd.item'=>$batch['item'],'sam_type'=>5,'s.status'=>3),'s.sam_date','s.location','sd.basic_quantity');
+							
+							//Adjusted - sum of $shorage and $converted from
+							$adjusted = $adjustment;
+							$scheme = $free_item_qty; 
+							//Sum of $converted_to and $in_receipt
+							$int_conv = $in_receipt;
+							$dump = $dump + $sales_promotion;
+							//Closing Balance
+							$closing = $opening + $purchases + $in_receipt + $adjustment - $dispatch + $converted_to - $converted_from - $dump - $shortage - $cash - $credit - $free_item_qty; 
+							if($opening == 0 && $purchases == 0 && $in_receipt == 0 && $dispatch == 0 &&$dump == 0 && $adjustment == 0 && $shortage == 0 &&$cash == 0 && $credit== 0 && $in_transit == 0 && $converted_to == 0 && $converted_from == 0 && $sales_promotion == 0 && $free_item_qty == 0):
+						?>
+						<?php else:
+						    $sv = $closing * $batch_elc;
+							$siv = $in_transit * $batch_elc;
+							$total_stock_value += $sv;
+							$total_stock_intransit_value += $siv;
+								
+						    $credit_value = $credit * $batch_sp;
+						    $credit_value = number_format($credit_value, 2, '.', '');
+					        $total_credit_value += $credit_value;
+					        $cash_value = $cash * $batch_sp;
+					        $cash_value = number_format($cash_value, 2, '.', '');
+					        $total_cash_value += $cash_value; 
+					        
+							$opening = ($opening != '' && $opening != 0)?number_format($opening, 2, '.', ','):'-';
+							$purchases = ($purchases != '' && $purchases != 0)?number_format($purchases, 2, '.', ','):'-';
+							$in_receipt = ($in_receipt != '' && $in_receipt != 0)?number_format($in_receipt, 2, '.', ','):'-';
+							$dispatch = ($dispatch != '' && $dispatch != 0)?number_format($dispatch, 2, '.', ','):'-';
+							$converted_to = ($converted_to != '' && $converted_to != 0)?number_format($converted_to, 2, '.', ','):'-';
+							$converted_from = ($converted_from != '' && $converted_from != 0)?number_format($converted_from, 2, '.', ','):'-';
+							$dump = ($dump != '' && $dump != 0)?number_format($dump, 2, '.', ','):'-';
+							$shortage = ($shortage != '' && $shortage != 0)?number_format($shortage, 2, '.', ','):'-';
+							$credit = ($credit != '' && $credit != 0)?number_format($credit, 2, '.', ','):'-';
+							$cash = ($cash != '' && $cash != 0)?number_format($cash, 2, '.', ','):'-';
+							$scheme = ($scheme != '' && $scheme != 0)?number_format($scheme, 2, '.', ','):'-';
+							$in_transit = ($in_transit != '' && $in_transit != 0)?number_format($in_transit, 2, '.', ','):'-';
+							$adjusted = ($adjusted != '' && $adjusted != 0)?number_format($adjusted, 2, '.', ','):'-';
+							$int_conv = ($int_conv != '' && $int_conv != 0)?number_format($int_conv, 2, '.', ','):'-';
+						?>
+							<tr>
+								<td><?php echo $batch['name'];?></td>
+								<?php if($data['activity'] == '1' || $data['activity'] == '7'): ?>
+								<td><?php echo $batch['batch'];?></td>
+								<td><?php echo $this->partyObj->getColumn($batch['supplier'],'code');?></td>
+								<?php endif;?>
+								<td class="blue" style="text-align:right" title="<?php echo "Opening : ".$op_stock_openings."&#013Purchase : ".$op_purchases."&#013IntRecpt : ".$op_in_receipt."&#013Convert To : ".$op_converted_to."&#013Convert From : ".$op_converted_from."&#013Dispatch : ".$op_dispatch."&#013Dumped : ".$op_dump."&#013Shortage : ".$op_shortage."&#013Credit : ".$op_credit."&#013Cash : ".$op_cash;?>">
+									<?php echo $opening;?></td>
+								<td class="green" style="text-align:right"><?php echo $purchases;?></td>
+								<td class="green" style="text-align:right" title="<?php echo "IntRecpt : ".$in_receipt."&#013Converted To : ".$converted_to;?>"><?php echo $int_conv;?></td>
+							
+								<td class="red" style="text-align:right"><?php echo $dispatch;?></td>
+								<td class="red" style="text-align:right"><?php echo $dump; ?></td>
+								<?php if($data['activity'] == '1' || $data['activity'] == '7'): ?>
+								<td class="red" style="text-align:right"><?php echo $scheme;?></td>
+								<?php endif;?>
+								<td class="red" style="text-align:right" title="<?php echo "Shortage : ".$shortage."&#013Converted From : ".$converted_from."&#013Adjustment: ".$adjustment;?>"><?php echo $adjusted; ?></td>
+							    <td class="red" style="text-align:right" title="<?php echo "Shortage : ".$shortage."&#013Converted From : ".$converted_from."&#013Adjustment: ".$shortage;?>"><?php echo $shortage; ?></td>
+								<td class="red" style="text-align:right"><?php echo $credit;?></td>
+								<td class="red" style="text-align:right"><?php echo $cash;?></td>
+								<td class="purple" style="text-align:right"><?php echo $in_transit;?></td>
+								<td class="blue" style="text-align:right"><?php echo ($closing != '' && $closing != 0)?number_format($closing, 2, '.', ','):'-';?></td>
+								<td class="orange" style="text-align:right"><?php echo number_format($total_qty, 2, '.', ',');?></td>
+								<td style="text-align:right"><?php echo number_format($batch_elc, 2, '.', ',');?></td>
+								<td style="text-align:right"><?php echo number_format($batch_sp, 2, '.', ',');?></td>
+								<td style="text-align:right">
+									<?php 
+										echo number_format($sv, 2, '.', ',');
+									?>
+								</td>
+							</tr>
+					<?php 
+							endif;
+							endforeach;
+						endif;
+						endforeach;
+					else:
+						$items = $this->batchObj->fetchSMDistinctItems(array('i.activity'=>$data['activity'], 'i.valuation'=>1, 'b.status' => 3),$data['item']);
+						$total_stock_value = 0;
+						$total_credit_value = 0;
+						$total_cash_value = 0;
+						$closing= 0;
+						foreach($items as $item):
+							$max_spe_date = $this->movingitemspObj->getMaxBatchdate('sp_effect_date',array('item' => $item['item_id']),$data['start_date'],$data['end_date']);
+							$max_batch_id = $this->movingitemspObj->getMaxBatchIdByLocation('b.batch',array('item' => $item['item_id']),$data['start_date'],$data['end_date'],$data['location']);
+							$spbatches = $this->movingitemspObj->getBatchRow(array('item' => $item['item_id']),$max_spe_date);
+							if(sizeof($spbatches)==0){
+								$spbatches = $this->movingitemspObj->getBatchByDate(array('m.item' => $item['item_id']),$data['start_date']);
+							}
+							$moving_elc_sum = 0;
+							$moving_sp_sum = 0;
+							$moving_count = 0;
+							foreach($spbatches as $spbatch):
+								$unit_uom = $this->batchObj->getColumn($spbatch['batch'],'unit_uom');
+								$total_elc = $this->batch_dtlsObj->getColumn(array('batch'=>$spbatch['batch']),'landed_cost');
+								$moving_elc = $total_elc/$unit_uom;
+								$moving_elc_sum += $moving_elc;
+								$moving_count += 1;
+								if($data['location'] != '-1'):
+									$selling_price = $this->batch_dtlsObj->getColumn(array('batch'=>$max_batch_id,'location'=>$data['location']),'selling_price');
+								endif;
+							endforeach;
+							$moving_elc = $moving_elc_sum/$moving_count;							
+							if($data['location'] != '-1'):
+							    $total_qty = $this->movingObj->getSUM(array('item' => $item['item_id'],'location'=>$data['location']),'quantity');
+							else:
+							    $total_qty = $this->movingObj->getSUM(array('item' => $item['item_id']),'quantity');
+							endif;
+							//Opening Stock Table
+							$op_stock_openings = $this->openingObj->fetchSMOpeningSUM($data['start_date'],$data['location'],array('o.item'=>$item['item_id']));
+							
+							$op_purchases = $this->pur_receiptObj->fetchSMOpeningSUM($data['start_date'],$data['location'],array('pd.item'=>$item['item_id'],'p.status'=>3),'p.prn_date','p.location','pd.basic_sound_qty');
+							
+							$op_dispatch = $this->dispatchObj->fetchSMOpeningSUM($data['start_date'],$data['location'],array('dd.item'=>$item['item_id'],'d.status'=>array(2,10,3)),'d.dispatch_date','d.from_location','dd.basic_quantity',$openingDate);
+							$op_in_receipt = $this->dispatchObj->fetchSMOpeningSUM($data['start_date'],$data['location'],array('dd.item'=>$item['item_id'],'d.status'=>3),'d.received_on','d.to_location','dd.accepted_qty');
+							
+							$op_converted_to = $this->itemconversionObj->fetchSMOpeningSUM($data['start_date'],$data['location'],array('converted_item'=>$item['item_id'],'status'=>3),'conversion_date','location','converted_basic_qty');
+							$op_converted_from = $this->itemconversionObj->fetchSMOpeningSUM($data['start_date'],$data['location'],array('item'=>$item['item_id'],'status'=>3),'conversion_date','location','basic_qty');
+							
+							$op_credit = $this->salesObj->fetchSMOpeningSUM($data['start_date'],$data['location'],array('sd.item'=>$item['item_id'],'credit'=>1,'s.status'=>3),'s.sales_date','s.location','sd.basic_quantity');
+							$op_cash = $this->salesObj->fetchSMOpeningSUM($data['start_date'],$data['location'],array('sd.item'=>$item['item_id'],'credit'=>0,'s.status'=>3),'s.sales_date','s.location','sd.basic_quantity');
+							
+							$op_dump = $this->samObj->fetchSMOpeningSUM($data['start_date'],$data['location'],array('sd.item'=>$item['item_id'],'sam_type'=>array(1,2),'s.status'=>3),'s.sam_date','s.location','sd.basic_quantity');
+							$op_shortage = $this->samObj->fetchSMOpeningSUM($data['start_date'],$data['location'],array('sd.item'=>$item['item_id'],'sam_type'=>3,'s.status'=>3),'s.sam_date','s.location','sd.basic_quantity');
+							$op_sales_promotion = $this->samObj->fetchSMOpeningSUM($data['start_date'],$data['location'],array('sd.item'=>$item['item_id'],'sam_type'=>4,'s.status'=>3),'s.sam_date','s.location','sd.basic_quantity');
+							$op_adjustment = $this->samObj->fetchSMOpeningSUM($data['start_date'],$data['location'],array('sd.item'=>$item['item_id'],'sam_type'=>5,'s.status'=>3),'s.sam_date','s.location','sd.basic_quantity');
+							
+							$plus_opening = $op_stock_openings + $op_purchases + $op_adjustment + $op_in_receipt + $op_converted_to;
+							$minus_opening = $op_dispatch + $op_converted_from + $op_credit + $op_cash + $op_dump + $op_shortage + $op_sales_promotion;
+							$opening = $plus_opening - $minus_opening;
+							
+							//Purchase Receipt Table
+							$purchases = $this->pur_receiptObj->fetchSMQuantitySUM($data['start_date'],$data['end_date'],$data['location'],array('pd.item'=>$item['item_id'],'p.status'=>3),'p.prn_date','p.location','pd.basic_sound_qty');
+							//Dispatch Table
+							$dispatch = $this->dispatchObj->fetchSMQuantitySUM($data['start_date'],$data['end_date'],$data['location'],array('dd.item'=>$item['item_id'],'d.status'=>array(2,10,3)),'d.dispatch_date','d.from_location','dd.basic_quantity');
+							$in_receipt = $this->dispatchObj->fetchSMQuantitySUM($data['start_date'],$data['end_date'],$data['location'],array('dd.item'=>$item['item_id'],'d.status'=>3),'d.received_on','d.to_location','dd.accepted_qty');
+							$in_transit_date = $this->dispatchObj->fetchSMTransitQtyDateSUM($data['end_date'],$data['location'],array('dd.item'=>$item['item_id'],'d.status'=>array(2,3)),'d.dispatch_date','d.received_on','d.to_location','dd.basic_quantity');
+							$in_transit_status = $this->dispatchObj->fetchSMTransitQtyStatusSUM($data['end_date'],$data['location'],array('dd.item'=>$item['item_id'],'d.status'=>array(2,10)),'d.dispatch_date','d.received_on','d.to_location','dd.basic_quantity');
+							$in_transit = $in_transit_date + $in_transit_status;
+							//Item Conversion
+							$converted_to = $this->itemconversionObj->fetchSMQuantitySUM($data['start_date'],$data['end_date'],$data['location'],array('converted_item'=>$item['item_id'],'status'=>3),'conversion_date','location','converted_basic_qty');
+							$converted_from = $this->itemconversionObj->fetchSMQuantitySUM($data['start_date'],$data['end_date'],$data['location'],array('item'=>$item['item_id'],'status'=>3),'conversion_date','location','basic_qty');
+							//Sales Table
+							$credit = $this->salesObj->fetchSMQuantitySUM($data['start_date'],$data['end_date'],$data['location'],array('sd.item'=>$item['item_id'],'credit'=>1,'s.status'=>3),'s.sales_date','s.location','sd.basic_quantity');
+							$cash = $this->salesObj->fetchSMQuantitySUM($data['start_date'],$data['end_date'],$data['location'],array('sd.item'=>$item['item_id'],'credit'=>0,'s.status'=>3),'s.sales_date','s.location','sd.basic_quantity');
+							//SAM Table
+							$dump = $this->samObj->fetchSMQuantitySUM($data['start_date'],$data['end_date'],$data['location'],array('sd.item'=>$item['item_id'],'sam_type'=>array(1,2),'s.status'=>3),'s.sam_date','s.location','sd.basic_quantity');
+							$shortage = $this->samObj->fetchSMQuantitySUM($data['start_date'],$data['end_date'],$data['location'],array('sd.item'=>$item['item_id'],'sam_type'=>3,'s.status'=>3),'s.sam_date','s.location','sd.basic_quantity');
+							$sales_promotion = $this->samObj->fetchSMQuantitySUM($data['start_date'],$data['end_date'],$data['location'],array('sd.item'=>$item['item_id'],'sam_type'=>4,'s.status'=>3),'s.sam_date','s.location','sd.basic_quantity');
+							$adjustment = $this->samObj->fetchSMQuantitySUM($data['start_date'],$data['end_date'],$data['location'],array('sd.item'=>$item['item_id'],'sam_type'=>5,'s.status'=>3),'s.sam_date','s.location','sd.basic_quantity');
+							
+							//Adjusted - sum of $shorage and $converted from
+							$adjusted = $converted_from + $adjustment + $sales_promotion;
+							//Sum of $converted_to and $in_receipt
+							$int_conv = $in_receipt + $converted_to;
+							
+							//Closing Balance
+							$closing = $opening + $purchases + $in_receipt + $adjustment - $dispatch + $converted_to - $converted_from - $dump - $shortage - $cash - $credit - $sales_promotion; 
+							if($opening == 0 && $purchases == 0 && $in_receipt == 0 && $dispatch == 0 && $dump == 0 && $shortage == 0 && $adjustment == 0 && $cash == 0 && $credit== 0 && $in_transit == 0 && $converted_to == 0 && $converted_from == 0 && $sales_promotion == 0):
+						?>
+						<?php else:
+						        $moving_elc = number_format($moving_elc, 2, '.', ',');
+								$sv = $closing * $moving_elc;
+								$siv = $in_transit * $moving_elc;
+								$total_stock_value += $sv;
+								$total_stock_intransit_value += $siv;
+						       
+						        $credit_value = $credit * $moving_sp;
+						        $total_credit_value += $credit_value;
+						        $cash_value = $cash * $moving_sp;
+						        $total_cash_value += $cash_value;
+						        $sum_closing += $closing;
+						        
+								$opening = ($opening != '' && $opening != 0)?number_format($opening, 2, '.', ','):'-';
+								$purchases = ($purchases != '' && $purchases != 0)?number_format($purchases, 2, '.', ','):'-';
+								$in_receipt = ($in_receipt != '' && $in_receipt != 0)?number_format($in_receipt, 2, '.', ','):'-';
+								$dispatch = ($dispatch != '' && $dispatch != 0)?number_format($dispatch, 2, '.', ','):'-';
+								$converted_to = ($converted_to != '' && $converted_to != 0)?number_format($converted_to, 2, '.', ','):'-';
+								$converted_from = ($converted_from != '' && $converted_from != 0)?number_format($converted_from, 2, '.', ','):'-';
+								$dump = ($dump != '' && $dump != 0)?number_format($dump, 2, '.', ','):'-';
+								$shortage = ($shortage != '' && $shortage != 0)?number_format($shortage, 2, '.', ','):'-';
+								$credit = ($credit != '' && $credit != 0)?number_format($credit, 2, '.', ','):'-';
+								$cash = ($cash != '' && $cash != 0)?number_format($cash, 2, '.', ','):'-';
+								$in_transit = ($in_transit != '' && $in_transit != 0)?number_format($in_transit, 2, '.', ','):'-';
+								$adjusted = ($adjusted != '' && $adjusted != 0)?number_format($adjusted, 2, '.', ','):'-';
+								$int_conv = ($int_conv != '' && $int_conv != 0)?number_format($int_conv, 2, '.', ','):'-';
+							?>
+							<tr>
+								<td><?php echo $item['code'];?></td>
+								<?php if($data['activity'] == '1' || $data['activity'] == '7'): ?>
+								<td><?php echo $this->partyObj->getColumn($item['supplier'],'code');?></td>
+								<td><?php echo 'NA';?></td>
+								<?php endif;?>
+								<td class="blue" style="text-align:right" title="<?php echo "Opening : ".$op_stock_openings."&#013Purchase : ".$op_purchases."&#013IntRecpt : ".$op_in_receipt."&#013Convert To : ".$op_converted_to."&#013Convert From : ".$op_converted_from."&#013Dispatch : ".$op_dispatch."&#013Dumped : ".$op_dump."&#013Shortage : ".$op_shortage."&#013Credit : ".$op_credit."&#013Cash : ".$op_cash;?>">
+									<?php echo $opening;?></td>
+								<td class="green" style="text-align:right"><?php echo $purchases;?></td>
+								<td class="green" style="text-align:right" title="<?php echo "IntRecpt : ".$in_receipt."&#013Converted To : ".$converted_to;?>"><?php echo $int_conv;?></td>
+								<td class="red" style="text-align:right"><?php echo $dispatch;?></td>
+								<td class="red" style="text-align:right"><?php echo $dump; ?></td>
+								<td class="red" style="text-align:right" title="<?php echo "adjusted : ".$adjusted."&#013Converted From : ".$converted_from."&#013Adjustment : ".$adjustment;?>"><?php echo $adjusted; ?></td>
+								<td class="red" style="text-align:right" title="<?php echo "Shortage : ".$shortage."&#013Converted From : ".$converted_from."&#013Adjustment : ".$adjustment;?>"><?php echo $shortage; ?></td>
+								<td class="red" style="text-align:right"><?php echo $credit;?></td>
+								<td class="red" style="text-align:right"><?php echo $cash;?></td>
+								<td class="purple" style="text-align:right"><?php echo 	$in_transit;?></td>
+								<td class="blue" style="text-align:right"><?php echo ($closing != '' && $closing != 0)?number_format($closing, 2, '.', ','):'-';;?></td>
+								<td class="orange" style="text-align:right"><?php echo number_format($total_qty, 2, '.', ',');?></td>
+								<td style="text-align:right"><?php echo number_format($moving_elc, 2, '.', ',');?></td>
+								<?php if($data['location'] != '-1'):?>
+								<td style="text-align:right"><?php echo number_format($selling_price, 2, '.', ',');?></td>
+								<?php endif; ?>
+								<td style="text-align:right"><?php
+										echo number_format($sv, 2, '.', ',');
+									?>
+								</td>
+							</tr>
+						<?php 
+								endif;
+						endforeach;
+					endif;	
+					?>
+				</tbody>
+			</table>
+		</div>
+		
+	</div>
+</div>
+<?php
+	$time = microtime();
+	$time = explode(' ', $time);
+	$time = $time[1] + $time[0];
+	$finish = $time;
+	$total_time = round(($finish - $start), 4);
+	echo "<p class='pull-right'>Stock Movement Report generated in ".$total_time." seconds.</p>";
+?>
+<script type="text/javascript">
+	$(document).ready(function() {
+		$('#start_date').datepicker();
+		$('#end_date').datepicker();
+		$('#start_date').on('changeDate',function(){
+			$('form').formValidation('revalidateField', $(this).attr('id'));
+		});
+		$('#end_date').on('changeDate',function(){
+			$('form').formValidation('revalidateField', $(this).attr('id'));
+		});
+		
+		$('#activity').on('change', function(){
+			$.post(
+				"<?php echo $this->url("stockreport", array("action" => "getitemactivity"));?>",
+				{
+					activity: $(this).val(),
+				},
+				function(data){
+					//console.log(data);
+					$('#item').html(data.item);
+					$('#item option:selected').removeAttr('selected');
+					$('item option[value='+data.selected_item+']').attr('selected', 'selected');
+					$('#item').trigger('chosen:updated');
+					$('form').formValidation('revalidateField', $('#item').attr('id'));
+				},
+				'json'
+			);
+		});
+		/*** Form Validation ***/
+		$('form').formValidation({
+				framework: 'bootstrap',
+				excluded: ':disabled',
+				message: 'This value is not valid',
+				fields: {
+					'location': {
+					 	validators: {
+							notEmpty: {
+								message: 'Please select location'
+						  	}
+					  	}
+				  	},
+					'activity': {
+						validators: {
+							notEmpty: {
+								message: 'Please select activity'
+							}
+						}
+					},
+					'start_date': {
+						validators: {
+							notEmpty: {
+								message: 'Please select start date'
+							},
+						}
+					},
+					'end_date': {
+						validators: {
+							notEmpty: {
+								message: 'Please select end date'
+							}
+						},
+					},
+					'item': {
+						validators: {
+							notEmpty: {
+								message: 'Please select item'
+							}
+						}
+					},
+				}
+			}).on('success.field.fv', function(e, data) {
+				if (data.fv.getInvalidFields().length > 0) {    // There is invalid field
+					data.fv.disableSubmitButtons(true);
+			}
+		});
+		
+		var title_table = $('#location_name').val()+'('+$('#activity_name').val()+') from '+$('input#start_date').val()+' to '+$('input#end_date').val();
+		$('#example').append('<caption style="caption-side: bottom">Total Stock Balance Value = <?php echo $this->currency($total_stock_value);?>&nbsp;&nbsp;&nbsp;Total Stock Intransit Value = <?php echo $this->currency($total_stock_intransit_value);?>&nbsp;&nbsp;&nbsp;Total Stock Closing = <?php echo $sum_closing;?></caption>');
+		if($('#activity').val() == 1 || $('#activity').val() == 7){
+			var table = $('#example').DataTable({
+				dom: 'Bfrtip',
+				lengthMenu: [
+					[ 10, 25, 50, -1 ],
+					[ '10 rows', '25 rows', '50 rows', 'Show all' ]
+				],
+				"columnDefs": [
+					{ "visible": false, "targets": 2 }, 
+				],
+				buttons: [
+					{
+						extend: 'copy',
+						exportOptions: {
+							columns: ':visible'
+						},
+						text: '<i class="fa fa-files-o"></i> Copy',
+						titleAttr: 'Copy'
+					},
+					{
+						extend: 'csv',
+						title: title_table,
+						exportOptions: {
+							columns: ':visible'
+						},
+						text: '<i class="fa fa-file-text-o"></i> Csv',
+						titleAttr: 'CSV'
+					},
+					{
+						extend: 'excel',
+						title: title_table,
+						exportOptions: {
+							columns: ':visible'
+						},
+						text: '<i class="fa fa-file-excel-o"></i> Excel',
+						titleAttr: 'Excel'
+					},
+					{
+						extend: 'pdfHtml5',
+						title: title_table,
+						exportOptions: {
+							columns: ':visible'
+						},
+						orientation: 'landscape',
+						pageSize: 'LEGAL',
+						text: '<i class="fa fa-file-pdf-o"></i> Pdf',
+						titleAttr: 'PDF'
+					},
+					{
+						extend: 'print',
+						title: title_table,
+						exportOptions: {
+							columns: ':visible'
+						},
+						text: '<i class="fa fa-print"></i> Print', 
+						titleAttr: 'Print'
+					},
+					'pageLength','colvis'
+				],
+				select:true,
+				"order": [[ 2, 'asc' ],[ 0, 'asc' ],[ 1, 'asc' ]],
+				"displayLength": 10,
+				"drawCallback": function ( settings ) {
+					var api = this.api();
+					var rows = api.rows( {page:'current'} ).nodes();
+					var last=null;
+	 
+					api.column(2, {page:'current'} ).data().each( function ( group, i ) {
+						if ( last !== group ) {
+							$(rows).eq( i ).before(
+								'<tr class="group"><td colspan="18">'+group+'</td></tr>'
+							);
+	 
+							last = group;
+						}
+					} );
+				}
+			} );
+			
+			// Order by the grouping
+			$('#example tbody').on( 'click', 'tr.group', function () {
+				var currentOrder = table.order()[0];
+				if ( currentOrder[0] === 2 && currentOrder[1] === 'asc' ) {
+					table.order( [ 2, 'desc' ] ).draw();
+				}
+				else {
+					table.order( [ 2, 'asc' ] ).draw();
+				}
+			} );
+		}else{
+			$('#example').DataTable( {
+				dom: 'Bfrtip',
+				lengthMenu: [
+					[ 10, 25, 50, -1 ],
+					[ '10 rows', '25 rows', '50 rows', 'Show all' ]
+				],
+				columnDefs: [ {
+					visible: false
+				} ],
+				buttons: [
+					{
+						extend: 'copy',
+						exportOptions: {
+							columns: ':visible'
+						},
+						text: '<i class="fa fa-files-o"></i> Copy',
+						titleAttr: 'Copy'
+					},
+					{
+						extend: 'csv',
+						title: title_table,
+						exportOptions: {
+							columns: ':visible'
+						},
+						text: '<i class="fa fa-file-text-o"></i> Csv',
+						titleAttr: 'CSV'
+					},
+					{
+						extend: 'excel',
+						title: title_table,
+						exportOptions: {
+							columns: ':visible'
+						},
+						text: '<i class="fa fa-file-excel-o"></i> Excel',
+						titleAttr: 'Excel'
+					},
+					{
+						extend: 'pdfHtml5',
+						title: title_table,
+						exportOptions: {
+							columns: ':visible'
+						},
+						orientation: 'landscape',
+						pageSize: 'LEGAL',
+						text: '<i class="fa fa-file-pdf-o"></i> Pdf',
+						titleAttr: 'PDF'
+					},
+					{
+						extend: 'print',
+						title: title_table,
+						exportOptions: {
+							columns: ':visible'
+						},
+						text: '<i class="fa fa-print"></i> Print',
+						titleAttr: 'Print'
+					},
+					'pageLength','colvis'
+				],
+				select:true
+			} );
+		}
+	} );
+</script>

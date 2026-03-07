@@ -1,0 +1,59 @@
+<?php
+/**
+ * 
+ * View -- of Sales/MasterpsController/feesAction
+ * 
+ */
+$this->headTitle($this->title);
+?>
+<?php echo $this->partial('sales/masterpos/partial.phtml', array('active' => 'fees')); ?>
+<div class="card">
+	<div class="card-header">
+		<div class="btn-group pull-right">
+			<?php echo $this->button(2);?>
+		</div>
+	</div>
+	<div class="table-responsive">
+		<table class="table table-striped table-bordered table-hover" id="dataTables">
+			<thead>
+				<tr>
+					<th>#</th>
+					<th>Fees</th>
+					<th>Status</th>
+					<?php if($this->button(1)!=""):?>
+						<th class="no-sort no-printpdf">Action</th>
+					<?php endif;?>
+				</tr>
+			</thead>
+			<tbody>
+				<?php
+					$i = 1; 
+					foreach ($fees as $fee):
+				?>
+					<tr>
+						<td><?php echo $i++; ?> </td>
+						<td><b><?php echo $fee['fees'];?></b></td>
+						<td><b><?php $this->status($fee['status'])?></b></td>
+						<?php if($this->button(1)!=""):?>
+						<td><?php echo $this->button(1, $fee['id']);?></td>
+						<?php endif;?>
+					</tr>
+				<?php endforeach;?>
+			</tbody>
+		</table>
+	</div>
+</div>
+<!-- for modal -->
+<div id="modal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+	<div class="modal-dialog">
+		<div class="modal-content">
+		</div>
+	</div>
+</div>
+<script type="text/javascript">
+$('document').ready(function(){
+	$('#dataTables').DataTable({
+		"paging":   true,
+	});
+});
+</script>

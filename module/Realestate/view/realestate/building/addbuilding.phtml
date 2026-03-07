@@ -1,0 +1,252 @@
+
+<?php
+/**
+ *
+ * View -- of Hr/BuildingController/addbuildingAction
+ *
+ */
+?>
+<form id="#form" method="post" action="<?php echo $this->url('building', array('action' => 'addbuilding')); ?>"  enctype="multipart/form-data" >
+    <div class="modal-header">
+	  <div class="row">
+		<div class="col-lg-12">
+			<div class="widget-box">
+				<div class="widget-header widget-header-smaller">
+					<h4 class="widget-title blue bolder smaller">Add Building Info 
+				</div>
+				<div class="widget-body">
+					<div class="widget-main padding-24">
+					    <div class="row">
+							<div class="form-group col-lg-4">
+								<label for="location" class="control-label">Location </label>
+								<select class="form-control" name="location" id="location" data-placeholder="Select" required >
+									<option value=""></option>
+									<?php foreach($this->locationObj->get(array('id'=>$admin_location)) as $location):?>
+										<option value="<?php echo $location['id'];?>" <?php echo ($source_locs == $location['id'])?'selected':'';?>>
+											<?php echo $location['location'];?>
+										</option>
+									<?php endforeach; ?>
+								</select>
+							</div>
+							<div class="form-group col-lg-4">
+								<label for="block" class="control-label">Block</label>
+									<select class="form-control" name="block" id="block" required>
+										<option value=""></option>
+										<?php foreach($block as $block):?>
+											<option value="<?php echo $block['id'];?>">
+											<?php echo $block['name'];?></option>
+											<?php endforeach;?>
+									</select>
+							</div>
+							<div class="form-group col-lg-4">
+								<label for="building" class="control-label"> Building</label>
+								<select class="form-control" name="building" id="building" style="text-transform: capitalize;" placeholder="Select " required >
+									<option value=""></option>
+								</select>
+							</div>
+							<div class="form-group col-lg-4">
+								<label for="tot_floor" class="control-label">Total Floor</label>
+								<input type="text" class="form-control" name="tot_floor" id="tot_floor" placeholder="Enter total no. floor" required />
+							</div>
+							<div class="form-group col-lg-4">
+							<label for="house_no" class="control-label">House No</label>
+								<input type="text" class="form-control" name="house_no" id="house_no" placeholder="Enter house No" required >
+							</div>
+							<div class="form-group col-lg-4">
+							<label for="thram_no" class="control-label">Thram No</label>
+								<input type="text" class="form-control" name="thram_no" id="thram_no" placeholder="Enter thram No" required >
+							</div>
+							<div class="form-group col-lg-4">
+							<label for="plot_no" class="control-label">Plot No</label>
+								<input type="text" class="form-control" name="plot_no" id="plot_no" placeholder="Enter plot No" required >
+							</div>
+						</div>
+						<div class="row">
+							<div class="col-lg-12"> 
+								<h4>Flate Details</h4>
+								<div>
+								<table id="floor_field" class="table small-padding">
+								<tbody>
+									<tr>
+									<td class="col-lg-3 input-cell">
+											<div class="form-group">
+											<label for="floor" class="control-label">Floor</label>
+												<select class="form-control tr_floor" name="floor[]" id="floor" data-placeholder="Select" required>
+													<option value=""></option>
+													<?php foreach($floor as $floors):?>
+													<option value="<?php echo $floors['id'];?>"><?php echo $floors['floor'];?>
+													</option>
+													<?php endforeach;?>
+												</select> 
+											</div>
+										</td>
+										<td class="col-lg-2 input-cell">
+											<div class="form-group">
+											<label for="flat_no" class="control-label">Flat No</label>
+												<input type="text" id="flat_no" name="flat_no[]" class="form-control tr_flat_no" data-placeholder="Select" required>
+											</div>
+										</td>
+										<td class="col-lg-2 input-cell">
+											<div class="form-group">
+											<label for="rent" class="control-label">Rent</label>
+												<input type="text" id="rent" name="rent[]" class="form-control tr_rent" placeholder="rent" required>
+											</div>
+										</td>
+										<td class="col-lg-2 input-cell">
+											<div class="form-group">
+											<label for="flat_status" class="control-label">Flat Status</label>
+												<select id="flat_status" name="flat_status[]" class="form-control tr_flat_status" data-placeholder="Select" required>
+													<option value=""></option>
+													<?php foreach($status as $staus):?>
+														<option value="<?php echo $staus['id']?>"><?php echo $staus['status']?>
+														</option>
+													<?php endforeach;?>
+												</select>
+											</div>
+										</td>
+										<td class="col-lg-1 input-cell">
+											<div class="form-group">
+											<label for="area" class="control-label">Area Square</label>
+												<input type="text" class="form-control tr_area" name="area[]" id="area" data-placeholder="Select" required >
+											</div>
+										</td>
+										<td class="col-lg-3 input-cell">
+											<div class="form-group">
+											<label for="remarks" class="control-label">Remarks</label>
+												<input type="text" class="form-control tr_remarks" placeholder="Remarks" name="remarks[]" id="remarks"/>
+											</div>
+										</td>
+										<td>
+										    <br>
+											<button class="btn btn-sm btn-success" type="button"  onclick="floor_field();"> <span class="fa fa-plus-square" aria-hidden="true"></span> </button>
+										</td>
+									</tr> 
+								</tbody>
+								<table>
+									<div class="clear"></div>
+								</div>
+							</div>
+						</div>
+						<div class="row">
+							<button type="submit" class="btn btn-success"><i class="fa fa-check"></i> Save </button>
+							<button type="button" class="btn btn-warning" onclick="javascript:history.back();"><i class="fa fa-times"></i> Cancel </button>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+</form>
+<script type="text/javascript">
+var room = 1;
+	function floor_field() {
+    room++;
+    var objTo = document.getElementById('floor_field');
+    var divtest = document.createElement('tr');
+    divtest.setAttribute('class', 'form-group removeclass' + room);
+    
+    divtest.innerHTML = 
+		'<tr><td class="col-lg-3"><div class="form-group"><select name="floor[]" class="form-control tr_floor" data-placeholder="Select" required><option value="-1">Select<?php foreach($floor as $floors):?><option value="<?php echo $floors['id']; ?>"><?php echo $floors['floor']; ?></option><?php endforeach; ?></select></div></td><td class="col-lg-1"><div class="form-group"><input type="text" class="form-control tr_flat_no" id="flat_no" name="flat_no[]"  placeholder="Flat No"></div></td><td class="col-lg-2 input-cell"><div class="form-group"><input type="text" id="rent" name="rent[]" class="form-control tr_rent" placeholder="rent" required></div></td><td class="col-lg-2 input-cell"><div class="form-group"><select id="flat_status" name="flat_status[]" class="form-control tr_flat_status" data-placeholder="Select" required><option value=""></option><?php foreach($status as $staus):?><option value="<?php echo $staus['id']?>"><?php echo $staus['status']?></option><?php endforeach;?></select></div></td><td class="col-lg-1 input-cell"><div class="form-group"><input type="text" class="form-control tr_area" name="area[]" id="area" data-placeholder="Select" required ></div></td><td class="col-lg-3"><div class="form-group"><input type="text" class="form-control tr_remarks" id="remarks" placeholder="remarks" name="remarks[]"></div></td><td class="col-lg-1 input-cell"><div class="input-group-btn"><button class="btn btn-sm btn-danger" type="button" onclick="remove_floor_field(' + room + ');"><span class="glyphicon-minus" aria-hidden="true"></span></button></div></td><tr>';
+		objTo.appendChild(divtest);
+    
+	}
+	function remove_floor_field(rid) {
+	$('.removeclass' + rid).remove();
+	}
+    $(function() {
+		$('#location,#block').on('change', function(){
+			//alert($(this).val());
+			$.post(
+				"<?php echo $this->url('building', array('action' => 'getbuilding')); ?>",
+				{
+					location_id: $('#location').val(),
+					type: $('#block').val(),
+				},
+				function(data){
+					console.log(data);
+					$('#building').html(data.building);
+					$('#building').trigger('chosen:updated');
+				},
+				'json'
+			);
+		});
+		$('#location').trigger('change');
+		$('select#region').on('change',function(){
+			$.post(
+				"<?php echo $this->url('building', array('action' => 'getlocation'));?>",
+				{
+					regId: $(this).val(),
+				},
+				function(data){
+					$('select#location').html(data.location);
+					$('select#location').trigger('chosen:updated');
+				},
+				'json'
+			);
+		});
+
+	});
+	
+	$('form select').chosen();
+	$('document').ready(function(){
+		const fv = FormValidation.formValidation(document.getElementById('#form'), {
+			fields: {
+				block: {
+					validators: {
+						notEmpty: {
+							message: 'Please select block.'
+						}
+					}
+				},
+				asset: {
+					validators: {
+						notEmpty: {
+							message: 'Please provide asset.'
+						}
+					}
+				},
+				assetid: {
+					validators: {
+						notEmpty: {
+							message: 'Please provide Asset id.'
+						},
+						numeric:{
+							message: 'Enter a Figure Value'
+						}
+					}
+				},
+				region: {
+					validators: {
+						notEmpty: {
+							message: 'Please provide Region.'
+						}
+					}
+				},
+				location: {
+					validators: {
+						notEmpty: {
+							message: 'Please provide location.'
+						},
+						numeric:{
+							message: 'Enter a Figure Value'
+						}
+					}
+				},
+			
+			plugins: {
+				trigger: new FormValidation.plugins.Trigger(),
+				bootstrap3: new FormValidation.plugins.Bootstrap3(),
+				submitButton: new FormValidation.plugins.SubmitButton(),
+				defaultSubmit: new FormValidation.plugins.DefaultSubmit(),
+			},
+		}
+		}).on('core.element.validated', function (e) {
+			if (e.valid) {
+				$('div#'+ e.field.replace('[]','') +'_chosen').removeClass('is-invalid');
+				$('div#'+ e.field.replace('[]','') +'_chosen').addClass('is-valid');
+			} else {
+				$('div#'+ e.field.replace('[]','') +'_chosen').removeClass('is-valid');
+				$('div#'+ e.field.replace('[]','') +'_chosen').addClass('is-invalid');
+			}
+		});
+	});
+</script>

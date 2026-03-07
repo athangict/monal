@@ -1,0 +1,80 @@
+<?php
+/**
+ * View -- of Stock/MsaterController/worktypeAction
+ */
+	$this->headTitle($this->title);
+?>
+<?php echo $this->partial('stock/master/partial.phtml', array('active' => 'cagreement')); ?>
+<div class="card">
+	<div class="card-header">
+		<div class="btn-group pull-right">
+			<?php echo $this->button(2);?>
+		</div>
+	</div>
+	<table class="table table-bordered table-striped table-hover" id="dataTables">
+		<thead>
+			<tr>
+				<th>#</th>
+				<th>Agreement Number</th>
+				<th>Agreement Date</th>
+				<th>Location</th>
+				<th>Activity</th>
+				<th>From Date</th>
+				<th>To Date</th>
+				<th class="no-sort">Action</th>
+			</tr>
+		</thead>
+		<tbody>
+			<?php
+				$i = 1; 
+				foreach($conagreements as $cont):
+			?>
+			<tr data-href ="<?php echo $this->url('stmaster', array('action'=>'conagreementdetails', 'id'=>$cont['id']));?>">
+				<td><?php echo $i++; ?> </td> 
+				<td><b><?php echo $cont['agreement_no']; ?></b> &nbsp;&nbsp;
+					<i>(&nbsp;<?php echo $this->contractorObj->getColumn(array('id'=>$cont['contractor_id']),'name'); ?>&nbsp;)</i>
+					<?php
+					$end_date = strtotime($cont['to_date']);
+					$curren_date = date('Y-m-d', time());
+					$current_date = strtotime($curren_date);
+					if($end_date >= $current_date): ?>
+						&nbsp;&nbsp;<span class="label label-success"><b><i>Active</i></b></span>
+					<?php else: ?>
+						&nbsp;&nbsp;<span class="label label-danger"><b><i>Expired</i></b></span>
+					<?php endif;?>
+				</td> 
+				<td><?php echo $cont['agreement_date']; ?></td>                                 
+				<td><?php echo $this->locationObj->getColumn(array('id'=>$cont['location_id']),'location'); ?></td>                                 
+				<td><?php $activity = $cont['activity'];
+						switch($activity){
+							case 1: echo "Agency"; break;
+							case 2: echo "Food Grains"; break;
+							case 3: echo "Both Agency & Food Grains"; break;
+							case 4: echo "RNR Marketing"; break;
+							} ?>
+				</td>                                 
+				<td><?php echo $cont['from_date']; ?></td>                                 
+				<td><?php echo $cont['to_date']; ?></td>                                 
+				<td>
+					<a class="btn btn-xs btn-info" href="<?php echo $this->url('stmaster', array('action'=>'editconagreement', 'id' => $cont['id']));?>" >
+						<i class="ace-icon fa fa-pencil bigger-120"></i>
+					</a>                                                                    
+				</td>
+			</tr>
+			<?php endforeach;?>
+		</tbody>
+	</table>
+</div>
+<!--for modal -->
+<div id="modal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content"> </div>
+    </div>
+</div>
+<script type="text/javascript">
+$('document').ready(function(){
+	$('#dataTables').DataTable({
+		"paging":   true,
+	});
+});
+</script>

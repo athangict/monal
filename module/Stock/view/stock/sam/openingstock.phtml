@@ -1,0 +1,88 @@
+<?php
+/**
+ * 
+ * View -- of Stock/GoodsrequestController/indexAction
+ * 
+ */
+	$this->headTitle($this->title);
+?>
+<?php echo $this->partial('stock/sam/partial.phtml', array('active' => 'opening')); ?><br/>
+<div class="card">
+	<div class="card-header">
+		<div class="row">
+		<form method="post" action="<?php echo $this->url('sam',array('action'=>'openingstock')); ?>"  enctype="multipart/form-data" >
+           <div class="form-group col-lg-3">
+				<label class="control-label" for="item">Item</label>
+				<select class="form-control" id="item" name="item" data-placeholder="Select" onchange='this.form.submit()'>
+					<option value="-1">All</option>
+					<?php 
+						foreach($this->itemObj->getAll() as $items): 
+						//echo '<pre>';print_r($activities);exit;
+						$selected_act = ($items['id']==$data['item'])?'selected':'';?>
+						<option value="<?php echo $items['id'];?>" <?php echo $selected_act;?>>
+							<?php echo $items['name'];?>
+						</option>
+					<?php endforeach; ?>
+				</select>
+			</div>		   
+		</form>
+			<div class="form-group col-lg-9">					
+				<div class="clearfix">
+					<div class="pull-right tableTools-container"></div>
+					<a class="red pull-right DTTT_button btn btn-white btn-info btn-bold" data-tooltip="tooltip" data-placement="top" title="Add New Opening Stock" href="<?php echo $this->url('sam', array('action'=>'addstockopening'));?>" >
+						<span class="red"><i class="fa fa-plus"></i> <span class="hidden-sm hidden-xs">&nbsp;Add Opening Stock</span></span>
+					</a>
+				</div>
+			</div>
+		</div>
+		<div>
+			<table class="table table-bordered table-condensed table-striped table-hover" id="dataTables">
+				<thead>
+					<tr>
+					    <th>#</th>
+						<th>Item</th>
+						<th>Uom</th>
+						<th>Quantity</th>
+						<th>Printint Price</th>
+						<th>Rate</th>
+						<th>Value(Nu)</th>
+						<th>Status</th>
+						<th class="no-sort no-printpdf">Action</th>
+					</tr>
+				</thead>
+				<tbody>					
+					<?php $i=1;
+						foreach($openingstocks as $row):
+							$quantity=$this->openingdtl->getSMSUM(array('opening_stock'=>$row['id']),'quantity');
+					?>
+						<tr>
+							<td><?php echo $i++;?></td>
+							<td><?php echo $this->itemObj->getColumn($row['item'],'name')?></td>
+							<td><?php echo $this->uomObj->getColumn($row['uom'],'code')?></td>
+							<td><?php echo $quantity;?></td>
+							<td><?php echo $row['cost_price']?></td>
+							<td><?php echo $row['selling_price']?></td>
+							<td><?php echo $row['selling_price']*$quantity?></td>
+							<td><?php echo $this->status($row['status']);?></td>
+							<td class="action">
+								<div class="btn-group">
+									<a class="btn btn-xs btn-primary no-alert" href="<?php echo $this->url('sam', array('action'=>'viewstockopening', 'id'=>$row['id'])); ?>" title="View">
+										<i class="ace-icon fa fa-eye bigger-120" ></i>
+							  		</a>
+						  		</div>
+							</td>
+						</tr>
+					<?php endforeach;?>  
+				</tbody>
+			</table>
+		</div>
+	</div>
+</div>
+<script type="text/javascript">
+$('document').ready(function(){
+	$('#dataTables').DataTable({
+		"paging":   true,
+	});
+});
+</script>
+

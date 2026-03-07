@@ -1,0 +1,116 @@
+<?php
+/**
+ * View --> Purchase/ContractorController/viewdetails.pthml
+ * ajax response
+ */
+?>
+<?php 
+	foreach($contractor_invoice as $con_inv);
+	$start_date = $con_inv['from_date'];
+	$end_date = $con_inv['to_date'];
+	$location = $con_inv['location_id'];
+	$activity = $con_inv['activity_id'];
+	$contractor = $con_inv['contractor_id'];
+?>
+<input type="hidden" value="<?php echo $start_date;?>" name="start_date" id="start_date" />
+<input type="hidden" value="<?php echo $end_date;?>" name="end_date" id="end_date" />
+<input type="hidden" value="<?php echo $location;?>" name="location" id="location" />
+<input type="hidden" value="<?php echo $activity;?>" name="activity" id="activity" />
+<input type="hidden" value="<?php echo $contractor;?>" name="contractor" id="contractor" />
+<div class="row">
+	<div class="col-lg-12">
+		<h3 class="row header smaller lighter blue">
+			Details of Contractor Invoice <i><?php echo $con_inv['invoice_no'];?></i> | <?php echo $con_inv['activity'];?> | <?php echo $con_inv['location'];?>
+			<?php $this->status($con_inv['status']);?>
+		</h3>
+		<div>
+			<table class="table table-striped table-bordered table-hover table-condensed">
+				<thead>
+					<tr>
+						<th>#</th>
+						<th>Charges</th>
+						<th>Qty Processed (MT|CASE)</th>
+						<th>Rate (<?php echo $this->currency_code();?>)</th>
+						<th>Amount (<?php echo $this->currency_code();?>)</th>
+						<th>View Details</th>
+					</tr>
+				</thead>
+				<tbody>
+					<?php 
+						$sl=1;
+             
+						foreach($con_inv_details as $con_inv_detail):
+					?>
+						<tr id="<?php echo $con_inv_detail['work_type'];?>">
+							<td><?php echo $sl++;?></td>
+							<td><b><?php echo $this->worktypeObj->getColumn($con_inv_detail['work_type'],'work_type');?></b></td>
+							<td><?php echo $con_inv_detail['qty'];?></td>
+							<td><?php echo $con_inv_detail['rate'];?></td>
+							<td>
+								<?php 
+									$total += $con_inv_detail['amount'];
+									echo $con_inv_detail['amount'];
+								?>
+							</td>
+							<td>
+								<input type="radio" name="details" value="1" id="details">
+							</td>
+						</tr>
+					<?php endforeach;?>
+				</tbody>
+				<tfoot>
+					<tr>
+						<th style="text-align:right" colspan="4"><i>Grand Total</i></th>
+						<th colspan="2">
+						<?php 
+							echo $grand_total = number_format((float)$con_inv['invoice_amount'], 2, '.', '');
+						?>
+						<input type="hidden" name="invoice_amount" id="invoice_amount" value="<?php echo $grand_total;?>" />
+						</th>
+					</tr>
+				</tfoot>
+			</table>
+		</div>
+		<div class="row">
+			<div class="col-lg-12">
+				<div class="clearfix">
+					<label><i class="blue fa fa-user"></i> <strong>Contractor:</strong></label> <span><?php echo $con_inv['contractor']; ?></span>.&nbsp;&nbsp;
+					<label><i class="red fa fa-map-marker"></i> <strong>Location:</strong></label> <span><?php echo $con_inv['location'];?></span>.&nbsp;&nbsp;
+					<label><i class="purple fa fa-tags"></i> <strong>Activity:</strong></label> <span><?php echo $con_inv['activity'];?></span>.&nbsp;&nbsp;
+					<label><i class="green fa fa-calendar"></i> <strong>Period From :</strong></label> <span><?php echo $con_inv['from_date'].' to '.$con_inv['to_date'];?></span>
+					<!--div class="pull-right">
+						<a href="#" id="print-bstable">
+							<i class="ace-icon fa fa-file-pdf-o fa-lg red"></i>
+						</a>
+					</div-->
+				</div>
+				<div class="details">
+				</div>
+			</div>
+		</div>
+		<div class="space-6"></div>
+		<div class="row">
+			<div class="col-lg-12">
+				<button type="button" class="btn btn-danger pull-right" onclick="javascript:history.back();" ><i class="fa fa-undo"></i> Go Back </button>
+			</div>
+		</div>
+	</div>
+</div>
+<script>
+$( "input:radio" ).on( "click", function() {
+	var id = $(this).closest('tr').attr('id');
+	$.post( 
+		"<?php echo $this->url('contractor', array('action' => 'getdetails'));?>",
+		{	
+			'id': id,
+			'start_date': $('input#start_date').val(),
+			'end_date': $('input#end_date').val(),
+			'location': $('#location').val(), 
+			'activity': $('#activity').val(),
+			'contractor':$('#contractor').val(),
+		}, 
+		function(data) {
+			$('div.details').html( data ); 
+	});	            
+});
+</script>	

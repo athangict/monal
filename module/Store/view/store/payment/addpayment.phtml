@@ -1,0 +1,424 @@
+<?php
+/**
+ *
+ * View -- of Store/PaymentController/addpaymentAction
+ *
+ */
+$this->headTitle($this->title);
+?>
+<?php
+	if(sizeof($pur_receipt)>0):
+		foreach($pur_receipt as $pur_receipt):
+			extract($pur_receipt);
+			$pr_id = $id;
+			$pr_location = $location_id;
+			$pr_activity = $activity_id;
+		endforeach;
+		foreach($pur_order as $pur_order):
+			extract($pur_order);
+			$po_id = $id;
+			$po_location = $location_id;
+			$po_activity = $activity_id;
+		endforeach;
+	endif;
+?>
+<div class="row">
+	<div class="col-lg-12">
+		<div class="widget widget-box">
+			<div class="widget-header">
+				<h5 class="widget-title lighter smaller">
+					<i class="fa fa-asterisk"></i>&nbsp;&nbsp;New Supplier Payment
+				</h5>
+			</div>
+			<div class="widget-body">
+				<div class="widget-main">
+				    <div class="row">
+						<div class="col-lg-12">
+							<div class="alert alert-block alert-info">
+								<div class="row">
+									<div class="col-lg-9">
+										<i class="ace-icon fa fa-check blue"></i>
+										Please Select the <strong class="blue"> Purchase Receipt </strong> (PR) for payment
+									</div>
+									<div class="col-lg-3">
+										<!-- Button trigger modal -->
+										<a data-toggle="modal" class="btn btn-success" href="<?php echo $this->url('inpurpayment', array('action' => 'getpreceipt')); ?>" data-target="#modal">
+											<i class="fa fa-share"></i> &nbsp;Get Purchase Receipt
+										</a>
+										<!--for modal -->
+										<div id="modal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+											<div class="modal-dialog">
+												<div class="modal-content"> </div>
+											</div>
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+					<div class="space-12"></div>
+					<form id="#form" method="post" action="<?php echo $this->url('inpurpayment', array('action' => 'addpayment')); ?>" enctype="multipart/form-data">
+						<div class="row">	
+							<div class="col-lg-3">    
+								<div class="form-group">
+									<label for="purchase_payment_date" class="control-label">Purchase Payment Date</label>
+									<div class="date input-group" id="purchase_payment_date" data-date="<?php echo date('Y-m-d');?>" data-date-format="yyyy-mm-dd" >
+										<input class="form-control span2" name="purchase_payment_date" id="purchase_payment_date" type="text" placeholder="Purchase P Date" value="<?php echo date('Y-m-d');?>" readonly required>
+										<span class="input-group-addon add-on"><i class="fa fa-calendar"></i></span>
+									</div>
+								</div>
+							</div>	
+							<div class="col-lg-3"> 
+								<div class="form-group">
+									<label for="activity" class="control-label">Location</label>
+									<select id="location" name="location" class="form-control" data-placeholder="Select" required>
+										<option value=""></option>
+										<?php foreach ($regions as $region): ?>
+										<optgroup label="<?php echo $region['region'];?>">
+											<?php  
+												 // retrive locations under the above region ID
+												$locations = $locationObj->get(array('l.region'=>$region['id']));
+												 foreach ($locations as $location):
+												 $selected = ($location['id']==$pr_location)?"selected":"";
+											?>
+											 <option value="<?php echo $location['id']; ?>" <?php echo $selected;?>>
+												<?php echo $location['location']; ?>
+											 </option>
+											<?php endforeach;?>
+										</optgroup>
+										<?php endforeach;?>									
+									</select> 
+								</div>
+							</div>
+							<div class="col-lg-3"> 
+								<div class="form-group">
+									<label for="item_group" class="control-label">Item Group</label>
+									<select id="item_group" name="item_group" class="form-control" data-placeholder="Select" readonly="readonly" required>
+										<option value=""></option>
+										<?php foreach ($this->groupObj->getAll() as $group):
+										    $slted = ($group['id'] == $item_group_id)?"selected":"";?>
+											<option value="<?php echo $group['id'];?>"<?php echo  $slted;?>><?php echo $group['name']; ?></option>
+										<?php endforeach; ?>								
+									</select> 
+								</div>
+							</div>
+							<div class="col-lg-3"> 
+								<div class="form-group">
+									<label for="cost_center" class="control-label">Cost Center</label>
+									<select class="form-control" name="cost_center" id="cost_center" data-placeholder="Select" readonly="readonly" required>
+										<option value=""></option>
+									<?php foreach($this->activities as $activity):
+										$selected=($activity['id']==$pr_activity)?'selected':'';?>
+											<option value="<?php echo $activity['id'];?>" <?php echo $selected;?>>
+										   		<?php echo $activity['activity']; ?>
+										   	</option>
+										<?php endforeach; ?>
+									</select>
+								</div>
+							</div>
+						</div>
+						<div class="row">
+                            <div class="col-lg-3"> 
+								<div class="form-group">
+									<label for="supplier" class="control-label">Supplier</label>
+									<input type="text" class="form-control" name="supplier" id="supplier" value ="<?php echo $supplier?>" placeholder="Enter supplier"/> 
+								</div>
+							</div>	
+                            <div class="col-lg-3">
+								<div class="form-group">
+									<label for="purchase_order_no" class="control-label">Purchase Order No.</label>
+									<select class="form-control" name="purchase_order_no" id="purchase_order_no" data-placeholder="Select" readonly >
+										<option value=""></option>
+										<option value="<?php echo $po_id;?>" selected="selected">
+											<?php if($po_id != ""){echo $this->pur_ordertObj->getColumn($po_id,'purchase_order_no');}?>
+										</option>	
+									</select> 
+								</div>
+							</div>							
+					        <div class="col-lg-3">
+								<div class="form-group">
+									<label for="purchase_receipt_no" class="control-label">Purchase Receipt No.</label>
+									<select class="form-control" name="purchase_receipt_no" id="purchase_receipt_no" data-placeholder="Select" readonly >
+										<option value=""></option>
+										<option value="<?php echo $pr_id;?>" selected="selected">
+											<?php if($pr_id != ""){echo $this->pur_receiptObj->getColumn($pr_id,'purchase_receipt_no');}?>
+										</option>	
+									</select> 
+								</div>
+							</div>
+							<div class="col-lg-3">
+								<div class="form-group">
+								    <label for="status" class="control-label">Check Cash or Bank</label> 
+									<div class="form-group radio">                                			
+										<label>
+											<input class="ace" type="radio" name="bank" id ="bank" value="3" checked >
+											<span class="lbl"> Bank Account </span>
+										</label>
+										<label>
+											<input class="ace" type="radio" name="cash" id = "cash" value="4" >
+											<span class="lbl"> Cash Account </span>
+										</label>	
+									</div>
+								</div>
+							</div>	
+						</div>
+						<div class ="row">
+						    <div class="col-lg-3">
+								<div class="form-group">
+									<label for="bcaccount" class="control-label">Select Bank Or Cash Account</label>
+									<select class="form-control" id="bcaccount" name="bcaccount" data-placeholder="Select" >
+										<option value=""></option>
+									</select>
+								</div>
+							</div>
+						    <div class="col-lg-3">
+								<div class="form-group">
+									<label for="acc_ref_type" class="control-label">Select Account Reference Type</label>
+									<select class="form-control" id="acc_ref_type" name="acc_ref_type" data-placeholder="Select" >
+										<option value=""></option>
+									</select>
+								</div>
+							</div>
+							<div class="col-lg-3">
+								<div class="form-group">
+									<label for="cheque_no" class="control-label">Cheque No.</label>
+									<input class = "form-control" type ="text" id ="cheque_no" name ="cheque_no" />
+								</div>
+							</div>	
+						    <div class="form-group col-lg-3">
+								<label for="bank_charge" class="control-label">Bank Charge(<?php echo $this->currency_code();?>)</label>							
+							    <input type="text" class="form-control" name="bank_charge" id="bank_charge" value="" placeholder="Bank Charge"/>
+							</div>
+							<div class="form-group col-lg-3">
+								<div class="space-10"></div>
+								<label>
+									<?php $check = ($bank_charge > 0)?'checked':'';?>
+									<input name="check_bank_charge" id="check_bank_charge" type="checkbox" value="1" class="ace" <?php echo $check;?> />
+									<span class="lbl red"> *Check if Bank Charge is required</span>
+								</label>
+							</div>
+						</div>
+						<div class="row">
+							<div class="col-lg-12">
+								<h5>Payment Details</h5>
+								<div>
+									<table id="trdetails_table" class="table small-padding">
+										<thead>
+											<tr>
+												<th>Invoice No.</th>
+												<th>Payable Amount(<?php echo $this->currency_code();?>)</th>
+											</tr>
+										</thead>
+										<tbody>
+											<tr>
+												<td>
+													<div class="form-group">
+														<input type="text" class="form-control" name="invoice_no[]" id="invoice_no" value="<?php echo $invoice_no."|".$challan_no;?>" readonly />
+													</div>
+												</td>
+												<td>
+													<div class="form-group">
+														<input type="text" class="form-control" name="payable_amount[]" id="payable_amount" value="<?php echo $payment_amt;?>" readonly />
+													</div>
+												</td>
+											</tr>
+										</tbody>
+									</table>
+								</div>
+							</div>
+						</div>
+						<div class="row">
+							<div class="col-lg-9"></div>
+							<div class="form-group col-lg-3">
+								<label for="payment_amount" class="control-label">Net Payable Amount(<?php echo $this->currency_code();?>)</label> 
+								<input type="text" class="form-control" name="payment_amount" id="payment_amount" value="<?php echo $payment_amt;?>" placeholder="Payment Amount" readonly />
+							</div>
+						</div>
+						<div class="row">
+							<div class="col-lg-12">
+								<label class="control-label" for="note">Note: </label>
+								<textarea class="form-control" name="note" id="note"></textarea>
+							</div>
+						</div>
+						<div class="space-12"></div>
+						<div class="row">
+							<div class="col-lg-9">
+								<button type="submit" class="btn btn-success">
+									<i class="fa fa-check"></i> Save
+								</button>
+								<button type="button" class="btn btn-warning" onclick="javascript:history.back();" ><i class="fa fa-times"></i> Cancel </button>
+							</div>
+						</div>
+					</form>
+				</div><!-- widget-main -->
+			</div><!-- widget-body -->
+		</div><!-- widget-box -->
+	</div><!-- col-lg-12 -->
+</div><!-- row -->
+
+<script type="text/javascript">
+	$(function() {
+		$('#payment_date').datepicker();
+		$('#payment_date').on('changeDate',function(){
+			$('form').formValidation('revalidateField','payment_date');
+		});
+	    $('input[name=bank]:radio:checked').ready(function(){
+		$.post(
+			"<?php echo $this->url('inpurpayment', array('action' => 'getaccount'));?>",
+			{
+				bank_type: $('input[name=bank]:radio:checked').val(),
+			},
+			function(data){
+				$('select#bcaccount').html(data.acc);
+				$('select#acc_ref_type').html(data.br);
+				$('select#bcaccount').trigger('chosen:updated');
+				$('select#acc_ref_type').trigger('chosen:updated');
+			},
+			'json'
+		);
+	});
+	//* On changing the account to cash, get cash account and disable account reference type*//
+	$('#cash').on('change',function(){
+		if ($("input[name='bank']").is(':checked')) {
+			$('input[name=bank]').removeAttr('checked');
+		$.post(
+			"<?php echo $this->url('inpurpayment', array('action' => 'getaccount'));?>",
+			{
+				bank_type: $(this).val(),
+			},
+			function(data){
+				//console.log(data);
+				$('select#acc_ref_type').html("");
+				$('select#acc_ref_type').attr("readonly", true);
+				$("#cheque").attr("disabled", "disabled");
+				$('select#acc_ref_type').trigger('chosen:updated');
+				$('cheque').trigger('chosen:updated');
+				$('select#bcaccount').html(data.acc);
+				$('select#bcaccount').trigger('chosen:updated');
+			},
+			'json'
+			);
+		}
+	});
+   //* On changing the account to bank, get bank account and disable account reference type*//
+	$('#bank').on('change',function(){
+		if ($("input[name='cash']").is(':checked')) {
+			$('input[name=cash]').removeAttr('checked');
+		$.post(
+			"<?php echo $this->url('inpurpayment', array('action' => 'getaccount'));?>",
+			{
+				bank_type: $(this).val(),
+			},
+			function(data){
+				//console.log(data);
+				$('select#acc_ref_type').html(data.acc);
+				$('select#acc_ref_type').html(data.br);
+				$('select#acc_ref_type').attr("readonly", false);
+				$('select#acc_ref_type').trigger('chosen:updated');
+				$('select#bcaccount').html(data.acc);
+				$('select#bcaccount').trigger('chosen:updated');
+			},
+			'json'
+			);
+		}
+	   });
+		
+		//** To disable the check field when cheque is selected *//
+		$('#acc_ref_type').on('change',function(){
+			if($(this).val() == 1){$("#cheque_no").removeAttr("disabled");
+			$("#cheque_no").focus();}else{$("#cheque_no").attr("disabled", "disabled");}
+			$('form').formValidation('revalidateField','cheque_no');
+		});
+      
+		/*** form validation***/ 
+		const fv = FormValidation.formValidation(document.getElementById('#form'), {
+			fields: {
+				payment_date: {
+		            validators: {
+		                notEmpty: {
+		                    message: 'Please select payment date.'
+		                }
+		            }
+		        },
+		        location: {
+		            validators: {
+		                notEmpty: {
+		                    message: 'Please select location.'
+		                }
+		            }
+		        },
+		        activity: {
+		            validators: {
+		                notEmpty: {
+		                    message: 'Please select activity.'
+		                }
+		            }
+		        },
+		        payment_type: {
+		            validators: {
+		                notEmpty: {
+		                    message: 'Please select payment type.'
+		                }
+		            }
+		        },   
+		        party: {
+		            validators: {
+		                notEmpty: {
+		                    message: 'Please select supplier.'
+		                }
+		            }
+		        }, 
+                head: {
+		            validators: {
+		                notEmpty: {
+		                    message: 'Please select head.'
+		                }
+		            }
+		        },  
+		        invoice_no[]: {
+		            validators: {
+		                notEmpty: {
+		                    message: 'Please select invoice no.'
+		                }
+		            }
+		        },  
+		        payment_amt[]: {
+		            validators: {
+		                notEmpty: {
+		                    message: 'Please provide payable amount.'
+		                }
+		            }
+		        },  
+		        payment_amount: {
+		            validators: {
+		                notEmpty: {
+		                    message: 'Please provide payment amount.'
+		                }
+		            }
+		        }, 
+                bcaccount: {
+		            validators: {
+		                notEmpty: {
+		                    message: 'Please select bank account.'
+		                }
+		            }
+		        },	
+			},
+			plugins: {
+				trigger: new FormValidation.plugins.Trigger(),
+				bootstrap3: new FormValidation.plugins.Bootstrap3(),
+				submitButton: new FormValidation.plugins.SubmitButton(),
+				defaultSubmit: new FormValidation.plugins.DefaultSubmit(),
+			},
+		}).on('core.element.validated', function (e) {
+			if (e.valid) {
+				$('div#'+ e.field.replace('[]','') +'_chosen').removeClass('is-invalid');
+				$('div#'+ e.field.replace('[]','') +'_chosen').addClass('is-valid');
+			} else {
+				$('div#'+ e.field.replace('[]','') +'_chosen').removeClass('is-valid');
+				$('div#'+ e.field.replace('[]','') +'_chosen').addClass('is-invalid');
+			}
+		});
+
+	});
+</script>

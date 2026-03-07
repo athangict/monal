@@ -1,0 +1,71 @@
+<?php
+  $subHeadDtls = $this->subheadObj->get(array('head'=>$this->head), $order='name');
+  if(sizeof($subHeadDtls) > 0){	
+	     ?>		  
+			<div class="col-lg-12">
+			<h3>Opening Balance of <?php echo $year; echo " [ ",$this->headObj->getColumn($this->head, 'name'); ?>] </h3>
+				<table class="table" id="trdetails_table" style="border-top:2px solid #ddd;">
+					<thead>
+						<tr>
+							<th>#</th>							
+							<th>Sub Ledger/SubHead</th>
+							<th>Location</th>
+							<th>Reference</th>
+							<th>Opening_SDR</th>
+							<th>Opening Debit</th>
+							<th>Opening Credit</th>
+						</tr>
+					</thead>
+					<tbody>
+					<?php 
+					$i=1;
+					 foreach($subHeadDtls as $row):
+					    $result = $this->closingbalanceObj->get(array('year'=>$this->year, 'sub_head'=>$row['id']));
+                         //echo '<pre>';print_r();exit;						
+						if(sizeof($result) > 0):
+							foreach( $result as $dtl);		
+							$location = $dtl['location'] ;
+							$reference = $dtl['reference'] ;
+							$closing_sdr = $dtl['closing_sdr'];			
+							$closing_credit = $dtl['closing_cr'];
+							$closing_debit = $dtl['closing_dr'] ;
+							$id = $dtl['id'];
+						else:
+						    $location = '-1';
+							$reference = '0';
+							$closing_sdr = '0.00';
+						    $closing_credit = "0.00";
+							$closing_debit = "0.00";
+							$id = 0;
+						endif;						
+					   ?>
+					    <tr> 
+							<td><?php echo $i++; ?> </td>
+							<td><strong><?php echo $row['code'].'-'.$row['name']; ?> </strong>
+							<input type ="hidden" name="head[]" value="<?php echo $this->headObj->getColumn($this->head, 'id'); ?>">
+							<input type="hidden" name="sub_head[]" value="<?php echo $row['id']; ?>">
+							<input type="hidden" value="<?php echo $id; ?>" name="closing_id[]"> </td>
+							<td>
+								<select id="location" name="location[]" class="form-control" data-placeholder="Select" required>
+									<option value="-1">All</option>	
+									<?php foreach($this->locationObj->getAll() as $loc): 
+									$selected_loc = ($loc['id']==$location) ? 'selected' : '';?>
+									<option value="<?php echo $loc['id'];?>"<?php echo $selected_loc;?>>
+									<?php echo $loc['location']; ?></option>	
+									<?php endforeach;  	?>
+								</select> 
+							</td>
+							<td><div class="form-group"> <input type="text" name="reference[]" id="reference" class="form-control" value="<?php echo $reference; ?>" step="0.001" required></div></td>
+							<td><div class="form-group"> <input type="text" name="closing_sdr[]" id="debit" class="form-control" value="<?php echo $closing_sdr; ?>" step="0.001" required></div></td>
+							<td><div class="form-group"> <input type="text" name="closing_dr[]" id="debit" class="form-control" value="<?php echo $closing_debit; ?>" step="0.001" required></div></td>
+							<td><div class="form-group"> <input type="text" name="closing_cr[]" id="credit" class="form-control" value="<?php echo $closing_credit; ?>" step="0.001"  required></div></td>
+						</tr>
+					   <?php
+ 					 endforeach;
+					?>
+					</tbody>
+				</table>
+			</div>
+<?php			
+  }
+?>

@@ -1,0 +1,87 @@
+<?php
+/**
+ * 
+ * View -- of Realestate/GodownsizeController/indexAction
+ * 
+ */
+	$this->headTitle($this->title);
+	//foreach ($rsdetails as $rows);print_r($rows['id']);exit;
+?>
+<?php echo $this->partial('realestate/godownsize/partial.phtml',array('active' => 'restate'));?>
+<div class="card">
+	<div class="card-header">
+		<div class="btn-group pull-right">
+			<?php echo $this->button(2);?>
+		</div>
+	</div>
+	<div class="table-responsive">
+		<table class="table card-table text-nowrap" id="dataTables">
+			<thead>
+				<tr>
+					<th>#</th>
+					<th>Location</th>
+					<th>Type</th>
+					<th>Operator</th>
+					<th>Capacity (mT)</th>
+					<th>Commodities Stored</th>
+					<th>Physical Condition</th>
+					<th>Area (sq.ft)</th>
+					<!-- <th class="no-sort no-printpdf">Action</th> -->
+				</tr>
+			</thead>
+			<tbody>
+				<?php $i=1;					
+				  foreach ($rsdetails as $rows):					  						
+				?>
+					<tr data-href="<?php echo $this->button(4, $rows['id']); ?>">
+						<td><?php echo $i++; ?> </td>
+						<td><strong><?php echo $rows['location']; ?></strong></td>	
+						<td><?php echo $rows['storage_type']; ?></td>
+						<td><?php echo $rows['operator_name']; ?></td>
+						<td><?php echo $rows['capacity']; ?></td>	
+						<td><?php echo $rows['commodity_stored']; ?></td>							
+						<td><?php echo $rows['physical_condition']; ?></td>
+						<td><?php echo $rows['area']; ?></td>
+						<!-- <td class="action"> -->
+							<!--a class="btn btn-xs btn-danger" data-toggle="modal" data-target="#modal" 
+									href="<?php //echo $this->url('acl', array('action' => 'activitylog', 'id' => "30-".$rows['id'])); ?>" title="View Activity Logs">
+									<i class="ace-icon fa fa-plus smaller-120" ></i>  
+							</a-->
+							<!-- <a class="btn btn-xs btn-primary" data-toggle="#" data-target="#" 
+									href="<?php echo $this->url('capacity', array('action' => 'editestatedtls', 'id' => $rows['id'])); ?>" >
+									<i class="ace-icon fa fa-pencil smaller-120" ></i>  
+							</a> -->
+						<!-- </td> -->
+						<?php //echo $this->button(1, $rows['id']); ?>
+					
+					</tr>
+				<?php 
+				$i++;
+				endforeach;  
+				?>
+			</tbody>
+		</table>
+	</div>
+</div>
+<div id="modal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+	<div class="modal-dialog">
+		<div class="modal-content">
+		</div>
+	</div>
+</div>
+<script type="text/javascript">
+	$("tr[data-href]").each(function(){
+		$(this).find('td').not('td.action').each(function(){
+			$(this).css('cursor','pointer');
+			$(this).bind('click',function() {
+				window.document.location = $(this).closest('tr').attr("data-href");
+			});
+		});
+	});
+
+	$('document').ready(function(){
+		$('#dataTables').DataTable();
+	});
+</script>
+
+

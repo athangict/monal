@@ -1,0 +1,63 @@
+<?php
+/**
+ * 
+ * View -- of Accounts/DemographyController/addactivityAction
+ * 
+ */
+?>
+<?php foreach($bank_ref_types as $row);?>
+
+<form method="post" action="<?php echo $this->url('accmaster', array('action' => 'editbankreftype', 'id' => $row['id'])); ?>"  enctype="multipart/form-data" >                  
+    <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+        <h4 class="modal-title"> <i class="fa fa-pencil-square-o"></i> Edit Bank Ref Type</h4>
+    </div>  <!-- /modal-header -->
+    
+    <div class="modal-body">       
+		<div class="panel panel-default">                       
+			<div class="panel-body"> 
+				<div class="form-group">
+				    <input type="hidden" id="bankref_id" name="bankref_id" value="<?php echo $row['id'];?>" />
+					<label for="bank_ref_type" class="control-label">Bank Ref Type</label>
+					<input type="text" class="form-control" name="bank_ref_type" id="bank_ref_type" value="<?php echo $row['bank_ref_type'];?>" size="30" required> 
+				</div>
+			</div>
+		</div>
+	</div> <!-- /modal-body -->    
+    <div class="modal-footer">
+        <button type="submit" class="btn btn-success"><i class="fa fa-check"></i> Save </button>
+        <button type="button" class="btn btn-warning" data-dismiss="modal" ><i class="fa fa-times"></i> Cancel </button> 
+    </div>
+</form>
+<script>
+	$('document').ready(function(){
+		const fv = FormValidation.formValidation(document.getElementById('#form'), {
+			fields: {
+				bank_ref_type: {
+					validators: {
+						notEmpty: {
+							message: 'Please provide bank ref type.'
+						}
+					}
+				},
+			},
+			plugins: {
+				trigger: new FormValidation.plugins.Trigger(),
+				bootstrap3: new FormValidation.plugins.Bootstrap3(),
+				submitButton: new FormValidation.plugins.SubmitButton(),
+				defaultSubmit: new FormValidation.plugins.DefaultSubmit(),
+			},
+		}).on('core.element.validated', function (e) {
+			if (e.valid) {
+				$('div#'+ e.field.replace('[]','') +'_chosen').removeClass('is-invalid');
+				$('div#'+ e.field.replace('[]','') +'_chosen').addClass('is-valid');
+			} else {
+				$('div#'+ e.field.replace('[]','') +'_chosen').removeClass('is-valid');
+				$('div#'+ e.field.replace('[]','') +'_chosen').addClass('is-invalid');
+			}
+		});
+		$('form select').chosen().change(function () {
+			fv.revalidateField($(this).attr('name'));
+		});
+	});
+</script>

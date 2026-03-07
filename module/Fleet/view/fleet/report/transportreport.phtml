@@ -1,0 +1,179 @@
+<?php
+/**
+ * View -- of Report/AccountsreportController/ledgerAction
+ */
+	$this->headTitle($this->title);
+	echo $this->partial('fleet/report/partial.phtml', array('active' => 'transportreport'));
+?><br/>
+<div class="row">
+    <div class="col-lg-12">
+		<form id="#form" method="post" action="<?php echo $this->url('ftreport', array('action' => 'transportreport')); ?>"  enctype="multipart/form-data" >    
+			<div class="row">
+				<div class="form-group col-lg-3">
+					<label class="control-label" for="region">Region</label>
+					<select class="form-control" name="region" id="region" data-placeholder="select" >
+						<option value="-1" <?php echo ($data['region']=='-1')?'selected':'';?>>All</option>
+							<?php  
+								$regions = $regionObj->getAll();
+								foreach ($regions as $region):
+									$selected_r = ($region['id']==$data['region'])?"selected":"";
+							?>
+								<option value="<?php echo $region['id']; ?>" <?php echo $selected_r;?>>
+									<?php echo $region['region']; ?>
+								</option>
+						<?php endforeach;  ?>									
+					</select>
+				</div>
+				<div class="form-group col-lg-2"></br>
+					<button type="submit" class="btn btn-sm btn-success pull-right"><i class="fa fa-gear"></i> Generate </button>
+				</div>
+			</div>	
+		</form>
+		<div class="hr hr-dotted"></div>
+		<div class="space-6"></div>
+		<div class="row col-lg-12">
+			<div class="clearfix">
+				<label><i class="red fa fa-map-marker"></i> <strong>Region: </strong></label><span><?php echo ($data["region"] == -1 || !isset($data['region']))? "All Region": $this->regionObj->getColumn($data["region"], 'region');?></span>.&nbsp;&nbsp;
+			</div>
+		</div>
+		<div class="row col-lg-12">
+			<div class="clearfix">
+			<input type ="hidden" id = "reg" name = "reg" value = "<?php echo ($data["region"] == -1 || !isset($data['region']))? "All Region": $this->regionObj->getColumn($data["region"], 'region');?>">
+			</div>
+		</div>
+		<div class ="row">
+			<div class="col-lg-12">
+				<div>
+					<table class="table card-table text-nowrap" id="dataTables">
+						<thead>
+							<tr>
+								<th>License Plate</th>
+								<th>Location</th>
+								<th>Class</th>
+								<th>Aquisition Date</th>
+								<th>Make/Model</th>
+								<th>Source Of Fund</th>
+								<th>Purchase Cost</th>
+								<th>Engine no./Chasis No.</th>
+								<th>Fuel Type</th>
+								<th>Tank Capacity</th>
+								<th>Fuel Supplier</th>
+								<th>F. S. Book No.</th>
+								<th>Insurance Company</th>
+								<th>Policy No./Sum Assured</th>
+								<th>Advance Ceilling</th>
+								<th>Handing Date</th>
+								<th>Pool/Designated</th>
+								<th>Employee</th>
+								<th>Driver</th>
+								<th>Recording Date</th>
+								<th>Type</th>
+								<th>Start Date </th>
+								<th>End Date</th>
+								<th>Amount</th>
+							</tr>
+						</thead>
+						<tbody>
+							<?php
+							if(sizeof($transports)>0):
+							foreach($transports as $transport):	?>						 
+						    <tr style="border-top:2px solid #ddd;border-bottom:2px solid #ddd;background-color:#FAEBD7;">
+								<td><strong><?php echo $transport['region'];?> </strong></td>
+								<td></td><td></td><td></td><td></td><td></td>
+								<td></td><td></td><td></td><td></td><td></td><td></td>
+								<td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+								<td></td><td></td><td></td><td></td><td></td>
+							</tr>
+							<tr> 
+                                <?php 
+								foreach($this->transportObj->getTransportReport($data['region'], array('region'=>$transport['region_id'])) as $trans):?>
+								<td style="text-align:left" class = ""><?php echo $trans['license_plate']; ?></td>
+								<td style="text-align:left" class = ""><?php echo $this->locationObj->getColumn($trans['location'],'location'); ?></td>
+								<td style="text-align:left" class = ""><?php echo $this->TCObject->getColumn($trans['class'],'transport_class'); ?></td>
+								<td style="text-align:right" class = ""><?php echo $trans['acquisition_date']; ?></td>
+								<td style="text-align:left" class = ""><?php echo $this->MObject->getColumn($trans['make'],'make'); ?>/<?php echo $trans['model']; ?></td>
+								<td style="text-align:left" class = ""><?php echo $trans['source_of_fund']; ?></td>
+							    <td style="text-align:right" class = ""><?php echo $trans['naked_vehicle_value']; ?></td>
+								<td style="text-align:left" class = ""><?php echo $trans['engine_no']; ?>/<?php echo $trans['chasis_no']; ?></td>
+								<td style="text-align:left" class = ""><?php echo $this->FObject->getColumn($trans['fuel_type'],'fuel'); ?></td>
+								<td style="text-align:right" class = ""><?php echo $trans['tank_capacity']; ?></td>
+								<td style="text-align:left" class = ""><?php echo $trans['fuel_supplier']; ?></td>
+								<td style="text-align:left" class = ""><?php echo $trans['supplier_book_no']; ?></td>
+								<td style="text-align:left" class = ""><?php echo $trans['insurance_company']; ?></td>
+								<td style="text-align:left" class = ""><?php echo $trans['policy_no']; ?>/ <?php echo $trans['sum_assured']; ?></td>
+								<td style="text-align:right" class = ""><?php echo $trans['advance_ceiling']; ?></td>
+								<td><?php echo "--"; ?></td><td><?php echo "--";; ?></td><td><?php echo "--";; ?></td>
+								<td><?php echo "--";; ?></td><td><?php echo "--";; ?></td><td><?php echo "--";; ?></td>
+								<td><?php echo "--";; ?></td><td><?php echo "--";; ?></td><td><?php echo "--";; ?></td>
+							</tr> 	
+							<?php 
+							   	$trans_details = $this->TDObject->getTransportDtls(array('transport'=>$trans['id']));
+								foreach($trans_details as $trans_detail):
+								?>
+							<tr style="border-top:2px solid #ddd;border-bottom:2px solid #ddd;background-color:#FFF8DC;">
+								<td></td><td></td><td></td><td></td>
+								<td></td><td></td><td></td><td></td><td></td>
+								<td></td><td></td><td></td><td></td><td></td><td></td>
+								<td style="text-align:left" class = ""><?php echo $trans_detail['date_of_handing']; ?></td>
+								<td style="text-align:left" class = ""><?php echo $this->PDObject->getColumn($trans_detail['pool_designated'],'code'); ?></td>
+								<td style="text-align:left" class = ""><?php echo $this->EDObject->getColumn($trans_detail['driver'],'full_name'); ?></td>
+								<td style="text-align:left" class = ""><?php echo $this->EDObject->getColumn($trans_detail['driver'],'full_name'); ?></td>
+								<td></td><td></td><td></td><td></td><td></td>
+							</tr>
+							<?php 
+							   	$transhs = $this->THObject->getTransportH(array('transport'=>$trans['id']));
+								foreach($transhs as $transh):
+								?>
+							<tr style="border-top:2px solid #ddd;border-bottom:2px solid #ddd;background-color:#F0FFF0;">
+								<td></td><td></td><td></td><td></td>
+								<td></td><td></td><td></td><td></td><td></td>
+								<td></td><td></td><td></td><td></td><td></td><td></td>
+								<td></td><td></td><td></td><td></td>
+								<td style="text-align:left" ><?php echo $transh['recording_date']; ?></td>
+								<td style="text-align:left" ><?php echo $this->typeObj->getColumn($transh['type'],'code'); ?></td>
+								<td style="text-align:left" ><?php echo $transh['start_date']; ?></td>
+								<td style="text-align:left" ><?php echo $transh['end_date']; ?></td>
+								<td style="text-align:left" class = ""><?php echo $transh['amount']; ?></td>
+							</tr>
+							<?php endforeach;endforeach;endforeach;endforeach;endif; ?>
+						</tbody>
+					</table>
+				</div>
+		    </div>
+		</div>
+	</div>
+</div>
+<script type="text/javascript">
+	$(function(){	
+	const fv = FormValidation.formValidation(document.getElementById('#form'), {
+		fields: {
+			region: {
+					validators: {
+						notEmpty: {
+							message: 'Please select head'
+						}
+					}
+			},
+		},
+		plugins: {
+			trigger: new FormValidation.plugins.Trigger(),
+			bootstrap3: new FormValidation.plugins.Bootstrap3(),
+			submitButton: new FormValidation.plugins.SubmitButton(),
+			defaultSubmit: new FormValidation.plugins.DefaultSubmit(),
+		},
+	}).on('core.element.validated', function (e) {
+		if (e.valid) {
+			$('div#'+ e.field.replace('[]','') +'_chosen').removeClass('is-invalid');
+			$('div#'+ e.field.replace('[]','') +'_chosen').addClass('is-valid');
+		} else {
+			$('div#'+ e.field.replace('[]','') +'_chosen').removeClass('is-valid');
+			$('div#'+ e.field.replace('[]','') +'_chosen').addClass('is-invalid');
+		}
+	});
+	var title_table = $('#reg').val();
+		
+	$('document').ready(function(){
+		$('#dataTables').DataTable();
+	});
+});
+</script>

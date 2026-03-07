@@ -1,0 +1,184 @@
+<?php
+/**
+ * 
+ * View -- of Hr/LeaveController/indexAction
+ * 
+ */
+$this->headTitle($this->title);
+foreach($this->encashDtls as $row); 
+foreach($this->employeeObj->get($row['employee']) as $emp);
+$flag = false;
+$checkleaveOfficial = $this->usersObj->get(array('id'=>$this->userID, 'role'=>100));   
+if(sizeof($checkleaveOfficial) >0 && sizeof($this->encashDtls)>0){
+  $flag = true;
+}else{	
+   $userEmp = $this->usersObj->getColumn($this->userID, 'employee'); 
+  if($userEmp == $row['employee'])
+  {
+	$flag = true;
+  }					  
+}
+
+?>
+<div class="row" id="report-print">
+	<div class="col-lg-12">
+		<div class="widget-box transparent ">
+			<div class="widget-header widget-header-large">
+			       <a class="btn btn-xs btn-danger" data-toggle="modal" data-target="#modal" 
+				   href="<?php echo $this->url('acl', array('action' => 'activitylog', 'id' => "23-".$row['id'])); ?>" title="View Activity Logs">
+							<i class="ace-icon fa fa-plus smaller-120" ></i>  
+				   </a>
+				   &nbsp;&nbsp;
+				<h3 class="widget-title grey lighter">
+					Leave Encashment Application &nbsp;&nbsp; <span class="orange">Dated:-<?php echo date('d-m-y',strtotime($row['encash_date']));?></span>
+					&nbsp;&nbsp;<?php $this->status($row['status']); ?> 					
+				</h3>
+				<div class="widget-toolbar hidden-xs">
+					<div class="btn-list">
+						<?php //if($edit_option){ echo $this->button(2,$row['id']); }?>
+						<span data-bs-toggle='tooltip' data-bs-placement='top' title='PDF Print'>
+							<a class='btn btn-danger btn-xs' id="print">
+							<i class="ace-icon fa fa-file-pdf-o bigger-120"></i></a></span>
+					</div>
+				</div>
+			</div>
+			<div class="widget-body" id="print-content">
+				<div class="widget-main padding-12">
+					<div>
+						<div class="row" id="convert-tb0">
+							<div class="col-lg-8" id="convert-tb1">
+								<ul class="list-unstyled spaced">
+								    <li>
+										<i class="ace-icon fa fa-caret-right blue"></i>
+										Encashment Date : <b class="blue"><?php echo $row['encash_date']; ?></b>
+									</li>
+									<li>
+										<i class="ace-icon fa fa-caret-right blue"></i>
+										Employee Name | EID : <b class="blue"><?php echo $emp['full_name']." | ".$emp['emp_id']; ?></b>
+									</li>
+									<li>
+										<i class="ace-icon fa fa-caret-right blue"></i>
+										Location : <b class="blue"> <?php echo $emp['location']; ?></b>
+									</li>	
+									<li>
+										<i class="ace-icon fa fa-caret-right blue"></i>
+										Designation: <b class="blue"><?php echo $emp['designation']; ?> </b>
+									</li>									
+                                    <li>
+								       <i class="ace-icon fa fa-caret-right blue"></i>
+										Email | Contact No: <b class="blue"><?php echo $emp['email']; ?> | <?php echo $emp['mobile']; ?> </b>
+									</li>		
+								</ul>
+							</div>
+						</div>
+						<div class="row">
+						    <br/>
+							<div class="col-lg-6">
+							     <h4>Leave Encashment Details</h4>
+								 <table class="table table-striped table-hover table-condensed">
+								     <tr><th>Encashment Date</th><th>Total EL(Day/s)</th><th>No. of Encash Days</th><th>EL Balance(Day/s)</th></tr>
+									 <tr>
+									     <td><?php echo $row['leave_balance_date']; ?></td>
+					                     <td><?php echo $row['leave_balance']+$row['no_of_encashed_days']; ?></td>									 
+										 <td><?php echo $row['no_of_encashed_days']; ?></td>
+										 <td><?php echo $row['leave_balance']; ?></td>
+									 </tr>
+								 </table>
+							</div>
+						</div>
+						<div class="row">
+							<div class="col-lg-6">
+							     <h4>Payment Details</h4>
+								 <table class="table table-striped table-hover table-condensed">
+								     <tr><th>Gross Salary</th><th>PID Deduction</th><th>Payable Amount</th></th></tr>
+									 <tr>
+									     <td><?php echo $this->currency($row['payment_amount'] + $row['deduction']); ?></td>
+					                     <td><?php echo $this->currency($row['deduction']); ?></td>										 
+										 <td><?php echo $this->currency($row['payment_amount']); ?></td>										
+									 </tr>
+								 </table>
+							</div>
+						</div>
+						<div class="row">
+							<div class="col-lg-12">
+									Remarks<p class="black"><?php echo $row['remarks'];?> </p>
+							</div>
+						</div>
+						<div class="col-lg-12" id="convert-tb2"><?php foreach($this->activityObj->get(array('process'=>520,'process_id'=>$row['id'])) as $actvity):?>
+							<div class='underlined'>
+							<b class="black"><?php echo $this->usersObj->getColumn($actvity['author'],'name');?></b>&nbsp;<?php echo $this->status($actvity['status']);?> to: <b class="black"><?php echo strtoupper($this->usersObj->getColumn($actvity['send_to'],'name'));?> on</b>&nbsp;<?php echo date('d-m-Y', strtotime($actvity['created'])); ?>
+							<br>Remarks: <b class="black"><?php echo $actvity['remarks'];?></b>
+							</div>
+							<style>
+							.underlined {
+								border-bottom: 0.5px solid #000; /* Black underline */
+								padding-bottom: 10px; /* Adjust spacing as needed */
+								margin-bottom: 10px; /* Adjust spacing as needed */
+							}
+							</style>
+						<?php endforeach;?>
+						</div>	
+					<!-- Upload and Download file attachments -->			
+					<?php   
+					 //echo $this->partial('partial/attachment.phtml', array('process' => '520', 'process_id'=> $row['id'] , 'status' => $row['status']));
+					?>					
+				    <!-- End of attachment -->
+					<div class="row">
+					 <form method="post" action="<?php echo $this->url('leave', array('action' => 'encashmentdtl')); ?>">	
+					    <div class="col-lg-8">
+						   &nbsp;
+						</div>
+						<div class="col-lg-4"><br/>&nbsp;
+						<?php
+						  $employeeUser = $this->usersObj->getColumn(array('employee'=>$emp['id']), 'id');	
+						  $activity = $this->flowtransactionObj->getMax($column='activity', $where=array('application'=>$row['id'],'process'=>520));
+						  $flows = $this->flowtransactionObj->get(array('application'=>$row['id'],'activity'=>$activity,'process'=>520));
+						  foreach($flows as $flow);	
+						 // print_r($row['id']);exit;
+							if($this->userID  == $employeeUser && $row['status']==1):?>
+								<form method="post" action="<?php echo $this->url('leave', array('action' => 'encashmentdtl')); ?>">	
+									<a data-toggle="modal" data-target="#modal" href="<?php echo $this->url('leave', array('action'=>'encashprocess', 'id'=>$row['id'].'-'.'1'.'-'.$flow['id']));?>" class="btn btn-success"> 
+									<i class="fa fa-check-square-o"></i> Apply Encashment </a>								
+									<button type="submit" value="1" name="cancel" class="btn btn-danger" onClick="return confirm('Are you sure to Cancel this leave?')"> 
+									<i class="fa fa-times"></i> Cancel  </button>	
+								  </form>	<?php
+								 elseif($this->userID == $flow['role_id'] && $row['status']!=8):							      
+									$actions = explode('|', $flow['action']);
+									for($i=0; $i < sizeof($actions); $i++):
+										$buttons = $this->flowactionObj->get($actions[$i]);
+										foreach($buttons as $button):?>
+										<span data-bs-toggle='tooltip' data-bs-placement='top' title='<?php echo $button['action']; ?>'>
+										<a data-toggle="modal" data-target="#modal"  class="btn <?php echo $button['class']; ?>"href="<?php echo $this->url('leave', array('action' => 'encashprocess', 'id'=>$row['id'].'-'.$button['id'].'-'.$flow['id'])); ?>">
+											<i class="icon <?php echo $button['icon'];?>"></i><?php echo $button['action']; ?>
+										</a></span>
+									<?php
+										endforeach;
+									endfor;
+							endif;?>	
+                        </div>
+					 </form>	
+					</div>	
+                </div>
+		     </div>				
+	     </div>
+      </div>
+	</div>
+</div>
+<?php //endif; ?>
+<div id="modal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+	<div class="modal-dialog">
+		<div class="modal-content">
+		</div>
+	</div>
+</div>
+<script type="text/javascript">	   
+$(function(){
+	 $('#print').gentcpdf({
+		content: '#print-content',
+		src:"<?php echo $this->url('print', array('action' => 'index'));?>",
+		orentation:"P",
+		size: 'A4',
+	});
+	
+});
+</script>

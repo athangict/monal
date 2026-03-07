@@ -1,0 +1,34 @@
+<?php // view partial.phtml 
+  $leavedailyreport = ($this->active == "leavedailyreport")?"active":"";
+ $leaveyearlyreport = ($this->active == "leaveyearlyreport")?"active":"";
+  $leaveencashreport = ($this->active == "leaveencashreport")?"active":"";
+  $leavebalancereport = ($this->active == "leavebalancereport")?"active":"";
+?>
+<br/>
+<ul class="nav nav-tabs padding-18" id="myTab" >
+		<li class="<?php echo $leavedailyreport; ?>">
+			<a href="<?php echo $this->url('leave', array('action' => 'leavedailyreport', 'id' => $this->id)); ?>">
+				<i class="blue ace-icon fa fa-user-times bigger-120"> </i>
+				<span class="hidden-xs"> Leave Daily Report</span>
+			</a>
+		</li>
+		<li class="<?php echo $leaveyearlyreport; ?>">
+			<a href="<?php echo $this->url('leave', array('action' => 'leaveyearlyreport', 'id' => $this->id)); ?>">
+				<i class="blue ace-icon fa fa-user-times bigger-120"> </i>
+				<span class="hidden-xs" >Leave yearly Report</span>
+			</a>
+		</li>
+		<li class="<?php echo $leaveencashreport; ?>">
+			<a href="<?php echo $this->url('leave', array('action' => 'leaveencashreport', 'id' => $this->id)); ?>">
+				<i class="blue ace-icon fa fa-user-times bigger-120"> </i>
+				<span class="hidden-xs" >Leave Encash Report</span>
+			</a>
+		</li>
+		<li class="<?php echo $leavebalancereport; ?>">
+			<a href="<?php echo $this->url('leave', array('action' => 'leavebalancereport', 'id' => $this->id)); ?>">
+				<i class="blue ace-icon fa fa-user-times bigger-120"> </i>
+				<span class="hidden-xs" >Leave Balance Report</span>
+			</a>
+		</li>
+</ul>
+

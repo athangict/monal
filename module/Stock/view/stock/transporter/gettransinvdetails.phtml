@@ -1,0 +1,138 @@
+<?php
+/**
+ * View -- Stock/TransportController/gettransinvdetails.pthml
+ * ajax response
+ */
+// print_r($data);
+?>
+<style>
+	.checkbox{
+		margin-top:3px;
+		margin-bottom:3px;"
+	}
+</style>
+<div class="clearfix message_box">
+	<label><i class="blue fa fa-user"></i> <strong>Transporter:</strong></label> <span><?php echo $this->partyObj->getColumn($data['transporter'],'code'); ?></span>.&nbsp;&nbsp;&nbsp;
+	<label><i class="purple fa fa-tags"></i> <strong>Location:</strong></label> <span><?php echo $this->locationObj->getColumn($data['location'], 'location');?></span>.&nbsp;&nbsp;
+	<label><i class="green fa fa-calendar"></i> <strong>Period From :</strong></label> <span><?php echo $data['from_date'].' to '.$data['to_date'];?></span>
+</div>	
+<div class="space-6"></div>
+<table class="table table-striped table-bordered table-hover table-condensed" id="trdetails_table">
+	<thead>
+		<tr>
+			<th>#</th>
+			<th>Challan No</th>
+			<th>Transport Charge No</th>
+			<th>Transport Date</th>
+			<th>Activity</th>
+			<th>Vehicle No.</th>
+			<th>Qty (MT)</th>
+			<th>Amount (<?php echo $this->currency_code();?>)</th>
+			<th>Deduction (<?php echo $this->currency_code();?>)</th>
+			<th>Payable Amount (<?php echo $this->currency_code();?>)</th>
+			
+			<th>
+				<div class="checkbox">
+					<label>
+						<input name="selectAll" id="selectAll" type="checkbox" class="ace" checked/>
+						<span class="lbl"> Select All</span>
+					</label>
+				</div>
+			</th>
+		</tr>
+	</thead>
+	<tbody>
+	<?php 	
+		/* transport charge */
+		$transport_charge = $this->transchargeObj->getByDate($data['from_date'],$data['to_date'],array('transporter'=>$data['transporter'], 'status'=>'3', 'invoiced'=>'0'));  //'location'=>$data['location'],
+		if(sizeof($transport_charge) > 0):
+		//echo "<pre>";print_r($transport_charge); exit;
+		$i = 1;
+		foreach($transport_charge as $trans_charge):
+		    $trans_id = $trans_charge['id'];
+			//$amount = $trans_charge['transportation_charge'];
+			
+			$hill_transp_charge = $trans_charge['hill_distance'] * $trans_charge['hill_rate'] * $trans_charge['qty'];
+			$plain_transp_charge = $trans_charge['plain_distance'] * $trans_charge['plain_rate'] * $trans_charge['qty'];
+			$total_charge = $hill_transp_charge + $plain_transp_charge;
+			
+			$transit_loss_amt = $this->transit_lossObj->getSUM(array('dispatch'=>$trans_charge['dispatch']),'amount');
+			$transit_loss_amt = ($transit_loss_amt == '')?'0.00':$transit_loss_amt;
+			$payable_amt = $total_charge - $transit_loss_amt;
+			?>
+				<tr>
+					<td>
+						<?php echo $i++;?> 
+					</td>
+					<td>
+						<?php echo $this->dispatchObj->getColumn($trans_charge['dispatch'],'challan_no');?>
+					</td>
+					<td>
+						<?php echo $trans_charge['transport_no'];?>
+					</td>
+					<td>
+						<?php echo $trans_charge['transport_date'];?>
+					</td>
+					<td><?php echo $this->activityObj->getColumn($trans_charge['activity'],'prefix');?></td>
+					<td>
+						<?php echo $this->dispatchObj->getColumn($trans_charge['dispatch'],'vehicle_no');?>
+					</td>
+					<td>
+						<?php echo $trans_charge['qty'];?>
+					</td>
+					<td>
+						<input type="text" class="form-control" name="amount[]" id="amount" value="<?php echo number_format((float)$total_charge, 2, '.', '');?>" readonly />
+					</td>
+					<td>
+						<input type="text" class="form-control" name="deduction_<?php echo $trans_id; ?>" id="deduction"  value="<?php echo $transit_loss_amt;?>">
+					</td>
+					<td>
+						<input type="text" class="form-control" name="payable_amount[]" id="payable_amount"  value="<?php echo $payable_amt;?>" readonly >
+					</td>
+					<td>
+						<div class="checkbox">
+							<label>
+								<input name="transp_status[]" id="transp_status" value="<?php echo $trans_id;?>" type="checkbox" class="ace" checked/>
+								<span class="lbl"></span>
+							</label>
+						</div>
+					</td>
+				</tr>
+		<?php
+		endforeach;	
+		else:
+	?>	
+		<tr>
+			<td colspan='11' style="text-align:center;"><i>No Records Found</i></td>
+		</tr>
+	<?php endif;?>
+	</tbody>
+</table>
+<div class="row">
+	<div class="col-lg-3"></div>
+	<div class="col-lg-3">
+		<label class="control-label" for="total_amount">Total Amount</label>
+		<input type="text" class="form-control" name="total_amount" id="total_amount" value="0.00" readonly>
+	</div>
+	<div class="col-lg-3">
+		<label class="control-label" for="total_deduction">Total Deduction</label>
+		<input type="text" class="form-control" name="total_deduction" id="total_deduction" value="0.00" readonly>
+	</div>
+	<div class="col-lg-3">
+		<label class="control-label" for="total_payable_amount">Net Payable Amount</label>
+		<input type="text" class="form-control" name="total_payable_amount" id="total_payable_amount" value="0.00" readonly >
+	</div>
+</div>
+<script>
+$(function() {
+ 	$('#trdetails_table').transinv();
+ 	$("input[name='selectAll']").change(function(){
+ 		if($(this).prop('checked')){
+ 			$('.tr-transp_status').prop('checked', true);
+ 		}else{
+ 			$('.tr-transp_status').prop('checked', false);
+ 		}
+ 	}); 
+});
+</script>
+

@@ -1,0 +1,19 @@
+<?php // partial.phtml 
+	$charge = ($this->active == "charge")?"active":"";
+	$invoice = ($this->active == "invoice")?"active":"";
+?>
+<br/>
+<ul class="nav nav-tabs padding-18 nav-fixed-top" id="myTab">
+	<li class="<?php echo $charge; ?>">
+		<a href="<?php echo $this->url('transporter', array('action' => 'transportcharge')); ?>" title="Dispatch of Items">
+			<i class="orange ace-icon fa fa-cubes bigger-120"></i>
+			<span class="hidden-xs">Transportation Charges</span>
+		</a>
+	</li>
+	<li class="<?php echo $invoice; ?>">
+		<a href="<?php echo $this->url('transporter', array('action' => 'transporterinv')); ?>" title="Good Request for Purchase or Dispatch">
+			<i class="green ace-icon fa fa-filter bigger-120"></i>
+			<span class="hidden-xs">Transportation Invoice</span>
+		</a>
+	</li>	
+</ul>

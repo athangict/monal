@@ -1,0 +1,293 @@
+<?php
+/**
+ * 
+ * View -- of Hr/PayrollController/salaryAction
+ * 
+ */
+	$this->headTitle($this->title);
+?>
+<div class="row">	
+	<form>				
+		<div class="col-lg-2">
+			<label for="month" class="control-label">Month </label>
+			<select class="form-control" name="month" id="month" data-placeholder="Select" required >
+				<option value=""></option>
+				<?php 
+					for($m=1;$m<=12;$m++):
+						$selected = ($this->month == $m)?'selected':'';
+				?>
+					<option value="<?php echo $m;?>" <?php echo $selected;?>>
+						<?php echo date("F", strtotime(date("d-$m-y"))); ?>
+					</option>
+				<?php endfor; ?>
+			</select>
+		</div>
+		<div class="col-lg-2">
+			<label for="year" class="control-label">Year </label>
+			<select class="form-control" name="year" id="year" data-placeholder="Select" required >
+				<option value=""></option>
+				<?php for($y=date('Y');$y >2005;$y--):
+					$selected = ($this->year == $y)?'selected':'';?>
+					<option value="<?php echo $y;?>" <?php echo $selected;?>>
+						<?php echo $y; ?>
+					</option>
+				<?php endfor; ?>
+			</select>
+		</div>
+		<div class="form-group col-lg-1">
+			<label class="control-label"> </label>
+			<button type="button" class="btn btn-sm btn-info" onclick="refresh()" ><i class="fa fa-refresh"></i> refresh</button>
+		</div>
+		<div class="form-group col-lg-3"></div>
+		<div class="form-group col-lg-4"><br />
+			<div><?php echo $this->button(2);?></div>
+			<div class="pull-right tableTools-container"></div>
+		</div>
+	</form>
+</div>
+<div class="hr dotted"></div>
+<div class="widget widget-box transparent">
+	<div class="widget-header">
+		<h4 class="widget-title"> 	
+			Payroll for the month of <strong><?php echo date('F, Y', strtotime('1-'.$this->month.'-'.$this->year));?></strong>
+		</h4>
+		<div class="widget-toolbar">
+			
+		</div>
+	</div>
+	<div class="widget-body">
+		<div class="widget-main">
+			<div class="row" style="overflow: auto;"> 
+				<table class="table card-table text-nowrap" id="dataTables">
+					<thead>
+						<tr>
+							<th>#</th>
+							<th>Employee</th>
+							<th>Emp ID</th>
+							<th>Basic Pay</th>
+							<th>Temporary</th>
+							<th>HRA</th>
+							<th>MLA (MLA)</th>
+							<th>PSA</th>
+							<th>LTC</th>
+							<th>BA</th>
+							<th>OTA</th>
+							<th>CA</th>
+							<th>Gross</th>
+							<th>CL PF</th>
+							<th>TDS</th>
+							<th>GIS</th>
+							<th>PSWF</th>
+							<th>HC</th>
+							<th>BOBL 1</th>
+							<th>BOBL 2</th>
+							<th>BOBL 3</th>
+							<th>BNBL 1</th>
+							<th>BNBL 2</th>
+							<th>BNBL 3</th>
+							<th>Tbank 1</th>
+							<th>Tbank 2</th>
+							<th>Tbank 3</th>
+							<th>BDBL 1</th>
+							<th>BDBL 2</th>
+							<th>BDBL 3</th>
+							<th>DPNB 1</th>
+							<th>DPNB 2</th>
+							<th>DPNB 3</th>
+							<th>NPPF 1</th>
+							<th>NPPF 2</th>
+							<th>NPPF 3</th>
+							<th>PSWF P</th>
+							<th>PSWF I</th>
+							<th>Salary Advance</th>
+							<th>RICBL 1</th>
+							<th>DK 1</th>
+							<th>Insurance 1</th>
+							<th>Insurance 2</th>
+							<th>Insurance 3</th>
+							<th>HRD</th>
+							<th>Salary Recovery</th>
+							<th>Total Ded.</th>
+							<th>Net Pay</th>
+							<?php if($this->button(1)!=""):?>
+								<th class="no-sort no-printpdf">Action</th>
+							<?php endif;?>
+						</tr>
+					</thead>
+					<tbody>
+						<?php
+						$i = 1; 
+						$total_net =0;
+						$total_gross =0;
+						$total_ded =0;
+						
+						foreach ($this->temppayroll as $row):
+						?> 
+						<tr data-href="<?php echo $this->button(4, $row['id']); ?>" >
+							<td><?php echo $i; ?> </td>
+							<td>
+								<strong><?php echo $row['full_name']; ?></strong>
+								</td>
+								<td>
+								 &nbsp;<?php echo $row['emp_id']; //
+								 ?> 
+							  </td>
+							<td><b><?php $basic=$this->payStructureObj->getColumn(array('employee'=>$row['employee'],'pay_head'=>1),'amount');echo ($basic!=null)?number_format((float)$basic,2,'.',','):0.00;?></b></td>
+							<td><b><?php $temporary=$this->payStructureObj->getColumn(array('employee'=>$row['employee'],'pay_head'=>47),'amount');echo ($temporary!=null)?number_format((float)$temporary,2,'.',','):0.00;?></b></td>
+							<td><b><?php $hra=$this->payStructureObj->getColumn(array('employee'=>$row['employee'],'pay_head'=>3),'amount');echo ($hra!=null)?number_format((float)$hra,2,'.',','):0.00;?></b></td>							
+							<td><b><?php $mla=$this->payStructureObj->getColumn(array('employee'=>$row['employee'],'pay_head'=>4),'amount');echo ($mla!=null)?number_format((float)$mla,2,'.',','):0.00;?></b></td>
+							<td><b><?php $psa=$this->payStructureObj->getColumn(array('employee'=>$row['employee'],'pay_head'=>5),'amount');echo ($psa!=null)?number_format((float)$psa,2,'.',','):0.00;?></b></td>
+							<td><b><?php $ltc=$this->payStructureObj->getColumn(array('employee'=>$row['employee'],'pay_head'=>6),'amount');echo ($ltc!=null)?number_format((float)$ltc,2,'.',','):0.00;?></b></td>
+							<td><b><?php $ba=$this->payStructureObj->getColumn(array('employee'=>$row['employee'],'pay_head'=>7),'amount');echo ($ba!=null)?number_format((float)$ba,2,'.',','):0.00;?></b></td>
+							<td><b><?php $ota=$this->payStructureObj->getColumn(array('employee'=>$row['employee'],'pay_head'=>8),'amount');echo ($ota!=null)?number_format((float)$ota,2,'.',','):0.00;?></b></td>
+							<td><b><?php $ca=$this->payStructureObj->getColumn(array('employee'=>$row['employee'],'pay_head'=>42),'amount');echo ($ca!=null)?number_format((float)$ca,2,'.',','):0.00;?></b></td>	
+							<td><strong><?php echo number_format((float)$gross=$row['gross'],2,'.',','); ?> </strong></td>
+							<td><b><?php $cf=$this->payStructureObj->getColumn(array('employee'=>$row['employee'],'pay_head'=>9),'amount');echo ($cf!=null)?number_format((float)$cf,2,'.',','):0.00;?></b></td>
+							<td><b><?php $tds=$this->payStructureObj->getColumn(array('employee'=>$row['employee'],'pay_head'=>11),'amount');echo ($tds!=null)?number_format((float)$tds,2,'.',','):0.00;?></b></td>
+							<td><b><?php $gis=$this->payStructureObj->getColumn(array('employee'=>$row['employee'],'pay_head'=>12),'amount');echo ($gis!=null)?number_format((float)$gis,2,'.',','):0.00;?></b></td>
+							<td><b><?php $pswf=$this->payStructureObj->getColumn(array('employee'=>$row['employee'],'pay_head'=>13),'amount');echo ($pswf!=null)?number_format((float)$pswf,2,'.',','):0.00;?></b></td>
+							<td><b><?php $hc=$this->payStructureObj->getColumn(array('employee'=>$row['employee'],'pay_head'=>14),'amount');echo ($hc!=null)?number_format((float)$hc,2,'.',','):0.00;?></b></td>
+							<td><b><?php $bo1=$this->payStructureObj->getColumn(array('employee'=>$row['employee'],'pay_head'=>15),'amount');echo ($bo1!=null)?number_format((float)$bo1,2,'.',','):0.00;?></b></td>
+							<td><b><?php $bo2=$this->payStructureObj->getColumn(array('employee'=>$row['employee'],'pay_head'=>16),'amount');echo ($bo2!=null)?number_format((float)$bo2,2,'.',','):0.00;?></b></td>
+							<td><b><?php $bo3=$this->payStructureObj->getColumn(array('employee'=>$row['employee'],'pay_head'=>17),'amount');echo ($bo3!=null)?number_format((float)$bo3,2,'.',','):0.00;?></b></td>
+							<td><b><?php $bn1=$this->payStructureObj->getColumn(array('employee'=>$row['employee'],'pay_head'=>18),'amount');echo ($bn1!=null)?number_format((float)$bn1,2,'.',','):0.00;?></b></td>
+							<td><b><?php $bn2=$this->payStructureObj->getColumn(array('employee'=>$row['employee'],'pay_head'=>19),'amount');echo ($bn2!=null)?number_format((float)$bn2,2,'.',','):0.00;?></b></td>
+							<td><b><?php $bn3=$this->payStructureObj->getColumn(array('employee'=>$row['employee'],'pay_head'=>20),'amount');echo ($bn3!=null)?number_format((float)$bn3,2,'.',','):0.00;?></b></td>
+							<td><b><?php $t1=$this->payStructureObj->getColumn(array('employee'=>$row['employee'],'pay_head'=>21),'amount');echo ($t1!=null)?number_format((float)$t1,2,'.',','):0.00;?></b></td>
+							<td><b><?php $t2=$this->payStructureObj->getColumn(array('employee'=>$row['employee'],'pay_head'=>22),'amount');echo ($t2!=null)?number_format((float)$t2,2,'.',','):0.00;?></b></td>
+							<td><b><?php $t3=$this->payStructureObj->getColumn(array('employee'=>$row['employee'],'pay_head'=>23),'amount');echo ($t3!=null)?number_format((float)$t3,2,'.',','):0.00;?></b></td>
+							<td><b><?php $bdb1=$this->payStructureObj->getColumn(array('employee'=>$row['employee'],'pay_head'=>24),'amount');echo ($bdb1!=null)?number_format((float)$bdb1,2,'.',','):0.00;?></b></td>
+							<td><b><?php $bdb2=$this->payStructureObj->getColumn(array('employee'=>$row['employee'],'pay_head'=>25),'amount');echo ($bdb2!=null)?number_format((float)$bdb2,2,'.',','):0.00;?></b></td>
+							<td><b><?php $bdb3=$this->payStructureObj->getColumn(array('employee'=>$row['employee'],'pay_head'=>26),'amount');echo ($bdb3!=null)?number_format((float)$bdb3,2,'.',','):0.00;?></b></td>
+							<td><b><?php $pn1=$this->payStructureObj->getColumn(array('employee'=>$row['employee'],'pay_head'=>27),'amount');echo ($pn1!=null)?number_format((float)$pn1,2,'.',','):0.00;?></b></td>
+							<td><b><?php $pn2=$this->payStructureObj->getColumn(array('employee'=>$row['employee'],'pay_head'=>28),'amount');echo ($pn2!=null)?number_format((float)$pn2,2,'.',','):0.00;?></b></td>
+							<td><b><?php $pn3=$this->payStructureObj->getColumn(array('employee'=>$row['employee'],'pay_head'=>29),'amount');echo ($pn3!=null)?number_format((float)$pn3,2,'.',','):0.00;?></b></td>	
+							<td><b><?php $np1=$this->payStructureObj->getColumn(array('employee'=>$row['employee'],'pay_head'=>31),'amount');echo ($np1!=null)?number_format((float)$np1,2,'.',','):0.00;?></b></td>
+							<td><b><?php $np2=$this->payStructureObj->getColumn(array('employee'=>$row['employee'],'pay_head'=>32),'amount');echo ($np2!=null)?number_format((float)$np2,2,'.',','):0.00;?></b></td>
+							<td><b><?php $np3=$this->payStructureObj->getColumn(array('employee'=>$row['employee'],'pay_head'=>33),'amount');echo ($np3!=null)?number_format((float)$np3,2,'.',','):0.00;?></b></td>
+							<td><b><?php $pswfp=$this->payStructureObj->getColumn(array('employee'=>$row['employee'],'pay_head'=>34),'amount');echo ($pswfp!=null)?number_format((float)$pswfp,2,'.',','):0.00;?></b></td>
+							<td><b><?php $pswfi=$this->payStructureObj->getColumn(array('employee'=>$row['employee'],'pay_head'=>35),'amount');echo ($pswfi!=null)?number_format((float)$pswfi,2,'.',','):0.00;?></b></td>
+							<td><b><?php $sa=$this->payStructureObj->getColumn(array('employee'=>$row['employee'],'pay_head'=>36),'amount');echo ($sa!=null)?number_format((float)$sa,2,'.',','):0.00;?></b></td>
+							<td><b><?php $ricbl1=$this->payStructureObj->getColumn(array('employee'=>$row['employee'],'pay_head'=>37),'amount');echo ($ricbl1!=null)?number_format((float)$ricbl1):0.00;?></b></td>
+							<td><b><?php $dk1=$this->payStructureObj->getColumn(array('employee'=>$row['employee'],'pay_head'=>38),'amount');echo ($dk1!=null)?number_format((float)$dk1,2,'.',','):0.00;?></b></td>
+							<td><b><?php $ins1=$this->payStructureObj->getColumn(array('employee'=>$row['employee'],'pay_head'=>39),'amount');echo ($ins1!=null)?number_format((float)$ins1,2,'.',','):0.00;?></b></td>
+							<td><b><?php $ins2=$this->payStructureObj->getColumn(array('employee'=>$row['employee'],'pay_head'=>40),'amount');echo ($ins2!=null)?number_format((float)$ins2,2,'.',','):0.00;?></b></td>	
+							<td><b><?php $ins3=$this->payStructureObj->getColumn(array('employee'=>$row['employee'],'pay_head'=>41),'amount');echo ($ins3!=null)?number_format((float)$ins3,2,'.',','):0.00;?></b></td>
+							<td><b><?php $hrd=$this->payStructureObj->getColumn(array('employee'=>$row['employee'],'pay_head'=>43),'amount');echo ($hrd!=null)?number_format((float)$hrd,2,'.',','):0.00;?></b></td>
+							<td><b><?php $salaryR=$this->payStructureObj->getColumn(array('employee'=>$row['employee'],'pay_head'=>48),'amount');echo ($salaryR!=null)?number_format((float)$salaryR,2,'.',','):0.00;?></b></td>
+							<td><strong><?php echo number_format((float)$deduc = $row['total_deduction']+$row['earning_dlwp']+$row['deduction_dlwp'],2,'.',','); ?> </strong></td>
+							<td><strong><?php echo  number_format((float)$net_pay = ($gross+$row['bonus']+$row['leave_encashment'])-$row['total_deduction']-$row['earning_dlwp']-$row['deduction_dlwp'],2,'.',','); ?></strong></td>
+							<?php $total_net += $net_pay; $total_ded +=$deduc; $total_gross += $gross; ?>
+							<td><?php echo $this->button(1, $row['id']);?></td>    
+						</tr>
+						<?php 
+						$i++;
+						endforeach;
+						?>
+						<tr>
+							<td></td>
+							<td></td>
+							<td><b>Total</b></td>
+							<td><b><?php echo $this->payStructureObj->getSum('amount',array('pay_head'=>1));?></b></td>
+							<td><b><?php echo $this->payStructureObj->getSum('amount',array('pay_head'=>47));?></b></td>
+							<td><b><?php echo $this->payStructureObj->getSum('amount',array('pay_head'=>3));?></b></td>
+							<td><b><?php echo $this->payStructureObj->getSum('amount',array('pay_head'=>4));?></b></td>
+							<td><b><?php echo $this->payStructureObj->getSum('amount',array('pay_head'=>5));?></b></td>
+							<td><b><?php echo $this->payStructureObj->getSum('amount',array('pay_head'=>6));?></b></td>
+							<td><b><?php echo $this->payStructureObj->getSum('amount',array('pay_head'=>7));?></b></td>
+							<td><b><?php echo $this->payStructureObj->getSum('amount',array('pay_head'=>8));?></b></td>
+							<td><b><?php echo $this->payStructureObj->getSum('amount',array('pay_head'=>42));?></b></td>
+							<td><b><?php echo number_format($total_gross);?></b></td>
+							<td><b><?php echo $this->payStructureObj->getSum('amount',array('pay_head'=>9));?></b></td>
+							<td><b><?php echo $this->payStructureObj->getSum('amount',array('pay_head'=>11));?></b></td>
+							<td><b><?php echo $this->payStructureObj->getSum('amount',array('pay_head'=>12));?></b></td>
+							<td><b><?php echo $this->payStructureObj->getSum('amount',array('pay_head'=>13));?></b></td>
+							<td><b><?php echo $this->payStructureObj->getSum('amount',array('pay_head'=>14));?></b></td>
+							<td><b><?php echo $this->payStructureObj->getSum('amount',array('pay_head'=>15));?></b></td>
+							<td><b><?php echo $this->payStructureObj->getSum('amount',array('pay_head'=>16));?></b></td>
+							<td><b><?php echo $this->payStructureObj->getSum('amount',array('pay_head'=>17));?></b></td>
+							<td><b><?php echo $this->payStructureObj->getSum('amount',array('pay_head'=>18));?></b></td>
+							<td><b><?php echo $this->payStructureObj->getSum('amount',array('pay_head'=>19));?></b></td>
+							<td><b><?php echo $this->payStructureObj->getSum('amount',array('pay_head'=>20));?></b></td>
+							<td><b><?php echo $this->payStructureObj->getSum('amount',array('pay_head'=>21));?></b></td>
+							<td><b><?php echo $this->payStructureObj->getSum('amount',array('pay_head'=>22));?></b></td>
+							<td><b><?php echo $this->payStructureObj->getSum('amount',array('pay_head'=>23));?></b></td>
+							<td><b><?php echo $this->payStructureObj->getSum('amount',array('pay_head'=>24));?></b></td>
+							<td><b><?php echo $this->payStructureObj->getSum('amount',array('pay_head'=>25));?></b></td>
+							<td><b><?php echo $this->payStructureObj->getSum('amount',array('pay_head'=>26));?></b></td>
+							<td><b><?php echo $this->payStructureObj->getSum('amount',array('pay_head'=>27));?></b></td>
+							<td><b><?php echo $this->payStructureObj->getSum('amount',array('pay_head'=>28));?></b></td>
+							<td><b><?php echo $this->payStructureObj->getSum('amount',array('pay_head'=>29));?></b></td>
+							<td><b><?php echo $this->payStructureObj->getSum('amount',array('pay_head'=>31));?></b></td>
+							<td><b><?php echo $this->payStructureObj->getSum('amount',array('pay_head'=>32));?></b></td>
+							<td><b><?php echo $this->payStructureObj->getSum('amount',array('pay_head'=>33));?></b></td>
+							<td><b><?php echo $this->payStructureObj->getSum('amount',array('pay_head'=>34));?></b></td>
+							<td><b><?php echo $this->payStructureObj->getSum('amount',array('pay_head'=>35));?></b></td>
+							<td><b><?php echo $this->payStructureObj->getSum('amount',array('pay_head'=>36));?></b></td>
+							<td><b><?php echo $this->payStructureObj->getSum('amount',array('pay_head'=>37));?></b></td>
+							<td><b><?php echo $this->payStructureObj->getSum('amount',array('pay_head'=>38));?></b></td>
+							<td><b><?php echo $this->payStructureObj->getSum('amount',array('pay_head'=>39));?></b></td>
+							<td><b><?php echo $this->payStructureObj->getSum('amount',array('pay_head'=>40));?></b></td>
+							<td><b><?php echo $this->payStructureObj->getSum('amount',array('pay_head'=>41));?></b></td>
+							<td><b><?php echo $this->payStructureObj->getSum('amount',array('pay_head'=>43));?></b></td>
+							<td><b><?php echo $this->payStructureObj->getSum('amount',array('pay_head'=>48));?></b></td>
+							<td><b><?php echo number_format($total_ded);?></b></td>
+							<td><b><?php echo number_format($total_net);?></b></td>
+							<td></td>
+						</tr>
+					</tbody>
+				</table>
+			</div>			
+		</div>
+		<div class="row">
+			<div class="col-lg-12">
+				<h3 class="widget-title"> Sumarray: </h3>
+				<div class="hr dotted"></div>
+				<div class="col-md-3">
+					<label> Total Employee: </label> <strong><?php echo $i-1;?></strong>
+				</div>
+				<div class="col-md-3">
+					<label> Total Gross Pay: </label> <strong><?php echo $this->currency($total_gross);?></strong>
+				</div>
+				<div class="col-md-3">
+					<label> Total Deduction: </label> <strong><?php echo $this->currency($total_ded);?></strong>
+				</div>
+				<div class="col-md-3">
+					<label> Total Net Pay: </label><strong><?php echo $this->currency($total_net);?></strong>
+				</div>
+			</div>
+		</div>
+		<div class="hr dotted"></div>
+		<div class="space-12"></div>
+		<div class="row">
+			<div class="col-lg-12">
+				<div class="alert alert-warning"> 
+					<strong>Warning!</strong> Once you submit this payroll you cannot alter any data, So check it and make sure before submitting.
+				</div>
+					
+				<center>
+					<a href="<?php echo $this->url('payroll', array('action'=>'submitpayroll','id'=>$this->year.'-'.$this->month));?>"  class="btn btn-success" onclick="confirmSubmit(this);" >
+						Submit Payroll for the month of <?php echo date('F, Y', strtotime('1-'.$this->month.'-'.$this->year));?>
+					</a>
+				</center>
+			</div>
+		</div>
+	</div>
+</div>
+<!--for modal -->
+<div id="modal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content"> </div>
+    </div>
+</div>
+<script>
+	//fuction to refresh 
+	function refresh(){
+		var id = $('#year').val()+'-'+$('#month').val();
+		location.href="<?php echo $this->url('payroll', array('action'=>'definepayroll'));?>/"+id;
+	}
+	
+	$('document').ready(function(){
+		$('#dataTables').DataTable({"paging":   true,});
+	});
+</script>

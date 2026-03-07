@@ -1,0 +1,176 @@
+<?php
+/**
+ * 
+ * View -- of Stock/MasterController/adduomAction
+ * 
+ */
+?>
+<?php foreach($postboxs as $postbox);?>
+<form id="#form" method="post" action="<?php echo $this->url('postbox', array('action' => 'renewpost')); ?>"  enctype="multipart/form-data" >
+    <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+        <h4 class="modal-title"> <i class="fa fa-asterisk"></i> Renew Post Box</h4>
+    </div>  <!-- /modal-header -->
+    <div class="modal-body">
+    <input type="hidden"  name="registration_id"  value="<?php echo $postbox['id'];?>"/>
+    <input type="hidden"  name="registration_name"  value="<?php echo $postbox['name'];?>"/>
+    <input type="hidden"  name="postbox_no" value="<?php echo $postbox['postbox_no'];?>"/>
+    <input type="hidden"  name="registration_year"  value="<?php echo $postbox['year'];?>"/>
+	<input type="hidden"  name="location" id="location" value="<?php echo $postbox['location'];?>"/>
+   	<div class="panel panel-default">                       
+			<div class="panel-body">   
+                <div class="form-group">
+                    <label for="renewal_date" class="control-label">Renewal Year</label>
+					<div class="date input-group" id="renewal_date" data-date="<?php echo date('Y-m-d');?>" data-date-format="yyyy-mm-dd" >
+						<input class="form-control span2" name="renewal_date" id="renewal_date" type="text" placeholder="PO Date" value="<?php echo date('Y-m-d');?>"  required>
+						<span class="input-group-addon add-on"><i class="fa fa-calendar"></i></span>
+					</div>
+                </div>
+               <div class="form-group">
+                    <label for="renewal_amount" class="control-label">Renewal Amount</label>
+                    <input type="text" class="form-control" name="renewal_amount" id="renewal_amount" />
+				</div>
+			</div>
+			<div id='payment' class="card">
+				<div class="card-header">
+					<h5>Payment Details</h5>
+				</div>
+				<div class="card-body">
+				<div  class="form-group col-lg-12">
+					<label for="cash" class="control-label">Payment</label>
+					<div class="radio">
+						<label>  
+							<input class="ace" type="radio" name="cash" id="cash"  value="1"/>
+							<span class="lbl"> Cash </span>
+						</label> 
+						<label>  
+							<input class="ace" type="radio" name="cash" id="cash" value="0"/>
+							<span class="lbl"> Bank </span>
+						</label> 
+					</div>
+				</div>
+					<div class="form-group row" id="account_no_container" style="display:none;">
+						<label for="account_no" class="col-md-4 col-form-label">Account</label>
+						<div class="col-md-8">
+							<select class="form-control" id="account_no" name="account_no">
+							<option value=""></option>
+							</select>
+						</div>
+					</div>
+					
+					<div class="form-group row" id="journal" style="display:none;">
+						<label for="journal_no" class="col-md-4 col-form-label">Journal No</label>
+						<div class="col-md-8">
+							<input type="text" class="form-control" name="journal_no"
+								id="journal_no" placeholder="Journal No" />
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+    </div> <!-- /modal-body -->
+    <div class="modal-footer">
+        <button type="submit" class="btn btn-success"><i class="fa fa-check"></i> Save </button>
+        <button type="button" class="btn btn-warning" data-dismiss="modal" ><i class="fa fa-times"></i> Cancel </button> 
+    </div>  
+</form>
+<script>
+$('document').ready(function(){
+	$('#renewal_date').datepicker();
+	$('input[type=radio][name=cash]').change(function() {
+		  $('#account_no_container').show();
+	console.log($(this).val());
+		$.post(
+			"<?php echo $this->url('postbox', array('action' => 'getBCAccount')); ?>",
+			{
+				paymentId: $(this).val(),
+				locationId: $('#location').val(),
+			},
+			function(data) {
+				console.log(data);
+				$("#account_no").html(data.account);	
+				$("#account_no").trigger('chosen:updated');
+			},
+			'json'
+		);
+
+		if ($(this).val() == "0") {
+			
+			$('#journal').show();
+			$('#ref_no').hide(); 
+		} else {
+			
+			$('#journal').hide();
+			$('#ref_no').hide();
+		}
+	});
+	const fv = FormValidation.formValidation(document.getElementById('#form'), {
+		fields: {
+			post_box_size: {
+				validators: {
+					notEmpty: {
+						message: 'Eneter Fuel'
+					},
+				}
+			},
+			cash: {
+				validators: {
+					notEmpty: {
+						message: 'Please Select Payment Mode'
+					},
+				}
+			},
+            account_no: {
+				validators: {
+					notEmpty: {
+						message: 'Please select Account'
+					},
+				}
+			},
+            renewal_amount: {
+				validators: {
+					notEmpty: {
+						message: 'Enter the renewal amount'
+					},
+				}
+			},
+		},
+		plugins: {
+			trigger: new FormValidation.plugins.Trigger(),
+			bootstrap3: new FormValidation.plugins.Bootstrap3(),
+			submitButton: new FormValidation.plugins.SubmitButton(),
+			defaultSubmit: new FormValidation.plugins.DefaultSubmit(),
+		},
+	}).on('core.element.validated', function (e) {
+		if (e.valid) {
+			$('div#'+ e.field.replace('[]','') +'_chosen').removeClass('is-invalid');
+			$('div#'+ e.field.replace('[]','') +'_chosen').addClass('is-valid');
+		} else {
+			$('div#'+ e.field.replace('[]','') +'_chosen').removeClass('is-valid');
+			$('div#'+ e.field.replace('[]','') +'_chosen').addClass('is-invalid');
+		}
+	});
+	$('form select').chosen().change(function () {
+		fv.revalidateField($(this).attr('name'));
+	});
+});
+$('document').ready(function(){
+    // Form validation setup (your existing code)
+    const fv = FormValidation.formValidation(document.getElementById('#form'), {
+        // Your validation rules...
+    });
+
+    // Event listener for 'Key Charges' and 'Rate' fields
+    $('#key_charges, #rate').on('input', function() {
+        // Get the values entered in 'Key Charges' and 'Rate' fields
+        var keyCharges = parseFloat($('#key_charges').val()) || 0;
+        var rate = parseFloat($('#rate').val()) || 0;
+
+        // Calculate the total amount
+        var amount = keyCharges + rate;
+
+        // Update the 'Amount' field with the calculated value
+        $('#amount').val(amount.toFixed(2)); // Ensure two decimal places
+    });
+});
+</script>

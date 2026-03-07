@@ -1,0 +1,203 @@
+<?php
+	$this->headTitle($this->title);	
+	//echo '<pre>';print_r($results);exit;
+?>
+<?php echo $this->partial('purchase/report/partial.phtml', array('active' => 'po')); ?><br/>
+<div class="card">
+	<div class="card-header">
+		<div class="row">
+			<div class="col-lg-12">
+				<form method="POST" action="<?php echo $this->url('purreport', array('action' => 'podetails')); ?>" enctype="multipart/form-data" >    
+						<div class="row">
+							<div class="form-group col-lg-2">
+								<label class="control-label" for="start_date">Start Date</label>
+								<div class="date input-group" id="start_date" data-date="<?php echo $data['start_date'];?>" data-date-format="yyyy-mm-dd" >
+									<input class="form-control span2" name="start_date" id="start_date" type="text" placeholder="Start Date" value="<?php echo $data['start_date'];?>"  required>
+									<span class="input-group-addon add-on"><i class="fa fa-calendar"></i></span>
+								</div>
+							</div>
+							<div class="form-group col-lg-2">
+								<label class="control-label" for="end_date">End Date</label>
+								<div class="date input-group" id="end_date" data-date="<?php echo $data['end_date'];?>" data-date-format="yyyy-mm-dd" >
+									<input class="form-control span2" name="end_date" id="end_date" type="text" placeholder="End Date" value="<?php echo $data['end_date'];?>"  required>
+									<span class="input-group-addon add-on"><i class="fa fa-calendar"></i></span>
+								</div>
+							</div>
+							<div class="form-group col-lg-2">
+								<label for="location" class="control-label">Location</label>
+								<select class="form-control" id="location" name="location" data-placeholder="Select" >
+									<option value="-1">All</option>
+									<?php foreach ($locations as $location):?>
+										<option value="<?php echo $location['id']?>"<?php echo ($location['id']==$data['location'])?'selected':'';?>>
+										<?php echo $location['location'];?>	</option>
+									<?php endforeach; ?>
+								</select>
+							</div>
+							<div class="form-group col-lg-2">
+								<label for="supplier" class="control-label">Supplier</label>
+								<select class="form-control" id="supplier" name="supplier" data-placeholder="Select" >
+									<option value="-1">All</option>
+									<?php foreach ($supplier as $suppliers):?>
+										<option value="<?php echo $suppliers['id']?>"<?php echo ($suppliers['id']==$data['supplier'])?'selected':'';?>>
+										<?php echo $suppliers['name'];?>	</option>
+									<?php endforeach; ?>
+								</select>
+							</div>
+							<div class="form-group col-lg-2">
+								<label class="control-label" for="item_class">Item Class</label>
+								<select  class="form-control" name="item_class" id="item_class" data-placeholder="Select" required >
+									<option value="-1">All</option>
+									<?php foreach($itemclass as $itemclass):
+										?>
+										<option value="<?php echo $itemclass['id']; ?>" <?php echo ($itemclass['id']==$data['item_class']?'selected':'');?>>
+										<?php echo $itemclass['item_class']; ?>
+										</option>
+									<?php endforeach; ?>
+								</select>
+							</div>
+							<div class="form-group col-lg-2">
+								<label class="control-label" for="item_group">Item Group</label>
+								<select  class="form-control" name="item_subgroup" id="item_subgroup" data-placeholder="Select" required >
+									<option value="-1">All</option>
+									<?php foreach($itemgroups as $itemgroup):
+										?>
+										<option value="<?php echo $itemgroup['id']; ?>" <?php echo ($itemgroup['id']==$data['item_subgroup']?'selected':'');?>>
+										<?php echo $itemgroup['item_group']; ?>
+										</option>
+									<?php endforeach; ?>
+								</select>
+							</div>
+							<div class="form-group col-lg-2">
+								<label for="item" class="control-label">Item</label>
+								<select class="form-control" id="item" name="item" data-placeholder="Select" >
+									<option value="-1">All</option>
+									<?php foreach ($items as $items):?>
+										<option value="<?php echo $items['id']?>"<?php echo ($items['id']==$data['item'])?'selected':'';?>>
+										<?php echo $items['name'];?>	</option>
+									<?php endforeach; ?>
+								</select>
+							</div>
+							<div class="form-group col-lg-1"><br>
+								<button type="submit" class="btn btn-sm btn-success pull-right"><i class="fa fa-gear"></i> Generate </button>
+							</div>
+						</div>
+					</form>
+				</div>
+		</div>
+	</div>
+	<div class="table-responsive">
+		<table class="table table-striped table-bordered table-hover" id="dataTables">
+			<thead>
+				<tr>
+					<th>#</th>
+					<th>PO No</th>
+					<th>PO Date</th>
+					<th>Location</th>
+					<th>Supplier</th>
+					<th>Item</th>
+					<th>Rate</th>
+					<th>Quantity</th>
+					<th>Amount </th>
+				</tr>
+			</thead>
+			<tbody>
+				<?php
+					$i = 1; $total_cash = 0;$total_qty=0;$total_credit = 0;$total_bank = 0;$total_adv = 0;$total = 0;
+					
+					foreach ($results as $row)://print_r($row['item']);exit;
+						
+					?>
+					<tr>
+						<td><?php echo $i++; ?> </td>
+						<td><?php echo $row['po_no'];?></td>	
+						<td><b><?php echo $row['po_date'];?></b></td>
+						<td><b><?php echo $this->locationObj->getColumn($row['destination'],'location');?></b></td>
+						<td><b><?php echo $this->supplierObj->getColumn($row['supplier'],'name');?></b></td>
+						<td><?php echo $this->itemObj->getColumn($row['item_id'],'name');?></td>	
+						<td><?php echo $row['rate'];?></td>
+						<td><?php echo $row['quantity'];?></td>
+						<td><?php echo $row['rate']*$row['quantity'];?></td>
+					</tr>
+				<?php  $total_qty+=$row['quantity'];
+				
+				$total+=($row['rate']*$row['quantity']);endforeach;?>
+					<tr>
+						<td></td>
+						<td></td>
+						<td></td>
+						<td></td>
+						<td></td>
+						<td></td>
+						<td></td>
+						<td><b>Total<b></td>
+						<td><b><?php echo number_format($total);?><b></td>
+											
+					</tr>
+			</tbody>
+		</table>
+	</div>
+</div>
+<!-- for modal -->
+<div id="modal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+	<div class="modal-dialog">
+		<div class="modal-content">
+		</div>
+	</div>
+</div>
+<script type="text/javascript">
+$('document').ready(function(){
+	$('#start_date').datepicker();
+	$('#end_date').datepicker();
+	$('#dataTables').DataTable({
+		"paging":   true,
+	});
+	
+	$('#item_class').on('change', function(){
+		//alert($(this).val());
+		$.post(
+			"<?php echo $this->url('pos', array('action' => 'getItemgroup')); ?>",
+			{
+				item_class: $(this).val(),
+			},
+			function(data){
+				console.log(data);
+				$("#item_subgroup").html(data.subgroup);	
+				$("#item_subgroup").trigger('chosen:updated');
+			},
+			'json'
+		);	
+	});
+	$('#item_subgroup,#location').on('change', function(){
+		//alert($(this).val());
+		$.post(
+			"<?php echo $this->url('pos', array('action' => 'getItemChange')); ?>",
+			{
+				locationId: $("#location").val(),
+				item_subgroup: $("#item_subgroup").val(),
+			},
+			function(data){
+				console.log(data);
+				$("#item").html(data.items);	
+				$("#item").trigger('chosen:updated');
+			},
+			'json'
+		);	
+	});
+	//$('#item_subgroup,#location,#item_class').trigger('change');
+	$('#location').on('change', function(){
+		//alert($(this).val());
+		$.post(
+			"<?php echo $this->url('pos', array('action' => 'getUsers')); ?>",
+			{
+				locationId: $("#location").val(),
+			},
+			function(data){
+				console.log(data);
+				$("#user").html(data.users);	
+				$("#user").trigger('chosen:updated');
+			},
+			'json'
+		);	
+	});
+});
+</script>

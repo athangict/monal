@@ -1,0 +1,337 @@
+<?php
+/**
+ *
+ * View -- of Stock/GoodsrequestController/addgoodsrequestAction
+ *
+ */
+  $this->headTitle($this->title);
+?>
+<?php echo $this->partial('stock/sam/partial.phtml', array('active' => 'conversion')); ?><br/>
+<div class="row">
+	<div class="col-lg-12">
+		<div class="widget widget-box">
+			<div class="widget-header">
+				<h5 class="widget-title lighter smaller">
+					<i class="fa fa-asterisk"></i>&nbsp;&nbsp;Add New Item Conversion
+                </h5>
+			</div>
+			<div class="widget-body">
+				<div class="widget-main">
+					<form id="#form" method="post" action="<?php echo $this->url('sam', array('action'=>'addconversion')); ?>"  enctype="multipart/form-data" >
+						<div class="row">
+							<div class="form-group col-lg-4">
+								<label for="conversion_date" class="control-label">Conversion Date</label>
+								<div class="date input-group" id="conversion_date" data-date="<?php echo date('Y-m-d');?>" data-date-format="yyyy-mm-dd" >
+									<input class="form-control span2" name="conversion_date" id="conversion_date" type="text" value="<?php echo date('Y-m-d');?>" placeholder="Item Conversion Date" readonly required>
+									<span class="input-group-addon add-on"><i class="fa fa-calendar"></i></span>
+								</div>
+							</div>
+							<div class="form-group col-lg-4">
+								<label for="location" class="control-label">Location</label>
+								<select id="location" name="location" class="form-control" data-placeholder="Select" required>
+									<option value=""></option>
+									<?php foreach ($regions as $region): ?>
+									<optgroup label="<?php echo $region['region'];?>">
+										<?php
+											$locations = $locationObj->get(array('region'=>$region['id']));
+											foreach ($locations as $location):
+										?>
+										 <option value="<?php echo $location['id']; ?>">
+											<?php echo $location['location']; ?>
+										 </option>
+										<?php endforeach;?>
+									</optgroup>
+									<?php endforeach;?>
+								</select>
+							</div>
+
+							<div class="form-group col-lg-4">
+								<label for="activity" class="control-label">Activity</label>
+								<select class="form-control" name="activity" id="activity" data-placeholder="Select" required>
+									<option value=""></option>
+									<?php foreach($this->activityObj->getAll() as $activity):?>
+										<option value="<?php echo $activity['id'];?>">
+									   		<?php echo $activity['activity']; ?>
+									   	</option>
+									<?php endforeach; ?>
+								</select>
+							</div>
+						</div>
+
+						<div class="row">
+						   <div class="col-lg-12">
+							  <h5>Conversion Item Details</h5>
+								 <div>
+									<table class="table small-padding">
+										<thead>
+											<tr>
+												<th>Item </th>
+												<th>Batch</th>
+												<th>Landed Cost</th>
+												<th>Balance Qty</th>
+												<th>UOM</th>
+												<th>Quantity</th>
+											</tr>
+										</thead>
+										<tbody>
+											<tr>
+												<td>
+													<div class="form-group">
+														<select id="item" name="item" class="form-control" data-placeholder="Select" >
+															<option value=""></option>
+														</select>
+													</div>
+												</td>
+												<td>
+													<div class="form-group">
+														<select id="batch" name="batch" class="form-control" data-placeholder="Select" required >
+															<option value=""></option>
+														</select>
+													</div>
+												</td>
+           	                                    <td>
+												    <div class="form-group">
+														<input type="text" id="landed_cost" name="landed_cost" class="form-control" readonly>
+													</div>
+												</td>
+												<td>
+													<div class="form-group">
+														<input type="text" class="form-control" name="balance_qty" id="balance_qty" value="0.00" readonly/>
+													</div>
+												</td>
+												<td>
+													<div class="form-group">
+														<select id="uom" name="uom" class="form-control" data-placeholder="Select" >
+															<option value=""></option>
+														</select>
+													</div>
+												</td>
+												<td>
+													<div class="form-group">
+														<input type="text" class="form-control" name="quantity" id="quantity" value="0.00"/>
+													</div>
+												</td>
+											</tr>
+										</tbody>
+									</table>
+								</div> <!-- end of div -->
+							</div> <!-- end of col-lg-12 -->
+						</div>	<!-- end of row -->
+						
+						<div class="row">
+						   <div class="col-lg-12">
+							  <h5>Product Details after conversion</h5>
+								 <div>
+									<table class="table small-padding">
+										<thead>
+											<tr>
+												<th>Item </th>
+												<th>Balance Qty</th>
+												<th>Converted UOM</th>
+                                                <th>Converted Qty</th>
+											</tr>
+										</thead>
+										<tbody>
+											<tr>
+												<td>
+													<div class="form-group">
+														<select id="item1" name="item1" class="form-control" data-placeholder="Select" >
+															<option value=""></option>
+														</select>
+													</div>
+												</td>
+												<td>
+													<div class="form-group">
+														<input type="text" class="form-control" name="balance_qty1" id="balance_qty1" value="0.00" readonly/>
+													</div>
+												</td>
+												<td>
+													<div class="form-group">
+														<select id="uom1" name="uom1" class="form-control" data-placeholder="Select" >
+															<option value=""></option>
+														</select>
+													</div>
+												</td>
+												<td>
+													<div class="form-group">
+														<input type="text" class="form-control" name="converted_qty" id="converted_qty" value="0.00"/>
+													</div>
+												</td>
+											</tr>
+										</tbody>
+									</table>
+								</div> <!-- end of div -->
+							</div> <!-- end of col-lg-12 -->
+						</div>	<!-- end of row -->
+						
+						<div class="row">
+							<div class="col-lg-12">
+								<label class="control-label" for="note">Note: </label>
+								<textarea class="form-control" name="note" id="note"></textarea>
+							</div>
+						</div>
+						<div class="space-12"></div>
+						<div class="row">
+							<div class="col-lg-9">
+								<button type="submit" class="btn btn-success"><i class="fa fa-check"></i> Save </button>
+								<button type="button" class="btn btn-warning" onclick="window.location.href='<?php echo $this->url('sam');?>'" ><i class="fa fa-times"></i> Cancel </button>
+							</div>
+						</div>
+					</form>
+				</div> <!-- end of widget-main -->
+	        </div> <!-- end of widget-body -->
+        </div> <!-- end of widget widget-default -->
+    </div> <!-- end of col-lg-12 -->
+</div> <!-- end of row -->
+
+<script type="text/javascript">
+$(function() {
+		$("#activity").change(function() {
+			$.post(
+				"<?php echo $this->url('dispatch', array('action' => 'getitemactivity'));?>",
+				{
+					'activity': $('#activity').val(),
+					'source_loc': $('#location').val(),
+				},
+				function(data) {
+					// console.log(data.items);
+					$('#item').html(data.items);
+					$('#item').trigger('chosen:updated');
+					$('#item1').html(data.items);
+					$('#item1').trigger('chosen:updated');
+				},
+				'json'
+				);
+		});
+		$("#item").change(function() {
+			if($('#location').val()==""){
+				$('form').formValidation('revalidateField',$('#location'));
+			}
+			$.post(
+				"<?php echo $this->url("sam", array("action" => "getdetails"));?>",
+				{
+					'item_id': $('#item').val(),
+					'source_loc' : $('#location').val(),
+					'conv_date' : $('input#conversion_date').val(),
+				},
+				function(data) {
+					console.log(data);
+						$('#batch').html(data.batch);
+						$('#batch').trigger('chosen:updated');
+						$('#uom').html(data.uom);
+						$('#uom').trigger('chosen:updated');
+						$('#landed_cost').val(data.landed_cost);
+						$('#balance_qty').val(data.source_qty);
+				},
+				'json'
+				);
+		});
+		
+		$("#item1").change(function() {
+			$.post(
+				"<?php echo $this->url("sam", array("action" => "getdetails"));?>",
+				{
+					'item_id': $('#item1').val(),
+					'source_loc' : $('#location').val(),
+				},
+				function(data) {
+					//console.log(data);
+						$('#uom1').html(data.uom);
+						$('#uom1').trigger('chosen:updated');
+						$('#balance_qty1').val(data.source_qty);
+				},
+				'json'
+				);
+		});
+
+	$('#conversion_date').datepicker();
+	$('#conversion_date').on('changeDate',function(){
+		$('form').formValidation('revalidateField', $(this).attr('id'));
+	});
+
+	/******** formValidation *************/
+	const fv = FormValidation.formValidation(document.getElementById('#form'), {
+		fields: {
+			'conversion_date': {
+				validators: {
+					notEmpty: {
+						message: 'Please select goods request date'
+					}
+				}
+			},
+			'location': {
+				validators: {
+					notEmpty: {
+						message: 'Please select location.'
+					}
+				}
+			},
+			'activity': {
+				validators: {
+					notEmpty: {
+						message: 'Please select activity.'
+					}
+				}
+			},
+
+			'item': {
+				validators: {
+					notEmpty: {
+						message: 'Please select item.'
+					}
+				}
+			},
+			'batch': {
+				validators: {
+					notEmpty: {
+						message: 'Please select batch.'
+					}
+				}
+			},
+			'uom':{
+				validators: {
+					notEmpty: {
+						message: 'Please select uom.'
+					}
+				}
+			},
+			'item1': {
+				validators: {
+					notEmpty: {
+						message: 'Please select item.'
+					}
+				}
+			},
+			'uom1':{
+				validators: {
+					notEmpty: {
+						message: 'Please select uom.'
+					}
+				}
+			},
+			'quantity':{
+				validators: {
+					notEmpty: {
+						message: 'Please provide quantity.'
+					}
+				}
+			}
+		},
+		plugins: {
+			trigger: new FormValidation.plugins.Trigger(),
+			bootstrap3: new FormValidation.plugins.Bootstrap3(),
+			submitButton: new FormValidation.plugins.SubmitButton(),
+			defaultSubmit: new FormValidation.plugins.DefaultSubmit(),
+		},
+	}).on('core.element.validated', function (e) {
+		if (e.valid) {
+			$('div#'+ e.field.replace('[]','') +'_chosen').removeClass('is-invalid');
+			$('div#'+ e.field.replace('[]','') +'_chosen').addClass('is-valid');
+		} else {
+			$('div#'+ e.field.replace('[]','') +'_chosen').removeClass('is-valid');
+			$('div#'+ e.field.replace('[]','') +'_chosen').addClass('is-invalid');
+		}
+	});
+});
+</script>
+

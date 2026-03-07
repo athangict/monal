@@ -1,0 +1,258 @@
+<?php
+/**
+ *
+ * View -- of Purchase/BillingController/addbillAction
+ *
+ */
+$this->headTitle($this->title);
+?>
+<div class="row">
+	<div class="col-lg-12">
+		<div class="widget widget-box">
+			<div class="widget-header">
+				<h5 class="widget-title lighter smaller">
+					<i class="fa fa-asterisk"></i>&nbsp;&nbsp;New Supplier Bill
+				</h5>
+			</div>
+			<div class="widget-body">
+				<div class="widget-main">
+					<form id="#form" method="post" action="<?php echo $this->url('billing', array('action' => 'addbill')); ?>" enctype="multipart/form-data">
+						<div class="row">							
+							<div class="form-group col-lg-3">
+								<label for="billing_date" class="control-label">Billing Date</label>
+								<div class="date input-group" id="billing_date" data-date="<?php echo date('Y-m-d');?>" data-date-format="yyyy-mm-dd">
+									<input class="form-control span2" name="billing_date" id="billing_date" type="text" placeholder="Billing Date" value="<?php echo date('Y-m-d'); ?>" readonly required>
+									<span class="input-group-addon add-on"><i class="fa fa-calendar"></i> </span>
+								</div>
+							</div>
+							<div class="form-group col-lg-3">
+								<label for="location" class="control-label">Location</label> 
+								<select class="form-control" name="location" id="location" data-placeholder="Select" required >
+									<option value=""></option>
+									<?php foreach($this->locationObj->get(array('id'=>$source_locs)) as $location):?>
+										<option value="<?php echo $location['id'];?>" <?php echo ($source_locs == $location['id'])?'selected':'';?>>
+											<?php echo $location['location'];?>
+										</option>
+									<?php endforeach; ?>						
+								</select> 
+							</div>
+							<div class="form-group col-lg-3">
+								<label for="prn_no" class="control-label">Purchase Receipt No</label> 
+								<select class="form-control" name="prn_no" id="prn_no" data-placeholder="Select" required >
+									<option value=""></option>	
+									<?php foreach($purreceipt as $pr):?>
+										<option value="<?php echo $pr['id'];?>">
+											<?php echo $pr['prn_no'];?>
+										</option>
+									<?php endforeach;?>			
+								</select> 
+							</div>
+							<div class="form-group col-lg-3">
+								<label for="supplier" class="control-label">Supplier</label> 
+								<select class="form-control" name="supplier" id="supplier" data-placeholder="Select" required >
+									<option value=""></option>					
+								</select> 
+							</div>
+						</div>
+						<div class="row">
+							<div class="col-lg-12">
+								<h4><b>Payment Details</b></h4>
+								<div>
+									<table id="trdetails_table" class="table small-padding">
+										<thead>
+											<tr>
+												<th>Receipt Amount</th>
+												<th>Discount</th>
+												<th>Net </th>
+												<th>Reference No.</th>
+											</tr>
+										</thead>
+										<tbody>
+											<tr>
+												<td>
+													<div class="form-group">
+														<input type="text" class="form-control" name="receipt_amt" id="receipt_amt" value="0.00" readonly>
+													</div>
+												</td>
+												<td>
+													<div class="form-group">
+														<input type="text" class="form-control" name="discount" id="discount" value="0.00" />
+													</div>
+												</td>
+												<td>
+													<div class="form-group">
+														<input type="text" class="form-control" name="net" id="net" readonly />
+													</div>
+												</td>
+												<td>
+													<div class="form-group">
+														<input type="text" class="form-control" name="ref_no" id="ref_no" />
+													</div>
+												</td>
+											</tr>
+										</tbody>
+									</table>
+								</div>
+							</div>
+						</div>
+						<div class="row">
+						<div class="col-lg-3">
+								<label class="control-label" for="freight_party">Freight (Party)</label>
+								<select class="form-control" name="freight_party" id="freight_party">
+								<option value="-1"></option>
+								<?php foreach($shead as $subhead):?>
+								<option value="<?php echo $subhead['id'];?>"><?php echo $subhead['name'];?></option>
+								<?php endforeach;?>
+								</select>
+							</div>
+							<div class="col-lg-3">
+								<label class="control-label" for="freight">Amount</label>
+								<input class="form-control" name="freight" id="freight" value="0.00">
+							</div>
+							<div class="col-lg-3">
+								<label class="control-label" for="freight_ref">Reference No</label>
+								<input class="form-control" name="freight_ref" id="freight_ref">
+							</div>
+						</div>
+						<div class="row">
+						<div class="col-lg-3">
+								<label class="control-label" for="tax_party">Tax (Party)</label>
+								<select class="form-control" name="tax_party" id="tax_party" >
+								<option value="-1"></option>
+								<?php foreach($shead as $subhead):?>
+								<option value="<?php echo $subhead['id'];?>"><?php echo $subhead['name'];?></option>
+								<?php endforeach;?>
+								</select>
+							</div>
+							<div class="col-lg-3">
+								<label class="control-label" for="tax">Amount </label>
+								<input class="form-control" name="tax" id="tax" value="0.00">
+							</div>
+							<div class="col-lg-3">
+								<label class="control-label" for="tax_ref">Reference No</label>
+								<input class="form-control" name="tax_ref" id="tax_ref">
+							</div>
+						</div>
+						<div class="row">
+							<div class="col-lg-9"></div>
+							<div class="col-lg-3">
+								<label class="control-label" for="total">Total: </label>
+								<input class="form-control" name="total" id="total" readonly>
+							</div>
+						</div>
+						<div class="row">
+							<div class="col-lg-12">
+								<label class="control-label" for="note">Note: </label>
+								<textarea class="form-control" name="note" id="note"></textarea>
+							</div>
+						</div>
+						<div class="space-12"></div>
+						<div class="row">
+							<div class="col-lg-9">
+								<button type="submit" class="btn btn-success">
+									<i class="fa fa-check"></i> Save
+								</button>
+								<button type="button" class="btn btn-warning" onclick="javascript:history.back();" ><i class="fa fa-times"></i> Cancel </button>
+							</div>
+						</div>
+					</form>
+				</div><!-- widget-main -->
+			</div><!-- widget-body -->
+		</div><!-- widget-box -->
+	</div><!-- col-lg-12 -->
+</div><!-- row -->
+
+<script type="text/javascript">
+$(document).ready(function (){
+	$('#billing_date').datepicker();
+	$("#location").trigger('change');
+	$('#prn_no').on('change', function(){
+		//alert($(this).val());
+		$.post(
+			"<?php echo $this->url('billing', array('action' => 'getsupplier')); ?>",
+			{
+				prn_no: $(this).val(),
+			},
+			function(data){
+				console.log(data);
+				$("#supplier").html(data.supplier);	
+				$("#supplier").trigger('chosen:updated');
+				$("#receipt_amt").val(data.sum);	
+				$("#net").val(data.sum);	
+				$("#total").val(data.sum);	
+			},
+			'json'
+		);	
+	});
+	
+	var prnamInput = $('#receipt_amt');
+	var discountInput = $('#discount');
+	var taxInput = $('#tax');
+	var freightInput = $('#freight');
+
+	prnamInput.on('input', calculateTotal);
+	discountInput.on('input', calculateTotal);
+	taxInput.on('input', calculateTotal);
+	freightInput.on('input', calculateTotal);
+
+	function calculateTotal() {
+		var prnamInputValue = prnamInput.val();
+		var prnam = parseFloat(prnamInputValue.replace(/,/g, '')) || 0;
+		var discount = parseFloat(discountInput.val()) || 0;
+		var tax = parseFloat(taxInput.val()) || 0;
+		var freight = parseFloat(freightInput.val()) || 0;
+
+		var gross = prnam + tax + freight;
+		var net = prnam - discount;
+
+		if (isNaN(gross) || isNaN(net)) {
+			// Handle invalid input values
+			return;
+		}
+
+		$('#total').val(gross.toFixed(2));
+		$('#net').val(net.toFixed(2));
+	}
+	/*** form validation***/ 
+	const fv = FormValidation.formValidation(document.getElementById('#form'), {
+		fields: {
+			'billing_date': {
+				validators: {
+					notEmpty: {
+						message: 'Please select payment date.'
+					}
+				}
+			},
+			'location': {
+				validators: {
+					notEmpty: {
+						message: 'Please select location.'
+					}
+				}
+			},
+			'payment_type': {
+				validators: {
+					notEmpty: {
+						message: 'Please select payment type.'
+					}
+				}
+			},                        
+		},
+		plugins: {
+			trigger: new FormValidation.plugins.Trigger(),
+			bootstrap3: new FormValidation.plugins.Bootstrap3(),
+			submitButton: new FormValidation.plugins.SubmitButton(),
+			defaultSubmit: new FormValidation.plugins.DefaultSubmit(),
+		},
+	}).on('core.element.validated', function (e) {
+		if (e.valid) {
+			$('div#'+ e.field.replace('[]','') +'_chosen').removeClass('is-invalid');
+			$('div#'+ e.field.replace('[]','') +'_chosen').addClass('is-valid');
+		} else {
+			$('div#'+ e.field.replace('[]','') +'_chosen').removeClass('is-valid');
+			$('div#'+ e.field.replace('[]','') +'_chosen').addClass('is-invalid');
+		}
+	});
+
+});
+</script>

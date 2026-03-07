@@ -1,0 +1,84 @@
+<?php
+/**
+ * Layout of the system/application
+ */
+?>
+<?= $this->doctype() ?>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <?= $this->headTitle('MONAL ')->setSeparator(' - ')->setAutoEscape(false) ?>
+
+        <?= $this->headMeta()
+            ->appendName('viewport', 'width=device-width, initial-scale=1.0, viewport-fit=cover')
+            ->appendHttpEquiv('X-UA-Compatible', 'IE=edge')
+        ?>
+        <!-- Le styles -->
+        <?php echo $this->headLink(array('rel' => 'shortcut icon', 'type' => 'image/vnd.microsoft.icon', 'href' => $this->basePath() . '/images/favicon.png'))
+        				->prependStylesheet($this->basePath() . '/old/css/ie/fcb_style-ie2.min.css', 'screen', 'IE')
+        				->prependStylesheet($this->basePath() . '/old/css/ie/fcb_style-ie.min.css', 'screen', 'IE')
+        				->prependStylesheet($this->basePath() . '/old/fcb_css.css');
+        ?> 
+                  
+       <!-- Scripts -->
+        <?php echo $this->headScript()->prependFile($this->basePath() . '/old/js/respond.min.js', 'text/javascript', array('conditional' => 'IE'))
+									->prependFile($this->basePath() . '/old/js/html5shiv.min.js', 'text/javascript', array('conditional' => 'IE'))
+									->prependFile($this->basePath() . '/old/js/jquery.browser.js')
+									->prependFile($this->basePath() . '/old/js/ch_genpdf.js')
+									->prependFile($this->basePath() . '/old/js/ch_addrow.js')
+									->prependFile($this->basePath() . '/old/js/jquery.mousewheel.js')
+									->prependFile($this->basePath() . '/old/js/jquery.jscrollpane.custom.min.js')
+									->prependFile($this->basePath() . '/old/js/daterangepicker.min.js')
+									->prependFile($this->basePath() . '/old/js/bootstrap-datepicker.min.js')
+									->prependFile($this->basePath() . '/old/js/jquery-ui.custom.min.js')
+									->prependFile($this->basePath() . '/old/js/jquery.ui.touch-punch.min.js')
+									->prependFile($this->basePath() . '/js/toastr.min.js')
+									->prependFile($this->basePath() . '/old/js/formValidator.bootstrap.js')
+									->prependFile($this->basePath() . '/old/js/formValidator.min.js')
+									->prependFile($this->basePath() . '/old/js/dataTables.colVis.min.js')
+									->prependFile($this->basePath() . '/old/js/dataTables.tableTools.js')
+									->prependFile($this->basePath() . '/old/js/jquery.dataTables.bootstrap.min.js')
+									->prependFile($this->basePath() . '/old/js/jquery.dataTables.min.js')
+									->prependFile($this->basePath() . '/old/js/fcb-elements.min.js')
+									->prependFile($this->basePath() . '/old/js/fcb-inline.min.js')
+									->prependFile($this->basePath() . '/old/js/jquery.slimscroll.min.js')
+									->prependFile($this->basePath() . '/old/js/fcb.min.js')									
+									->prependFile($this->basePath() . '/old/js/fcb-extra.min.js')
+                                    ->prependFile($this->basePath() . '/old/js/bootstrap.min.js')
+									->prependFile($this->basePath() . '/old/js/chosen.jquery.js')
+                                    ->prependFile($this->basePath() . '/old/js/jquery.table2excel.js')
+                                    ->prependFile($this->basePath() . '/old/js/jquery.2.1.1.min.js','text/javascript', array('conditional' => '!IE'))
+                                    ->prependFile($this->basePath() . '/old/js/jquery.1.11.1.min.js','text/javascript', array('conditional' => 'IE')); ?>  
+		
+		<script type="text/javascript">
+			if('ontouchstart' in document.documentElement) document.write("<script src='assets/js/jquery.mobile.custom.min.js'>"+"<"+"/script>");
+		</script>                             
+	</head>
+    <body class="<?php echo ($user = $this->Identity())?'no-skin':'login-layout light-login patern-bg';?>">
+		<?php if ($user = $this->Identity()) {  ?>
+			<!-- topbar menu  -->    
+			<?php echo $this->partial('partial/navbar-top.phtml'); ?>
+		<?php } ?> 
+		<div class="main-container ace-save-state" id="main-container">
+			<?php if ($user = $this->Identity()) {  ?>  
+				<!-- sidebar menu  -->  
+				<?php echo $this->partial('partial/navbar-side.phtml'); ?>                
+			<?php } ?>  	 
+			<div class="main-content">
+				<div class="main-content-inner">
+					<?php if ($user = $this->Identity()) {  ?> 
+						<!-- breadcrumb  --> 
+						<?php echo $this->partial('partial/breadcrumb.phtml'); ?>    	
+						<div class="page-content">
+					<?php }?>
+							<?php echo $this->content; ?>  
+							<?php echo $this->flashmessage();?>
+					<?php if ($user = $this->Identity()) {  ?>   
+						</div><!-- /.page-content -->
+					<?php }?>
+				</div>
+			</div><!-- /.main-content -->
+			<?php echo $this->partial('partial/navbar-bottom.phtml'); ?>
+		</div><!-- /.main-container -->
+	</body>
+</html>

@@ -1,0 +1,136 @@
+<?php
+/**
+ * View -- of Stock/BatchController/viewbatchAction
+ */
+ $this->headTitle($this->title);
+?>
+<style>
+	.mytable tr th,.mytable tr td {
+		padding:5px;
+	}
+</style>
+<?php 
+foreach($assetOpening as $opening):
+    extract( $opening);
+endforeach;    
+?>
+
+<div class="row">
+	<div class="col-lg-12">
+		<div class="widget widget-box">
+			<div class="widget-header">
+				<h5 class="widget-title lighter smaller">
+					# Stock Opening Details:<strong>&nbsp;&nbsp;<?php echo $opening['asset']; ?> | <?php echo $this->itemObj->getColumn($opening['item'],'code'); ?></strong>&nbsp;
+				</h5>
+				<div class="widget-toolbar hidden-xs">
+					<a style='cursor:pointer' id="print">
+						<i class="ace-icon fa fa-file-pdf-o red"></i>
+					</a>
+				</div>
+			</div>
+			<div class="widget-body">
+				<div class="widget-main">
+					<div id="report-print">
+						<div class="row" id="convert-tb0">
+							<div class="col-lg-8" id="convert-tb1">
+								<ul class="list-unstyled spaced">
+									<li>
+										<i class="ace-icon fa fa-caret-right blue"></i>
+										Asset No. | Asset Date: <b class="red"><?php echo $opening['asset']; ?> | <?php echo $this->dateformat($opening['opening_date']);?></b>
+									</li>										
+									<li>
+										<i class="ace-icon fa fa-caret-right blue"></i>
+										Item : <b class="red"><?php echo $this->itemObj->getColumn($opening['item'],'code');?></b>
+										<a href="<?php echo $this->url('store', array('action'=>'viewitem', 'id'=>$opening['item']));?>" target="_blank">
+										<i class='fa fa-arrow-right'></i></a>
+									</li>
+									<li>
+										<i class="ace-icon fa fa-caret-right blue"></i>
+										UOM | Quantity : <b class="red"><?php echo $this->uomObj->getColumn($opening['uom'],'code');?> | <?php echo $opening['quantity']; ?></b>
+									</li>
+								</ul>
+							</div>
+						</div>
+						<?php $item_group_id = $this->itemObj->getColumn($opening['item'],'item_group');?>
+						<div class="space-12"></div>
+						<div class="row">
+							<div class="col-lg-12" >
+								 <table class="table" style="border-top:2px solid #ddd;">
+								    <thead>																		
+									    <th>#</th>
+										<th>Location</th>	
+										<th>Qty</th>
+										<th>Uom</th>										
+										<th>Rate</th>										
+										<th>Author</th>
+										<th>Status</th>
+										<?php if(in_array($item_group_id,array('1','2'))):?>
+										<th class="no-printpdf">Action</th>
+										<?php endif;?>
+									</thead>
+									<tbody>									
+										<?php
+											$i=1;
+											foreach($this->assetOpeningdtlsObj->get(array('id'=>$opening['id'])) as $tdrow): ?>
+											<tr>
+												<td><?php echo  $i++; ?></td>
+												<td><?php echo $this->locationObj->getColumn($tdrow['location'],'location'); ?>
+												&nbsp;&nbsp;
+												<span class="label label-info"> 
+												<?php 
+													  $loc_type_id = $this->locationObj->getColumn($tdrow['location'],'location_type'); 
+													  echo $this->locationtypeObj->getColumn($loc_type_id,'location_type');
+												?>											    
+												</span>
+												</td>
+												<td><?php echo round($tdrow['quantity'],2);?></td>
+												<td><?php echo $this->uomObj->getColumn($opening['uom'],'code');?></td>
+												<td><?php echo $tdrow['rate'];?> </td>	
+												<td><i><?php echo $this->usersObj->getColumn($tdrow['author'],'name');?></i></td>
+												<td><?php echo $this->status($status);?></td>
+												<?php if(in_array($item_group_id,array('1'))):?>
+												<td>
+													<?php if($author == $tdrow['author']):?>
+														<a data-toggle="modal" data-target="#modal" href="<?php echo $this->url('inissue', array('action'=>'editassetopeningdetail', 'id'=>$tdrow['id']));?>" class=""> <i class="fa fa-pencil blue" title="Edit"></i></a>
+													<?php else:
+														echo "--";
+													endif;?>
+												</td>
+												<?php endif;?>
+											</tr>
+										<?php endforeach; ?>
+									</tbody>
+								</table>	
+							</div>
+						</div>
+						<div class="row">
+							<div class="col-lg-5" style="text-align: right"></div>
+							<div class="col-lg-7" style="text-align: right">
+								<?php if(in_array($item_group_id,array('1'))):?>
+								<a href="<?php echo $this->url('inissue', array('action'=>'addassetopening'));?>" class="btn btn-info btn-sm"> <i class="fa fa-pencil"></i> Add Asset Opening Details </a>
+								<a href="<?php echo $this->url('inissue', array('action'=>'updateasset', 'id'=>$opening['id']));?>" class="btn btn-warning btn-sm"> <i class="fa fa-refresh"></i> Update to Batch Details</a>
+                                <?php endif;?>
+								<button type="button" class="btn btn-default btn-sm" onclick="javascript:history.back();" ><i class="fa fa-arrow-left"></i> Back </button> 
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+<!-- for modal -->
+<div id="modal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+	<div class="modal-dialog">
+		<div class="modal-content">
+		</div>
+	</div>
+</div>
+<script type="text/javascript">
+	$('#print').genpdfinvoice({
+		content: '#report-print',
+		src:"<?php echo $this->url('pdfxls', array('action' => 'pdf'));?>",
+		orentation:"P",//L =landscape, P = potrait
+	});
+</script>
+

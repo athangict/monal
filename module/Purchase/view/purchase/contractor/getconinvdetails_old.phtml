@@ -1,0 +1,519 @@
+<?php
+/**
+ * View --> Purchase/ContractorController/getconinvdetails.pthml
+ * ajax response
+ */
+?>
+<?php 
+	$start_date = $data['start_date'];
+	$end_date = $data['end_date'];
+	$location = $data['location'];
+	$activity = $data['activity'];
+	$contractor = $data['contractor'];
+?>
+<div class="clearfix message_box">
+	<label><i class="blue fa fa-user"></i> <strong>Contractor:</strong></label> <span><?php echo $this->partyObj->getColumn($contractor,'code'); ?></span>.&nbsp;&nbsp;
+	<label><i class="red fa fa-map-marker"></i> <strong>Location:</strong></label> <span><?php echo $this->locationObj->getColumn($location,'location');?></span>.&nbsp;&nbsp;
+	<label><i class="purple fa fa-tags"></i> <strong>Activity:</strong></label> <span><?php echo $this->activityObj->getColumn($activity, 'activity');?></span>.&nbsp;&nbsp;
+	<label><i class="green fa fa-calendar"></i> <strong>Period From :</strong></label> <span><?php echo $data['start_date'].' to '.$data['end_date'];?></span>
+</div>	
+<div class="space-6"></div>
+<?php 
+	$current_month = date('m',strtotime($start_date));
+	if($last_month == $current_month):
+?>
+	<div class="alert alert-warning fade in">
+		<h3><center>The <span class="red">Invoice</span> has been already generated for this month. </center></h3>
+	</div>
+<?php endif;?>
+<table class="table table-striped table-bordered table-hover table-condensed">
+	<thead>
+		<tr>
+			<th>#</th>
+			<th>Charges</th>
+			<th>Qty Processed (MT|CASE)</th>
+			<th>Rate (<?php echo $this->currency_code();?>)</th>
+			<th>Amount (<?php echo $this->currency_code();?>)</th>
+			<th>View Details</th>
+		</tr>
+	</thead>
+	<tbody>
+<?php 
+	$sl = 1;
+	/*************** Purchase Receipt *****************/
+	$pur_receipt = $this->prnObj->getByDate($start_date, $end_date, array('location'=>$location,'activity'=>$activity,'status'=>'3'));
+	foreach($pur_receipt as $prn):
+		$prn_details = $this->prn_detailsObj->get(array('d.purchase_receipt'=>$prn['id']));
+		foreach($prn_details as $pr_detail):
+			$prn_item = $pr_detail['item_id'];
+			$prn_uom = $pr_detail['uom_id'];
+			$prn_qty = $pr_detail['accept_qty'];
+			$prn_uom_conversion = $this->itemuomObj->getColumn(array('item'=>$prn_item, 'uom'=>$prn_uom),'conversion');
+			$basic_uom = $this->itemObj->getColumn($prn_item,'uom');
+			$standard_uom = $this->itemuomObj->getColumn(array('item'=>$prn_item,'costing_uom'=>'1'),'uom');
+			
+			if($standard_uom == '84'): //METRIC TONES
+				if($prn_uom == $standard_uom):
+					$prn_MT_qty = $prn_qty;
+				else:
+					$prn_basic_qty = ($prn_uom == $basic_uom)?$prn_qty:$prn_qty*$prn_uom_conversion;
+					$prn_MT_conversion = $this->scalarconversionObj->getColumn(array('from_uom'=>$basic_uom,'to_uom'=>'84'),'conversion');
+					$prn_MT_qty = ($basic_uom == $standard_uom)?$prn_basic_qty:$prn_basic_qty/$prn_MT_conversion;
+				endif;
+				$wt_sumprnqty += $prn_MT_qty;
+				$Processed_UOM = '84';
+			else: //CASES
+				if($prn_uom == $standard_uom):
+					$prn_CASE_qty = $prn_qty;
+				else:
+					$prn_basic_qty = ($prn_uom == $basic_uom)?$prn_qty:$prn_qty*$prn_uom_conversion;
+					$prn_CASE_conversion = $this->itemuomObj->getColumn(array('item'=>$prn_item, 'uom'=>$standard_uom),'conversion');
+					$prn_CASE_qty = ($basic_uom == $standard_uom)?$prn_basic_qty:$prn_basic_qty/$prn_CASE_conversion;
+				endif;
+				$case_sumprnqty += $prn_CASE_qty;
+				$Processed_UOM = '-1'; //CASES
+			endif;
+		endforeach;
+	endforeach;
+	
+	/*************** Dispatch InReceipt *****************/
+	$intreceipt = $this->dispatchObj->getByDate($start_date, $end_date, array('to_location'=>$location,'activity'=>$activity,'status'=>'3'));
+	foreach($intreceipt as $recdisp):
+		$rec_details = $this->disp_detailsObj->get(array('d.dispatch'=>$recdisp['id']));
+		foreach($rec_details as $rec_detail):
+			//echo "<pre>"; print_r($rec_detail); 
+			$rec_item = $rec_detail['item_id'];
+			$rec_uom = $rec_detail['basic_uom'];
+			$rec_qty = $rec_detail['accepted_qty'];
+			$rec_uom_conversion = $this->itemuomObj->getColumn(array('item'=>$rec_item, 'uom'=>$rec_uom),'conversion');
+			$basic_uom = $this->itemObj->getColumn($rec_item,'uom');
+			$standard_uom = $this->itemuomObj->getColumn(array('item'=>$rec_item,'costing_uom'=>'1'),'uom');
+			
+			if($standard_uom == '84'): //METRIC TONES
+				if($rec_uom == $standard_uom):
+					$rec_MT_qty = $rec_qty;
+				else:
+					$rec_basic_qty = ($rec_uom == $basic_uom)?$rec_qty:$rec_qty*$rec_uom_conversion;
+					$rec_MT_conversion = $this->scalarconversionObj->getColumn(array('from_uom'=>$basic_uom,'to_uom'=>'84'),'conversion');
+					$rec_MT_qty = ($basic_uom == $standard_uom)?$rec_basic_qty:$rec_basic_qty/$rec_MT_conversion;
+				endif;
+				$wt_sumrec_qty += $rec_MT_qty;
+				$Processed_UOM = '84';
+			else: //CASES
+				if($rec_uom == $standard_uom):
+					$rec_CASE_qty = $rec_qty;
+				else:
+					$rec_basic_qty = ($rec_uom == $basic_uom)?$rec_qty:$rec_qty*$rec_uom_conversion;
+					$rec_CASE_conversion = $this->itemuomObj->getColumn(array('item'=>$rec_item, 'uom'=>$standard_uom),'conversion');
+					$rec_CASE_qty = ($basic_uom == $standard_uom)?$rec_basic_qty:$rec_basic_qty/$rec_CASE_conversion;
+				endif;
+				$case_sumrec_qty += $rec_CASE_qty;
+				$Processed_UOM = '-1'; //CASES 
+			endif;
+		endforeach;
+	endforeach; 
+	$MT_unloading = $wt_sumprnqty + $wt_sumrec_qty;
+	$CASE_unloading = $case_sumprnqty + $case_sumrec_qty;
+	if($Processed_UOM == '84'):
+		$wt_work_type = 2; //unload MT
+		$wt_charge_tax = $this->worktypeObj->getColumn($wt_work_type,'charge_tax');
+		$wt_charge_tax_value = $this->chargetaxObj->getColumn($wt_charge_tax,'value');
+	else:
+		$case_work_type = 4; //unload CASE
+		$case_charge_tax = $this->worktypeObj->getColumn($case_work_type,'charge_tax');
+		$case_charge_tax_value = $this->chargetaxObj->getColumn($case_charge_tax,'value');
+	endif;
+?>
+<?php if($MT_unloading > 0):?>
+	<tr id='2'>
+		<td><?php echo $sl++;?></td>
+		<td><b><?php echo $this->worktypeObj->getColumn($wt_work_type,'work_type');?></b></td>
+		<td><?php echo number_format((float)$MT_unloading, 2, '.', '');?></td>
+		<td><?php echo $wt_charge_tax_value;?></td>
+		<td>
+			<?php $wt_amount = $MT_unloading * $wt_charge_tax_value;
+				echo $wt_net_unloading = number_format((float)$wt_amount, 2, '.', '');
+			?>
+		</td>
+		<td class="form-group">
+			<input type="radio" name="details" value="1" id="details"> Unload MT Details
+		</td>
+	</tr>
+	<input type="hidden" name="work_type[]" id="work_type" value="<?php echo $wt_work_type;?>" />
+	<input type="hidden" name="qty[]" id="qty" value="<?php echo $MT_unloading;?>" />
+	<input type="hidden" name="rate[]" id="rate" value="<?php echo $wt_charge_tax_value;?>" />
+	<input type="hidden" name="amount[]" id="amount" value="<?php echo $wt_net_unloading;?>" />
+<?php endif;?>
+<?php if($CASE_unloading > 0):?>
+	<tr id='4'>
+		<td><?php echo $sl++;?></td>
+		<td><b><?php echo $this->worktypeObj->getColumn($case_work_type,'work_type');?></b></td>
+		<td><?php echo number_format((float)$CASE_unloading, 2, '.', '');?></td>
+		<td><?php echo $case_charge_tax_value;?></td>
+		<td>
+			<?php $case_amount = $CASE_unloading * $case_charge_tax_value;
+				echo $case_net_unloading = number_format((float)$case_amount, 2, '.', '');
+			?>
+		</td>
+		<td class="form-group">
+			<input type="radio" name="details" value="1" id="details"> Unload CASE Details
+		</td>
+	</tr>
+	<input type="hidden" name="work_type[]" id="work_type" value="<?php echo $case_work_type;?>" />
+	<input type="hidden" name="qty[]" id="qty" value="<?php echo $CASE_unloading;?>" />
+	<input type="hidden" name="rate[]" id="rate" value="<?php echo $case_charge_tax_value;?>" />
+	<input type="hidden" name="amount[]" id="amount" value="<?php echo $case_net_unloading;?>" />
+<?php endif;?>
+<?php 
+	/*************** Goods Dispatch *****************/
+	$dispatch = $this->dispatchObj->getByDate($start_date, $end_date, array('from_location'=>$location,'activity'=>$activity,'status'=>array('2','3')));
+	foreach($dispatch as $disp):
+		$disp_details = $this->disp_detailsObj->get(array('d.dispatch'=>$disp['id']));
+		foreach($disp_details as $disp_detail):
+			//echo "<pre>"; print_r($disp_detail); 
+			$disp_item = $disp_detail['item_id'];
+			$disp_uom = $disp_detail['uom_id'];
+			$disp_qty = $disp_detail['quantity'];
+			$disp_uom_conversion = $this->itemuomObj->getColumn(array('item'=>$disp_item, 'uom'=>$disp_uom),'conversion');
+			$basic_uom = $this->itemObj->getColumn($disp_item,'uom');
+			$standard_uom = $this->itemuomObj->getColumn(array('item'=>$disp_item,'costing_uom'=>'1'),'uom');
+			
+			if($standard_uom == '84'): //METRIC TONES
+				if($disp_uom == $standard_uom):
+					$disp_MT_qty = $disp_qty;
+				else:
+					$disp_basic_qty = ($disp_uom == $basic_uom)?$disp_qty:$disp_qty*$disp_uom_conversion;
+					$disp_MT_conversion = $this->scalarconversionObj->getColumn(array('from_uom'=>$basic_uom,'to_uom'=>'84'),'conversion');
+					$disp_MT_qty = ($basic_uom == $standard_uom)?$disp_basic_qty:$disp_basic_qty/$disp_MT_conversion;
+				endif;
+				$wt_sumdispqty += $disp_MT_qty;
+				$Processed_UOM = '84';
+			else: //CASES
+				if($disp_uom == $standard_uom):
+					$disp_CASE_qty = $disp_qty;
+				else:
+					$disp_basic_qty = ($disp_uom == $basic_uom)?$disp_qty:$disp_qty*$disp_uom_conversion;
+					$disp_CASE_conversion = $this->itemuomObj->getColumn(array('item'=>$disp_item, 'uom'=>$standard_uom),'conversion');
+					$disp_CASE_qty = ($basic_uom == $standard_uom)?$disp_basic_qty:$disp_basic_qty/$disp_CASE_conversion;
+				endif;
+				$case_sumdispqty += $disp_CASE_qty;
+				$Processed_UOM = '-1'; //CASES 
+			endif;
+		endforeach;
+	endforeach; 
+	/*************** Sales *****************/
+	$sales = $this->salesObj->getByDate($start_date, $end_date, array('s.location'=>$location,'i.activity'=>$activity,'s.status'=>'3'));
+	foreach($sales as $sale):
+		//echo "<pre>"; print_r($sale); 
+		$sale_item = $sale['item'];
+		$sale_uom = $sale['uom'];
+		$sale_qty = $sale['quantity'];
+		$sale_uom_conversion = $this->itemuomObj->getColumn(array('item'=>$sale_item, 'uom'=>$sale_uom),'conversion');
+		$basic_uom = $sale['basic_uom'];
+		$standard_uom = $this->itemuomObj->getColumn(array('item'=>$sale_item,'costing_uom'=>'1'),'uom');
+		
+		if($standard_uom == '84'): //METRIC TONES
+			if($sale_uom == $standard_uom):
+				$sale_MT_qty = $sale_qty;
+			else:
+				$sale_basic_qty = ($sale_uom == $basic_uom)?$sale_qty:$sale_qty*$sale_uom_conversion;
+				$sale_MT_conversion = $this->scalarconversionObj->getColumn(array('from_uom'=>$basic_uom,'to_uom'=>'84'),'conversion');
+				$sale_MT_qty = ($basic_uom == $standard_uom)?$sale_basic_qty:$sale_basic_qty/$sale_MT_conversion;
+			endif;
+			$wt_sumsaleqty += $sale_MT_qty;
+			$Processed_UOM = '84';
+		else: //CASES
+			if($sale_uom == $standard_uom):
+				$sale_CASE_qty = $sale_qty;
+			else:
+				$sale_basic_qty = ($sale_uom == $basic_uom)?$sale_qty:$sale_qty*$sale_uom_conversion;
+				$sale_CASE_conversion = $this->itemuomObj->getColumn(array('item'=>$sale_item, 'uom'=>$standard_uom),'conversion');
+				$sale_CASE_qty = ($basic_uom == $standard_uom)?$sale_basic_qty:$sale_basic_qty/$sale_CASE_conversion;
+			endif;
+			$case_sumsaleqty += $sale_CASE_qty;
+			$Processed_UOM = '-1'; //CASES 
+		endif;
+	endforeach; 
+	$MT_loading = $wt_sumdispqty + $wt_sumsaleqty;
+	$CASE_loading = $case_sumdispqty + $case_sumsaleqty;
+	if($Processed_UOM == '84'):
+		$wt_work_type = 1; //unload MT
+		$wt_charge_tax = $this->worktypeObj->getColumn($wt_work_type,'charge_tax');
+		$wt_charge_tax_value = $this->chargetaxObj->getColumn($wt_charge_tax,'value');
+	else:
+		$case_work_type = 3; //unload CASE
+		$case_charge_tax = $this->worktypeObj->getColumn($case_work_type,'charge_tax');
+		$case_charge_tax_value = $this->chargetaxObj->getColumn($case_charge_tax,'value');
+	endif;
+?>
+<?php if($MT_loading > 0):?>
+	<tr id='1'>
+		<td><?php echo $sl++;?></td>
+		<td><b><?php echo $this->worktypeObj->getColumn($wt_work_type,'work_type');?></b></td>
+		<td><?php echo number_format((float)$MT_loading, 2, '.', '');?></td>
+		<td><?php echo $wt_charge_tax_value;?></td>
+		<td>
+			<?php $wt_amount = $MT_loading * $wt_charge_tax_value;
+				echo $wt_net_loading = number_format((float)$wt_amount, 2, '.', '');
+			?>
+		</td>
+		<td class="form-group">
+			<input type="radio" name="details" value="1" id="details"> Load MT Details
+		</td>
+	</tr>
+	<input type="hidden" name="work_type[]" id="work_type" value="<?php echo $wt_work_type;?>" />
+	<input type="hidden" name="qty[]" id="qty" value="<?php echo $MT_loading;?>" />
+	<input type="hidden" name="rate[]" id="rate" value="<?php echo $wt_charge_tax_value;?>" />
+	<input type="hidden" name="amount[]" id="amount" value="<?php echo $wt_net_loading;?>" />
+<?php endif;?>
+<?php if($CASE_loading > 0):?>
+	<tr id="3">
+		<td><?php echo $sl++;?></td>
+		<td><b><?php echo $this->worktypeObj->getColumn($case_work_type,'work_type');?></b></td>
+		<td><?php echo number_format((float)$CASE_loading, 2, '.', '');?></td>
+		<td><?php echo $case_charge_tax_value;?></td>
+		<td>
+			<?php $case_amount = $CASE_loading * $case_charge_tax_value;
+				echo $case_net_loading = number_format((float)$case_amount, 2, '.', '');
+			?>
+		</td>
+		<td class="form-group">
+			<input type="radio" name="details" value="1" id="details"> Load CASE Details
+		</td>
+	</tr>
+	<input type="hidden" name="work_type[]" id="work_type" value="<?php echo $case_work_type;?>" />
+	<input type="hidden" name="qty[]" id="qty" value="<?php echo $CASE_loading;?>" />
+	<input type="hidden" name="rate[]" id="rate" value="<?php echo $case_charge_tax_value;?>" />
+	<input type="hidden" name="amount[]" id="amount" value="<?php echo $case_net_loading;?>" />
+<?php endif;?>
+<?php
+	/***************** Repacking & Shifting *********************/
+	$repackings = $this->repackingObj->getByDate($start_date, $end_date, array('location'=>$location,'activity'=>$activity,'status'=>'3'));
+	foreach($repackings as $repacking):
+		$pack_item = $repacking['item'];
+		$pack_uom = $repacking['uom'];
+		$pack_qty = $repacking['quantity'];
+		$pack_rate = $repacking['rate'];
+		$pack_uom_conversion = $this->itemuomObj->getColumn(array('item'=>$pack_item, 'uom'=>$pack_uom),'conversion');
+		$basic_uom = $this->itemObj->getColumn($pack_item,'uom');
+		$standard_uom = $this->itemuomObj->getColumn(array('item'=>$pack_item,'costing_uom'=>'1'),'uom');
+		if($repacking['work_type'] == 1): //Repacking
+			if($standard_uom == '84'): //METRIC TONES
+				if($pack_uom == $standard_uom):
+					$repacking_MT_qty = $pack_qty;
+					$repacking_MT_rate = $pack_rate;
+				else:
+					$repacking_basic_qty = ($pack_uom == $basic_uom)?$pack_qty:$pack_qty*$pack_uom_conversion;
+					$repacking_MT_conversion = $this->scalarconversionObj->getColumn(array('from_uom'=>$basic_uom,'to_uom'=>'84'),'conversion');
+					$repacking_MT_qty = ($basic_uom == $standard_uom)?$repacking_basic_qty:$repacking_basic_qty/$repacking_MT_conversion;
+					
+					$repacking_basic_rate = ($pack_uom == $basic_uom)?$pack_rate:$pack_rate/$pack_uom_conversion;
+					$repacking_MT_rate = ($basic_uom == $standard_uom)?$repacking_basic_rate:$repacking_basic_rate*$repacking_MT_conversion;
+				endif;
+				$MT_repacking += $repacking_MT_qty;
+				$Rate_MT_repacking += $repacking_MT_rate;
+				$repacking_CASE_amount = $repacking_MT_qty * $repacking_MT_rate;
+				$Amount_CASE_repacking += $repacking_CASE_amount;
+				$Processed_UOM = '84';
+			else: //CASES
+				if($pack_uom == $standard_uom):
+					$repacking_CASE_qty = $pack_qty;
+					$repacking_CASE_rate = $pack_rate;
+				else:
+					$repacking_basic_qty = ($pack_uom == $basic_uom)?$pack_qty:$pack_qty*$pack_uom_conversion;
+					$repacking_CASE_conversion = $this->itemuomObj->getColumn(array('item'=>$pack_item, 'uom'=>$standard_uom),'conversion');
+					$repacking_CASE_qty = ($basic_uom == $standard_uom)?$repacking_basic_qty:$repacking_basic_qty/$repacking_CASE_conversion;
+					
+					$repacking_basic_rate = ($pack_uom == $basic_uom)?$pack_rate:$pack_rate/$pack_uom_conversion;
+					$repacking_CASE_rate = ($basic_uom == $standard_uom)?$repacking_basic_rate:$repacking_basic_rate*$repacking_CASE_conversion;
+				endif;
+				$CASE_repacking += $repacking_CASE_qty;
+				$Rate_CASE_repacking += $repacking_CASE_rate;
+				$repacking_CASE_amount = $repacking_CASE_qty * $repacking_CASE_rate;
+				$Amount_CASE_repacking += $repacking_CASE_amount;
+				$Processed_UOM = '-1'; //CASES 
+			endif;
+			if($Processed_UOM == '84'):
+				$repacking_MT_work_type = 5; //repacking MT
+			else:
+				$repacking_CASE_work_type = 7; //repacking CASE
+			endif;
+		else: // Shifting
+			if($standard_uom == '84'): //METRIC TONES
+				if($pack_uom == $standard_uom):
+					$shifting_MT_qty = $pack_qty;
+					$shifting_MT_rate = $pack_rate;
+				else:
+					$shifting_basic_qty = ($pack_uom == $basic_uom)?$pack_qty:$pack_qty*$pack_uom_conversion;
+					$shifting_MT_conversion = $this->scalarconversionObj->getColumn(array('from_uom'=>$basic_uom,'to_uom'=>'84'),'conversion');
+					$shifting_MT_qty = ($basic_uom == $standard_uom)?$shifting_basic_qty:$shifting_basic_qty/$shifting_MT_conversion;
+					
+					$shifting_basic_rate = ($pack_uom == $basic_uom)?$pack_rate:$pack_rate/$pack_uom_conversion;
+					$shifting_MT_rate = ($basic_uom == $standard_uom)?$shifting_basic_rate:$shifting_basic_rate*$shifting_MT_conversion;
+				endif;
+				$MT_shifting += $shifting_MT_qty;
+				$Rate_MT_shifting += $shifting_MT_rate;
+				$shifting_MT_amount = $shifting_MT_qty * $shifting_MT_rate;
+				$Amount_MT_shifting += $shifting_MT_amount;
+				$Processed_UOM = '84';
+			else: //CASES
+				if($pack_uom == $standard_uom):
+					$shifting_CASE_qty = $pack_qty;
+					$shifting_CASE_rate = $pack_rate;
+				else:
+					$shifting_basic_qty = ($pack_uom == $basic_uom)?$pack_qty:$pack_qty*$pack_uom_conversion;
+					$shifting_CASE_conversion = $this->itemuomObj->getColumn(array('item'=>$pack_item, 'uom'=>$standard_uom),'conversion');
+					$shifting_CASE_qty = ($basic_uom == $standard_uom)?$shifting_basic_qty:$shifting_basic_qty/$shifting_CASE_conversion;
+					
+					$shifting_basic_rate = ($pack_uom == $basic_uom)?$pack_rate:$pack_rate/$pack_uom_conversion;
+					$shifting_CASE_rate = ($basic_uom == $standard_uom)?$shifting_basic_rate:$shifting_basic_rate*$shifting_CASE_conversion;
+				endif;
+				$CASE_shifting += $shifting_CASE_qty;
+				$Rate_CASE_shifting += $shifting_CASE_rate;
+				$shifting_CASE_amount = $shifting_CASE_qty * $shifting_CASE_rate;
+				$Amount_CASE_shifting += $shifting_CASE_amount;
+				$Processed_UOM = '-1'; //CASES 
+			endif;
+			if($Processed_UOM == '84'):
+				$shifting_MT_work_type = 6; //shifting MT
+			else:
+				$shifting_CASE_work_type = 8; //shifting CASE
+			endif;
+		endif;
+	endforeach;
+?>
+<?php if($MT_repacking > 0):?>
+	<tr id='5'>
+		<td><?php echo $sl++;?></td>
+		<td><b><?php echo $this->worktypeObj->getColumn($repacking_MT_work_type,'work_type');?></b></td>
+		<td><?php echo number_format((float)$MT_repacking, 2, '.', '');?></td>
+		<td><?php echo number_format((float)$Rate_MT_repacking, 2, '.', '');?></td>
+		<td>
+			<?php 
+				echo $wt_net_repacking = number_format((float)$Amount_CASE_repacking, 2, '.', '');
+			?>
+		</td>
+		<td class="form-group">
+			<input type="radio" name="details" value="1" id="details"> Repacking MT Details
+		</td>
+	</tr>
+	<input type="hidden" name="work_type[]" id="work_type" value="<?php echo $repacking_MT_work_type;?>" />
+	<input type="hidden" name="qty[]" id="qty" value="<?php echo $MT_repacking;?>" />
+	<input type="hidden" name="rate[]" id="rate" value="<?php echo $Rate_MT_repacking;?>" />
+	<input type="hidden" name="amount[]" id="amount" value="<?php echo $wt_net_repacking;?>" />
+<?php endif;?>
+
+<?php if($CASE_repacking > 0):?>
+	<tr id='7'>
+		<td><?php echo $sl++;?></td>
+		<td><b><?php echo $this->worktypeObj->getColumn($repacking_CASE_work_type,'work_type');?></b></td>
+		<td><?php echo number_format((float)$CASE_repacking, 2, '.', '');?></td>
+		<td><?php echo number_format((float)$Rate_CASE_repacking, 2, '.', '');?></td>
+		<td>
+			<?php 
+				echo $case_net_repacking = number_format((float)$Amount_CASE_repacking, 2, '.', '');
+			?>
+		</td>
+		<td class="form-group">
+			<input type="radio" name="details" value="1" id="details"> Repacking CASE Details
+		</td>
+	</tr>
+	<input type="hidden" name="work_type[]" id="work_type" value="<?php echo $repacking_CASE_work_type;?>" />
+	<input type="hidden" name="qty[]" id="qty" value="<?php echo $CASE_repacking;?>" />
+	<input type="hidden" name="rate[]" id="rate" value="<?php echo $Rate_CASE_repacking;?>" />
+	<input type="hidden" name="amount[]" id="amount" value="<?php echo $case_net_repacking;?>" />
+<?php endif;?>
+<?php if($MT_shifting > 0):?>
+	<tr id='6'>
+		<td><?php echo $sl++;?></td>
+		<td><b><?php echo $this->worktypeObj->getColumn($shifting_MT_work_type,'work_type');?></b></td>
+		<td><?php echo number_format((float)$MT_shifting, 2, '.', '');?></td>
+		<td><?php echo number_format((float)$Rate_MT_shifting, 2, '.', '');?></td>
+		<td>
+			<?php 
+				echo $wt_net_shifting = number_format((float)$Amount_MT_shifting, 2, '.', '');
+			?>
+		</td>
+		<td class="form-group">
+			<input type="radio" name="details" value="1" id="details"> Shifting MT Details
+		</td>
+	</tr>
+	<input type="hidden" name="work_type[]" id="work_type" value="<?php echo $shifting_MT_work_type;?>" />
+	<input type="hidden" name="qty[]" id="qty" value="<?php echo $MT_shifting;?>" />
+	<input type="hidden" name="rate[]" id="rate" value="<?php echo $Rate_MT_shifting;?>" />
+	<input type="hidden" name="amount[]" id="amount" value="<?php echo $wt_net_shifting;?>" />
+<?php endif;?>
+
+<?php if($CASE_shifting > 0):?>
+	<tr id='8'>
+		<td><?php echo $sl++;?></td>
+		<td><b><?php echo $this->worktypeObj->getColumn($shifting_CASE_work_type,'work_type');?></b></td>
+		<td><?php echo number_format((float)$CASE_shifting, 2, '.', '');?></td>
+		<td><?php echo number_format((float)$Rate_CASE_shifting, 2, '.', '');?></td>
+		<td>
+			<?php 
+				echo $case_net_shifting = number_format((float)$Amount_CASE_shifting, 2, '.', '');
+			?>
+		</td>
+		<td class="form-group">
+			<input type="radio" name="details" value="1" id="details"> Shifting CASE Details
+		</td>
+	</tr>
+	<input type="hidden" name="work_type[]" id="work_type" value="<?php echo $shifting_CASE_work_type;?>" />
+	<input type="hidden" name="qty[]" id="qty" value="<?php echo $CASE_shifting;?>" />
+	<input type="hidden" name="rate[]" id="rate" value="<?php echo $Rate_CASE_shifting;?>" />
+	<input type="hidden" name="amount[]" id="amount" value="<?php echo $case_net_shifting;?>" />
+<?php endif;?>
+	</tbody>
+	<tfoot>
+		<tr>
+			<th style="text-align:right" colspan="4"><i>Grand Total</i></th>
+			<th colspan="2">
+			<?php 
+				$grand_total = $case_net_unloading + $wt_net_unloading + $case_net_loading + $wt_net_loading + $wt_net_repacking + $case_net_repacking + $wt_net_shifting + $case_net_shifting;
+				echo $grand_total = number_format((float)$grand_total, 2, '.', '');
+			?>
+			<input type="hidden" name="invoice_amount" id="invoice_amount" value="<?php echo $grand_total;?>" />
+			</th>
+		</tr>
+	</tfoot>
+</table>
+<div class="row"> 
+	<div class="col-lg-6"></div>
+	<div class="col-lg-3">
+		<div class="form-group">
+			<label for="deduction">Deduction(<?php echo $this->currency_code();?>)</label>
+			<input type="text" class="form-control tr-deduction" name="deduction" id="deduction" value="0.00" />
+		</div>
+	</div>
+	<div class="col-lg-3">
+		<div class="form-group">
+			<label for="payable_amount">Payable Amount(<?php echo $this->currency_code();?>)</label>
+			<input type="text" class="form-control tr-payable_amount" name="payable_amount" id="payable_amount" value="<?php echo $grand_total;?>" readonly />
+		</div>
+	</div>  
+</div>
+<script>
+	$('#deduction').change(function(){
+		var payable_amount = $('#invoice_amount').val() - $(this).val();
+		payable_amount = parseFloat(payable_amount).toFixed(2);
+		$('#payable_amount').val(payable_amount);
+	});
+	$( "input:radio" ).on( "click", function() {
+		var id = $(this).closest('tr').attr('id');
+		$.post( 
+			"<?php echo $this->url('contractor', array('action' => 'getdetails'));?>",
+			{	
+				'id': id,
+				'start_date': $('input#start_date').val(),
+				'end_date': $('input#end_date').val(),
+				'location': $('#location').val(), 
+				'activity': $('#activity').val(),
+				'contractor':$('#contractor').val(),
+			}, 
+			function(data) {
+				$('div.details').html( data ); 
+		});	            
+	});
+</script>	
+	

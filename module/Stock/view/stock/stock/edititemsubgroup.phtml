@@ -1,0 +1,96 @@
+<?php
+/**
+ * 
+ * View -- of Stock/MasterController/editsubitemgroupAction
+ * 
+ */
+?>
+<?php 
+    foreach($this->itemsubgroups as $itemsubgroup):
+        extract($itemsubgroup);        
+    endforeach;
+?>
+
+<form id="#form" method="post" action="<?php echo $this->url('stock', array('action' => 'edititemsubgroup', 'id' => $id)); ?>"  enctype="multipart/form-data" >                  
+    <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+        <h4 class="modal-title"> <i class="fa fa-pencil-square-o"></i> Edit Item Sub-Group</h4>
+    </div>  <!-- /modal-header -->
+    
+    <div class="modal-body">       
+		<div class="panel panel-default">                       
+			<div class="panel-body"> 
+				<div class="form-group">
+					<label for="itemgroup" class="control-label">Item Group</label>
+					<select class="form-control" name="itemgroup" id="itemgroup" data-placeholder="Select"> 
+						<option value=""></option>
+						<?php 
+							foreach($itemgroups as $itemgroup):
+								$selected = ($itemgroup['id'] == $item_group)?"selected":"";
+						?>
+							<option value="<?php echo $itemgroup['id'];?>" <?php echo $selected;?>>
+								<?php echo $itemgroup['item_group'];?>
+							</option>
+						<?php endforeach;?>
+					</select>
+				</div>
+				<div class="form-group">
+					<label for="itemsubgroup" class="control-label">Item Sub-Group</label>
+					<input type="text" class="form-control" name="itemsubgroup" id="itemsubgroup" value="<?php echo $item_subgroup;?>" size="30" required> 
+				</div>
+				<div class="form-group">
+					<label for="description" class="control-label">Description</label>
+					<input type="text" class="form-control" name="description" id="description" value="<?php echo $description;?>" size="30" required> 
+				</div>
+			</div>
+		</div>
+	</div> <!-- /modal-body -->    
+    <div class="modal-footer">
+        <button type="submit" class="btn btn-success"><i class="fa fa-check"></i> Save </button>
+        <button type="button" class="btn btn-warning" data-dismiss="modal" ><i class="fa fa-times"></i> Cancel </button> 
+    </div>
+</form>
+<script>
+$('document').ready(function(){
+	$('form select').chosen();
+	const fv = FormValidation.formValidation(document.getElementById('#form'), {
+		fields: {
+			itemsubgroup: {
+				validators: {
+					notEmpty: {
+						message: 'Please provide item sub-group.'
+					}
+				}
+			},
+			itemgroup: {
+				validators: {
+					notEmpty: {
+						message: 'Please provide item group.'
+					}
+				}
+			},
+			description: {
+				validators: {
+					notEmpty: {
+						message: 'Please provide description for item sub-group.'
+					},
+				}
+			},
+		},
+		plugins: {
+			trigger: new FormValidation.plugins.Trigger(),
+			bootstrap3: new FormValidation.plugins.Bootstrap3(),
+			submitButton: new FormValidation.plugins.SubmitButton(),
+			defaultSubmit: new FormValidation.plugins.DefaultSubmit(),
+		},
+	}).on('core.element.validated', function (e) {
+		if (e.valid) {
+			$('div#'+ e.field.replace('[]','') +'_chosen').removeClass('is-invalid');
+			$('div#'+ e.field.replace('[]','') +'_chosen').addClass('is-valid');
+		} else {
+			$('div#'+ e.field.replace('[]','') +'_chosen').removeClass('is-valid');
+			$('div#'+ e.field.replace('[]','') +'_chosen').addClass('is-invalid');
+		}
+	});
+});
+</script>

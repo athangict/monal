@@ -1,0 +1,472 @@
+
+<?php
+/**
+ * 
+ * View -- of Hr/LeaveController/indexAction
+ * 
+ */
+	$this->headTitle($this->title);
+	$checkleaveOfficial =$this->userObj->get(array('id'=>$this->userID, 'role'=>4));
+?>
+<style>
+#remarks.red-text {
+    color: red;
+}
+</style>
+<form id="#form" method="post" action="<?php echo $this->url('leave', array('action' => 'apply')); ?>"  enctype="multipart/form-data" >
+	<div class="row">
+		<div class="col-lg-12"> 
+			<div class="widget-box transparent">
+				<div class="widget-header widget-header-smaller">
+					<h4 class="widget-title blue bolder smaller"> Leave Application Form </h4>
+				</div>
+				<div class="widget-body">
+					<div class="widget-main padding-24"> 
+						<div class="row">  
+						   <div class="form-group col-lg-4">
+								<label for="applicant" class="control-label">Applicant<span style="color: red;">*</span></label>
+								<input type="hidden"  id="loc" name="loc" />
+								<input type="hidden"  id="region" name="region" />
+								<select class="form-control" id="applicant" name="applicant" data-placeholder="-Select-" required >
+									<option value=""></option>									
+									<?php 
+								/*	if(sizeof($checkleaveOfficial) > 0){
+									  $employees = $this->employeeObj->getEmployee(array('e.status'=>array(1)));
+									  if(sizeof($employees)>0):
+									  foreach ($employees as $employee):?>
+										 <option value="<?php echo $employee['id'];?>"><?php echo $employee['full_name'];?> (Emp No. : <?php echo $employee['emp_id'];?>)</option>
+									   <?php
+									  endforeach;
+									  endif; 
+									}
+									else{*/
+									    $loginEmployee = $this->employeeObj->get($this->login_emp_ID);
+										if(sizeof($loginEmployee)>0):
+										foreach($loginEmployee as $employee);
+										?>
+										  <option value="<?php echo $employee['id'];?>"><?php echo $employee['full_name'];?> (Emp No. : <?php echo $employee['emp_id'];?>)</option>
+									<?php
+									 endif; 
+									//} ?>									
+								</select>
+							</div>		
+							<div class="form-group col-lg-4">
+								 <label for="leave_type" class="control-label">Leave Type <span style="color: red;">*</span></label>
+								<select class="form-control" id="leave_type" name="leave_type" data-placeholder="-Select-" required >
+									<option value=""></option>									
+									<?php 
+									foreach ($this->leaveTypes as $leaveType):
+									?>
+										<option value="<?php echo $leaveType['id'];?>">
+											<?php echo $leaveType['type'];?> 
+										</option>
+									<?php
+									endforeach;
+									?>
+								</select>
+							</div>
+						</div>	
+						<div class="row">  
+						   <div class="form-group col-lg-10" id="empdtl"></div>						   
+						</div>						
+						<div class="row">
+							<div class="col-lg-8  alert alert-info fade in">
+								<h5>Leave Details as of <?php echo date('Y-m-d');?></h5>
+								<table class="table table-striped table-hover table-condensed" >								 
+								  <tbody>
+								  	<tr>
+										  <td>Leave</td>
+										  <td>Leave Taken</td>
+										  <td>Leave Balance</td>
+										</tr> 
+								 	 	<tr>
+										  <td>Casual Leave</td>
+										  <td><input type="text" class="form-control" id="casual_leave_used" name="casual_leave_used" readonly ></td>
+										  <td><input type="text" class="form-control" id="casual_bal" name="casual_bal" readonly ></td>
+										</tr> 
+										<tr>
+										  <td>Earned Leave</td>
+										  <td><input type="text" class="form-control" id="earned_leave_used" name="earned_leave_used" readonly ></td>
+										  <td><input type="text" class="form-control" id="earned_bal" name="earned_bal" readonly ></td>
+										</tr>  
+										<tr>
+										  <td>Breavement Leave</td>
+										  <td><input type="text" class="form-control" id="beavement_leave_used" name="beavement_leave_used" readonly ></td>
+										  <td><input type="text" class="form-control" id="breavement_bal" name="breavement_bal" readonly ></td>
+										</tr> 
+										<tr>
+										  <td>Extraordinary Leave</td>
+										  <td><input type="text" class="form-control" id="extraordinary_leave_used" name="extraordinary_leave_used" readonly ></td>
+										  <td><input type="text" class="form-control" id="extraordinary_bal" name="extraordinary_bal" readonly ></td>
+										</tr> 
+										<tr>
+										  <td>Maternity Leave</td>
+										  <td><input type="text" class="form-control" id="maternity_leave_used" name="maternity_leave_used" readonly ></td>
+										  <td><input type="text" class="form-control" id="maternity_bal" name="maternity_bal" readonly ></td>
+										</tr>
+										<tr>
+										  <td>Medical Leave</td>
+										  <td><input type="text" class="form-control" id="medical_leave_used" name="medical_leave_used" readonly ></td>
+										  <td><input type="text" class="form-control" id="medical_bal" name="medical_bal" readonly ></td>
+										</tr>
+										<tr>
+										  <td>Paternity Leave</td>
+										  <td><input type="text" class="form-control" id="paternity_leave_used" name="paternity_leave_used" readonly ></td>
+										  <td><input type="text" class="form-control" id="paternity_bal" name="paternity_bal" readonly ></td>
+										</tr> 
+										<tr>
+										  <td>Escort Leave</td>
+										  <td><input type="text" class="form-control" id="escort_leave_used" name="escort_leave_used" readonly ></td>
+										  <td><input type="text" class="form-control" id="escort_bal" name="escort_bal" readonly ></td>
+										</tr> 
+										<tr>
+										  <td>Study Leave</td>
+										  <td><input type="text" class="form-control" id="study_leave_used" name="study_leave_used" readonly ></td>
+										  <td><input type="text" class="form-control" id="study_bal" name="study_bal" readonly></td>
+										</tr>   
+										<tr>
+										  <td>Preparatory Leave</td>
+										  <td><input type="text" class="form-control" id="prep_leave_used" name="prep_leave_used" readonly ></td>
+										  <td><input type="text" class="form-control" id="prep_bal" name="prep_bal" readonly></td>
+										</tr>   
+								  </tbody>
+								</table>			
+							</div>
+						</div>
+						<div class="row">  
+							<div class="form-group col-lg-4">
+								<label for="start_date" class="control-label">Leave Start Date</label>
+								<div class="date input-group" id="start_date"  >
+									<input class="form-control span2" name="start_date" id="start_date" type="text" placeholder="Start Date"  required>
+									<span class="input-group-addon add-on"><i class="fa fa-calendar"></i></span>
+								</div>
+							</div>
+							<div class="form-group col-lg-4">
+								<label for="end_date" class="control-label">Leave End Date</label>
+								<div class="date input-group" id="end_date" data-date="<?php echo date('Y-m-d');?>" data-date-format="yyyy-mm-dd" >
+									<input class="form-control span2" name="end_date" id="end_date" type="text" placeholder="End Date"  required>
+									<span class="input-group-addon add-on"><i class="fa fa-calendar"></i></span>
+								</div>
+							</div>
+							<div class="form-group col-lg-4" id="half_day">
+							<label for="btn3" class="control-label">Duration</label>
+							<div class="checkbox">
+								<label>
+									<input class="ace" type="radio" name="half" id="half" value="1" />
+									<span class="lbl" style="margin-left: -20px;">Half day</span>
+								</label>
+								<label>
+									<input class="ace" type="radio" name="half" id="half" value="0" checked />
+									<span class="lbl">Full Day</span>
+								</label>
+							</div>
+							</div>		
+						</div>
+						<div class="row">	
+							<div class="form-group col-lg-3">
+								<label for="no_of_days" class="control-label">No. of Days</label>
+								<input type="text" class="form-control" name="no_of_days" id="no_of_days" readonly> 
+							</div>				
+							<div class="form-group col-lg-4">
+								<label for="substitute" class="control-label">Substitute</label>
+								<select class="form-control" id="delegation" name="delegation" data-placeholder="-Select-" >
+									<option value=""></option>									
+									<?php 
+									$employees = $this->employeeObj->getEmployee(array('e.status'=>array(1,4,5)));
+									foreach ($employees as $employee):
+									?>
+										<option value="<?php echo $employee['id'];?>">
+											<?php echo $employee['full_name'];?> (<?php echo $employee['emp_id'];?>)
+										</option>
+									<?php
+									endforeach;
+									?>
+								</select>
+							</div>
+						</div>
+						<div class="row">
+							<div class="form-group col-lg-11">
+								<label for="subs_contact" class="control-label">Remarks <span class="orange" style="font-size:11px;"> <i>* Mention the relationship with deceased for BL. </i></span></label>
+								<textarea class="form-control" name="remarks" id="remarks" row="3" col="60" type="text"> </textarea>
+							</div>			
+						</div>
+						<div class="row">
+							<div class="form-group">
+								<label>
+									<input class="ace" type="checkbox"  name="declaration" id="declaration" value="1" style="min-width: 90px;"></input>
+									<span class="lbl"> I hereby certify that the information provided above is correct. Any falsification of information in this record may form ground for disciplinary action, Furthermore; I fully understand that I am not entitled to go on leave until I receive an approved copy of this form.</span>
+								</label>
+							</div>
+							<div>
+								<button id="submit_button" type="submit" class="btn btn-success"><i class="fa fa-check"></i> Next </button>
+								<button type="button" class="btn btn-warning" onclick="javascript:history.back();"><i class="fa fa-times"></i> Cancel </button>  
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</form>
+<script>
+    $(document).ready(function() {
+		
+		$('#applicant').on('change', function(){
+			$.post(
+				"<?php echo $this->url('leave', array('action' => 'getleavedtls')); ?>",
+				{
+					emp_id: $(this).val(),
+				},
+				function(data){
+					console.log(data);
+					$('#casual_bal').val(data.casual_bal);	
+					$('#earned_bal').val(data.earned_bal);
+					$('#casual_leave_used').val(data.casual_leave_used);	
+					$('#earned_leave_used').val(data.earned_leave_used);
+					$('#paternity_bal').val(data.paternity_bal);
+					$('#paternity_leave_used').val(data.paternity_leave_used);		
+					$('#breavement_bal').val(data.breavement_bal);
+					$('#beavement_leave_used').val(data.beavement_leave_used);	
+					$('#extraordinary_bal').val(data.extraordinary_bal);
+					$('#extraordinary_leave_used').val(data.extraordinary_leave_used);
+					$('#maternity_bal').val(data.maternity_bal);
+					$('#maternity_leave_used').val(data.maternity_leave_used);	
+					$('#medical_bal').val(data.medical_bal);
+					$('#medical_leave_used').val(data.medical_leave_used);	
+					$('#escort_bal').val(data.escort_bal);
+					$('#escort_leave_used').val(data.escort_leave_used);
+					$('#study_bal').val(data.study_bal);
+					$('#study_leave_used').val(data.study_leave_used);
+					$('#prep_bal').val(data.prep_bal);
+					$('#prep_leave_used').val(data.prep_leave_used);
+					$('#loc').val(data.empLocation);
+					$('#region').val(data.empRegion);
+					var casualleave = parseFloat(data.casual_bal);calculateTotal(casualleave);
+					var earnedleave = parseFloat(data.earned_bal);calculateTotal(earnedleave);
+					var paternityleave = parseFloat(data.paternity_bal);calculateTotal(paternityleave);
+					var breaveleave = parseFloat(data.breavement_bal);calculateTotal(breaveleave);
+					var extraleave = parseFloat(data.extraordinary_bal);calculateTotal(extraleave);
+					var maternityleave = parseFloat(data.maternity_bal);calculateTotal(maternityleave);
+					var medicalleave = parseFloat(data.medical_bal);calculateTotal(medicalleave);
+					var escortleave = parseFloat(data.escort_bal);calculateTotal(escortleave);
+					var studyleave = parseFloat(data.study_bal);calculateTotal(studyleave);
+					var prepleave = parseFloat(data.prep_bal);calculateTotal(prepleave);
+					var location = parseFloat(data.empLocation);updateNumberOfDays(location);	
+					var region = parseFloat(data.empRegion);updateNumberOfDays(region);	
+				},
+				'json'
+			);	
+	      $('#empdtl').load("<?php echo $this->url('leave', array('action' => 'displayempdtl')); ?>/"+ $(this).val(), function() {       
+           $("#empdtl").trigger('chosen:updated');
+  	      });
+		});
+        // Initialize datepicker
+        $('#start_date').datepicker({
+            format: 'yyyy-mm-dd',
+            autoclose: true
+        });
+
+        $('#end_date').datepicker({
+            format: 'yyyy-mm-dd',
+            autoclose: true
+        });
+		
+		var formattedStartDate, formattedEndDate;
+
+		$('#start_date').on('changeDate', function(event) {
+			var selectedSDate = event.date; // Get the selected date object
+			
+			// Format the start date using JavaScript Date object
+			formattedStartDate = selectedSDate.getFullYear() + '-' + 
+								 ('0' + (selectedSDate.getMonth() + 1)).slice(-2) + '-' + 
+								 ('0' + selectedSDate.getDate()).slice(-2);
+			
+			console.log('Selected Start Date:', formattedStartDate);
+			updateNumberOfDays();
+		});
+
+		$('#end_date').on('changeDate', function(event) {
+			var selectedEDate = event.date; // Get the selected date object
+			
+			// Format the end date using JavaScript Date object
+			formattedEndDate = selectedEDate.getFullYear() + '-' + 
+							   ('0' + (selectedEDate.getMonth() + 1)).slice(-2) + '-' + 
+							   ('0' + selectedEDate.getDate()).slice(-2);
+			
+			console.log('Selected End Date:', formattedEndDate);
+			updateNumberOfDays();
+		});
+
+		function updateNumberOfDays() {
+			
+			// Make sure both start date and end date are defined
+			if (formattedStartDate && formattedEndDate) {
+				
+				// Make AJAX request to get holidays
+				 var leaveType = $("#leave_type").val(); 
+				  var location = parseInt($("#loc").val(), 10);// Assuming the leave type is selected via an element with id "leave_type"
+				  var region = parseInt($("#region").val(), 10);// Assuming the leave type is selected via an element with id "leave_type"
+					console.log("region:", region);				
+				if (![2, 3, 4, 5].includes(region)) {
+					console.log("Location value1:", region);
+						if (leaveType == 2 || leaveType == 3 || leaveType == 7) {
+							$.post(
+								"<?php echo $this->url('leave', array('action' => 'getholidays'));?>",
+								{
+									start_date: formattedStartDate,
+									end_date: formattedEndDate
+								},
+								function(data) {
+									//console.log(data);
+									   $("#no_of_days").val(data.non_holiday_days);	
+									   var no_of_days = parseFloat(data.non_holiday_days);
+									calculateTotal(no_of_days);
+								},
+								'json'
+							);
+							if (formattedStartDate == formattedEndDate) {
+								$('#no_of_days').closest('.form-group').hide();
+								$('#half_day').closest('.form-group').show();
+							}else{
+								
+								$('#no_of_days').closest('.form-group').show();
+								$('#half_day').closest('.form-group').hide();
+							}
+						}else{ 
+							$.post(
+								"<?php echo $this->url('leave', array('action' => 'getweekends'));?>",
+								{
+									start_date: formattedStartDate,
+									end_date: formattedEndDate
+								},
+								function(data) {
+									   $("#no_of_days").val(data.non_holiday_days);	
+									   var no_of_days = parseFloat(data.non_holiday_days);
+									calculateTotal(no_of_days);
+								},
+								'json'
+							);
+						}
+				}else{
+					console.log("Location value2:", region);
+					if (leaveType == 2 || leaveType == 3) {
+							$.post(
+								"<?php echo $this->url('leave', array('action' => 'getholidaysGpo'));?>",
+								{
+									start_date: formattedStartDate,
+									end_date: formattedEndDate
+								},
+								function(data) {
+									   $("#no_of_days").val(data.non_holiday_days);	
+									   var no_of_days = parseFloat(data.non_holiday_days);
+									calculateTotal(no_of_days);
+								},
+								'json'
+							);
+							if (formattedStartDate == formattedEndDate) {
+								$('#no_of_days').closest('.form-group').hide();
+								$('#half_day').closest('.form-group').show();
+							}else{
+								
+								$('#no_of_days').closest('.form-group').show();
+								$('#half_day').closest('.form-group').hide();
+							}
+						}
+						else if (leaveType == 7) {
+							$.post(
+								"<?php echo $this->url('leave', array('action' => 'getholidays'));?>",
+								{
+									start_date: formattedStartDate,
+									end_date: formattedEndDate
+								},
+								function(data) {
+									   $("#no_of_days").val(data.non_holiday_days);	
+									   var no_of_days = parseFloat(data.non_holiday_days);
+									calculateTotal(no_of_days);
+								},
+								'json'
+							);
+							if (formattedStartDate == formattedEndDate) {
+								$('#no_of_days').closest('.form-group').hide();
+								$('#half_day').closest('.form-group').show();
+							}else{
+								
+								$('#no_of_days').closest('.form-group').show();
+								$('#half_day').closest('.form-group').hide();
+							}
+						}
+						else{ 
+							$.post(
+								"<?php echo $this->url('leave', array('action' => 'getweekends'));?>",
+								{
+									start_date: formattedStartDate,
+									end_date: formattedEndDate
+								},
+								function(data) {
+									   $("#no_of_days").val(data.non_holiday_days);	
+									   var no_of_days = parseFloat(data.non_holiday_days);
+									calculateTotal(no_of_days);
+								},
+								'json'
+							);
+						}
+				}
+			}
+		}
+	/*Prohibit the leave balance to get deducted if no of days is more than balance */
+		var days = $('#no_of_days');
+		var casualleave = $('#casual_bal');
+		var earnedleave = $('#earned_bal');
+		var paternityleave = $('#paternity_bal');
+		var breaveleave = $('#breavement_bal');
+		var extraleave = $('#extraordinary_bal');
+		var maternityleave = $('#maternity_bal');
+		var medicalleave = $('#medical_bal');
+		var escortleave = $('#escort_bal');
+		var studyleave = $('#study_bal');
+		var prepleave = $('#prep_bal');
+		days.on('input', calculateTotal);
+		casualleave.on('input', calculateTotal);
+		paternityleave.on('input', calculateTotal);
+		earnedleave.on('input', calculateTotal);
+		breaveleave.on('input', calculateTotal);
+		extraleave.on('input', calculateTotal);
+		maternityleave.on('input', calculateTotal);
+		medicalleave.on('input', calculateTotal);
+		escortleave.on('input', calculateTotal);
+		studyleave.on('input', calculateTotal);
+		prepleave.on('input', calculateTotal);
+		function calculateTotal() {
+			var no_of_days_val = parseFloat(days.val().replace(',', '')) || 0;
+			var c_leave = parseFloat(casualleave.val().replace(',', '')) || 0;
+			var e_leave = parseFloat(earnedleave.val().replace(',', '')) || 0;
+			var pater_leave = parseFloat(paternityleave.val().replace(',', '')) || 0;
+			var breave_leave = parseFloat(breaveleave.val().replace(',', '')) || 0;
+			var extra_leave = parseFloat(extraleave.val().replace(',', '')) || 0;
+			var mater_leave = parseFloat(maternityleave.val().replace(',', '')) || 0;
+			var medical_leave = parseFloat(medicalleave.val().replace(',', '')) || 0;
+			var escort_leave = parseFloat(escortleave.val().replace(',', '')) || 0;
+			var study_leave = parseFloat(studyleave.val().replace(',', '')) || 0;
+			var prep_leave = parseFloat(prepleave.val().replace(',', '')) || 0;
+			var leaveType = $("#leave_type").val(); 
+			if (leaveType==2 && no_of_days_val > c_leave || leaveType==3 && no_of_days_val > e_leave || leaveType==1 && no_of_days_val > breave_leave ||
+			leaveType==4 && no_of_days_val > extra_leave || leaveType==5 && no_of_days_val > mater_leave || leaveType==6 && no_of_days_val > medical_leave || 
+			leaveType==7 && no_of_days_val > pater_leave || leaveType==8 && no_of_days_val > prep_leave ||leaveType==9 && no_of_days_val > study_leave || leaveType==11 && no_of_days_val > escort_leave
+		){
+				$('#submit_button').prop('disabled', true);
+				$('#no_of_days').closest('.form-group').hide();
+				$('#remarks').text('Please note: No. of leave days exceeds the balance.');
+				$('#remarks').css('color', 'red');
+			}else if (leaveType == 10 && no_of_days_val > 14) {
+        $('#submit_button').prop('disabled', true);
+        $('#no_of_days').closest('.form-group').hide();
+        $('#remarks').text('Please note: No. of leave days for leave type Pre-Birth Maternity Leave cannot exceed 14.');
+        $('#remarks').css('color', 'red');
+    }
+
+		
+		}
+		
+    });
+	
+</script>

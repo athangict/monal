@@ -1,0 +1,54 @@
+<?php // partial.phtml 
+  $scope = ($this->active == "scope")?"active":"";
+  $service = ($this->active == "service")?"active":"";
+  $fees = ($this->active == "fees")?"active":"";
+  $feestarriff = ($this->active == "feestarriff")?"active":"";
+  $fixedfactor = ($this->active == "fixedfactor")?"active":"";
+  $servicetarriff = ($this->active == "servicetarriff")?"active":"";
+  $postoffice = ($this->active == "postoffice")?"active":"";
+?>
+<br/>
+<ul class="nav nav-tabs padding-18" id="myTab">
+	<li class="<?php echo $scope; ?>">
+		<a href="<?php echo $this->url('masterpos', array('action' => 'scope')); ?>">
+			<i class="blue fa fa-address-card-o bigger-120"> </i>
+			<span class="hidden-xs">Scope</span>
+		</a>
+	</li>
+	<li class="<?php echo $service; ?>">
+		<a href="<?php echo $this->url('masterpos', array('action' => 'service')); ?>">
+			<i class="blue ace-icon fa fa-envelope-open bigger-120"> </i>
+			<span class="hidden-xs">Service</span>
+		</a>
+	</li>
+	<li class="<?php echo $fees; ?>">
+		<a href="<?php echo $this->url('masterpos', array('action' => 'fees')); ?>">
+			<i class="purple ace-icon fa fa-percent bigger-120"> </i>
+			<span class="hidden-xs">Fees</span>
+		</a>
+	</li>
+	<li class="<?php echo $feestarriff; ?>">
+		<a href="<?php echo $this->url('masterpos', array('action' => 'feestarriff')); ?>">
+			<i class="dark ace-icon fa fa-truck bigger-120"> </i>
+			<span class="hidden-xs">Fees Tarriff</span>
+		</a>
+	</li>
+	<!--li class="<?php //echo $fixedfactor; ?>">
+		<a href="<?php //echo $this->url('masterpos', array('action' => 'fixedfactor')); ?>">
+			<i class="green ace-icon fa fa-money bigger-120"> </i>
+			<span class="hidden-xs">Fixed Factors</span-->
+		</a>
+	</li>
+	<li class="<?php echo $servicetarriff; ?>">
+		<a href="<?php echo $this->url('masterpos', array('action' => 'servicetarriff')); ?>">
+			<i class="red ace-icon fa fa-usd bigger-120"> </i>
+			<span class="hidden-xs">Service Tarriff </span>
+		</a>
+	</li>
+	<li class="<?php echo $postoffice; ?>">
+		<a href="<?php echo $this->url('masterpos', array('action' => 'postoffice')); ?>">
+			<i class="blue ace-icon fa fa-envelope bigger-120"> </i>
+			<span class="hidden-xs">Post Office </span>
+		</a>
+	</li>
+</ul>

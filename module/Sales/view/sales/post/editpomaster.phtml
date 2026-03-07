@@ -1,0 +1,115 @@
+<?php
+/**
+ * 
+ * View -- of Stock/MasterController/editfuelAction
+ * 
+ */
+?>
+<?php 
+    foreach($this->pos as $fuel):
+        extract($fuel);        
+    endforeach;
+?>
+
+<form id="#form" method="post" action="<?php echo $this->url('postbox', array('action' => 'editpomaster', 'id' => $id)); ?>"  enctype="multipart/form-data" >                  
+    <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+        <h4 class="modal-title"> <i class="fa fa-pencil-square-o"></i>Edit Pomaster</h4>
+    </div>  <!-- /modal-header -->
+    
+    <div class="modal-body">       
+		<div class="panel panel-default">                       
+			<div class="panel-body"> 
+				<div class="form-group">
+					<label for="post_box_size" class="control-label">Post-box size</label>
+					<input type="text" class="form-control" name="post_box_size" id="post_box_size" value="<?php echo $post_box_size;?>" size="30" required> 
+				</div>
+				<div class="form-group">
+					<label for="key_charges" class="control-label">key charges</label>
+					<input type="text" class="form-control" name="key_charges" id="key_charges" value="<?php echo $key_charges;?>" size="30" required> 
+				</div>
+                <div class="form-group">
+					<label for="rate" class="control-label">Rate</label>
+					<input type="text" class="form-control" name="rate" id="rate" value="<?php echo $rate;?>" size="30" required> 
+				</div>
+                <div class="form-group">
+					<label for="amount" class="control-label">Amount</label>
+					<input type="text" class="form-control" name="amount" id="amount" value="<?php echo $amount;?>" size="30" required> 
+				</div>
+			</div>
+		</div>
+	</div> <!-- /modal-body -->    
+    <div class="modal-footer">
+        <button type="submit" class="btn btn-success"><i class="fa fa-check"></i> Save </button>
+        <button type="button" class="btn btn-warning" data-dismiss="modal" ><i class="fa fa-times"></i> Cancel </button> 
+    </div>
+</form>
+<script>
+$('document').ready(function(){
+	const fv = FormValidation.formValidation(document.getElementById('#form'), {
+		fields: {
+			post_box_size: {
+				validators: {
+					notEmpty: {
+						message: 'Edit Post box size'
+					},
+				}
+			},
+			key_charges: {
+				validators: {
+					notEmpty: {
+						message: 'Edit key_charges'
+					},
+				}
+			},
+           rate: {
+				validators: {
+					notEmpty: {
+						message: 'Edit rate'
+					},
+				}
+			},
+            amount: {
+				validators: {
+					notEmpty: {
+						message: 'Edit amounr'
+					},
+				}
+			},
+		},
+		plugins: {
+			trigger: new FormValidation.plugins.Trigger(),
+			bootstrap3: new FormValidation.plugins.Bootstrap3(),
+			submitButton: new FormValidation.plugins.SubmitButton(),
+			defaultSubmit: new FormValidation.plugins.DefaultSubmit(),
+		},
+	}).on('core.element.validated', function (e) {
+		if (e.valid) {
+			$('div#'+ e.field.replace('[]','') +'_chosen').removeClass('is-invalid');
+			$('div#'+ e.field.replace('[]','') +'_chosen').addClass('is-valid');
+		} else {
+			$('div#'+ e.field.replace('[]','') +'_chosen').removeClass('is-valid');
+			$('div#'+ e.field.replace('[]','') +'_chosen').addClass('is-invalid');
+		}
+	});
+});
+$('document').ready(function(){
+    // Form validation setup (your existing code)
+    const fv = FormValidation.formValidation(document.getElementById('#form'), {
+        // Your validation rules...
+    });
+
+    // Event listener for 'Key Charges' and 'Rate' fields
+    $('#key_charges, #rate').on('input', function() {
+        // Get the values entered in 'Key Charges' and 'Rate' fields
+        var keyCharges = parseFloat($('#key_charges').val()) || 0;
+        var rate = parseFloat($('#rate').val()) || 0;
+
+        // Calculate the total amount
+        var amount = keyCharges + rate;
+
+        // Update the 'Amount' field with the calculated value
+        $('#amount').val(amount.toFixed(2)); // Ensure two decimal places
+    });
+});
+</script>

@@ -1,0 +1,30 @@
+<?php
+/**
+ * View -- of Administration/MasterController/addactivity
+ * chophel@athang.com
+ */
+?>
+<?php 
+	foreach($this->postage as $row );?>
+<form id="#form" method="post" action="<?php echo $this->url('postage', array('action' => 'deletebulkbooking','id'=>$row['id'])); ?>" enctype="multipart/form-data">
+    <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+        <h4 class="modal-title"> <i class="ace-icon fa fa-plus-square-o"></i> <?php echo $this->title; ?></h4>
+    </div> 
+    <input type="" id="bulk_booking" name="bulk_booking" value="<?php echo $row['id']?>">    
+    <div class="modal-body">    
+		<div class="panel panel-default">                       
+			<div class="panel-body">
+				
+					<i class="ace-icon fa fa-trash fa-2x red"></i>
+					<b>Reminder: Incase of bulk booking, kindly go to the view page to delete the whole bulk.Do you want to continue to delete?</b>
+					<h5 class="widget-title grey lighter">
+				</h5>
+            </div>
+        </div>
+    </div>    
+    <div class="modal-footer">
+        <button type="submit" class="btn btn-danger"><i class="fa fa-check"></i> Delete </button>
+        <button type="button" class="btn btn-success" data-dismiss="modal" ><i class="fa fa-times"></i> Cancel </button> 
+    </div>  
+</form>  

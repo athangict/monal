@@ -1,0 +1,156 @@
+<?php
+/**
+ * 
+ * View -- of Accounts/ChartaccountController/editclassAction
+ * 
+ */
+?>
+<?php foreach($assettype as $assettype):
+        extract($assettype);
+		//echo '<pre>';print_r($assettype);
+    endforeach;//exit;?>
+<form id="#form" method="post" action="<?php echo $this->url('mastera', array('action' => 'editassettype', 'id' => $id)); ?>"  enctype="multipart/form-data" >                  
+    <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+        <h4 class="modal-title"> <i class="fa fa-pencil-square-o"></i> Edit Class </h4>
+    </div>  <!-- /modal-header -->
+    <div class="modal-body">
+        <div class="panel panel-default">
+            <div class="panel-body">  
+				<div class="row"> 
+					<div class="col-lg-6"> 
+						<div class="form-group">
+							<label for="code" class="control-label">Code</label>
+							<input type="text" class="form-control" name="code" id="code" value="<?php echo $code;?>" size="30" > 
+						</div> 
+						<div class="form-group">
+							<label for="name" class="control-label">Name</label>
+							<input type="text" id="name" name="name" class="form-control" value="<?php echo $name;?>" required>
+						 </div>
+					</div> 
+					<div class="col-lg-6"> 
+						<div class="form-group">
+							<label for="classid" class="control-label">Class</label>
+							<select class="form-control" id="classid" name="classid" data-placeholder="Select" required >
+								<option value=""></option>
+								<?php 
+							    foreach ($classes as $cls):
+									$selected=($class==$cls['id'])?"selected":"";
+								?>
+									<option value="<?php echo $cls['id'];?>"<?php echo $selected;?>>
+										<?php echo $cls['name'];?>
+									</option>
+								<?php
+								endforeach;?>
+							</select>
+						</div> 
+						<div class="form-group">
+							<label for="subhead" class="control-label">Subhead</label>
+							<select class="form-control chosen-widget" id="subhead" name="subhead" data-placeholder="Select" required >
+								<option value=""></option>
+								<?php 
+								foreach ($this->subheadObj->get(array('c.id'=>$class)) as $sbh):
+									$selected=($subhead==$sbh['id'])?"selected":"";
+								?>
+									<option value="<?php echo $sbh['id'];?>"<?php echo $selected;?>>
+										<?php echo $sbh['name'];?>
+									</option>
+								<?php
+								endforeach;
+								?>
+							</select>
+						</div>  
+					</div> 
+					<div class="form-group col-lg-6">
+						<label for="manual" class="control-label">Manually Depreciate</label>
+						<div class="radio">
+							<label>  
+								<input class="ace" type="radio" name="manual" id="manual"  value="1" <?php echo ($manual==1)?'checked':'';?>/>
+								<span class="lbl"> Yes </span>
+							</label> 
+							<label>  
+								<input class="ace" type="radio" name="manual" id="manual" value="0" <?php echo ($manual==0)?'checked':'';?>/>
+								<span class="lbl"> No </span>
+							</label> 
+						</div>	
+					</div>
+					<div class="form-group col-lg-6">
+						<label for="depreciation" class="control-label">Depreciation</label>
+						<select class="form-control chosen-widget" id="depreciation" name="depreciation" data-placeholder="Select" required >
+							<option value=""></option>
+							<?php foreach($depreSh as $dep):?>
+								<option value="<?php echo $dep['id'];?>" <?php echo ($dep_subhead==$dep['id'])?'selected':'';?>><?php echo $dep['name']; ?>
+							<?php endforeach;?>
+						</select>
+					</div>			
+				</div> 
+		    </div> 
+        </div> 
+    </div>  
+    <!-- /modal-body -->    
+    <div class="modal-footer">
+        <button type="submit" class="btn btn-success"><i class="fa fa-check"></i> Save </button>
+        <button type="button" class="btn btn-warning" data-dismiss="modal" ><i class="fa fa-times"></i> Cancel </button>
+    </div>
+</form>
+<script>
+$('document').ready(function(){
+	$('#classid').on('change',function(){
+		//alert($('#class_id').val());
+		$.post(
+			'<?php echo $this->url('mastera', array('action' => 'getsubhead')); ?>',
+			{
+				class_id: $(this).val(),
+			},
+			function(data){
+				//console.log(data);	
+				$('#subhead').html(data.subhead);	
+				$("#subhead").trigger("chosen:updated");			
+			},
+			'json'
+		);
+	});
+	const fv = FormValidation.formValidation(document.getElementById('#form'), {
+		fields: {
+			code: {
+				validators: {
+					notEmpty: {
+						message: 'Please provide Code .'
+					}
+				}
+			},
+			name: {
+				validators: {
+					notEmpty: {
+						message: 'Please provide Name.'
+					}
+				}
+			},
+			status: {
+				validators: {
+					notEmpty: {
+						message: 'Please select status.'
+					}
+				}
+			},
+		},
+		plugins: {
+			trigger: new FormValidation.plugins.Trigger(),
+			bootstrap3: new FormValidation.plugins.Bootstrap3(),
+			submitButton: new FormValidation.plugins.SubmitButton(),
+			defaultSubmit: new FormValidation.plugins.DefaultSubmit(),
+		},
+	}).on('core.element.validated', function (e) {
+		if (e.valid) {
+			$('div#'+ e.field.replace('[]','') +'_chosen').removeClass('is-invalid');
+			$('div#'+ e.field.replace('[]','') +'_chosen').addClass('is-valid');
+		} else {
+			$('div#'+ e.field.replace('[]','') +'_chosen').removeClass('is-valid');
+			$('div#'+ e.field.replace('[]','') +'_chosen').addClass('is-invalid');
+		}
+	});
+	$('form select').chosen().change(function () {
+		fv.revalidateField($(this).attr('name'));
+	});
+});
+</script>

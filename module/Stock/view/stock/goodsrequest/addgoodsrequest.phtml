@@ -1,0 +1,177 @@
+<?php
+/**
+ * 
+ * View -- of Stock/GoodsrequestController/addgoodsrequestAction
+ * 
+ */
+  $this->headTitle($this->title);
+?>
+<?php echo $this->partial('stock/dispatch/partial.phtml', array('active' => 'request')); ?> <br/>
+<div class="row">
+	<div class="col-lg-12">
+		<div class="widget widget-box">
+			<div class="widget-header">
+				<h5 class="widget-title lighter smaller">
+					<i class="fa fa-asterisk"></i>&nbsp;&nbsp;New Goods Request
+                </h5>	
+			</div>
+			<div class="widget-body">
+				<div class="widget-main">
+					<form id="#form" method="post" action="<?php echo $this->url('goodsrequest', array('action'=>'addgoodsrequest')); ?>"  enctype="multipart/form-data" >    
+						<div class="row">
+							<div class="form-group col-lg-3">
+								<label for="gr_date" class="control-label">GRN Date</label>
+								<div class="date input-group" id="gr_date" data-date="<?php echo date('Y-m-d');?>" data-date-format="yyyy-mm-dd" >
+									<input class="form-control span2" name="gr_date" id="gr_date" type="text" value="<?php echo date('Y-m-d');?>" placeholder="GRN Date" readonly required>
+									<span class="input-group-addon add-on"><i class="fa fa-calendar"></i></span>
+								</div>
+							</div> 
+							<div class="form-group col-lg-3">
+								<label for="gr_type" class="control-label">GRN Type</label>
+								<select id="gr_type" name="gr_type" class="form-control" data-placeholder="Select" required>
+									<option value=""></option>	
+									<!--option value="1">Purchase Request</option-->
+									<option value="2">Dispatch Request</option>
+								</select> 
+							</div>
+							<div class="form-group col-lg-3">
+								<label for="location" class="control-label">From Location</label>
+								<select id="location" name="location" class="form-control" data-placeholder="Select" required>
+									<option value=""></option>
+									<?php foreach ($regions as $region): ?>
+									<optgroup label="<?php echo $region['region'];?>">
+										<?php
+											$locations = $locationObj->get(array('region'=>$region['id']));
+											foreach ($locations as $location):
+										?>
+										 <option value="<?php echo $location['id']; ?>">
+											<?php echo $location['location']; ?>
+										 </option>
+										<?php endforeach;?>
+									</optgroup>
+									<?php endforeach;?>									
+								</select> 
+							</div> 
+							<div class="form-group col-lg-3">
+								<label for="to_location" class="control-label">To Location</label>
+								<select id="to_location" name="to_location" class="form-control" data-placeholder="Select" required>
+									<option value=""></option><?php
+										$locations = $locationObj->get($this->user_location);
+										foreach ($locations as $location):
+										?>
+										 <option value="<?php echo $location['id']; ?>" selected>
+											<?php echo $location['location']; ?>
+										 </option>
+										<?php endforeach;?>															
+								</select> 
+							</div> 
+						</div>
+						<div class="space-12"></div>
+						<div class="row"> 	
+							<div class="col-lg-9"> 
+								<button type="submit" class="btn btn-success"><i class="fa fa-check"></i> Save </button>
+								<button type="button" class="btn btn-warning" onclick="window.location.href='<?php echo $this->url('goodsrequest');?>'" ><i class="fa fa-times"></i> Cancel </button> 					
+							</div>
+						</div>
+					</form>  
+				</div> <!-- end of widget-main -->  
+	        </div> <!-- end of widget-body -->
+        </div> <!-- end of widget widget-default -->
+    </div> <!-- end of col-lg-12 -->
+</div> <!-- end of row -->
+
+<script type="text/javascript">
+$(function() {
+	$('#gr_date').datepicker();
+	$('#gr_date').on('changeDate',function(){
+		$('form').formValidation('revalidateField', $(this).attr('id'));
+	});
+	$('#required_date').datepicker();
+	$('#required_date').on('changeDate',function(){
+		$('form').formValidation('revalidateField', $(this).attr('id'));
+	});
+
+	$('#trdetails_table').goodsrequest({
+		getItems:'<?php echo $this->url("goodsrequest", array("action" => "getitembyactivity"));?>',
+		getUomStockQty:'<?php echo $this->url("goodsrequest", array("action" => "getuomstockqty"));?>',
+		getUomChange:'<?php echo $this->url("goodsrequest",array("action" => "getuomchange"));?>',
+	});
+
+	/******** formValidation *************/
+	const fv = FormValidation.formValidation(document.getElementById('#form'), {
+		fields: {
+			'grn_date': {
+				validators: {
+					notEmpty: {
+						message: 'Please select goods request date'
+					}
+				}
+			},
+			'grn_type': {
+				validators: {
+					notEmpty: {
+						message: 'Please select type.'
+					}
+				}
+			},   
+			'location': {
+				validators: {
+					notEmpty: {
+						message: 'Please select location.'
+					}
+				}
+			},
+			'activity': {
+				validators: {
+					notEmpty: {
+						message: 'Please select activity.'
+					}
+				}
+			},   
+			'required_date': {
+				validators: {
+					notEmpty: {
+						message: 'Please select required date.'
+					}
+				}
+			},   
+			'item[]': {
+				validators: {
+					notEmpty: {
+						message: 'Please select item.'
+					}
+				}
+			},
+			'uom[]':{
+				validators: {
+					notEmpty: {
+						message: 'Please select uom.'
+					}
+				}
+			}, 
+			'quantity[]':{
+				validators: {
+					notEmpty: {
+						message: 'Please provide quantity.'
+					}
+				}
+			}             
+		},
+		plugins: {
+			trigger: new FormValidation.plugins.Trigger(),
+			bootstrap3: new FormValidation.plugins.Bootstrap3(),
+			submitButton: new FormValidation.plugins.SubmitButton(),
+			defaultSubmit: new FormValidation.plugins.DefaultSubmit(),
+		},
+	}).on('core.element.validated', function (e) {
+		if (e.valid) {
+			$('div#'+ e.field.replace('[]','') +'_chosen').removeClass('is-invalid');
+			$('div#'+ e.field.replace('[]','') +'_chosen').addClass('is-valid');
+		} else {
+			$('div#'+ e.field.replace('[]','') +'_chosen').removeClass('is-valid');
+			$('div#'+ e.field.replace('[]','') +'_chosen').addClass('is-invalid');
+		}
+	});
+});
+</script>
+

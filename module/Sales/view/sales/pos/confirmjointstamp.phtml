@@ -1,0 +1,31 @@
+<?php 
+/**
+ * View -- of Implementation/ImplementationController/confirmimplementationAction
+ * chophel@athang.com
+ */
+	$this->headTitle($this->title);
+?>
+<?php foreach($sales as $row);?>
+<form id="#form" method="post" action="<?php echo $this->url('pos', array('action' => 'confirmjointstamp')); ?>" enctype="multipart/form-data">                 
+<div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+        <h4 class="modal-title"> <i class="fa fa-checked"></i> Confirm Joint Stamp Out</h4>
+    </div>     
+    <div class="modal-body">       
+		<div class="panel panel-default">                       
+			<div class="panel-body">
+              <input type="hidden" value="<?php echo $row['id'];?>" name="sales" id="sales"/>
+              <input type="hidden" value="<?php echo $row['location'];?>" name="location" id="location" />		
+              <input type="hidden" value="<?php echo $row['sales_no'];?>" name="sales_no" id="sales_no" />	
+			  <input type="hidden" value="<?php echo $row['sales_date'];?>" name="sales_date" id="sales_date" />			
+		        <div class="alert alert-primary">
+			        Are you sure you want to confirm Joint Stamp No. <strong><?php echo $row['sales_no'];?></strong>
+		        </div>
+			</div>
+		</div>
+	</div> <!-- /modal-body -->        
+	<div class="modal-footer">
+		<button type="submit" class="btn btn-success"><i class="icon ti ti-checkbox"></i> Commit </button>
+		<button type="button" class="btn btn-warning" data-dismiss="modal" ><i class="fa fa-times"></i> Cancel </button> 
+    </div>  
+</form>  

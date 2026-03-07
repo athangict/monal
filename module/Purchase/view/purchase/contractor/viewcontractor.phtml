@@ -1,0 +1,170 @@
+<?php
+/**
+ * View -- of Purchase/ContractorController/viewcontractor
+ */
+?>
+<style>
+	.mytable tr th,.mytable tr td {
+		padding:5px;
+	}
+</style>
+<?php 
+	foreach($contractor_invoice as $con_inv):
+		extract($con_inv);
+		$con_inv_id = $id;
+		$con_inv_status = $status;
+		//echo "<pre>";print_r($con_inv);
+	endforeach;
+?>
+<div class="row">
+	<div class="col-lg-12">
+		<div class="widget widget-box">
+			<div class="widget-header">
+				<h5 class="widget-title lighter smaller">
+					# Contractor Invoice Details:<strong> &nbsp;&nbsp;<?php echo $invoice_no; ?> | <?php echo $activity ?> | <?php echo $contractor; ?></strong>&nbsp;
+					<?php $this->status($con_inv_status);?>
+				</h5>
+				<div class="widget-toolbar hidden-xs">
+					<?php if($con_inv_status == 3):?> 
+						<button type="button" id="payment_btn" class="btn btn-white btn-warning btn-bold btn-xs"><i class="fa fa-money"></i> Contractor Payment </button>
+					<?php endif;?>
+				</div>
+				<div class="widget-toolbar hidden-xs">
+					<a style='cursor:pointer' id="print">
+						<i class="ace-icon fa fa-file-pdf-o red"></i>
+					</a>
+				</div>
+			</div>
+			<div class="widget-body">
+				<div class="widget-main padding-12">
+					<div id="report-print">
+						<div class="row" id="convert-tb0">
+							<div class="col-lg-8" id="convert-tb1">
+								<ul class="list-unstyled spaced">
+									<li>
+										<i class="ace-icon fa fa-caret-right blue"></i>
+										Invoice No : <b class="red"><a target="_blank" href="<?php echo $this->url('transaction', array('action'=>'viewtransaction', 'id'=>$con_inv['transaction_id']));?>"><?php echo $invoice_no; ?></a></b>
+									</li>
+									<li>
+										<i class="ace-icon fa fa-caret-right blue"></i>
+										Location : <b class="red"><?php echo $location; ?></b>
+									</li>
+									<li>
+										<i class="ace-icon fa fa-caret-right blue"></i>
+										Start Date : <b class="red"><?php echo $from_date; ?></b>
+									</li>
+									<li>
+										<i class="ace-icon fa fa-caret-right blue"></i>
+										Contractor : <b class="red"><?php echo $contractor; ?></b>
+									</li>
+									<li>
+										<i class="ace-icon fa fa-caret-right blue"></i>
+										Payable Amount : <b class="red"><?php echo $this->currency($payable_amount);?></b>
+									</li>
+								</ul>
+							</div>
+							<div class="col-lg-4" id="convert-tb2">
+								<ul class="list-unstyled spaced">
+									<li>
+										<i class="ace-icon fa fa-caret-right blue"></i>
+										Invoice Date : <b class="red"> <?php echo $invoice_date; ?></b>
+									</li>
+									<li>
+										<i class="ace-icon fa fa-caret-right blue"></i>
+										Activity : <b class="red"> <?php echo $activity; ?></b>
+									</li>
+									<li>
+										<i class="ace-icon fa fa-caret-right blue"></i>
+										End Date : <b class="red"> <?php echo $to_date; ?></b>
+									</li>
+									<li>
+										<i class="ace-icon fa fa-caret-right blue"></i>
+										Deduction Amount : <b class="red"><?php echo $this->currency($deduction);?></b>
+									</li>
+								</ul>
+							</div>
+						</div>
+						<div class="row">
+							<div class="col-lg-12">
+								<ul class="list-unstyled spaced">
+									<li>
+										<i class="ace-icon fa fa-caret-right blue"></i>Note: <b class="red"><?php echo $note;?> </b>
+									</li>
+								</ul>
+							</div>
+						</div>
+						<div class="space-6"></div>
+						<div class="row">
+							<div class="col-lg-12" >
+								<table class="table" style="border-top:2px solid #ddd;">
+									<thead>
+										<tr>
+											<th>#</th>
+											<th>Charges</th>
+											<th>Qty Processed (MT|CASE)</th>
+											<th>Rate (<?php echo $this->currency_code();?>)</th>
+											<th>Amount (<?php echo $this->currency_code();?>)</th>
+										</tr>
+									</thead>
+									<tbody>
+									<?php 
+										$sl=1;
+										foreach($con_inv_details as $con_inv_detail):
+									?>
+										<tr>
+											<td><?php echo $sl++;?></td>
+											<td><b><?php echo $this->worktypeObj->getColumn($con_inv_detail['work_type'],'work_type');?></b></td>
+											<td><?php echo $con_inv_detail['qty'];?></td>
+											<td><?php echo $con_inv_detail['rate'];?></td>
+											<td>
+												<?php 
+													$total += $con_inv_detail['amount'];
+													echo $con_inv_detail['amount'];
+												?>
+											</td>
+										</tr>
+									<?php endforeach;?>
+										<tr style="border-top:2px solid #ddd;border-bottom:2px solid #ddd;">
+											<th colspan="3"><?php echo $this->numtoWords($total);?></th>
+											<th colspan="2">
+												Net Invoice Amount : <?php echo $this->currency($total);?>
+											</th>
+										</tr>	
+									</tbody>
+								</table>
+							</div>
+						</div>
+					</div>
+					<div class="row">
+						<div class="col-lg-3">
+							<a href="<?php echo $this->url('contractor', array('action'=>'viewdetails', 'id'=>$con_inv_id));?>" class="btn btn-grey"> <i class="fa fa-eye"></i> View Details </a>
+						</div>
+						<div class="col-lg-6"></div>
+						<div class="col-lg-3">
+							<?php if($status == '1'):?>
+								<a href="<?php echo $this->url('contractor', array('action'=>'editcontractor', 'id'=>$con_inv_id));?>" class="btn btn-info"> <i class="fa fa-pencil"></i> Edit </a>
+								<a href="<?php echo $this->url('contractor', array('action'=>'commitcontractor', 'id'=>$con_inv_id));?>" class="btn btn-success"> <i class="fa fa-check-square-o"></i>Commit</a>
+							<?php endif;?>
+						</div>
+					</div>
+					<!-- Upload and Download file attachments -->			
+					<?php   
+					   echo $this->partial('partial/attachment.phtml', array('process' => '5', 'process_id'=> $con_inv_id , 'status' => $con_inv_status));
+					?>					
+				    <!-- End of attachment -->
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+<script type="text/javascript">
+	$('#payment_btn').on('click',function(){
+		window.document.location = "<?php echo $this->url('payment', array('action' => 'addpayment','id' => "3-".$con_inv_id));?>";
+	});
+
+	$('#print').genpdfinvoice({
+		content: '#report-print',
+		src:"<?php echo $this->url('pdfxls', array('action' => 'pdf'));?>",
+		orentation:"P",//L =landscape, P = potrait
+	});
+</script>

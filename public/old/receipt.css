@@ -1,0 +1,28 @@
+/*** css for receipt ***/
+div.print_receipt {
+	font-family : consolas;
+	font-size : 12px;
+}
+p.title {
+	text-align :  center;	
+}
+hr {
+    border-top: dashed 1px;
+	font-size : 12px;
+}
+table#salesTable{
+	font-size : 12px;
+}
+thead th {
+	border-bottom:1px dashed;
+	padding-right:1em;
+	text-align:left;
+}
+div.net_payment {
+	font-family : consolas;
+	font-size : 12px;
+}
+div.date_note {
+	font-family : consolas;
+	font-size : 12px;
+}

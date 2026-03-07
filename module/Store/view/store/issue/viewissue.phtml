@@ -1,0 +1,271 @@
+<?php
+/**
+ * 
+ * View -- of Stock/StockController/viewgoodsrequest
+ * 
+ */
+?>
+<?php echo $this->partial('store/issue/partial.phtml', array('active' => 'issue')); ?> <br/>
+<?php 
+	foreach($issues as $issue):
+		extract($issue);
+		$issues_id = $id;
+		$issue_status = $status;
+	endforeach; 
+	$subRoles = $this->userRoleObj->get(array('user'=>$this->userID, 'subrole'=>array('1','3','15','22'))); 
+	$depoyManager = $this->userRoleObj->get(array('user'=>$this->userID, 'subrole'=>array('9'))); 
+	if(sizeof($subRoles) > 0 || (sizeof($depoyManager)>0 && ($from_location == $this->user_location || $to_location == $this->user_location))){
+		/* checks whether the user is admin, CEO, FECD Manager || user belongs to source or Destination Location or depoy Manager */
+		$flag = true; 
+	}	
+	else{ 
+	   $flag = false; 
+	}
+?>
+<style>
+	.mytable tr th,.mytable tr td {
+		padding:5px;
+	}
+</style>
+<?php if($flag):  ?>
+<div class="row">
+	<div class="col-lg-12">
+		<div class="widget widget-box">
+			<div class="widget-header">
+				<h5 class="widget-title lighter smaller">
+					# Issue Details:
+					<strong>&nbsp;&nbsp;<?php echo $challan_no; ?> | <?php echo $this->groupObj->getColumn($item_group,'name'); ?> |
+					<?php echo $this->activityObj->getColumn($cost_center,'activity');?></strong>&nbsp;
+					<?php $this->status($status); ?>
+				</h5>
+				<div class="widget-toolbar hidden-xs">
+					<?php if($issue_status == 3):?>
+						<button type="button" id="tc_btn" class="btn btn-white btn-success btn-bold btn-xs"><i class="fa fa-money"></i> Transportation Charge </button>
+					<?php endif;?>
+				</div>
+				<div class="widget-toolbar hidden-xs">
+				 <div class="btn-group">
+					<a class="btn btn-xs btn-danger" data-toggle="modal" data-target="#modal" href="<?php echo $this->url('acl', array('action' => 'activitylog', 'id' => "11-".$issue_id)); ?>" title="View Activity Logs">
+						<i class="ace-icon fa fa-plus bigger-120" ></i>  
+					</a> &nbsp;|
+					</div>
+					<a style='cursor:pointer' id="print">
+						<i class="ace-icon fa fa-file-pdf-o red"></i>
+					</a>
+				</div>	
+			</div>
+			<div class="widget-body">
+				<div class="widget-main padding-12">
+					<div id="report-print">
+						<div class="row" id="convert-tb0">
+							<div class="col-lg-8" id="convert-tb1">
+								<ul class="list-unstyled spaced">
+									<li>
+										<i class="ace-icon fa fa-caret-right blue"></i>
+										<b>Challan No. : </b> <?php echo $challan_no;?>
+									</li>
+									<li>
+										<i class="ace-icon fa fa-caret-right blue"></i>
+										<b>Source Location : </b><?php echo $from=$this->locationObj->getColumn($from_location,'location'); ?>
+									</li>
+									<li>
+										<i class="ace-icon fa fa-caret-right blue"></i>
+										<b> Activity  : </b><?php echo $this->activityObj->getColumn($cost_center,'activity'); ?>
+									</li>
+									<li>
+										<i class="ace-icon fa fa-caret-right blue"></i>
+										<b>Name of Driver : </b><?php echo $this->employeeObj->getColumn($fcb_transport,'full_name'); ?> 
+									</li>
+									<?php if($dispatch_status == 3 || $dispatch_status == 4 || $dispatch_status == 10):?>
+									<li>
+										<i class="ace-icon fa fa-caret-right blue"></i>
+							 			 <b>Received By : </b><?php echo $this->employeeObj->getColumn($received_by,'full_name');?>
+							 		</li>
+									<?php endif;?>
+									<li>
+										<i class="ace-icon fa fa-caret-right blue"></i>
+										Transaction Voucher No. : <b class="red"><a target="_blank" href="<?php echo $this->url('transaction', array('action'=>'viewtransaction', 'id' => $transaction_id));?>"><?php echo $this->transactionObj->getColumn(array('id' => $transaction_id),'voucher_no');?> </a> </b>
+									</li>
+								</ul>
+							</div>
+							<div class="col-lg-4" id="convert-tb2">
+								<ul class="list-unstyled spaced">
+									<li>
+										<i class="ace-icon fa fa-caret-right blue"></i>
+										 <b>Dispatch Date : </b> <?php echo $issue_date; ?>
+									</li>
+									<li>
+										<i class="ace-icon fa fa-caret-right blue"></i>
+										<b> Destination Location : </b> <?php echo $this->locationObj->getColumn($to_location,'location');?>
+									</li>
+									<li>
+										<i class="ace-icon fa fa-caret-right blue"></i>
+										<b> Item Group  : </b><?php echo $this->groupObj->getColumn($item_group,'name'); ?>
+									</li>
+									<li>
+										<i class="ace-icon fa fa-caret-right blue"></i>
+										<b>Vehicle No : </b><?php echo $vehicle_no; ?>
+									</li>
+									<?php if($issue_status == 3 || $issue_status == 4 || $issue_status == 10):?>
+									<li>
+										<i class="ace-icon fa fa-caret-right blue"></i>
+							 			<b>Received On : </b><?php echo $received_on;?>
+							 		</li>
+									<?php endif;?>
+								</ul>
+							</div>
+						</div>
+						<div class="row">
+							<div class="col-lg-12">
+								<ul class="list-unstyled spaced">
+									<li>
+										<i class="ace-icon fa fa-caret-right blue"></i><b>Note: </b><?php echo $note;?> 
+									</li>
+								</ul>
+							</div>
+						</div>
+						<div class="space-6"></div>
+						<div class="row">
+							<div class="col-lg-12" >
+								<table class="table" style="border-top:2px solid #ddd;">
+									<thead>
+										<tr>
+											<th>#</th>
+											<th>Item</th>
+											<?php if($item_group == 1):?>
+											<th>Asset</th>
+											<?php else: ?>
+											<th>Store Spare</th>
+											<?php endif; ?>
+											<th>UOM</th>
+											<th>Issued Qty</th>
+                                                                                        <th>Rate</th>
+											<?php if($issue_status == 3 || $issue_status == 4 || $issue_status == 10):?>
+											<th>Damaged Qty</th>
+											<th>Shortage Qty</th>
+											<th>Accepted Qty</th>
+											<th>Sound Qty</th>
+											<?php endif;?>
+                                                                                        <th>Amount</th>
+											<th>Remarks</th>
+										</tr>
+									</thead>
+									<tbody>
+									<?php
+									    $i= 1;
+										$issue_details = $this->issue_detailsObj->get(array('issue'=>$issues_id)); 
+											foreach($issue_details as $tdrow):
+											//echo "<pre>"; print_r($tdrow); exit;
+					 				?>	
+											<tr>
+											    <td><?php echo $i++;?></td>
+												<td><?php echo $tdrow['item'];?></td>
+												<?php
+													$selected_item = $this->itemObj->get($tdrow['item_id']);
+													foreach($selected_item as $item):
+														
+														if($item['item_group_id']==1):
+															$assetssp = $this->assetObj->getColumn($tdrow['assetssp'],'asset');
+															$from_quantity = $this->asset_detailsObj->getColumn(array('asset'=>$tdrow['assetssp'],'location'=>$from_location),'quantity');
+															$to_quantity = $this->asset_detailsObj->getColumn(array('asset'=>$tdrow['assetssp'],'location'=>$to_location),'quantity');
+															
+														else: 
+															$assetssp = $this->sspObj->getColumn($tdrow['assetssp'],'storespare');
+															$from_quantity = $this->ssp_detailsObj->getColumn(array('storespare'=>$tdrow['assetssp'],'location'=>$from_location),'quantity');
+															$to_quantity = $this->ssp_detailsObj->getColumn(array('storespare'=>$tdrow['assetssp'],'location'=>$to_location),'quantity');
+															
+														endif;
+												?>
+												<td><?php echo $assetssp;?></td>
+												<td><?php echo $this->uomObj->getColumn($tdrow['uom'],'code');?></td>
+												<td><?php echo $tdrow['quantity'];?></td>
+                                                                                                <td><?php echo $tdrow['rate'];?></td>
+												<?php if($issue_status == 3 || $issue_status == 4 || $issue_status == 10):?>
+													<td><?php echo $tdrow['demage_quantity'];?></td>
+													<td><?php echo $tdrow['shortage_quantity'];?></td>
+													<td><?php echo $tdrow['accepted_quantity'];?></td>
+													<td><?php echo $tdrow['sound_quantity']; ?></td>
+												<?php endif;?>
+                                                                                                											    <td><?php echo $tdrow['amount']; ?></td>
+
+												<td><?php echo $tdrow['remarks'];?></td>
+											</tr>
+										<?php endforeach; endforeach; ?>
+									</tbody>
+								</table>
+							</div>
+						</div>
+                        <div class="space-32"></div>
+						<?php if($issue_status == '2'):?>
+						<div class="row" id="convert-tb0" style='text-align:center;'>
+							<div class="col-lg-4" id="convert-tb1">
+								Consignor's Signature
+							</div>
+							<div class="col-lg-4" id="convert-tb1">
+								Driver's Signature
+							</div>
+							<div class="col-lg-4" id="convert-tb2">
+								Consignee's/Receiver's Signature
+							</div>
+						</div>
+						<?php endif;?>
+					</div>
+					<div class="row">
+						<div class="col-lg-12" style="text-align: right">
+							<?php if($issue_status == '1' && $this->user_location == $from_location && sizeof($depoyManager)>0):?>
+								<a href="<?php echo $this->url('inissue', array('action'=>'editissue', 'id'=>$issues_id));?>" class="btn btn-info"> <i class="fa fa-pencil"></i> Edit </a>
+								<a href="<?php echo $this->url('inissue', array('action'=>'pendingissue', 'id'=>$issues_id));?>" class="btn btn-warning" data-toggle="modal" data-target="#modal"> <i class="fa fa-plane"></i> Issue </a>
+							<?php elseif(($issue_status == '2'|| $issue_status == '10') && sizeof($depoyManager)>0):?>
+								<?php if($user_location == $from_location && $issue_status != '10'): ?>
+									<a class="btn btn-primary" data-tooltip="tooltip" data-toggle="modal" data-target="#modal" data-placement="top" title="Revice" href="<?php echo $this->url('inissue', array('action'=>'reviceissue', 'id'=>$issue_id));?>" >
+										<i class="fa fa-pencil-square-o"></i> Revise </a>
+									</a>
+								<?php endif;?>
+								<?php 
+									$admin_locs = $this->usersObj->getColumn($userID,'admin_location');
+									$admin_loc_array = explode(',',$admin_locs);
+									if(in_array($to_location, $admin_loc_array)):
+									//if($this->user_location == $to_location):
+								?>
+									<a href="<?php echo $this->url('inissue',array('action'=>'receiveissue','id'=>$issues_id));?>" class="btn btn-danger"><i class="fa fa-arrow-circle-o-down"> Receive </i></a>							
+								<?php endif; ?>
+								<?php if(in_array($to_location, $admin_loc_array) && $issue_status == '10' ):?>
+								   <a href="<?php echo $this->url('inissue',array('action'=>'confirmreceive','id'=>$issues_id));?>" class="btn btn-success">
+									<i class="fa fa-check-square-o"> Confirm </i></a>
+								<?php endif; ?>
+							<?php endif;?>
+						</div>
+					</div>
+					<!-- Upload and Download file attachments -->			
+					<?php   
+					   echo $this->partial('partial/attachment.phtml', array('process' => '11', 'process_id'=> $issues_id , 'status' => $issue_status));
+					?>					
+				    <!-- End of attachment -->
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+<?php 
+else: ?> 
+    <div class="alert alert-success fade in"> 
+	    You don't have privilege to view the details of this dispatch. 
+	</div>
+<?php endif; ?>
+<!-- for modal -->
+<div id="modal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+	<div class="modal-dialog">
+		<div class="modal-content">
+		</div>
+	</div>
+</div>
+<script type="text/javascript">
+	$('#tc_btn').on('click',function(){
+		window.document.location = "<?php echo $this->url('transporter', array('action' => 'viewtranspcharge','id' => $tc_id));?>";
+	});
+	$('#print').genpdfinvoice({
+		content: '#report-print',
+		src:"<?php echo $this->url('pdfxls', array('action' => 'pdf'));?>",
+		orentation:"L",//L =landscape, P = potrait
+	});
+</script>

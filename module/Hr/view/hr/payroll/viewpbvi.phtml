@@ -1,0 +1,168 @@
+<?php
+/**
+ * 
+ * View -- of Hr/PayrollController/salaryAction
+ * 
+ */
+	$this->headTitle($this->title);
+    foreach($this->pbviObj->get($pbvi_id) as $bonus);
+	
+?>
+<div class="row">	
+	<form>				
+		<div class="col-lg-2">
+			<!-- <label for="year" class="control-label">Year </label>
+			<select class="form-control" name="year" id="year" data-placeholder="Select" required >
+				<option value=""></option>
+				<?php for($y=date('Y');$y >2022;$y--):
+					$selected = ($year == $y)?'selected':'';?>
+					<option value="<?php echo $y;?>" <?php echo $selected;?>>
+						<?php echo $y; ?>
+					</option>
+				<?php endfor; ?>
+			</select>
+		</div>
+		<div class="col-lg-2">
+			<label for="loc" class="control-label">Location </label>
+			<select class="form-control" name="loc" id="loc" data-placeholder="Select" required >
+				<option value="-1">All</option>
+				<?php foreach($locationlist as $locationlists):?>
+					<option value="<?php echo $locationlists['id'];?>" <?php echo($locationlists['id'] == $location)?'selected':'';?>>
+						<?php echo $locationlists['location']; ?>
+					</option>
+				<?php endforeach; ?>
+			</select>
+		</div>
+		<div class="form-group col-lg-1">
+			<label class="control-label"> </label>
+			<button type="button" class="btn btn-sm btn-info" onclick="refresh()" ><i class="fa fa-refresh"></i> Generate</button>
+		</div> -->
+		<div class="form-group col-lg-3"></div>
+		<div class="form-group col-lg-4"><br />
+			<div><?php echo $this->button(2);?></div>
+			<div class="pull-right tableTools-container"></div>
+		</div>
+	</form>
+</div>
+<div class="hr dotted"></div>
+<div class="widget widget-box transparent">
+	<div class="widget-header">
+		<h4 class="widget-title"> 	
+			PBVI for the Year <strong><?php echo $bonus['year'];?></strong>
+		</h4>
+		<div class="widget-toolbar">
+			
+		</div>
+	</div>
+	<div class="widget-body">
+		<div class="widget-main">
+			<div class="row"> 
+				<table class="table card-table text-nowrap" id="dataTables">
+					<thead>
+						<tr>
+							<th>#</th>
+							<th>Employee</th>
+							<th>Location</th>
+                            <th>Annual Basic Pay</th>
+                            <th>Percentage</th>
+                            <th>Gross Amount</th>
+                            <th>TDS</th>
+                            <th>Other Deduction</th>
+                            <th>Net Amount</th>
+							<?php if($this->button(1)!=""):?>
+								<th class="no-sort no-printpdf">Action</th>
+							<?php endif;?>
+						</tr>
+					</thead>
+					<tbody>
+						<?php
+						$i = 1; 
+						$total_salary =0;$total_gross =0;$total_tds =0;$total_ded =0;$total_net=0;
+                       
+						foreach ($pbvid as $row):
+						?> 
+							<tr >
+								<td><?php echo $i; ?> </td>
+								<td><strong><?php echo $this->employeeObj->getColumn($row['employee'],'full_name').' ('.$this->employeeObj->getColumn($row['employee'],'emp_id').')'; ?></strong></td>
+								<td><?php echo $this->locationObj->getColumn($row['location'],'location');?></td>
+                                <td><?php echo $row['gross_salary']; ?></td>
+								<td><?php echo $row['percentage']; ?></td>
+								<td><?php echo $row['gross']; ?></td>
+                                <td><?php echo $row['tds']; ?></td>
+                                <td><?php echo $row['other_deduction']; ?></td>
+                                <td><?php echo $row['net']; ?></td>
+								<td><?php echo ($bonus['status']!=4 )?$this->button(1, $row['id']):$this->status($bonus['status']);?></td>    
+							</tr>
+						<?php 
+						$i++;
+						$total_salary=$total_salary+$row['gross_salary'];
+                        $total_gross=$total_gross+$row['gross'];
+                        $total_tds=$total_tds+$row['tds'];
+                        $total_ded=$total_ded+$row['other_deduction'];
+                        $total_net=$total_net+$row['net'];
+						endforeach;  
+						?>
+                        <tr >
+								<td> </td>
+								<td></td>
+								<td><b>Total</b></td>
+                                <td><?php echo $total_salary; ?></td>
+								<td></td>
+								<td><?php echo $total_gross; ?></td>
+                                <td><?php echo $total_tds; ?></td>
+                                <td><?php echo $total_ded; ?></td>
+                                <td><?php echo $total_net; ?></td>
+								<td></td>    
+							</tr>
+					</tbody>
+				</table>
+			</div>			
+		<!-- <div class="row">
+			<div class="col-lg-12">
+				<h3 class="widget-title"> Sumarray: </h3>
+				<div class="hr dotted"></div>
+				<div class="col-md-3">
+					<label> Total Employee: </label> <strong><?php echo $i-1;?></strong>
+				</div>
+				<div class="col-md-3">
+					<label> Total Annual Basic Pay </label> <strong><?php echo number_format((float)$total, 2, '.', ',');?></strong>
+				</div>
+			</div>
+		</div> -->
+			<div class="hr dotted"></div>
+			<div class="space-12"></div>
+			<div class="row">
+				<div class="col-lg-12">
+					<div class="alert alert-warning"> 
+					<?php foreach($pbvid as $pbvids);
+					if(sizeof($pbvid)>0):
+					if($bonus['status']!=4):?>
+						<strong>Warning!</strong> Once you submit this PBVI you cannot alter any data, So check it and make sure before submitting.
+						<?php else:?>
+					PBVI has been Submitted.
+						<?php endif;?>
+					</div>
+					<center>
+						<?php if($bonus['status']!=4 ):?>
+						<a class="btn btn-success" data-toggle="modal" data-target="#modal" href="<?php echo $this->url('payroll', array('action'=>'submitpbvi','id'=>$bonus['id']));?>"   >
+							Submit PBVI for the Year <?php echo $bonus['year'];?>
+						</a>
+						<?php endif;endif;?>
+					</center>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+<!--for modal -->
+<div id="modal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+	<div class="modal-dialog">
+		<div class="modal-content">
+		</div>
+	</div>
+</div>
+<script>
+	$('document').ready(function(){
+		$('#dataTables').DataTable({"paging":   true,});
+	});
+</script>

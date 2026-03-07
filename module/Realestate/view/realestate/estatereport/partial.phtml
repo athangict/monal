@@ -1,0 +1,28 @@
+<?php // view partial.phtml 
+  $estatereport = ($this->active == "estatereport")?"active":"";
+  $buildingreport = ($this->active == "buildingreport")?"active":"";
+  $flatreport = ($this->active == "flatreport")?"active":"";
+
+?>
+<br/>
+<ul class="nav nav-tabs padding-18" id="myTab">
+	<li class="<?php echo $estatereport; ?>">
+		<a href="<?php echo $this->url('estatereport', array('action' => 'estatereport')); ?>" title="Land report">
+		<i class="red ace-icon fa fa-bar-chart bigger-120"></i>
+			<span class="hidden-xs"> Land Report </span>
+		</a>
+	</li>
+	<li class="<?php echo $buildingreport; ?>">
+		<a href="<?php echo $this->url('estatereport', array('action' => 'buildingreport')); ?>" title="Land report">
+			<i class="green ace-icon fa fa-building bigger-120"> </i>
+			<span class="hidden-xs" >Building Report</span>
+		</a>
+	</li>
+	<li class="<?php echo $flatreport; ?>">
+		<a href="<?php echo $this->url('estatereport', array('action' => 'flatreport')); ?>" title="Flat report">
+			<i class="blue ace-icon fa fa-bed bigger-120"> </i>
+			<span class="hidden-xs" >Flat Report</span>
+		</a>
+	</li>
+</ul>
+

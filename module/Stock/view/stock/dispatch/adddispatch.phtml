@@ -1,0 +1,301 @@
+<?php
+/**
+ * View -- of Purchase/PurchaseController/addporderAction
+ */
+  $this->headTitle($this->title);
+
+?>
+<?php echo $this->partial('stock/dispatch/partial.phtml', array('active' => 'dispatch')); ?> <br/>
+<?php
+	$subRoles = $this->userRoleObj->get(array('id'=>$this->userID)); 
+	$depoyManager = $this->userRoleObj->get(array('id'=>$this->userID)); 
+	if(sizeof($subRoles) > 0 || (sizeof($depoyManager)>0 )){
+		/* checks whether the user is admin, CEO, FECD Manager || user belongs to source or Destination Location or depoy Manager */
+		$flag = true; 
+	}	
+	else{ 
+	   $flag = false; 
+	}
+	if($flag):
+?>
+<div class="row">
+	<div class="col-lg-12">
+		<div class="widget widget-box">
+			<div class="widget-header">
+				<h5 class="widget-title lighter smaller">
+					<i class="fa fa-asterisk"></i>&nbsp;&nbsp;New Dispatch
+				</h5>
+			</div><!-- end of widget-header -->
+			<div class="widget-body">
+				<div class="widget-main">
+					<form id="#form" method="post" action="<?php echo $this->url('dispatch', array('action' => 'adddispatch')); ?>"  enctype="multipart/form-data" >    
+						<div class="row">	
+							<div class="col-lg-3">    
+								<div class="form-group">
+									<label for="dispatch_date" class="control-label">Dispatch Date</label>
+									<div class="date input-group" id="dispatch_date" data-date="<?php echo date('Y-m-d');?>" data-date-format="yyyy-mm-dd" >
+										<input class="form-control span2" name="dispatch_date" id="dispatch_date" type="text" value="<?php echo date('Y-m-d');?>" placeholder="Dispatch Date" readonly required>
+										<span class="input-group-addon add-on"><i class="fa fa-calendar"></i></span>
+									</div>
+								</div>
+							</div>
+							<div class="col-lg-3"> 
+								<div class="form-group">
+									<label for="from_location" class="control-label">Source Location</label>
+									<select id="from_location" name="from_location" class="form-control" data-placeholder="Select" required>
+									  <option value=""></option>
+										<?php 
+											foreach($admin_locs as $admin_loc):
+										?>
+											<?php $selected = ($admin_loc['id'] == $user_location)?"selected":"";?>
+											<option value="<?php echo $admin_loc['id'];?>" <?php echo $selected; ?>>
+												<?php echo $admin_loc['location'];?>
+											</option>
+										<?php endforeach;?>										 
+									</select> 
+								</div>
+							</div>
+							<div class="col-lg-3" id="fcb">
+								<div class="form-group">
+									<label for="goodrequest" class="control-label">Goodrequest Number</label>
+									<select class="form-control" name="goodrequest" id="goodrequest" data-placeholder="Select" > 
+										<option value=""></option>
+										<?php foreach($goodrequest as $goodrequests):?>
+											<option value="<?php echo $goodrequests['gr_no'];?>">
+												<?php echo $goodrequests['gr_no'];?>
+											</option>
+										<?php endforeach;?>
+									</select>
+								</div>
+							</div>
+							<div class="col-lg-3"> 
+								<div class="form-group">
+									<label for="to_location" class="control-label">Destination Location</label>
+									<select id="to_location" name="to_location" class="form-control" data-placeholder="Select" required>
+									  <option value=""></option>
+									</select> 
+								</div>
+							</div>	
+							<div class="col-lg-3">
+								<div class="form-group">
+									<label for="tracking_no" class="control-label">Tracking Number</label>
+									<input type="text" class="form-control" name="tracking_no" id="tracking_no" placeholder="Tracking No."/> 
+								</div>
+							</div>
+						</div>
+						<div class="space-12"></div>
+						<div class="row"> 	
+							<div class="col-lg-9"> 
+								<button type="submit" class="btn btn-success"><i class="fa fa-check"></i> Save </button>
+								<button type="button" class="btn btn-warning" onclick="javascript:history.back();" >
+									<i class="fa fa-times"></i> Cancel 
+								</button> 					
+							</div>
+						</div>
+					</form>	
+				</div><!-- widget widget-main -->
+			</div>  <!-- widget widget-body -->   
+		</div> <!-- widget widget-box --> 
+	</div><!-- col-lg-12 -->
+</div><!-- row -->
+<?php else: ?> 
+    <div class="alert alert-success fade in"> 
+	    You don't have privilege to add new dispatch. 
+	</div>
+<?php endif; ?>
+<script type="text/javascript">
+$(function() {	
+	$("select#goodrequest").change(function() {
+		alert($(this).val());
+		$.post(
+			"<?php echo $this->url('dispatch', array('action' => 'getlocation'));?>",
+			{
+				grno: $(this).val(),
+			},
+			function(data){
+				//console.log(data);	
+				$('select#to_location').html(data.to_location);
+				$('select#to_location').trigger('chosen:updated');
+				},
+			'json'
+		);	
+	});
+	$("#vehicle_no").bind('keyup', function (e) {
+		if (e.which >= 97 && e.which <= 122) {
+			var newKey = e.which - 32;
+			// I have tried setting those
+			e.keyCode = newKey;
+			e.charCode = newKey;
+		}
+		$("#vehicle_no").val(($("#vehicle_no").val()).toUpperCase());
+	});
+	$("#transporter_nonfcb").bind('keyup', function (e) {
+		if (e.which >= 97 && e.which <= 122) {
+			var newKey = e.which - 32;
+			// I have tried setting those
+			e.keyCode = newKey;
+			e.charCode = newKey;
+		}
+		$("#transporter_nonfcb").val(($("#transporter_nonfcb").val()).toUpperCase());
+	});
+	/*** onChange of fcb_transport ***/
+	if($('input[name="fcb_transport"]:checked').val() == '0'){
+		$("div#fcb").hide();
+		$("div#non_fcb").show();
+	}else{
+		$("div#fcb").show();
+		$("div#non_fcb").hide();
+	}
+	$("input[name='fcb_transport']").change(function(e){
+		if($(this).val() == '0') {
+			$("div#fcb").hide();
+			$("div#non_fcb").show();
+			$('select#transporter_fcb option:selected').removeAttr('selected');
+			$("select#transporter_fcb").trigger("chosen:updated");
+			$('select#party option:selected').removeAttr('selected');
+			$("select#party").trigger("chosen:updated");
+		} else {
+			$("div#fcb").show();
+			$("div#non_fcb").hide();
+			$("input[name='transporter_nonfcb']").val('');
+			$('select#party option:selected').removeAttr('selected');
+			$('select#party option[value=323]').attr('selected', 'selected');
+			$("select#party").trigger("chosen:updated");
+		}
+	});
+	
+	$('#dispatch_date').datepicker();
+	$('#dispatch_date').on('changeDate',function(){
+		$('form').formValidation('revalidateField', $(this).attr('id'));
+	});
+
+	$('#trdetails_table').dispatch({
+		getToLocation:'<?php echo $this->url('dispatch', array('action' => 'gettolocation'));?>',
+		getItem:'<?php echo $this->url("dispatch", array("action" => "getitemactivity"));?>',
+		getDetails:'<?php echo $this->url("dispatch", array("action" => "getdetails"));?>',
+		getStockBalance:'<?php echo $this->url("dispatch", array("action" => "getstockbalance"));?>',
+		getConvertedQty:'<?php echo $this->url("dispatch", array("action" => "getconvertedqty"));?>',
+		getBasicQty:'<?php echo $this->url("dispatch", array("action" => "getbasicqty"));?>',
+	});
+
+	/*** Form Validation ***/ 
+	const fv = FormValidation.formValidation(document.getElementById('#form'), {
+		fields: {
+			'dispatch_date': {
+			 	validators: {
+					notEmpty: {
+						message: 'Please select dispatch date.'
+				  	},
+			  	},
+		  	},
+			'from_location': {
+				validators: {
+					notEmpty: {
+						message: 'Please select source location.'
+					}
+				}
+			}, 
+			'to_location': {
+				validators: {
+					notEmpty: {
+						message: 'Please select destination location.'
+					}
+				}
+			},
+			goodrequest: {
+				validators: {
+					notEmpty: {
+						message: 'Please provide goodrequest number.'
+					},
+					remote: {
+						data: {
+							type:'goodrequest',
+						},
+						message: 'This goodrequest has been already used.',
+						method: 'POST',
+						url: "<?php echo $this->url('dispatch', array('action' => 'getcheckavailability'));?>",
+					}
+				}
+			},
+			'fcb_transport':{
+				validators: {
+					notEmpty: {
+						message: 'Please provide fcb transport'
+					}
+				}
+			},
+			/*'transporter':{
+				validators: {
+					notEmpty: {
+						message: 'Please provide name of driver.'
+					}
+				}
+			},*/
+			'vehicle_no':{
+				validators: {
+					notEmpty: {
+						message: 'Please provide vechile no.'
+					}
+				}
+			},
+			'party':{
+				validators: {
+					notEmpty: {
+						message: 'Please select transporter.'
+					}
+				}
+			},
+			'item[]': {
+				validators: {
+					notEmpty: {
+						message: 'Please select item.'
+					}
+				}
+			},
+			/*'batch[]': {
+				validators: {
+					notEmpty: {
+						message: 'Please provide batch.'
+					}
+				}
+			},*/
+			'from_balance[]': {
+                validators: {
+                    greaterThan: {
+                        value: '1',
+                        message: 'The source quantity must be greater than 0'
+                    }
+                }
+            },
+			'uom[]': {
+				validators: {
+					notEmpty: {
+						message: 'Please select uom.'
+					}
+				}
+			},
+			'quantity[]': {
+				validators: {
+					notEmpty: {
+						message: 'Please provide quantity.'
+					},
+				}
+			},
+		},
+		plugins: {
+			trigger: new FormValidation.plugins.Trigger(),
+			bootstrap3: new FormValidation.plugins.Bootstrap3(),
+			submitButton: new FormValidation.plugins.SubmitButton(),
+			defaultSubmit: new FormValidation.plugins.DefaultSubmit(),
+		},
+	}).on('core.element.validated', function (e) {
+		if (e.valid) {
+			$('div#'+ e.field.replace('[]','') +'_chosen').removeClass('is-invalid');
+			$('div#'+ e.field.replace('[]','') +'_chosen').addClass('is-valid');
+		} else {
+			$('div#'+ e.field.replace('[]','') +'_chosen').removeClass('is-valid');
+			$('div#'+ e.field.replace('[]','') +'_chosen').addClass('is-invalid');
+		}
+	});    
+});
+</script>

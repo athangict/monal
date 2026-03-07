@@ -1,0 +1,344 @@
+<?php
+/**
+ * 
+ * View -- of Stock/StockController/viewgoodsrequest
+ * 
+ */
+?>
+<?php echo $this->partial('stock/dispatch/partial.phtml', array('active' => 'dispatch')); ?> <br/>
+<?php 
+	foreach($dispatchs as $dispatch):
+		extract($dispatch);
+	//	echo "<pre>"; print_r($dispatch);
+		$dispatch_id = $id;
+		$dispatch_status = $status;
+	endforeach; 
+	$subRoles = $this->userRoleObj->get(array('user'=>$this->userID, 'subrole'=>array('1','3','15'))); 
+	$depoyManager = $this->userRoleObj->get(array('user'=>$this->userID, 'subrole'=>array('9'))); 
+	if(sizeof($subRoles) > 0 || (sizeof($depoyManager)>0 && ($from_location == $this->user_location || $to_location == $this->user_location))){
+		/* checks whether the user is admin, CEO, FECD Manager || user belongs to source or Destination Location or depoy Manager */
+		$flag = true; 
+	}	
+	else{ 
+	   $flag = false; 
+	}
+?>
+<style>
+	.mytable tr th,.mytable tr td {
+		padding:5px;
+	}
+</style>
+<?php if($flag): ?>
+<div class="row">
+	<div class="col-lg-12">
+		<div class="widget widget-box">
+			<div class="widget-header">
+				<h5 class="widget-title lighter smaller">
+					# Goods Dispatch Details:
+					<strong>&nbsp;&nbsp;<?php echo $challan_no; ?> | 
+					<?php echo $this->activityObj->getColumn($activity,'activity');?></strong>&nbsp;
+					<?php $this->status($status); ?>
+				</h5>
+				<div class="widget-toolbar hidden-xs">
+					<?php if($dispatch_status == 3 && $fcb_transport == 0):
+						$tc_id = $this->transchargeObj->getColumn(array('dispatch'=>$dispatch_id),'id');
+					?>
+						<button type="button" id="tc_btn" class="btn btn-white btn-success btn-bold btn-xs"><i class="fa fa-money"></i> Transportation Charge </button>
+					<?php endif;?>
+				</div>
+				<div class="widget-toolbar hidden-xs">
+				 <div class="btn-group">
+					<a class="btn btn-xs btn-danger" data-toggle="modal" data-target="#modal" href="<?php echo $this->url('acl', array('action' => 'activitylog', 'id' => "11-".$dispatch_id)); ?>" title="View Activity Logs">
+						<i class="ace-icon fa fa-plus bigger-120" ></i>  
+					</a> &nbsp;|
+					</div>
+					<a style='cursor:pointer' id="print">
+						<i class="ace-icon fa fa-file-pdf-o red"></i>
+					</a>
+				</div>	
+			</div>
+			<div class="widget-body">
+				<div class="widget-main padding-12">
+					<div id="report-print">
+						<div class="row" id="convert-tb0">
+							<div class="col-lg-8" id="convert-tb1">
+								<ul class="list-unstyled spaced">
+									<li>
+										<i class="ace-icon fa fa-caret-right blue"></i>
+										<b>Challan No. : </b> <?php echo $challan_no;?>
+									</li>
+									<li>
+										<i class="ace-icon fa fa-caret-right blue"></i>
+										<b>Source Location : </b><?php echo $from=$this->locationObj->getColumn($from_location,'location'); ?>
+									</li>
+									<li>
+										<i class="ace-icon fa fa-caret-right blue"></i>
+										<b> Activity  : </b><?php echo $this->activityObj->getColumn($activity,'activity'); ?>
+									</li>
+									<li>
+										<i class="ace-icon fa fa-caret-right blue"></i>
+										<b>Name of Driver : </b><?php echo ($fcb_transport==1)?$this->employeeObj->getColumn($transporter,'full_name'):$transporter;?> 
+									</li>
+									<li>
+										<i class="ace-icon fa fa-caret-right blue"></i>
+										<b>Transportation : </b><?php echo $this->partyObj->getColumn($party,'name');?>
+									</li>
+									<?php if($dispatch_status == 3 || $dispatch_status == 4 || $dispatch_status == 10):?>
+									<li>
+										<i class="ace-icon fa fa-caret-right blue"></i>
+							 			 <b>Received By : </b><?php echo $this->employeeObj->getColumn($received_by,'full_name');?>
+							 		</li>
+									<?php endif;?>
+								</ul>
+							</div>
+							<div class="col-lg-4" id="convert-tb2">
+								<ul class="list-unstyled spaced">
+									<li>
+										<i class="ace-icon fa fa-caret-right blue"></i>
+										 <b>Dispatch Date : </b> <?php echo $dispatch_date; ?>
+									</li>
+									<li>
+										<i class="ace-icon fa fa-caret-right blue"></i>
+										<b> Destination Location : </b> <?php echo $to=$this->locationObj->getColumn($to_location,'location');?>
+									</li>
+									<li>
+										<i class="ace-icon fa fa-caret-right blue"></i>
+										<b>FCBL Transportation  :</b> <?php echo ($fcb_transport == 1)?"YES":"NO"; ?>
+									</li>
+									<li>
+										<i class="ace-icon fa fa-caret-right blue"></i>
+										<b>Vehicle No : </b><?php echo $vehicle_no; ?>
+									</li>
+									<?php if($dispatch_status == 3 || $dispatch_status == 4 || $dispatch_status == 10):?>
+									<li>
+										<i class="ace-icon fa fa-caret-right blue"></i>
+							 			<b>Received On : </b><?php echo $received_on;?>
+							 		</li>
+									<?php endif;?>
+								</ul>
+							</div>
+						</div>
+						<div class="row">
+							<div class="col-lg-12">
+								<ul class="list-unstyled spaced">
+									<li>
+										<i class="ace-icon fa fa-caret-right blue"></i><b>Note: </b><?php echo $note;?> 
+									</li>
+								</ul>
+							</div>
+						</div>
+						<div class="space-6"></div>
+						<div class="row">
+							<div class="col-lg-12" >
+								<table class="table" style="border-top:2px solid #ddd;">
+									<thead>
+										<tr>
+											<th>Item</th>
+											<th>Batch</th>
+											<th>UOM</th>
+											<?php if($dispatch_status == 1 || $dispatch_status ==2):?>
+												<!--<th><?php //echo $from;?><br><i style="font-size: 11px;">(Source Qty)</i></th>
+												<th><?php //echo $to;?><br><i style="font-size: 11px;">(Destination Qty)</i></th>-->
+											<?php endif;?>
+											<th>Dispatched Qty</th>
+											<th>Basic UOM</th>
+											<th>Basic Quantity</th>
+											<th>ELC of Source Location<br><i style="font-size: 11px;">(<?php echo $this->currency_code();?>)</i></th>
+											<th>Value<br><i style="font-size: 11px;">(<?php echo $this->currency_code();?>)</i></th>
+											<?php if($dispatch_status == 3 || $dispatch_status == 4 || $dispatch_status == 10):?>
+												<th>Damaged Qty</th>
+												<th>Shortage Qty</th>
+												<th>Accepted Qty</th>
+												<th>Sound Qty</th>
+											<?php endif;?>
+											<th>Remarks</th>
+										</tr>
+									</thead>
+									<tbody>
+									<?php
+									//echo $dispatch_id; 
+										$dispatch_details = $this->dispatch_detailsObj->get(array('dispatch'=>$dispatch_id)); 
+										//$dispatch_details = $this->dispatch_detailsObj->getAll(); 
+					 						//echo sizeof($dispatch_details); 
+											foreach($dispatch_details as $tdrow):
+											//	echo "<pre>"; print_r($tdrow);
+					 				?>	
+											<tr>
+												<td><?php echo $tdrow['item'];?></td>
+												<?php
+													$selected_item = $this->itemObj->get($tdrow['item_id']);
+													foreach($selected_item as $item):
+														if($item['valuation']==1):
+															$batch = "N/A";
+															$from_quantity = $this->movingitemObj->getColumn(array('item'=>$tdrow['item_id'],'location'=>$from_location),'quantity');
+															$to_quantity = $this->movingitemObj->getColumn(array('item'=>$tdrow['item_id'],'location'=>$to_location),'quantity');
+															
+															$latest_batch = $this->movingitemspObj->getBatchColumn(array('item'=>$tdrow['item_id']),$dispatch_date);
+															$elc = $this->batchObj->getColumn($latest_batch,'landed_cost');
+															$unit_uom = $this->batchObj->getColumn($latest_batch,'unit_uom');
+															$elc = $elc / $unit_uom;
+$elc = number_format((float)$elc, 2, '.', '');
+														else: 
+															$batch = $this->batchObj->getColumn($tdrow['batch'],'batch');
+															$from_quantity = $this->batch_detailsObj->getColumn(array('batch'=>$tdrow['batch'],'location'=>$from_location),'quantity');
+															$to_quantity = $this->batch_detailsObj->getColumn(array('batch'=>$tdrow['batch'],'location'=>$to_location),'quantity');
+															
+															$elc = $this->batchObj->getColumn($tdrow['batch'],'landed_cost');
+															$unit_uom = $this->batchObj->getColumn($tdrow['batch'],'unit_uom');
+															$elc = $elc / $unit_uom;
+$elc = number_format((float)$elc, 2, '.', '');
+														endif;
+														if($item['uom']!=$tdrow['uom_id']):
+															$conversion = $this->itemuomObj->getColumn(array('item'=>$tdrow['item_id'],'uom'=>$tdrow['uom_id']),'conversion');
+															$from_quantity = $from_quantity/$conversion;
+															$to_quantity = $to_quantity/$conversion;
+														endif;
+												?>
+												<td><?php echo $batch;?></td>
+												<td><?php echo $this->uomObj->getColumn($tdrow['uom_id'],'code');?></td>
+												<?php if($dispatch_status == 1 || $dispatch_status ==2):?>
+													<!--<td><?php //echo $from_quantity;?></td>
+													<td><?php //echo $to_quantity;?></td>-->
+												<?php endif;?>
+												<td><?php echo $tdrow['quantity'];?></td>
+												<td><?php echo $this->uomObj->getColumn($tdrow['basic_uom'],'code');?></td>
+												<td><?php echo $tdrow['basic_quantity'];?></td>
+												<td><?php echo $elc;?></td>
+												<td><?php echo $value = $elc * $tdrow['basic_quantity']; ?></td>
+												<?php if($dispatch_status == 3 || $dispatch_status == 4 || $dispatch_status == 10):?>
+													<td><?php echo $tdrow['damage_qty'];?></td>
+													<td><?php echo $tdrow['shortage_qty'];?></td>
+													<td><?php echo $tdrow['accepted_qty'];?></td>
+													<td><?php echo $tdrow['sound_qty']; ?></td>
+												<?php endif;?>
+												<td><?php echo $tdrow['remarks'];?></td>
+											</tr>
+										<?php 	endforeach; 
+												//Calculating net weight of the dispatch in MT
+												$item = $this->itemObj->get($tdrow['item_id']);
+												foreach($item as $itemcol);
+												//MT has to be given static MT = 59001
+												//echo $itemcol['scalar_uom']."<br>"; 
+												//echo $itemcol['net_weight']."<br><br>"; 
+												if($itemcol['scalar_uom'] != 59001){
+													$conversion = $this->ScalarconversionObj->getColumn(array('from_uom'=>$itemcol['scalar_uom'],'to_uom'=>59001),'conversion');
+													//echo $conversion."<br>";
+													$MT_net_weight = $itemcol['net_weight']/$conversion."<br>";
+												}
+												$wt = $MT_net_weight * $tdrow['basic_quantity']."<br>";
+												$total_wt += $wt;	
+												
+												$net_elc += $elc;
+												$net_value += $value;
+											endforeach;
+										?>
+									</tbody>
+									<tfoot>
+										<tr style="border-top:2px solid #ddd;border-bottom:2px solid #ddd;">
+											<th colspan="">Total</th>
+											<?php if($dispatch_status == 1 || $dispatch_status ==2):?>
+												<th></th>
+												<th></th>
+											<?php endif;?>
+											<th><?php echo $total_wt;?> MT </th>
+											<th></th>
+											<th></th>
+											<th><?php echo number_format((float)$net_elc, 2, '.', ',');?></th>
+											<th><?php echo number_format((float)$net_value, 2, '.', ',');?></th>
+											<?php if($dispatch_status == 3 || $dispatch_status == 4 || $dispatch_status == 5):?>
+												<th></th>
+												<th></th>
+												<th></th>
+												<th></th>
+											<?php endif;?>
+											<th></th>
+										</tr>
+									</tfoot>
+								</table>
+							</div>
+						</div>
+                                                <div class="space-32"></div>
+						<?php if($dispatch_status == '2'):?>
+						<div class="row" id="convert-tb0" style='text-align:center;'>
+							<div class="col-lg-4" id="convert-tb1">
+								Consignor's Signature
+							</div>
+							<div class="col-lg-4" id="convert-tb1">
+								Driver's Signature
+							</div>
+							<div class="col-lg-4" id="convert-tb2">
+								Consignee's/Receiver's Signature
+							</div>
+						</div>
+						<?php endif;?>
+					</div>
+					<div class="row">
+						<div class="col-lg-12" style="text-align: right">
+							<?php if($dispatch_status == '1' && $this->user_location == $from_location && sizeof($depoyManager)>0):?>
+								<a href="<?php echo $this->url('dispatch', array('action'=>'editdispatch', 'id'=>$dispatch_id));?>" class="btn btn-info"> <i class="fa fa-pencil"></i> Edit </a>
+								<a href="<?php echo $this->url('dispatch', array('action'=>'pendingdispatch', 'id'=>$dispatch_id));?>" class="btn btn-warning" data-toggle="modal" data-target="#modal"> <i class="fa fa-plane"></i> Dispatch </a>
+							<?php elseif(($dispatch_status == '2'|| $dispatch_status == '10') && sizeof($depoyManager)>0):?>
+								<?php if($user_location == $from_location && $dispatch_status != '10'): ?>
+									<a class="btn btn-primary" data-tooltip="tooltip" data-toggle="modal" data-target="#modal" data-placement="top" title="Revice" href="<?php echo $this->url('dispatch', array('action'=>'revicedispatch', 'id'=>$dispatch_id));?>" >
+										<i class="fa fa-pencil-square-o"></i> Revise </a>
+									</a>
+								<?php endif;?>
+								<?php 
+									$admin_locs = $this->usersObj->getColumn($userID,'admin_location');
+									$admin_loc_array = explode(',',$admin_locs);
+									if(in_array($to_location, $admin_loc_array)):
+									//if($this->user_location == $to_location):
+								?>
+									<a href="<?php echo $this->url('dispatch',array('action'=>'receivedispatch','id'=>$dispatch_id));?>" class="btn btn-danger"><i class="fa fa-arrow-circle-o-down"> Receive </i></a>							
+								<?php endif; ?>
+								<?php if(in_array($to_location, $admin_loc_array) && $dispatch_status == '10' ):?>
+								   <a href="<?php echo $this->url('dispatch',array('action'=>'confirmreceive','id'=>$dispatch_id));?>" class="btn btn-success">
+									<i class="fa fa-check-square-o"> Confirm </i></a>
+								<?php endif; ?>
+							<?php endif;?>
+<?php 
+							$Admin = $this->userRoleObj->get(array('user'=>$this->userID, 'subrole'=>array('15')));							
+							if($dispatch_status == '2' && sizeof($Admin) > 0):?>
+							    <a href="<?php echo $this->url('dispatch', array('action'=>'rectifydispatch', 'id'=>$dispatch_id));?>"  class="btn btn-warning"> <i class="fa fa-plane"></i> Rectify Dispatch </a>
+							<?php endif; ?>
+							<?php if($dispatch_status == '10' && sizeof($Admin) > 0):?>
+								<a href="<?php echo $this->url('dispatch', array('action'=>'rectifydispatch', 'id'=>$dispatch_id));?>" class="btn btn-warning" > <i class="fa fa-plane"></i>Rectify Dispatch </a>
+							<?php endif; ?>
+							<?php if($dispatch_status == '3' && sizeof($Admin) > 0):?>
+								<a href="<?php echo $this->url('dispatch', array('action'=>'pendingrectifydispatch', 'id'=>$dispatch_id));?>" class="btn btn-warning" data-toggle="modal" data-target="#modal"> <i class="fa fa-plane"></i>Rectify Dispatch </a>
+							<?php endif; ?>
+						</div>
+					</div>
+					<!-- Upload and Download file attachments -->			
+					<?php   
+					   echo $this->partial('partial/attachment.phtml', array('process' => '11', 'process_id'=> $dispatch_id , 'status' => $dispatch_status));
+					?>					
+				    <!-- End of attachment -->
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+<?php 
+else: ?> 
+    <div class="alert alert-success fade in"> 
+	    You don't have privilege to view the details of this dispatch. 
+	</div>
+<?php endif; ?>
+<!-- for modal -->
+<div id="modal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+	<div class="modal-dialog">
+		<div class="modal-content">
+		</div>
+	</div>
+</div>
+<script type="text/javascript">
+	$('#tc_btn').on('click',function(){
+		window.document.location = "<?php echo $this->url('transporter', array('action' => 'viewtranspcharge','id' => $tc_id));?>";
+	});
+	$('#print').genpdfinvoice({
+		content: '#report-print',
+		src:"<?php echo $this->url('pdfxls', array('action' => 'pdf'));?>",
+		orentation:"L",//L =landscape, P = potrait
+	});
+</script>

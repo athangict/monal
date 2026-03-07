@@ -1,0 +1,211 @@
+<?php 
+/**
+*
+* View Selling Price  Stock/BatchController/sellingprice
+*
+*/
+$this->headTitle($this->title);
+?>
+<?php echo $this->tabs_helper(array(684,691,685,686,687,688,689,690,699)); ?>
+<div class="card">
+	<div class="card-header">
+		<div class="row">
+			<div class="col-lg-12">
+				<form method="post" action="<?php echo $this->url('report', array('action' => 'bankbook')); ?>">
+					<div class="row">
+					    <div class="col-lg-3">
+							<div class="form-group">
+								<label for="location" class="control-label">Location</label>
+								<select id="location" name="location" class="form-control" data-placeholder="Select">
+									<option value=""></option>
+									<?php foreach($this->locationObj->getAll() as $locations):
+									$selected = ($location_id == $locations['id'])?"selected":"";?>
+										<option value="<?php echo $locations['id'];?>" <?php echo $selected;?>>
+											<?php echo $locations['location'];?>
+										</option>
+									<?php endforeach;?>
+								</select> 
+							</div>
+						</div>
+						<div class="col-lg-3">
+							<div class="form-group">
+								<label for="bank_account" class="control-label">Bank Account</label>
+								<select id="bank_account" name="bank_account" class="form-control" data-placeholder="Select" >
+									<option value=""></option>
+								</select> 
+							</div>
+						</div>
+						<div class="col-lg-2">
+							<div class="form-group">
+								<label for="start_date" class="control-label">Start Date</label>
+								<div class="date input-group" id="start_date" data-date="<?php echo $data['start_date'];?>"data-date-format="yyyy-mm-dd" >
+									<input class="form-control span2" name="start_date" id="start_date" value="<?php echo $data['start_date'];?>" type="text" placeholder="Start Date" required>
+									<span class="input-group-addon add-on"><i class="fa fa-calendar"></i></span>
+								</div>
+							</div>
+						</div>
+						<div class="col-lg-2">
+							<div class="form-group">
+								<label for="end_date" class="control-label">End Date</label>
+								<div class="date input-group" id="end_date" data-date="<?php echo $data['end_date'];?>" data-date-format="yyyy-mm-dd" >
+									<input class="form-control span2" name="end_date" id="end_date" value="<?php echo $data['end_date'];;?>" type="text" placeholder="End Date" readonly required>
+									<span class="input-group-addon add-on"><i class="fa fa-calendar"></i></span>
+								</div>
+							</div>
+						</div>
+						<div class="col-lg-2"> <br/>
+							<button type="submit" id="refresh_btn" class="btn btn-info pull-right"><i class="fa fa-refresh"></i> Refresh </button>
+						</div>
+					</div>	  
+				</form>		
+			</div>
+		</div>				
+	</div>
+</div>
+<div class="hr hr-dotted"></div>
+<div id="report-print">
+	<div class="row">
+		<div class="col-lg-12">
+			<div class="table-header clearfix">
+			    <div class="col-lg-6">
+					<label><center><i class="white fa fa-map-marker"></i> <strong>Bank : </strong></label> <span><?php echo $this->subheadObj->getColumn($bank_account,'code');?></center></span>&nbsp;&nbsp;
+					<label><center><i class="white fa fa-calendar"></i> <strong>From Date:</strong></label> <span><?php echo $data['start_date'];?></span>.&nbsp;&nbsp;
+					<label><i class="white fa fa-calendar"></i> <strong>To Date:</strong></label> <span><?php echo $data['end_date'];?></span></center>
+					<input type="hidden" id="subhead" name="subhead" value="<?php echo $bank_account;?>"/>
+					<input type="hidden" id="start_date" name="start_date" value="<?php echo $data['start_date'];?>"/>
+					<input type="hidden" id="end_date" name="end_date" value="<?php echo $data['end_date'];?>"/>
+				</div>
+				<div class="col-lg-6">
+					<div class="pull-right">
+						<a title="Export to Excel" id="excel">
+							<i class="ace-icon fa fa-file-excel-o fa-lg white"></i>
+						</a>&nbsp;&nbsp;
+						<a title="Print PDF" id="print">
+							<i class="ace-icon fa fa-file-pdf-o fa-lg white"></i>
+						</a>&nbsp;&nbsp;
+					</div>
+				</div>
+			</div>
+			<table class="table table-hover" id="table2excel">
+				<thead>
+					<tr>
+						<th></th>
+						<th>Cheque No</th>
+						<th>Voucher No</th>
+						<th>Txn Date</th>
+						<th style="text-align:right">Amount Dr</th>
+						<th style="text-align:right">Amount Cr</th>
+					</tr>
+				</thead>
+				<tbody>
+					<tr>
+						<td><strong>Opening Balance</strong></td>
+						<td></td>
+						<td></td>
+						<td><strong>
+							<?php 
+							if($data['bank_account'] > 0):
+                                $date = $data['start_date'];
+								$date = strtotime($date);
+								$date = strtotime("-1 day", $date);
+							    $closing_date = date('Y-m-d', $date);
+							    echo $closing_date;
+							else:
+							    echo date('Y-m-d');
+							endif;
+							?></strong>
+						</td>
+						<td class="green" style="text-align:right">
+							<?php $i = 1;
+							$opening_balance=0;
+							if($data['bank_account'] > 0):
+               					//get clossing balance
+                                $opening_balance = $this->transactiondetailObj->getOpeningBalanceforBA($data['start_date'], $data['bank_account']);
+                            endif;								
+							?>
+							<strong>
+							<?php $grand_tot_receipt = $opening_balance;
+								echo number_format((float)$grand_tot_receipt, 2, '.', ',');
+							?>
+							</strong>
+						</td>
+						<td class="purple" style="text-align:right" ><strong><?php echo $grand_tot_payment = 0.00;?></strong></td>
+					</tr>
+					<?php $i = 1; 
+					    $tot_receipt = 0.00; $tot_payment = 0.00;
+					    if($data['bank_account'] > 0):
+					    foreach($this->transactionObj->getDisinctTransactionBAID($data['bank_account'],$data['start_date'],$data['end_date']) as $rowsets):
+						    foreach($this->transactiondetailObj->getBank(array('transaction'=>$rowsets['transaction_id']),$data['bank_account']) as $transdtl):
+				        ?>
+						<tr>
+							<td><?php echo $transdtl['remark'];?></td>
+							<td><?php echo $transdtl['cheque_no'];?></td>
+                            <td><?php echo $transdtl['voucher_no']; ?></td>
+							<td><?php echo $transdtl['voucher_date'];?></td>
+							<td class="green" style="text-align:right"><?php $tot_receipt += $transdtl['debit']; echo number_format((float)$transdtl['debit'], 2, '.', ',');?></td>
+							<td class="purple" style="text-align:right"><?php $tot_payment += $transdtl['credit']; echo number_format((float)$transdtl['credit'], 2, '.', ',');?></td>
+						</tr>
+						<?php endforeach;?>		
+					<?php endforeach;?>
+					<?php endif;?>
+					<tr>
+						<td><strong><?php echo "Total amount";?></strong></td>
+						<td></td>
+						<td></td>
+						<td></td>
+						<td class="green" style="text-align:right"><strong><?php $grand_tot_receipt += $tot_receipt;
+									echo number_format((float)$grand_tot_receipt, 2, '.', ',');
+									?>
+						</strong></td>
+						<td class="purple" style="text-align:right"><strong><?php $grand_tot_payment += $tot_payment;
+									echo number_format((float)$grand_tot_payment, 2, '.', ',');
+									?>
+						</strong></td>
+					</tr>
+					<tr>
+						<td></td>
+						<td></td>
+						<td><strong>Closing Balance</strong></td>
+						<td></td>
+						<td></td>
+						<td class="purple" style="text-align:right"><strong><?php $colsing = $grand_tot_receipt-$grand_tot_payment;
+									echo number_format((float)$colsing, 2, '.', ',');
+									?>
+						</strong></td>
+					</tr>	
+				</tbody>	
+			</table>
+		</div>
+	</div>
+</div>
+<script text="text/javascript">
+$(function(){
+	$('#start_date').datepicker();
+	$('#end_date').datepicker();
+	var doc_loc = $('input#subhead').val()+'(from: '+$('input#start_date').val()+' to: '+$('input#end_date').val()+')';
+	$("#excel").click(function(){
+	  $("#table2excel").table2excel({
+		// exclude CSS class
+		exclude: ".noExl",
+		name: "Worksheet Name",
+		filename: "BankBook_"+doc_loc, //do not include extension
+	  }); 
+	});
+	$('#location').on('change', function(){			
+		$.post(
+			"<?php echo $this->url('report', array('action' => 'getbankaccount')); ?>",
+			{
+				location_id: $(this).val(),
+			},
+			function(data){
+				//console.log(data);
+				$("#bank_account").html(data.bankacc);
+				$("#bank_account").trigger('chosen:updated');				
+			},
+			'json'
+		);	
+	});
+});
+</script>
+
+

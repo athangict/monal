@@ -1,0 +1,81 @@
+<?php
+/**
+ * 
+ * View -- of Accounts/TransactionController/indexAction
+ * 
+ */
+?>
+<?php echo $this->partial('sales/pos/partial.phtml', array('active' => 'eosrecord')); ?>
+<?php $minYear = date('Y', strtotime($minYear)); ?>
+<div class="card">
+	<div class="card-header">
+		<div class="row">
+			<form id="#form" method="post" action="<?php echo $this->url('sales', array('action'=>'eosrecord')); ?>"  enctype="multipart/form-data" >
+				<div class="form-group col-lg-3">
+					<label class="control-label" for="year">Year</label>
+					<select class="form-control" id="year" name="year" data-placeholder="Select" onchange='this.form.submit()'>
+						<option value=""></option>
+						<?php 
+							for($year=date('Y');$year>=$minYear;$year--):
+								$selected = ($year == $data['year'])?"selected":"";
+						?>
+							<option value="<?php echo $year;?>" <?php echo $selected;?> >
+								<?php echo $year;?> 
+							</option>
+						<?php endfor; ?>
+					</select>
+				</div>
+				<div class="form-group col-lg-3">
+					<label class="control-label" for="month">Month</label>
+					<select class="form-control" id="month" name="month" data-placeholder="Select" onchange='this.form.submit()'>
+						<?php for($month=1; $month<=12; $month++):?>
+							<?php $selected = ($month == $data['month'])?'selected':'';?>
+							<option value="<?php echo $month;?>" <?php echo $selected; ?>>
+								<?php echo DateTime::createFromFormat('!m', $month)->format('F');?>
+							</option> 
+						<?php endfor;?>
+					</select>
+				</div>
+			</form>
+		</div>
+		<div class="row">
+			<table class="table table-striped table-bordered table-hover" id="dataTables">
+				<thead>
+					<tr>
+						<th>#</th>
+						<th>End of Session Voucher</th>
+						<th>End of Session Date</th>
+						<th>Location</th>
+					</tr>
+				</thead>
+				<tbody>
+					<?php $sl=1;
+					foreach($this->slbooking as $booking):
+					?>
+						<tr data-href="<?php echo $this->url('sales',array('action' => 'viewendofsession','id' => $booking['id'])); ?>">
+							<td><?php echo $sl++;?></td>
+							<td><b><?php echo $booking['eos_voucher'];?></b></td>
+							<td><b><?php echo $booking['eos_date'];?></b></td>
+							<td><b><?php echo $this->locationObj->getColumn($booking['location'],'location');?></b></td>
+						</tr>
+					<?php endforeach;?>
+				</tbody>
+			</table>
+		</div>
+	</div>
+</div>
+<script>		
+$("tr[data-href]").each(function(){
+	$(this).find('td').not('td.action').each(function(){
+		$(this).css('cursor','pointer');
+		$(this).bind('click',function() {
+			window.document.location = $(this).closest('tr').attr("data-href");
+		});
+	});
+});
+$('document').ready(function(){
+	$('#dataTables').DataTable({
+		"paging":   true,
+	});
+});
+</script>

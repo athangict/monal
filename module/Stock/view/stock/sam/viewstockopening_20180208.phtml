@@ -1,0 +1,170 @@
+<?php
+/**
+ * View -- of Stock/BatchController/viewbatchAction
+ */
+ $this->headTitle($this->title);
+?>
+<?php
+	foreach($opening_stock as $op_stock):
+		//echo "<pre>"; print_r($op_stock);
+		extract($op_stock);
+	endforeach;
+?>
+<style>
+	.mytable tr th,.mytable tr td {
+		padding:5px;
+	}
+</style>
+<div class="row">
+	<div class="col-lg-12">
+		<div class="widget widget-box">
+			<div class="widget-header">
+				<h5 class="widget-title lighter smaller">
+					# Stock Opening Details:<strong>&nbsp;&nbsp;<?php echo $batch; ?> | <?php echo $this->itemObj->getColumn($item,'code'); ?></strong>&nbsp;
+				</h5>
+				<div class="widget-toolbar hidden-xs">
+					<a style='cursor:pointer' id="print">
+						<i class="ace-icon fa fa-file-pdf-o red"></i>
+					</a>
+				</div>
+			</div>
+			<div class="widget-body">
+			    <form method="post" action="<?php echo $this->url('batch', array('action' => 'viewbatch', 'id'=>$batch_id)); ?>"  enctype="multipart/form-data" >
+				<div class="widget-main">
+					<div id="report-print">
+						<div class="row" id="convert-tb0">
+							<div class="col-lg-8" id="convert-tb1">
+								<ul class="list-unstyled spaced">
+									<li>
+										<i class="ace-icon fa fa-caret-right blue"></i>
+										Batch No. | Batch Date: <b class="red"><?php echo $batch; ?> | <?php echo $this->dateformat($opening_date);?></b>
+									</li>										
+									<li>
+										<i class="ace-icon fa fa-caret-right blue"></i>
+										Item : <b class="red"><?php echo $this->itemObj->getColumn($item,'code');?></b>
+									</li>
+									<li>
+										<i class="ace-icon fa fa-caret-right blue"></i>
+										UOM | Quantity : <b class="red"><?php echo $this->uomObj->getColumn($uom,'code');?> | <?php echo $quantity; ?></b>
+									</li>
+								</ul>
+							</div>
+							
+							<div class="col-lg-4" id="convert-tb2">
+								<ul class="list-unstyled spaced">									
+									<li>
+										<i class="ace-icon fa fa-caret-right blue"></i>
+										Landed Cost : <b class="red"> <?php echo number_format($landed_cost,'3','.',',');?></b>
+									</li>
+									<li>
+										<i class="ace-icon fa fa-caret-right blue"></i>
+										Source Location : <b class="red"><?php echo $this->locationObj->getColumn($location,'location');?> </b>
+									</li>
+								</ul>
+							</div>
+						</div>
+						<div class="space-12"></div>
+						<div class="row">
+							<div class="col-lg-12" >
+								 <table class="table" style="border-top:2px solid #ddd;">
+								    <thead>																		
+									    <th>#</th>
+										<th>Location</th>	
+										<th>Qty</th>
+										
+										<?php $standard_UOMs = $this->itemUomObj->get(array('item'=>$item, 'costing_uom'=>'1'));
+											  foreach($standard_UOMs as $suomRow):
+											     $standard_UOM = $suomRow['uom_code'];
+											  endforeach;
+										?>	
+										<th>ELC/<?php echo $standard_UOM; ?></th>
+										<th>Margin %</th>										
+										<th>Margin/<?php echo $standard_UOM; ?></th>	
+										<th>SP/<?php echo $standard_UOM; ?></th>										
+										<th>
+											<?php $item_basic = $this->itemObj->getColumn($item,'uom'); ?>
+											SP/<?php echo $this->uomObj->getColumn($item_basic,'code'); ?></th>
+										<?php
+										  $itemUoms = $this->itemUomObj->get(array('item'=>$item));
+										  foreach($itemUoms as $uomRow):
+											if($uomRow['costing_uom']!= '1'):											  
+											   ?><th>SP/<?php echo $uomRow['uom_code']; ?></th><?php
+											endif; 
+										  endforeach; 
+										?>
+									</thead>
+									<tbody>									
+										<?php
+											$i=1;
+											foreach($opening_details as $tdrow): ?>
+											<tr>
+												<td><?php echo  $i++; ?></td>
+												<td><?php echo $this->locationObj->getColumn($tdrow['location'],'location'); ?>
+												<input type="hidden" value="<?php echo $tdrow['location'];?>" name="location[]">												
+												&nbsp;&nbsp;
+												<span class="label label-info"> 
+												<?php 
+													  $loc_type_id = $this->locationObj->getColumn($tdrow['location'],'location_type'); 
+													  echo $this->locationTypeObj->getColumn($loc_type_id,'location_type');
+												?>											    
+												</span>
+												</td>
+												<td><?php echo round($tdrow['quantity'],2);?> <input type="hidden" value="<?php echo $tdrow['quantity'];?>" name="quantity[]"> </td>
+												<td><?php $elc = $tdrow['landed_cost']; echo number_format($elc, 2,".",",")?></td>
+												  <td><?php echo $tdrow['margin'];?></td>
+												  <td><?php $margin_value = $elc*$tdrow['margin']/100 ;
+         												    echo number_format($margin_value,2,'.',','); ?></td>
+												  <td><?php $sum = $elc + $margin_value;
+												           echo number_format($sum,2,'.',',');?></td>
+												  <td><?php echo $tdrow['selling_price'];?>
+												  <input type="hidden" value="<?php echo $tdrow['selling_price']; ?>" name="selling_price[]">
+												  </td>	
+												  <?php
+												  $itemUoms = $this->itemUomObj->get(array('item'=>$item_id));
+												  foreach($itemUoms as $uomRow):
+												    if($uomRow['costing_uom']!= '1'):
+													  ?> 
+													  <td>
+														<?php echo round($tdrow['selling_price'] * $uomRow['conversion'],2); ?>
+													 </td>
+													  <?php
+													endif; 
+												  endforeach;
+												 ?>																							
+											</tr>
+										<?php endforeach; ?>
+									</tbody>
+								</table>
+								<input type="hidden" value="<?php echo $batch_uom;?>" name="batch_uom">
+								<input type="hidden" value="<?php echo $item_id;?>" name="item">
+								<input type="hidden" name="batch" value="<?php echo $batch_id; ?>" />	
+							</div>
+						</div>
+						<div class="row">
+							<div class="col-lg-7">
+								 <i>Prepared by: <?php echo $this->userTable->getColumn($tdrow['author'],'name');?></i>
+								<br/><br/><br/>
+							</div>
+							<div class="col-lg-5" style="text-align: right">
+							    <?php if($count == 0):?>		
+								<a href="<?php echo $this->url('sam', array('action'=>'editstockopening', 'id'=>$id));?>" class="btn btn-info"> <i class="fa fa-pencil"></i> Edit </a>
+                                					
+								<a href="<?php echo $this->url('sam', array('action'=>'updatebatch', 'id'=>$id));?>" class="btn btn-warning"> <i class="fa fa-refresh"></i> Update Batch </a>
+                                <?php endif;?>							
+							</div>
+						</div>
+					</div>
+				</div>
+				</form>	
+			</div>
+		</div>
+	</div>
+</div>
+<script type="text/javascript">
+	$('#print').genpdfinvoice({
+		content: '#report-print',
+		src:"<?php echo $this->url('pdfxls', array('action' => 'pdf'));?>",
+		orentation:"P",//L =landscape, P = potrait
+	});
+</script>
+

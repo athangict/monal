@@ -1,0 +1,117 @@
+<?php
+/**
+ * 
+ * View -- of Hr/EmployeeController/addemployeeAction
+ * //
+ */
+    $this->headTitle($this->title);
+?>
+<?php foreach($benefit as $benefits);
+$employeeUser = $this->userObj->getColumn(array('employee'=>$benefits['employee']), 'id');	
+$max_activity = $this->flowtransactionObj->getMax($column='activity', $where=array('application'=>$benefits['id'],'process'=>1307));
+$current_flow = $this->flowtransactionObj->get(array('application'=>$benefits['id'], 'activity'=>$max_activity,'process'=>1307));?>
+
+<div class="row" >
+	<div class="col-lg-12"> 
+		<div class="widget-box transparent" id="print-content">
+			<div class="widget-header widget-header-large">
+				<h3 class="widget-title grey lighter">
+					Benefit Application &nbsp;&nbsp; <span class="orange">Dated:-<?php echo date('d-m-y',strtotime($benefits['date']));?></span>
+					&nbsp;&nbsp;<?php $this->status($benefits['status']); ?> 					
+				</h3>
+				<div class="widget-toolbar hidden-xs">
+					<div class="btn-list">
+						<?php //if($edit_option){ echo $this->button(2,$row['id']); }?>
+						<span data-bs-toggle='tooltip' data-bs-placement='top' title='PDF Print'>
+							<a class='btn btn-danger btn-xs' id="print">
+							<i class="ace-icon fa fa-file-pdf-o bigger-120"></i></a></span>
+					</div>
+				</div>
+			</div>
+			<div class="widget-body" id="print-content">
+				<div class="widget-main padding-12">
+					<div class="row" id="convert-tb0">
+						<div class="col-lg-12" id="convert-tb1">
+							Employee <b class="black"><?php echo $this->employeeObj->getColumn($benefits['employee'],'full_name'); ?></b><br>			
+							Date: <b class="black"><?php  echo date('d-m-Y', strtotime($benefits['date'])); ?></b><br>
+							Category: <b class="black"><?php echo $this->categoryObj->getColumn($benefits['category'],'name'); ?></b><br>
+							Subject: <b class="black"><?php echo $benefits['subject']; ?></b><br>
+							Requested Amount: <b class="black"><?php echo $benefits['requested_amt']; ?></b><br>
+							Eligibility Amount: <b class="black"><?php echo !empty($benefits['approved_amt']) ? $benefits['approved_amt'] : '- <i>On Allocation[FD]</i> -';?></b><br>
+						</div>
+					</div>
+					<div class="row">
+						<div class="col-lg-12">
+							<p class="text-secondary">Description: <?php echo $benefits['description']; ?> </p>
+						</div>
+						<div class="col-lg-12" id="convert-tb2"><?php foreach($this->activityObj->get(array('process'=>1307,'process_id'=>$benefits['id'])) as $actvity):?>	
+						<div class='underlined'>
+							<b class="black"><?php echo $this->userObj->getColumn($actvity['author'],'name');?></b>&nbsp;<?php echo $this->status($actvity['status']);?> to: <b class="black"><?php echo strtoupper($this->userObj->getColumn($actvity['send_to'],'name'));?> on</b>&nbsp;<?php echo date('d-m-Y', strtotime($actvity['created'])); ?>
+							<br>REMARKS: <b class="black"><i><?php echo $actvity['remarks'];?></i></b>
+						</div>
+						<style>
+							.underlined {
+								border-bottom: 0.5px solid #d0d0d0; /* Black underline */
+								padding-bottom: 10px; /* Adjust spacing as needed */
+								margin-bottom: 10px; /* Adjust spacing as needed */
+							}
+						</style>
+						<?php endforeach;?>
+					</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+<?php if(!empty($current_flow)):?>
+<div class="col-lg-12">
+	<?php echo $this->partial('partial/attachment.phtml', array('process' => '1307', 'process_id'=>$benefits['id'], 'applicationNO'=>$benefits['id'], 'login_id' =>$login_id,'status'=>$benefits['status']));?>
+</div><?php //endif;?>
+<div class="row">
+	<div class="col-lg-7">
+	</div>
+	<div class="col-lg-5" style="text-align: right"><?php
+	foreach($current_flow as $flow);
+	//echo'<pre>';print_r($flow);exit;
+		if( $benefits['status']!=8 && $benefits['status']!=6 && $benefits['status']!=4 && $benefits['status']!=17 && $benefits['status']!=21 && $benefits['status']!=10):?>
+		<a data-toggle="modal" data-target="#modal" href="<?php echo $this->url('benefit', array('action'=>'process', 'id'=>$benefits['id'].'-'.'1'.'-'.$flow['id']));?>" class="btn btn-success"> 
+		<i class="fa fa-check-square-o"></i> Apply  </a>
+	<?php 
+
+	elseif($login_id == $flow['role_id']):	
+		$actions = explode('|', $flow['action']);
+		for($i=0; $i < sizeof($actions); $i++):
+			$buttons = $this->flowactionObj->get($actions[$i]);
+			foreach($buttons as $button):?>
+			<span data-bs-toggle='tooltip' data-bs-placement='top' title='<?php echo $button['action']; ?>'>
+			<a data-toggle="modal" data-target="#modal" class="btn <?php echo $button['class']; ?>" href="<?php echo $this->url('benefit', array('action' => 'process', 'id'=>$benefits['id'].'-'.$button['id'].'-'.$flow['id'])); ?>">
+				<i class="icon <?php echo $button['icon'];?>"></i><?php echo $button['action']; ?>
+			</a></span>
+		<?php
+			endforeach;
+		endfor;
+	endif;?>
+	<?php 
+	$role=$this->userObj->getColumn($flow['role_id'], 'role');
+	//echo'<pre>';print_r($role);exit;
+	if($role==99):?>	
+	<a href="<?php echo $this->url('benefit', array('action'=>'editbenefit', 'id'=>$benefits['id']));?>" class="btn btn-info"> 
+	<i class="fa fa-pencil"></i> Update </a>	
+	<?php endif;?>	
+	</div>
+	<?php endif;?>
+</div>
+<script type="text/javascript">	   
+$(function(){
+	 $('#print').gentcpdf({
+		content: '#print-content',
+		src:"<?php echo $this->url('print', array('action' => 'index'));?>",
+		orentation:"P",
+		size: 'A4',
+	});
+	
+});
+</script>
+
+

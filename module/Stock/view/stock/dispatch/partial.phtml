@@ -1,0 +1,33 @@
+<?php // partial.phtml 
+	$dispatch = ($this->active == "dispatch")?"active":"";
+	$request = ($this->active == "request")?"active":"";
+	$requestview = ($this->active == "requestview")?"active":""; 
+	$dispatchreport = ($this->active == "dispatchreport")?"active":"";
+?>
+<br/>
+<ul class="nav nav-tabs padding-18 nav-fixed-top" id="myTab">
+	<li class="<?php echo $dispatch; ?>">
+		<a href="<?php echo $this->url('dispatch', array('action' => 'index')); ?>" title="Dispatch of Items">
+			<i class="orange ace-icon fa fa-cubes bigger-120"></i>
+			<span class="hidden-xs">Goods Dispatch & Receive</span>
+		</a>
+	</li>
+	<li class="<?php echo $request; ?>">
+		<a href="<?php echo $this->url('goodsrequest', array('action' => 'goodsrequest')); ?>" title="Good Request for Purchase or Dispatch">
+			<i class="green ace-icon fa fa-filter bigger-120"></i>
+			<span class="hidden-xs">Goods Request</span>
+		</a>
+	</li>
+	<!--li class="<?php echo $requestview; ?>">
+		<a href="<?php //echo $this->url('goodsrequest', array('action' => 'reorder')); ?>" title="Check reorder level of goods">
+			<i class="blue ace-icon fa fa-book bigger-120"></i>
+			<span class="hidden-xs">Check Reorder Goods</span>
+		</a>
+	</li-->
+	<li class="<?php echo $dispatchreport; ?>">
+		<a href="<?php echo $this->url('dispatch', array('action' => 'dispatchreport')); ?>" title="Check reorder level of goods">
+			<i class="red ace-icon fa fa-file-text-o bigger-120"></i>
+			<span class="hidden-xs">Dispatch Report</span>
+		</a>
+	</li>
+</ul>

@@ -1,0 +1,82 @@
+<?php
+/**
+ * 
+ * View -- of Stock/BatchController/marginadjustAction
+ * 
+ */
+$this->headTitle($this->title);
+?>
+<?php echo $this->partial('stock/batch/partial2.phtml', array('active' => 'marginadjust')); ?> <br/>
+<div class="row">
+	<div class="col-lg-12">
+		<div class="clearfix">
+			<div class="pull-right tableTools-container"></div>
+			<a class="red pull-right DTTT_button btn btn-white btn-info btn-bold" data-tooltip="tooltip" data-placement="top" 
+			title="ELC costing" href="<?php echo $this->url('batch', array('action' => 'addmarginadjust'));?>" >
+				<span class="red"><i class="fa fa-plus"></i> <span class="hidden-sm hidden-xs">&nbsp;Add</span></span>
+			</a>
+		</div>
+		<div class="card">
+			<div class="card-header">
+				<div class="btn-group pull-right">
+					<?php //echo $this->button(2,$page);?>
+				</div>
+			</div>
+			<table class="table table-bordered table-striped table-hover" id="dataTables">
+				<thead>
+					<tr>
+					    <th>#</th>
+						<th>Margin Adjust Date</th>
+						<th>Item</th>
+						<th>Batch No | Date</th>
+						<th>Batch Date</th>
+						<th>Est. Landed Cost(Nu.)</th>
+						<th class="no-sort">Action</th>
+					</tr>
+				</thead>
+				<tbody>					
+				  <?php 
+						$sl = 1; 						
+						foreach ($this->marginAdjustDtls as $dtl):
+					?>		
+						  <tr>
+							  <td><?php echo $sl++; ?></td> 
+							  <td><?php echo $dtl['adjust_date']; ?>&nbsp; 	<?php $this->status($dtl['status']);?> </td>
+							  <td><?php echo $this->itemObj->getColumn($dtl['item'],'code'); ?></td>
+							  <?php 
+							      $batchDtls = $this->batchObj->get($dtl['batch']);
+							      foreach($batchDtls as $batch);
+							   ?>
+							  <td><?php echo $batch['batch']; ?></td>  
+							  <td><?php echo $batch['batch_date']; ?></td> 							 
+							  <td><?php echo $batch['landed_cost']; ?></td> 
+							  <td>
+							     <div class="hidden-sm hidden-xs btn-group">
+								<a class="btn btn-xs btn-success" href="<?php echo $this->url('batch', array('action' => 'viewadjustmargin', 'id' => $dtl['id'])); ?>" title="view Margin Dtls">
+									<i class="ace-icon fa fa-eye bigger-120" ></i>  
+								 </a>
+								 <a data-toggle="modal" data-target = "#modal" class="btn btn-xs btn-danger" href="<?php echo $this->url('acl', array('action' => 'activitylog', 'id' => "20-".$dtl['id'])); ?>" title="View Activity Logs">
+									<i class="ace-icon fa fa-plus bigger-120" ></i>  
+								 </a>
+							     </div>
+							   </td>
+						   </tr>				 
+					<?php endforeach;?>
+				</tbody>
+			</table>
+		</div>
+	</div>
+</div>
+<!--for modal -->
+<div id="modal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content"> </div>
+    </div>
+</div>
+<script type="text/javascript">
+$('document').ready(function(){
+	$('#dataTables').DataTable({
+		"paging":   true,
+	});
+});
+</script>

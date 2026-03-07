@@ -1,0 +1,296 @@
+<?php
+/**
+ * View -- of Stock/MasterController/edittripAction
+ */
+$this->headTitle($this->title);
+?>
+<?php foreach($trips as $trip);?>
+<div class="row">
+	<div class="col-lg-12">
+		<div class="widget widget-box">
+			<div class="widget-header">
+				<h5 class="widget-title lighter smaller">
+					<i class="fa fa-pencil"></i>&nbsp;Manage Trip Details:&nbsp;<?php echo $trip['trip_no']; ?>
+				</h5>
+			</div><!-- end of widget-header -->
+			<div class="widget-body">
+				<div class="widget-main">
+					<div class="row" id="convert-tb0">
+						<div class="col-lg-8" id="convert-tb1">
+							<ul class="list-unstyled spaced">
+								<li>
+									<i class="ace-icon fa fa-caret-right blue"></i>
+									Trip No : <b class="red"><?php echo $trip['trip_no']; ?></b>
+								</li>										
+								<li>
+									<i class="ace-icon fa fa-caret-right blue"></i>
+									Trip Date : <b class="red"><?php echo $trip['trip_date'];?></b>
+								</li>
+							</ul>
+						</div>
+						
+						<div class="col-lg-4" id="convert-tb2">
+							<ul class="list-unstyled spaced">									
+								<li>
+									<i class="ace-icon fa fa-caret-right blue"></i>
+									Effect Date : <b class="red"> <?php echo ($trip['effect_date']==NULL)?'No Effect Date':$trip['effect_date'];?></b>
+								</li>									
+								<li>
+									<i class="ace-icon fa fa-caret-right blue"></i>
+									Status : 
+									<b class="red">
+										<?php if($trip['status']==1):?>
+										<span class="label label-success">Active</span>
+										<?php else:?>
+										<span class="label label-warning">InActive</span>
+										<?php endif;?>
+									</b>
+								</li>
+							</ul>
+						</div>
+					</div>
+					<div class="space-6"></div>
+					<form id="#form" method="post" action="<?php echo $this->url('stmaster', array('action' => 'edittrip')); ?>"  enctype="multipart/form-data" >    
+						<div class="row">
+							<div class="col-lg-4" algin="left"> 
+								<div class="form-group">
+									<label for="source_location" class="control-label">Source Location</label>
+									<select class="form-control" name="source_location" id="source_location" data-placeholder="Select"  onchange='this.form.submit()' required>
+										<option value=""></option>
+										<?php foreach($this->locationObj->getAll() as $row): 
+											$selected = ($data['source_location'] == $row['id'])?'selected':'';?>
+										<option value="<?php echo $row['id'];?>" <?php echo $selected;?>>
+											<?php echo $row['location'];?>
+										</option>
+										<?php endforeach; ?>
+									</select> 
+									<input type="hidden" value="<?php echo $trip['id']?>" name="trip_id" id="trip_id" />
+								</div>
+							</div>
+							<div class="col-lg-4" algin="left"> 
+								<div class="form-group">	
+									<label for="location_type" class="control-label">Destination Location Type</label>
+									<select class="form-control" name="location_type" id="location_type" data-placeholder="Select"  onchange='this.form.submit()' required>
+										<option value=""></option>
+										<?php foreach($this->locationtypeObj->get(array('sales'=>1)) as $type): 
+											$selected = ($data['location_type'] == $type['id'])?'selected':'';?>
+										<option value="<?php echo $type['id'];?>" <?php echo $selected;?>>
+											<?php echo $type['location_type'];?>
+										</option>
+										<?php endforeach; ?>
+									</select> 
+								</div>
+							</div>
+							<div class="col-lg-4" algin="left"> 
+								<div class="form-group">	
+									<label for="region" class="control-label">Region of Destination Location</label>
+									<select class="form-control" name="region" id="region" data-placeholder="Select"  onchange='this.form.submit()' required>
+										<option value="-1">All</option>
+										<?php foreach($regions as $reg): 
+											$selected = ($data['region'] == $reg['id'])?'selected':'';?>
+										<option value="<?php echo $reg['id'];?>" <?php echo $selected;?>>
+											<?php echo $reg['region'];?>
+										</option>
+										<?php endforeach; ?>
+									</select> 
+								</div>
+							</div>
+						</div>
+						<div class="row">
+							<div class="col-lg-12">
+								<?php if($data['source_location']>0 && $trip['id']>0 && $data['location_type']>0):?>
+									<div class="alert alert-info">  
+										<i class="ace-icon fa fa-paw fa-2x"></i> &nbsp;&nbsp;Trip Details from <b><?php echo $this->locationObj->getColumn($data['source_location'],'location'); ?></b>
+									</div>
+									<div>
+													                            <table class="table table-striped table-condensed table-bordered table-hover" id="example">
+
+											<thead>
+											   <tr>
+													<th>#</th>
+													<th>To Location</th>
+													<th>Plain Distance (KM)</th>
+													<th>Plain Rate/KM (Nu.)</th>
+													<th>Hill Distance (KM)</th>
+													<th>Hill Rate/KM (Nu.)</th>
+													<th>No of Stops(Hops)</th>
+													<th>Remarks</th>
+												</tr>
+											</thead>
+											<tbody>	
+												<?php
+											$sl = 1; 
+											if($data['region'] == '-1'):
+												$destination_locations = $this->locationObj->get(array('l.location_type' => $data['location_type']));
+											else:
+												$destination_locations = $this->locationObj->get(array('l.location_type' => $data['location_type'], 'l.region' => $data['region']));
+											endif;
+											foreach($destination_locations as $row):
+												$id = "";
+												$distance = "";
+												$rate = "";
+												$hop = "";
+												$remarks = "";
+												if($data['source_location'] != $row['id']){
+											   ?>
+												<tr>
+													<td><?php echo $sl++; ?></td>			
+												<?php 
+												  $tripDtls = $this->tripdtlsObj->get(array('trip'=>$trip['id'],'source_location'=>$data['source_location'], 'destination_location'=>$row['id'])); 			  
+												  if(sizeof($tripDtls) == 0){ 
+													$tripDtls = $this->tripdtlsObj->get(array('trip'=>$trip['id'],'source_location'=>$row['id'], 'destination_location'=>$data['source_location'])); 			  
+												  }
+												  if(sizeof($tripDtls) > 0){ 
+													 foreach($tripDtls as $tripRow):
+														$id = $tripRow['id'];
+														$plain_distance = $tripRow['plain_distance'];
+														$plain_rate = $tripRow['plain_rate'];
+														$hill_distance = $tripRow['hill_distance'];
+														$hill_rate = $tripRow['hill_rate'];
+														$hop = $tripRow['hop'];
+														$remarks = $tripRow['remarks'];
+													 endforeach; 
+												 }
+												?>
+												<td><input type="hidden" value="<?php echo $row['id']; ?>" name="destination_location[]" class="form-control">
+												  <b><?php echo $row['location']; ?></b>
+													<input type="hidden" value="<?php echo $id; ?>" name="id[]">
+												  </td>
+												<td><input type="text" value="<?php echo $plain_distance; ?>" name="plain_distance[]" class="form-control"><?php echo $plain_distance; ?></td>
+												<td><input type="text" value="<?php echo $plain_rate; ?>" name="plain_rate[]" class="form-control"><?php echo $plain_rate; ?></td>
+												<td><input type="text" value="<?php echo $hill_distance; ?>" name="hill_distance[]" class="form-control"><?php echo $hill_distance; ?></td>
+												<td><input type="text" value="<?php echo $hill_rate; ?>" name="hill_rate[]" class="form-control"><?php echo $hill_rate; ?></td>
+												<td><input type="text" value="<?php echo $hop; ?>" name="hop[]" class="form-control"><?php echo $hop; ?></td>
+												<td><input type="text" value="<?php echo $remarks; ?>" name="remarks[]" class="form-control"><?php echo $remarks; ?></td>												 </tr>
+											   <?php
+											   }
+											   endforeach;
+											 ?>
+											</tbody>
+										</table>
+
+
+
+									</div>
+								<?php else:?>
+									<div class="alert alert-warning">  
+										<i class="ace-icon fa fa-paw fa-2x"></i> &nbsp;&nbsp;<b>Select the Source location  and the Destination location type to manage the trip details.</b>
+									</div>
+								<?php endif;?>
+							</div>
+						</div>
+						<div class="row">
+							<div class="col-lg-12">
+								<label class="control-label" for="note">Note: </label>
+								<textarea class="form-control" name="note" id="note"><?php echo $trip['note'];?></textarea>
+							</div>
+						</div>
+						<div class="space-12"></div>
+						<div class="row"> 
+							<div class="col-lg-9"></div>
+							<div class="col-lg-3"> 
+								<button type="submit" class="btn btn-success" name="btn" value="save_trip"><i class="fa fa-save"></i> Save Trip Details </button>
+								<button type="button" class="btn btn-warning" onclick="window.location.href='<?php echo $this->url('stmaster',array('action'=>'trip'));?>'" ><i class="fa fa-times"></i> Cancel </button> 					
+							</div>
+						</div>
+					</form>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+<script>
+$('document').ready(function(){
+	$('#po_date').on('changeDate',function(){
+		$('form').formValidation('revalidateField', $(this).attr('id'));
+	});
+	var title_table = $('input#source_location').val()+' from '+$('input#location_type').val()+' to '+$('input#region').val();
+	$('#example').DataTable( {
+		dom: 'Bfrtip',
+		/*buttons: [
+			'copy', 'csv', 'excel', 'pdf', 'print'
+		]*/
+		lengthMenu: [
+			[ 10,25, 50, -1 ],
+			[ '10 rows','25 rows', '50 rows', 'Show all' ]
+		],
+		columnDefs: [ {
+			visible: false
+		} ],
+		buttons: [
+			{
+				extend: 'copy',
+				exportOptions: {
+					columns: ':visible'
+				},
+				text: '<i class="fa fa-files-o"></i> Copy',
+				titleAttr: 'Copy'
+			},
+			{
+				extend: 'excel',
+				title: title_table,
+				exportOptions: {
+					columns: ':visible'
+				},
+				text: '<i class="fa fa-file-excel-o"></i> Excel',
+				titleAttr: 'Excel'
+			},
+			{
+				extend: 'pdfHtml5',
+				title: title_table,
+				exportOptions: {
+					columns: ':visible'
+				},
+				orientation: 'landscape',
+				pageSize: 'LEGAL',
+				text: '<i class="fa fa-file-pdf-o"></i> Pdf',
+				titleAttr: 'PDF'
+			},
+			{
+				extend: 'print',
+				title: title_table,
+				exportOptions: {
+					columns: ':visible'
+				},
+				text: '<i class="fa fa-print"></i> Print',
+				titleAttr: 'Print'
+			},
+			'pageLength','colvis'
+		],
+		select:true
+	});
+	/*** Form Validation of PO ***/
+	const fv = FormValidation.formValidation(document.getElementById('#form'), {
+		fields: {
+			'source_location': {
+				validators: {
+					notEmpty: {
+						message: 'Please select source location of the trip'
+					}
+				}
+			},
+			'location_type': {
+				validators: {
+					notEmpty: {
+						message: 'Please select destination location type'
+					}
+				}
+			},
+		},
+		plugins: {
+			trigger: new FormValidation.plugins.Trigger(),
+			bootstrap3: new FormValidation.plugins.Bootstrap3(),
+			submitButton: new FormValidation.plugins.SubmitButton(),
+			defaultSubmit: new FormValidation.plugins.DefaultSubmit(),
+		},
+	}).on('core.element.validated', function (e) {
+		if (e.valid) {
+			$('div#'+ e.field.replace('[]','') +'_chosen').removeClass('is-invalid');
+			$('div#'+ e.field.replace('[]','') +'_chosen').addClass('is-valid');
+		} else {
+			$('div#'+ e.field.replace('[]','') +'_chosen').removeClass('is-valid');
+			$('div#'+ e.field.replace('[]','') +'_chosen').addClass('is-invalid');
+		}
+	});
+});    
+</script>

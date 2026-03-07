@@ -1,0 +1,130 @@
+<?php if(sizeof($this->pendingCredit) == 0): ?>
+<table class="table" id="trdetails_table" style="border-top:2px solid #ddd;" >
+ <thead>
+   <tr>
+      <th>#</th> 
+      <th>Memo No.</th>
+  	  <th>Sales Date  -  Due Date</th>
+	  <th>Location</th>
+      <th>Invoice Amount(<?php echo $this->currency_code();?>)</th>
+	  <th>Penalty</th>
+	  <th>Payable Amount</th>
+	  <th>Due Amount</th>
+	  <th>Payment Check</th>
+    </tr>
+   </thead>
+   <tbody>
+   <?php $sl = 1;    
+    foreach ($salesmemos as $memo): 	
+	 $difference_amount = $memo['payment_amount'] - $memo['received_amount']; 
+	 if($difference_amount >= 1){	 
+	 $penalty_amount = "0.00"; ?>
+       <tr>
+         <td><?php echo $sl++; ?>.<input type="hidden" name="sales[]" value="<?php echo $memo['id'];?>" id="sales"></td>
+		 <td><?php echo $memo['sales_no']; ?></td>
+		 <td><?php echo $this->dateformat($memo['sales_date']); ?> &nbsp; : &nbsp;<?php echo $this->dateformat($memo['due_date']); ?></td>
+		 <td><?php echo $this->locationObj->getColumn($memo['location'],'location'); ?></td>
+		 <td><?php echo $memo['payment_amount']; ?> <input type="hidden" name="invoice[]" value="<?php echo $difference_amount; ?>" id="invoice"></td>
+		 <td><?php 
+		     $due_date = strtotime($memo['due_date']);
+             $to_day = strtotime(date('Y-m-d'));
+			 $sales_date = strtotime($memo['sales_date']); 
+			 $sl_difference = floor(abs($to_day - $sales_date)/(60*60*24)); 
+			  if($sl_difference > 30){	
+			    $ageing_days = $sl_difference - 30;
+				$penalty_percent = 24/100;
+				$penalty_amount = (($penalty_percent * $memo['payment_amount'])/360) * $ageing_days;
+			  }
+			  else{ $penalty_amount = "0.00"; }
+			  $payable_amount = round($penalty_amount+$difference_amount,2);
+			  echo round($penalty_amount,2); 
+		  ?>
+		 <input type="hidden" value="<?php echo $penalty_amount; ?>" name="penalty[]" id="penalty">
+		 </td>
+		 <td><input type="text" class="form-control" name="payable[]" id="payable" value="<?php echo $payable_amount; ?>" size="8"></td>
+		  <td><input type="text" class="form-control" name="due_amount[]" id="due_amount" value="0" size="5" readonly></td>
+		 <td><input type="checkbox" class="form-control" id="payment_check" name="payment_check[]" value="1"></td>
+       </tr>
+	 <?php }
+	 endforeach;  ?>
+   </tbody>
+ </table>
+ <?php else: ?>
+    <div class="alert alert-warning fade in">  
+    				    * <b>Credit Payment still pending. There is possibility for double entry. So before you proceed, commit or cancel the credit payment listed below </b>
+    				     <?php foreach($this->pendingCredit as $row ): ?>
+						 <ol>
+    				      <ol> <li><a href="<?php echo $this->url('sales',array('action'=>'viewreceipt', 'id'=>$row['id'])); ?>"><?php echo $row['receipt_no']; ?> (<?php echo $row['receipt_date'];?>)</a></li> </ol>
+    				     </ol>
+						 <?php endforeach; ?>
+    				 </div> 
+ <?php endif; ?>
+ 
+ <script type="text/javascript">
+	$(function() {
+		var tr_id = 0;
+		var total_invoice = 0;		
+		var payable = 0; 	
+		var due_amount = 0;	
+		var parentObj = $('#trdetails_table');	
+		parentObj.wrap("<div style='overflow-x:scroll;margin-bottom:5px;'> </div>");
+		parentObj.find("tbody tr").each(function(){
+			$(this).attr('id',++tr_id);				
+			$(this).find(':input').each(function(){
+	            var old_id = $(this).attr('id');			
+	            var new_id=(old_id.lastIndexOf('-') > 0)? old_id.substr(0, old_id.lastIndexOf('-')): old_id;
+	            $(this).attr('id',new_id+'-'+tr_id);
+	            $(this).addClass('tr-'+new_id);
+	        });	
+			var id = $(this).attr('id');
+			$("#penalty_applicable").change(function() {				   
+				if ($(this).prop('checked')==true){ 	
+				    payable = parseFloat($("#invoice-"+id).val()) + parseFloat($("#penalty-"+id).val()); 
+					penaltySum(parentObj);					
+				}else{
+					payable = parseFloat($("#invoice-"+id).val());	
+                    $("#total_penalty").val(0.00);				
+				}
+				$("#payable-"+id).val(parseFloat(payable).toFixed(2));
+				$("#due_amount-"+id).val(0);
+				 payableSum(parentObj);
+			});	
+            $("#payable-"+id).change(function() {	
+			    if ($("#penalty_applicable").prop('checked')==true){
+		            due_amount = parseFloat($("#invoice-"+id).val()) + parseFloat($("#penalty-"+id).val()) - parseFloat($(this).val());
+				}else{
+					due_amount = parseFloat($("#invoice-"+id).val()) - parseFloat($(this).val());
+				}
+				if(due_amount > 0 ) { $("#due_amount-"+id).val(parseFloat(due_amount).toFixed(2)); }else{  $("#due_amount-"+id).val('0.00'); }
+				payableSum(parentObj);
+		    });	
+			$("#payment_check-"+id).change(function() {	 
+		        payableSum(parentObj);
+				penaltySum(parentObj);
+		    });	
+		}); 	
+        
+        function payableSum(obj){
+			var total_payable = 0;
+			obj.find('tbody tr').each(function(){
+				var id = $(this).attr("id");
+				if ($("#payment_check-"+id).prop('checked')==true){
+					total_payable += parseFloat($("#payable-"+id).val()); 
+				}				
+			});
+			$("#total_payable").val(parseFloat(total_payable).toFixed(2));
+		}		
+		function penaltySum(obj){
+			var total_penalty = 0;
+			obj.find('tbody tr').each(function(){
+				var id = $(this).attr("id");
+				if($("#penalty_applicable").prop('checked')==true){
+					if ($("#payment_check-"+id).prop('checked')==true){
+						total_penalty += parseFloat($("#penalty-"+id).val()); 
+					}		
+				}					
+			});
+			$("#total_penalty").val(parseFloat(total_penalty).toFixed(2));
+		}		
+	});			
+</script>

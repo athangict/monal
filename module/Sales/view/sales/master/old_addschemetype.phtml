@@ -1,0 +1,69 @@
+<?php
+/**
+ * 
+ * View -- of Sales/MasterController/addschemetype
+ * 
+ */
+?>
+<form method="post" action="<?php echo $this->url('slmaster', array('action' => 'addschemetype')); ?>" enctype="multipart/form-data">
+    <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+        <h4 class="modal-title"> <i class="fa fa-asterisk"></i> Add New Scheme Type</h4>
+    </div>  <!-- /modal-header -->
+    <div class="modal-body">
+		<div class="panel panel-default">                       
+			<div class="panel-body">   
+				<div class="form-group">
+					<label for="scheme_type" class="control-label">Scheme Type</label>
+					<input type="text" class="form-control" name="scheme_type" id="scheme_type" size="30" placeholder="Scheme Type" required/> 
+				</div>
+				<div class="form-group">
+					<label for="description" class="control-label">Description</label>
+					<input type="text" class="form-control" name="description" id="description" size="30" placeholder="Description" required/> 
+				</div>
+				<div class="form-group">
+					<label for="type" class="control-label">Description</label>
+					<select id="type" name="type" class="form-control" data-placeholder="Select">
+						<option value="1">Actual Qty</option>
+						<option value="2">Rate</option>
+					</select>
+				</div>
+			</div>
+		</div>
+    </div> <!-- /modal-body -->
+    <div class="modal-footer">
+        <button type="submit" class="btn btn-success"><i class="fa fa-check"></i> Save </button>
+        <button type="button" class="btn btn-warning" data-dismiss="modal" ><i class="fa fa-times"></i> Cancel </button> 
+    </div>  
+</form>
+<script>
+	$('document').ready(function(){
+		$('form').formValidation({
+			excluded: ':disabled',
+			message: 'Please enter a value.',
+			fields: {
+				scheme_type: {
+					validators: {
+						notEmpty: {
+							message: 'Please provide scheme type.'
+						}
+					}
+				},
+				description: {
+					validators: {
+						notEmpty: {
+							message: 'Please provide description for the scheme'
+						}
+					}
+				},
+			}
+		});
+	});
+</script>
+
+
+
+
+
+
+

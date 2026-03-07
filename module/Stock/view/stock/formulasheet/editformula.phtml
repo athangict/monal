@@ -1,0 +1,388 @@
+<?php 
+/**
+ * add formula view
+ */
+$this->headTitle($this->title);
+?>
+<?php echo $this->partial('stock/master/partial.phtml', array('active' => 'formula')); ?>
+<style>
+	.mytable tr th,.mytable tr td {
+		padding:5px;
+		border:1px solid #ddd;
+	}
+</style>
+<?php 
+ if(sizeof($this->formulaDtls)>0):
+    foreach ($this->formulaDtls as $formuladtl ): 
+        $fs_id = $formuladtl['id']; 
+        $activity_id = $formuladtl['activity'];
+        $costing_type_id = $formuladtl['costing_type'];
+        $formula_name = $formuladtl['formula_name'];
+        $note = $formuladtl['description'];
+    endforeach;
+ endif;
+?>
+          <div class="row">				 
+				  <div class="col-lg-4">
+                    <h5 class="widget-title lighter smaller">
+                       <i class="fa fa-book"></i> &nbsp;<strong> Costing Elements </strong>
+                   </h5>
+                   <table class="table" style="border-top:2px solid #ddd;">
+            		<thead>
+            			<tr>
+            			    <th>#</th>									
+            				<th>Costing Element </th>
+            				<th>Source(Table)</th>
+            				<th>Code</th>	
+            			</tr>
+            		</thead>
+            		<tbody>
+            		     <tr>
+            		         <td>1.</td>
+            		         <td>Unit_UOM (Units/Case|MT)</td>
+            		         <td>PO / Invoice</td>
+            		         <td><b>[I.unit_uom]</b></td>					         
+            		     </tr>
+            		     <tr>
+            		         <td>2.</td>
+            		         <td>Invoice Rate</td>
+            		         <td>PO / Invoice</td>
+            		         <td><b>[I.rate]</b></td>					         
+            		     </tr>
+						 <tr>
+            		         <td>3.</td>
+            		         <td>Invoice Quantity</td>
+            		         <td>PO / Invoice</td>
+            		         <td><b>[I.quantity]</b></td>					         
+            		     </tr>
+            		      <tr>
+            		         <td>4.</td>
+            		         <td>BST (Import Tax)</td>
+            		         <td>Item Master</td>
+            		         <td><b>[B.BST]</b></td>					         
+            		     </tr>
+						 <tr>
+            		         <td>5.</td>
+            		         <td>Net Weight in MT</td>
+            		         <td>Item Master</td>
+            		         <td><b>[B.net_weight]</b></td>					         
+            		     </tr>
+            	         <tr>
+            		         <td>6.</td>
+            		         <td>Transportation</td>
+            		         <td>Trip</td>
+            		         <td><b>[T.Transportation]</b></td>					         
+            		     </tr>
+						 
+						  <tr>
+            		         <td>7.</td>
+            		         <td>ELC</td>
+            		         <td>Costing Sheet</td>
+            		         <td><b>[B.landed_cost]</b></td>					         
+            		     </tr>
+            	        </tbody>
+                    </table>
+                 </div>
+                 <div class="col-lg-4">                 
+				   <h5 class="widget-title lighter smaller">
+					<i class="fa fa-book"></i> &nbsp;<strong> Charges Tax Elements</strong>
+				   </h5>
+					 <table id="csTable"  class="table" style="border-top:2px solid #ddd;">
+						<thead>
+							<tr>
+								<th>#</th>
+								<th>Charge element</th>
+								<th>Value</th>
+								<th>Code</th>
+							</tr>
+						</thead>
+						<tbody>
+						  <?php 
+            		      $i = 1; 
+            		      foreach ($this->charges as $charge): ?>
+            		         <tr>
+            			         <td> <?php echo $i++; ?></td>
+            			         <td> <?php echo $charge['charge_tax']; ?></td>
+            			         <td> <?php echo $charge['value']; echo $per = ($charge['percentage'] == '1')?"%":""; ?></td>
+            			         <td><b>[C.<?php echo $charge['charge_tax'];?>]</b></td>
+            		         </tr>
+            		      <?php endforeach; ?>
+						</tbody>
+					 </table>	
+	           </div>
+			    <div class="col-lg-4">                 
+				   <h5 class="widget-title lighter smaller">
+					<i class="fa fa-book"></i> &nbsp;<strong> Invoice Defination Field</strong>
+				    </h5>
+					 <table id="csTable1"  class="table" style="border-top:2px solid #ddd;">
+						<thead>
+						  <tr>
+							<th>#</th>
+							<th>Inv Field</th>
+							<th>Description</th>
+							<th>Code</th>
+						  </tr>
+						</thead>
+						<tbody>
+						  <?php 
+							  $i = 1; 
+							  foreach ($this->invDefFields as $field): ?>
+								 <tr>
+									 <td> <?php echo $i++; ?></td>
+									 <td> <?php echo $field['def_field']; ?></td>
+									 <td> <?php echo $field['description']; ?></td>
+									 <td><b>[D.<?php echo $field['def_field'];?>]</b></td>
+								 </tr>
+						 <?php endforeach; ?>
+						</tbody>
+					 </table>	
+	           </div>
+		      </div>
+			  
+			 <div id="row">				               
+			   <div class="col-lg-12">	
+				 <div class="widget widget-box">
+					<div class="widget-header">
+					  <h5 class="widget-title lighter smaller">
+							<i class="fa fa-asterisk"></i>&nbsp;&nbsp;New Costing Formula
+					  </h5>	
+			   </div>
+			   <div class="widget-body">
+				<div class="widget-main">			                    
+				<form  id="#form" method="post" action="<?php echo $this->url('formula', array('action' => 'editformula')); ?>">    
+					<div class="row">
+					  <input type="hidden" id="fs_id" name="fs_id" value="<?php echo $fs_id;?>"/>                          
+					   <div class="col-lg-4">    
+							<div class="form-group">                        								
+							<label for="activity" class="control-label">Formula Name</label>
+							<input type="text" class="form-control" name="formula_name" id="formula_name" value="<?php echo $formula_name; ?>" required>
+						  </div>                							
+						</div>    						  	
+						<div class="col-lg-4">    
+							<div class="form-group">                        								
+							<label for="activity" class="control-label">Activity</label>
+							<select class="form-control" name="activity" id="activity" data-placeholder="Select" required>
+								<option value=""></option>
+								<?php foreach($this->activities as $activity):?>
+									<?php $selected = ($activity_id == $activity['id'])?"selected":""; ?>
+									<option value="<?php echo $activity['id'];?>" <?php echo $selected; ?> >
+										<?php echo $activity['activity']; ?>
+									</option>
+								<?php endforeach; ?>
+							</select>
+						  </div>                							
+					  </div>
+					  
+					  <div class="col-lg-4">    
+							<div class="form-group">                        								
+							<label for="activity" class="control-label">Costing Type</label>
+							<select class="form-control" name="costing_type" id="costing_type" data-placeholder="Select" required>
+								<option value=""></option>
+								<?php foreach($this->costingTypes as $ctype):?>
+									<?php $selected_ctype = ($costing_type_id == $ctype['id'])?"selected":""; ?>
+									<option value="<?php echo $ctype['id'];?>" <?php echo $selected_ctype; ?>>
+										<?php echo $ctype['costing_type']; ?>
+									</option>
+								<?php endforeach; ?>
+							</select>
+						  </div>                							
+					  </div> 
+					</div>                						
+								 
+				   <div class="row">
+				   <div class="col-lg-12"> 
+					  <h5>Costing Formula Details</h5>
+						 <div>
+							<table id="trdetails_table" class="table small-padding">
+								<thead>
+									<tr>
+										<th>Costing Head</th>
+										<th>Formula</th>
+										<th>Code</th>	
+										<th>Order</th>		
+										<th>ELC</th>								
+										<th></th>
+									</tr>
+								</thead>
+								<tbody>										
+					<?php if(sizeof($this->formulaSheetDtls) > 0): 
+							  foreach ($this->formulaSheetDtls as $fsdtl):			   
+								?>										
+							<tr>
+								<td width="20%"> 
+									<div class="form-group">
+									
+										<select id="costing_head" name="costing_head[]" class="form-control" data-placeholder="Select" >
+											<option value=""></option>		
+											<?php foreach($this->costing_headsObj->getAll() as $head): ?>
+											<?php
+												 $selected = ($head['id'] == $fsdtl['costing_head'])?"selected":""; 
+											?>
+												  <option value="<?php echo $head['id']; ?>" <?php echo $selected; ?>><?php echo $head['costing_head']; ?></option>
+											<?php endforeach; ?>																											
+										</select>
+										<input type="hidden" name="details_id[]" id="details_id-<?php echo $i;?>" value="<?php echo $fsdtl['id'];?>">
+									</div>
+								</td>
+								<td width="40%">
+									<div class="form-group">
+										<input type="text" id="formula" name="formula[]" id="formula"  class="form-control" value="<?php echo $fsdtl['formula']; ?>">
+									</div>
+								</td>
+								<?php $costing_head_code = $this->costing_headsObj->getColumn($fsdtl['costing_head'],'costing_head');?>
+								<td width="15%">
+									<div class="form-group">
+										<input type="text" class="form-control" name="code[]" id="code"  value="<?php echo "[S.".$costing_head_code."]"; ?>"/>
+									</div>
+								</td>	
+								
+								<td width="5%">
+									<div class="form-group">
+										<input type="text" class="form-control" name="order[]" id="order" value="<?php echo $fsdtl['serial']; ?>" />
+									</div>
+								</td>		
+								
+								<td width="15%">
+									<div class="form-group">
+										<select name="elc[]" id="elc">
+											<?php $yesSelected = ($fsdtl['elc'] == '1')?"selected":""?>
+											<?php $noSelected = ($fsdtl['elc'] == '1')?"selected":""?>
+											<option value="0" <?php echo $yesSelected; ?>>No</option>
+											<option value="1" <?php echo $noSelected; ?>>Yes</option>
+										</select>
+									</div>
+								</td>	
+																	
+								<td></td>
+							</tr>
+					<?php endforeach;
+						else:
+					 ?>
+						<tr>
+						<td width="20%"> 
+							<div class="form-group">
+								<select id="costing_head" name="costing_head[]" class="form-control" data-placeholder="Select" >
+									<option value=""></option>		
+									<?php foreach($this->costing_heads as $head): ?>
+										  <option value="<?php echo $head['id']; ?>"><?php echo $head['costing_head']; ?></option>
+									<?php endforeach; ?>																											
+								</select>
+							</div>
+						</td>
+						<td width="30%">
+							<div class="form-group">
+								<input type="text" id="formula" name="formula[]" id="formula"class="form-control">
+							</div>
+						</td>
+						
+						<td width="15%">
+							<div class="form-group">
+								<input type="text" class="form-control" name="code[]" id="code"/>
+							</div>
+						</td>	
+						
+						<td width="10%">
+							<div class="form-group">
+								<input type="text" class="form-control" name="order[]" id="order"/>
+							</div>
+						</td>		
+						
+						<td width="15%">
+							<div class="form-group">
+								<select name="elc[]" id="elc">
+									<option value="0" selected>No</option>
+									<option value="1">Yes</option>
+								</select>
+							</div>
+						</td>	
+															
+						<td></td>
+					</tr>
+					 <?php
+						endif; 
+				  ?>
+								</tbody>
+							</table>
+						</div> <!-- end of div -->
+					</div> <!-- end of col-lg-12 -->
+				</div>	<!-- end of row -->		
+				
+				<div class="row">
+					<div class="col-lg-12">
+						<label class="control-label" for="note">Note: </label>
+						<textarea class="form-control" name="note" id="note"><?php echo $note; ?></textarea>
+					</div>
+				</div>
+				<div class="space-12"></div>
+				<div class="row"> 	
+					<div class="col-lg-9"> 
+						<button type="submit" class="btn btn-success"><i class="fa fa-check"></i> Save </button>
+						<button type="button" class="btn btn-warning" onclick="window.location.href='<?php echo $this->url('formula',array('action' => 'view', 'id' => $fs_id));?>'" ><i class="fa fa-times"></i> Cancel </button> 					
+					</div>
+				</div>	         
+			</form>
+			</div>
+		  </div>
+		</div>
+		</div>      
+	   </div>
+	  </div>	    
+    </div>
+    
+    
+<script type="text/javascript">
+$(function() {		
+	$('#trdetails_table').formulasheet({
+			getFormulaCode:'<?php echo $this->url("formula", array("action" => "getformulacode"));?>',
+		});
+	/******** formValidation *************/
+	const fv = FormValidation.formValidation(document.getElementById('#form'), {
+		fields: {
+			'costing_type': {
+				validators: {
+					notEmpty: {
+						message: 'Please select costing type'
+					}
+				}
+			},
+			
+			'activity': {
+				validators: {
+					notEmpty: {
+						message: 'Please select activity.'
+					}
+				}
+			},   
+			
+			'costing_head[]':{
+				validators: {
+					notEmpty: {
+						message: 'Please select uom.'
+					}
+				}
+			}, 
+			'formula[]':{
+				validators: {
+					notEmpty: {
+						message: 'Please provide formula.'
+					}
+				}
+			}             
+		},
+		plugins: {
+			trigger: new FormValidation.plugins.Trigger(),
+			bootstrap3: new FormValidation.plugins.Bootstrap3(),
+			submitButton: new FormValidation.plugins.SubmitButton(),
+			defaultSubmit: new FormValidation.plugins.DefaultSubmit(),
+		},
+	}).on('core.element.validated', function (e) {
+		if (e.valid) {
+			$('div#'+ e.field.replace('[]','') +'_chosen').removeClass('is-invalid');
+			$('div#'+ e.field.replace('[]','') +'_chosen').addClass('is-valid');
+		} else {
+			$('div#'+ e.field.replace('[]','') +'_chosen').removeClass('is-valid');
+			$('div#'+ e.field.replace('[]','') +'_chosen').addClass('is-invalid');
+		}
+	});
+});
+</script>

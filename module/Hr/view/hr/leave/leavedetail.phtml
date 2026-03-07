@@ -1,0 +1,201 @@
+<?php
+/**
+ * 
+ * View -- of Hr/LeaveController/indexAction
+ * 
+ */
+ 
+$this->headTitle($this->title);
+foreach($this->leavedetail as $row);
+foreach($this->employeeObj->get($row['employee']) as $emp);
+$userEmp = $this->usersObj->getColumn($this->userID, 'employee');
+$flag = false;
+$checkleaveOfficial =$this->userObj->get(array('id'=>$this->userID, 'role'=>4));  
+if(sizeof($checkleaveOfficial) >0 && sizeof($this->leavedetail)>0){
+  $flag = true;
+}else{	
+  $results = $this->ActivityLogObj->get(array('process'=>520, 'process_id'=>$row['id']));
+  $activity_user = array();
+  foreach($results as $log):  array_push($activity_user, $log['author']);  endforeach;
+  $userEmp = $this->usersObj->getColumn($this->userID, 'employee');
+  if($userEmp == $row['employee'] || $userEmp == $row['delegation'] || in_array($this->userID,$activity_user))
+  {
+	$flag = true;
+  }					  
+}			
+
+
+//if($flag):
+?>
+<div class="row">
+	<div class="col-lg-12">
+		<div class="widget-box transparent ">
+			<div class="widget-header widget-header-large">
+			       <a class="btn btn-xs btn-danger" data-toggle="modal" data-target="#modal" 
+				   href="<?php echo $this->url('acl', array('action' => 'activitylog', 'id' => "22-".$row['id'])); ?>" title="View Activity Logs">
+							<i class="ace-icon fa fa-plus smaller-120"></i>  
+				   </a>
+				   &nbsp;&nbsp;
+				<h3 class="widget-title grey lighter">
+					Leave Application &nbsp;&nbsp; <span class="orange">Dated:-<?php echo date('d-m-y',strtotime($row['created']));?></span>
+					&nbsp;&nbsp;<?php $this->status($row['status']); ?> 					
+				</h3>
+				<div class="widget-toolbar hidden-xs">
+					<div class="btn-list">
+						<?php //if($edit_option){ echo $this->button(2,$row['id']); }?>
+						<span data-bs-toggle='tooltip' data-bs-placement='top' title='PDF Print'>
+							<a class='btn btn-danger btn-xs' id="print">
+							<i class="ace-icon fa fa-file-pdf-o bigger-120"></i></a></span>
+					</div>
+				</div>
+			</div>
+			<div class="widget-body" id="print-content">
+				<div class="widget-main padding-12">
+					<div>	
+                        <div class="row">
+							<div class="col-lg-6">
+							   <ul class="list-unstyled spaced">
+									<li>
+										<i class="ace-icon fa fa-caret-right blue"></i>
+										Employee Name | EID : <b class="blue"><?php echo $emp['full_name']." | ".$emp['emp_id']; ?></b>
+									</li>
+									<li>
+										<i class="ace-icon fa fa-caret-right blue"></i>
+										Location: <b class="blue"> <?php echo $emp['location']; ?></b>
+									</li>	
+									<li>
+										<i class="ace-icon fa fa-caret-right blue"></i>
+										Designation: <b class="blue"><?php echo $emp['designation']; ?> </b>
+									</li>									
+                                    <li>
+								       <i class="ace-icon fa fa-caret-right blue"></i>
+										Email | Contact No: <b class="blue"><?php echo $emp['email']; ?> | <?php echo $row['contact']; ?> </b>
+									</li>																		
+									<li>
+										<i class="ace-icon fa fa-caret-right blue"></i>
+										Officiating : <b class="blue"><?php if(empty($row['delegation'])):echo '';else:echo $this->employeeObj->getColumn($row['delegation'],'full_name');endif;?></b>
+									</li>							
+								</ul>		
+								<h3 class="widget-title grey lighter">Leave Application Details</h3>
+							  <table class="table table-striped table-hover table-condensed">
+								<tr><th>Leave Type</th><th>Start Date</th><th>End Date</th><th>No. of Days</th></tr>
+								 <tr> 
+								     <td><?php echo $row['type']; ?></td>
+									 <td><?php echo $row['start_date']; ?></td>
+									 <td><?php echo $row['end_date']; ?></td>										 
+									 <td><?php echo $row['no_of_days']; ?></td>									
+								 </tr>
+							  </table>	
+                              <ul class="list-unstyled spaced">
+									<li>
+										<i class="ace-icon fa fa-caret-right blue"></i>Remarks: <b class="red"><?php echo $row['remarks'];?> </b>
+									</li>
+							   </ul>							   
+                            </div>
+                        </div>		
+                      
+					<div class="row">
+						<div class="col-lg-7">
+						</div>
+						<div class="col-lg-5" style="text-align: right"><?php
+						$employeeUser = $this->usersObj->getColumn(array('employee'=>$emp['id']), 'id');	
+						$max_activity = $this->flowtransactionObj->getMax($column='activity', $where=array('application'=>$row['id'],'process'=>508));
+						$current_flow = $this->flowtransactionObj->get(array('application'=>$row['id'], 'activity'=>$max_activity,'process'=>508));
+						foreach($current_flow as $flow);
+					/*	if($this->userID == $flow['role_id'] && $row['status']!=8 && $userEmp!=$row['employee']):?>
+							<a data-toggle="modal" data-target="#modal" href="<?php echo $this->url('leave', array('action'=>'process', 'id'=>$row['id'].'-'.'3'.'-'.$flow['id']));?>" class="btn btn-success"> 
+								<i class="fa fa-check-square-o"></i> Approve Leave </a>				<?php 	
+						endif;	*/
+						if($this->userID == $flow['role_id']):
+							$actions = explode('|', $flow['action']);
+							for($i=0; $i < sizeof($actions); $i++):
+								$buttons = $this->flowactionObj->get($actions[$i]);
+								foreach($buttons as $button):?>
+								<span data-bs-toggle='tooltip' data-bs-placement='top' title='<?php echo $button['action']; ?>'>
+								<a data-toggle="modal" data-target="#modal" class="btn <?php echo $button['class']; ?>" href="<?php echo $this->url('leave', array('action' => 'process', 'id'=>$row['id'].'-'.$button['id'].'-'.$flow['id'])); ?>">
+									<i class="icon <?php echo $button['icon'];?>"></i><?php echo $button['action']; ?>
+								</a></span>
+							<?php
+								endforeach;
+							endfor;
+						endif;
+						if($this->userID  == $employeeUser && $row['status']!=8 && $row['status']!=10 && $row['status']!=21 && $row['status']!=6 && $row['status']!=5):?>
+							<form method="post" action="<?php echo $this->url('leave', array('action' => 'leavedetail')); ?>">	
+								<a data-toggle="modal" data-target="#modal" href="<?php echo $this->url('leave', array('action'=>'process', 'id'=>$row['id'].'-'.'1'.'-'.$flow['id']));?>" class="btn btn-success"> 
+								<i class="fa fa-check-square-o"></i> Apply Leave </a>								
+								<!--button type="submit" value="1" name="cancel" class="btn btn-danger" onClick="return confirm('Are you sure to Cancel this leave?')"> 
+								<i class="fa fa-times"></i> Cancel Leave </button-->
+								<a href="<?php echo $this->url('leave', array('action'=>'editleave', 'id'=>$row['id']));?>" class="btn btn-info"> 
+								<i class="fa fa-pencil"></i> Edit </a>									
+							</form>	<?php 	
+						endif;											
+						  ?>						
+						</div>
+					</div>
+					<?php 
+					$timestamp_start = strtotime(date('Y-m-d'));
+				    $timestamp_end = strtotime($row['end_date']); 
+					if($row['status'] == "8"){
+					?>
+					<div class="row">
+					 <?php 
+					    $leaveFlow = $this->leaveFlowObj->get(array('application'=>$row['id'], 'process'=>'520'));
+						$actors = array();
+						foreach($leaveFlow as $flow):						
+						   if(!in_array($flow['actor'],$actors)){			   
+							  array_push($actors, $flow['actor']);				 
+						   }
+						endforeach;
+					
+					   if(($timestamp_start >  $timestamp_end || $timestamp_end == $timestamp_start) && $this->userID != $employeeUser && in_array($this->userID, $actors)): ?>
+					    <div class="col-lg-5" style="text-align: right"> 
+						  <a data-toggle="modal" data-target="#modal" href="<?php echo $this->url('leave', array('action'=>'process', 'id'=>$row['id']."-7"));?>"  class="btn btn-danger"> 
+								Complete Leave
+						  </a>
+					    </div> <?php
+					  endif; ?>
+					</div>					
+					<?php 				   
+					}	?>
+					</div>
+						<div class="col-lg-12" id="convert-tb2"><?php foreach($this->activityObj->get(array('process'=>508,'process_id'=>$row['id'])) as $actvity):?>	
+							<div class='underlined'>
+									<b class="black"><?php echo $this->userObj->getColumn($actvity['author'],'name');?></b>&nbsp;<?php echo $this->status($actvity['status']);?> to: <b class="black"><?php echo strtoupper($this->userObj->getColumn($actvity['send_to'],'name'));?> on</b>&nbsp;<?php echo date('d-m-Y', strtotime($actvity['created'])); ?>
+									 <b class="black"><br>Remarks:</b><?php echo $actvity['remarks'];?>
+							</div>
+								<style>
+									.underlined {
+										border-bottom: 0.5px solid #000; /* Black underline */
+										padding-bottom: 10px; /* Adjust spacing as needed */
+										margin-bottom: 10px; /* Adjust spacing as needed */
+									}
+								</style>
+							<?php endforeach;?></div>
+			    </div>
+		    </div>	
+			  <!-- Upload and Download file attachments -->						
+					<?php echo $this->partial('partial/attachment.phtml', array('process' => '508', 'process_id'=> $row['id'] , 'status' => $row['status']));
+					?>						
+				    <!-- End of attachment -->
+	    </div>
+    </div>
+</div>
+<div id="modal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+	<div class="modal-dialog">
+		<div class="modal-content">
+		</div>
+	</div>
+</div>
+<?php //endif; ?>
+<script type="text/javascript">	   
+$(function(){
+	 $('#print').gentcpdf({
+		content: '#print-content',
+		src:"<?php echo $this->url('print', array('action' => 'index'));?>",
+		orentation:"P",
+		size: 'A4',
+	});
+	
+});
+
+</script>

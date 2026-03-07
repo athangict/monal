@@ -1,0 +1,133 @@
+<?php
+/**
+ * Purchase/view/purchase/master/supinvoice.phtml
+ */
+ $this->headTitle($this->title);
+?>
+<?php echo $this->partial('stock/master/partial.phtml', array('active' => 'supinvoice')); ?>
+<div class="space-12"></div>
+<div class="row">
+	<div class="col-lg-12">
+		<div class="row">
+			<div class="form-group col-lg-4">
+				<form method="POST">
+					<label class="control-label" for="supplier"><strong>Select Supplier</strong></label>
+					<select class="form-control" name="supplier" id="supplier" onchange='this.form.submit()' data-placeholder="Select">
+						<option value=""></option>
+						<?php 
+						$suppliers = $this->suppliersObj->get(array('p.role' => '1'));
+						foreach($suppliers as $supplier):
+							$selected = ($supplier['id']==$selected_supplier)?"selected":"";
+						?>
+						<option value="<?php echo $supplier['id'];?>" <?php echo $selected;?>>
+							<?php echo $supplier['name'];?>
+						</option>
+						<?php endforeach;?>
+					</select>
+				</form>
+			</div>
+			<div class="clearfix col-lg-8">
+				<a class="red pull-right DTTT_button btn btn-white btn-info btn-bold" data-tooltip="tooltip" data-placement="top" title="Add New Invoice Def" href="<?php echo $this->url('stmaster', array('action' => 'addinvdef', 'id' => $selected_supplier));?>" >
+					<span class="red"><i class="fa fa-plus"></i> <span class="hidden-sm hidden-xs">&nbsp;Add New Invoice Defination</span></span>
+				</a>
+			</div>
+		</div>
+		<div class="row">
+		<?php 
+		if($selected_supplier != "" || $selected_supplier != 0):
+			if(sizeof($inv_definations)>0):
+				$sl=1;
+				foreach($inv_definations as $inv_def):?>
+				<?php $i=1; 
+					foreach($this->inv_detailsObj->get(array('d.inv_def' => $inv_def['id'])) as $inv_form):
+					endforeach;
+				?>
+				<div class="col-lg-6">
+					<div class="widget-box">
+						<div class="widget-header">
+							<h5 class="widget-title">
+								<?php echo $sl++;?>.&nbsp;<strong><?php echo $inv_def['defination'];?></strong>
+							</h4>
+							<div class="widget-toolbar">
+								<a data-toggle="modal" href="<?php echo $this->url('stmaster', array('action'=>'editinvdef', 'id' => $inv_def['id']));?>" data-target="#modal">
+									<i class="ace-icon fa fa-pencil bigger-120"></i>
+								</a> 
+							</div>
+						</div>
+						<div class="widget-body">
+							<div class="widget-main">
+								<form method="post" action="<?php echo $this->url('stmaster', array('action' => 'fieldorder', 'id' => $inv_form['id'])); ?>" enctype="multipart/form-data">
+									<input type="hidden" name="defination" id ="defination" value="<?php echo $inv_def['id'];?>" />
+									<input type="hidden" name="supplier_id" id="supplier_id" value="<?php echo $selected_supplier;?>" />
+										
+									<table class="table table-bordered table-striped table-hover table-condensed">
+										<thead>
+											<tr>
+												<th>#</th>
+												<th>Fields</th>
+												<th>Description</th>
+												<th>Order</th>
+											</tr>
+										</thead>
+										<tbody>
+											<?php $i=1; 
+												foreach($this->inv_detailsObj->get(array('d.inv_def' => $inv_def['id'])) as $inv_detail):
+											?>
+												<tr>
+													<td><?php echo $i++;?></td>
+													<td><?php echo $inv_detail['def_field'];?></td>
+													<td><?php echo $this->inv_fieldsObj->getColumn(array('id' => $inv_detail['inv_def_field']), 'description');?></td>
+													<td>
+														<input type="text" class="form-control" size="1" name ="order_by[]" id="order_by_<?php echo $i;?>" value="<?php echo $inv_detail['order_by'];?>" />
+														<input type="hidden" name="detail[]" id="detail_<?php echo $i;?>" value="<?php echo $inv_detail['id'];?>" />
+													</td>
+												</tr>
+											<?php endforeach;?>
+										</tbody>
+									</table>
+									<a data-toggle="modal"  data-target="#modal" href="<?php echo $this->url('stmaster', array('action' => 'addinvfield', 'id' => $inv_def['id']));?>" class="btn btn-success btn-xs" >
+										<i class='fa fa-plus'></i> Add Field
+									</a>
+									<button type="submit" class="btn btn-info btn-xs"><i class="fa fa-check"></i> Save </button>
+								</form>
+							</div>
+						</div>
+					</div>
+				</div>
+				<?php endforeach;
+				else:?>
+				<div class="row">
+					<div class="col-lg-12">
+						<div class="alert alert-block alert-warning">
+							<i class="ace-icon fa fa-check warning"></i>
+							No invoice defination created for the Supplier : <strong class="warning"> <?php echo $this->suppliersObj->getColumn($selected_supplier, 'name');?> </strong>
+						</div>
+					</div>
+				</div>
+			<?php endif;
+			else:?>
+				<div class="row">
+					<div class="col-lg-12">
+						<div class="alert alert-block alert-info">
+							<i class="ace-icon fa fa-check blue"></i>
+							Please Select the <strong class="blue"> Supplier </strong> to view <strong class="blue">Invoice Defination</strong> of the particular supplier.
+						</div>
+					</div>
+				</div>
+			<?php endif;?>
+		</div>
+	</div>
+</div>
+<!--for modal -->
+<div id="modal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content"> </div>
+    </div>
+</div>
+<script>
+$('document').ready(function(){
+	$('#dataTables').DataTable({
+		"paging":   true,
+	});
+});
+</script>

@@ -1,0 +1,391 @@
+<?php
+/**
+ * 
+ * View -- of Accounts/AssetController/addassetAction
+ * 
+ */
+	$this->headTitle($this->title);
+?>
+<div class="space-12"></div>
+<div class="row">
+	<div class="col-lg-12">
+		<div class="widget widget-box">
+			<div class="widget-header">
+				<h3 class="widget-title lighter smaller">
+					<i class="fa fa-asterisk"></i> Contractor Agreement
+				</h3>
+			</div>
+			<div class="widget-body">
+				<div class="widget-main">
+					<form id="#form" method="post" action="<?php echo $this->url('stmaster', array('action' => 'addcontagreement')); ?>" enctype="multipart/form-data" >
+						<div class="row">    
+							<div class="form-group col-lg-4">
+								<label for="contractor" class="control-label">Contractor Name</label>
+								<select class="form-control" style="#" data-placeholder="Select" name="contractor" id="contractor" required >
+									<option></option>
+									<?php foreach($this->contractors as $contractor):?>
+										<option value="<?php echo $contractor['id'];?>"><?php echo $contractor['name'];?></option>
+									<?php endforeach;?>				
+								</select>
+							</div>
+							<div class="form-group col-lg-4">
+								<label for="location" class="control-label">Location</label>
+								<select class="form-control" style="#" data-placeholder="Select" name="location" id="location" required >
+									<option></option>
+									<?php foreach($this->locations as $location):?>
+										<option value="<?php echo $location['id'];?>"><?php echo $location['location'];?></option>
+									<?php endforeach;?>				
+								</select> 
+							</div>
+							<div class="form-group col-lg-4">
+								<label for="agreement_date" class="control-label">Agreement Date</label>
+								<div class="date input-group" id="agreement_date" data-date="<?php echo date('Y-m-d');?>" data-date-format="yyyy-mm-dd" >
+									<input class="form-control span2" name="agreement_date" id="agreement_date" type="text" value="<?php echo date('Y-m-d');?>" placeholder="Agreement Date" required>
+									<span class="input-group-addon add-on"><i class="fa fa-calendar"></i></span>
+								</div>
+							</div>
+						</div>
+						<div class="row">
+							<div class="form-group col-lg-4">
+								<label for="activity" class="control-label">Activity</label>
+								<div class="radio">
+									<?php
+										$checked1 = ($activity == 1)?"checked":"";
+										$checked2 = ($activity == 2)?"checked":"";
+										$checked3 = ($activity == 0 || $activity != 4|| $activity == "")?"checked":"";  
+										$checked4 = ($activity == 4)?"checked":"";  
+									?>
+									<label> 
+										<input class="ace" type="radio" name="activity" id="activity" value="1" <?php echo $checked1;?>/>
+										<span class="lbl"> Agency </span>
+									</label> 
+									<label> 
+										<input class="ace" type="radio" name="activity" id="activity" value="2" <?php echo $checked2;?>/>
+										<span class="lbl"> Food Grains </span>
+									</label> 
+									<label> 
+										<input class="ace" type="radio" name="activity" id="activity" value="3" <?php echo $checked3;?>/>
+										<span class="lbl"> Both(Agency and Food Grains)</span>
+									</label>
+									<label> 
+										<input class="ace" type="radio" name="activity" id="activity" value="4" <?php echo $checked4;?>/>
+										<span class="lbl"> RNR Marketing </span>
+									</label> 
+								</div>
+							</div>
+							<div class="form-group col-lg-4">
+								<label for="from_date" class="control-label">From Date</label>
+								<div class="date input-group" id="from_date" data-date="<?php echo date('Y-m-d');?>" data-date-format="yyyy-mm-dd" >
+									<input class="form-control span2" name="from_date" id="from_date" type="text" value="<?php echo date('Y-m-d');?>" placeholder="Start Date" required>
+									<span class="input-group-addon add-on"><i class="fa fa-calendar"></i></span>
+								</div>
+							</div>
+							<div class="form-group col-lg-4">
+								<label for="to_date" class="control-label">To Date</label>
+								<div class="date input-group" id="to_date" data-date="<?php echo date('Y-m-d');?>" data-date-format="yyyy-mm-dd" >
+									<input class="form-control span2" name="to_date" id="to_date" type="text" value="" placeholder="End Date" required>
+									<span class="input-group-addon add-on"><i class="fa fa-calendar"></i></span>
+								</div>
+							</div>
+						</div>
+						
+						<div class="row">
+							<div class="col-lg-12">  
+								<table id="work_table" class="table small-padding">
+									<thead>
+										<tr>
+											<th>Work Type</th>
+											<th>Charges</th>
+											<th>Remarks</th>
+											<th>&nbsp;</th>
+										</tr>
+									</thead>
+									<tbody>
+										<tr>
+											<td class="col-lg-3">
+												<div class="form-group">
+													<select class="form-control" id="work_type" name="work_type[]" data-placeholder="Select" required>
+														<option value=""></option>
+														<?php 
+														foreach ($worktypes as $worktype):
+														?>
+															<option value="<?php echo $worktype['id'];?>">
+																<?php echo $worktype['work_type'];?>
+															</option>
+														<?php
+														endforeach;
+														?>
+													</select>
+												</div>
+											</td>
+											<td class="col-lg-3">
+												<div class="form-group">
+													<select class="form-control" id="charge" name="charge[]" data-placeholder="Select" required>
+														<option value=""></option>
+													</select>
+												</div>
+											</td>
+											<td class="col-lg-3">
+												<div class="form-group">
+													<input class="form-control" type="text" id="remarks" name="remarks[]"/>
+												</div>
+											</td>
+											<td width="30px;"></td>
+										</tr>
+									</tbody>
+								</table>
+							</div>
+						</div>
+						<div class="row">
+							<div class="col-lg-12">
+								<label class="control-label" for="note">Note: </label>
+								<textarea class="form-control" name="note" id="note"></textarea>
+							</div>
+						</div>
+						<div class="space-12"></div>
+						<div class="row">
+							<div class="col-lg-12">
+								<button type="submit" class="btn btn-success"><i class="fa fa-check"></i> Save </button>
+								<button type="button" class="btn btn-warning" onclick="javascript:history.back();" ><i class="fa fa-times"></i> Cancel </button>
+							</div>
+						</div> 
+					</form>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+<script>
+$(function() {
+	$('#agreement_date').datepicker();
+	$('#from_date').datepicker();
+	$('#to_date').datepicker();
+	
+	$('#from_date').on('changeDate',function(){
+		$('form').formValidation('revalidateField', $(this).attr('id'));
+	});
+	$('#to_date').on('changeDate',function(){
+		$('form').formValidation('revalidateField', $(this).attr('id'));
+	});	
+	
+	const fv = FormValidation.formValidation(document.getElementById('#form'), {
+		fields: {
+			'contractor': {
+				validators: {
+					notEmpty: {
+						message: 'Please provide contractor.'
+					},
+				}
+			},
+			'location': {
+				validators: {
+					notEmpty: {
+						message: 'Please provide location.'
+					},
+				}
+			},
+			'from_date': {
+				validators: {
+					notEmpty: {
+						message: 'Please select from date.'
+					},
+				}
+			},
+			'to_date': {
+				validators: {
+					notEmpty: {
+						message: 'Please select to date.'
+					},
+				}
+			},
+			'work_type[]': {
+				validators: {
+					notEmpty: {
+					message: 'Please select Head Type'
+					}
+				}
+				},
+			'charge[]': {
+				validators: {
+					notEmpty: {
+					message: 'Please select Head'
+					}
+				}
+			}, 
+		},
+		plugins: {
+			trigger: new FormValidation.plugins.Trigger(),
+			bootstrap3: new FormValidation.plugins.Bootstrap3(),
+			submitButton: new FormValidation.plugins.SubmitButton(),
+			defaultSubmit: new FormValidation.plugins.DefaultSubmit(),
+		},
+	}).on('core.element.validated', function (e) {
+		if (e.valid) {
+			$('div#'+ e.field.replace('[]','') +'_chosen').removeClass('is-invalid');
+			$('div#'+ e.field.replace('[]','') +'_chosen').addClass('is-valid');
+		} else {
+			$('div#'+ e.field.replace('[]','') +'_chosen').removeClass('is-valid');
+			$('div#'+ e.field.replace('[]','') +'_chosen').addClass('is-invalid');
+		}
+	});
+	
+	/****** dynamic insertion of table row*******/
+	var tr_id =0;
+	var parentObj = $('#work_table');
+	parentObj.wrap("<div style='margin-bottom:5px; overflow-x:scroll;' id='jscroll_div'> </div>");		
+	parentObj.find("tbody tr").each(function(){
+		$(this).attr('id',++tr_id);			
+		$(this).find('div.chosen-search input').each(function(){
+			$(this).addClass('ch-search');
+		});
+		$(this).find('div.chosen-container .chosen-drop').each(function(){
+			$(this).css({'position':'relative'});
+		});
+		$(this).find(':input').not('input.ch-search').each(function(){
+			var old_id = $(this).attr('id');
+			var new_id=(old_id.lastIndexOf('-') > 0)? old_id.substr(0, old_id.lastIndexOf('-')): old_id;
+			$(this).attr('id',new_id+'-'+tr_id);
+			$(this).addClass('tr-'+new_id);
+		});
+		$(this).find('select.tr-work_type').each(function(){
+			$(this).bind('change', function(){
+			var id = $(this).closest('tr').attr('id');
+			var cur_val = $(this).val();
+				$.when(
+					$.post(
+						"<?php echo $this->url("stmaster", array("action" => "getcharges")); ?>",
+						{
+							worktype: $(this).val(),
+						},
+						function(data){
+							console.log(data);
+							$('#charge-'+id).html(data.charges);
+							$('#charge-'+id+' option:selected').removeAttr('selected');
+							$('#charge-'+id+' option[value='+data.charge+']').attr('selected', 'selected');
+							$('#charge-'+id).trigger('chosen:updated');
+						},
+						'json'
+					)
+				).done(function(){
+					var cur_obj = $('#work_type-'+id).closest('tr');	
+					$(document).find('select.tr-work_type').not('#work_type-'+id).each(function(){
+						if(cur_val == $(this).val()){
+							sh_reset(cur_obj);
+						}
+					});
+				});
+			});
+		});
+		sh_delbtn(parentObj);
+	});
+	if($('#addRow').length == 0){
+		var addbutton = "<div class='col-lg-12'><a value='Add' id='addRow' class='pull-right btn btn-success btn-xs' ><i class='fa fa-plus'></i> Add Row</a>&nbsp;&nbsp;&nbsp;&nbsp;</div>";
+		$('#work_table').closest('.row').append(addbutton);
+	};		
+	$("#addRow").click(function(){
+		sh_addrow(parentObj);			     
+	});
+});
+function sh_addrow(obj){
+	var lastRow = obj.find("tbody tr:last").attr('id');
+	var tmplt_row = obj.find("tbody tr:last").clone(true);
+	clone = tmplt_row.clone();
+	clone.find('div.chosen-container').each(function(){
+		$(this).remove();
+	});
+	clone.attr('id',++lastRow);
+	clone.find(':input').each(function(){
+		var old_id = $(this).attr('id');
+		var new_id=(old_id.lastIndexOf('-') > 0)? old_id.substr(0, old_id.lastIndexOf('-')): old_id;
+		$(this).attr('id',new_id+'-'+lastRow);
+		$(this).addClass('tr-'+new_id);
+		$('form').formValidation('addField', $(this));
+	});
+	$('#'+obj.attr('id')+' tbody').append(clone);
+	sh_reset(clone);	        
+	$('form select').chosen();
+	clone.find('div.chosen-container .chosen-drop').each(function(){
+		$(this).css({'position':'relative'});
+	});
+	clone.find('div.chosen-search input').each(function(){
+		$(this).addClass('ch-search');
+	});
+	clone.find('select.tr-work_type').each(function(){
+		$(this).bind('change', function(){
+		var id = $(this).closest('tr').attr('id');
+		var cur_val = $(this).val();
+			$.when(
+				$.post(
+					"<?php echo $this->url("stmaster", array("action" => "getcharges")); ?>",
+					{
+						worktype: $(this).val(),
+					},
+					function(data){
+						console.log(data);
+						$('#charge-'+id).html(data.charges);
+						$('#charge-'+id+' option:selected').removeAttr('selected');
+						$('#charge-'+id+' option[value='+data.charge+']').attr('selected', 'selected');
+						$('#charge-'+id).trigger('chosen:updated');
+					},
+					'json'
+				)
+			).done(function(){
+				var cur_obj = $('#work_type-'+id).closest('tr');	
+				$(document).find('select.tr-work_type').not('#work_type-'+id).each(function(){
+					if(cur_val == $(this).val()){
+						sh_reset(cur_obj);
+					}
+				});
+			});
+		});
+	});
+	sh_delbtn(obj);	
+};
+function sh_delbtn(obj){
+	var trlenght = 1;
+	if(obj.find("tbody tr").length > trlenght){
+		delBtn = "<a value='Delete' class='btn btn-warning btn-xs delRow' style='margin-top:5px;' ><i class='fa fa-times'></i></a>";
+		obj.find("tbody tr").each(function(){
+			$(this).find("td:last").html(delBtn);			
+		});
+		obj.find("td a.delRow").each(function(){
+			$(this).click(function(){sh_delrow($(this).closest('tr'));});	
+		});
+	}else{
+		delBtn = "<a value='Delete' class='btn btn-warning btn-xs resetRow' style='margin-top:5px;' ><i class='fa fa-refresh'></i></a>";
+		obj.find("tbody tr").each(function(){
+			var las_td = $(this).find("td:last").html(delBtn);
+		});
+		obj.find("td a.resetRow").each(function(){
+			$(this).click(function(){sh_reset($(this).closest('tr'));});	
+		});
+	}		
+};
+function sh_delrow(obj){
+	obj.find(':input[data-fv-field]').each(function() {
+		$('form').formValidation('removeField', $(this));
+	});	
+	var tr_length = obj.parent().find('tr').length;
+	var tbody = obj.parent();
+	obj.closest("tr").remove();	
+	var trlenght = 2;
+	if(tr_length == trlenght){
+		var delBtn = "<a value='Delete' class='btn btn-warning btn-xs resetRow' style='margin-top:5px;' ><i class='fa fa-refresh'></i></a>";
+		tbody.find('tr').each(function(){$(this).find('td:last').html(delBtn)});
+		tbody.find('tr td:last a.resetRow').each(function(){
+			$(this).click(function(){sh_reset($(this).closest("tr"));});
+		});
+	}
+}	
+function sh_reset(obj){
+	var id = obj.attr('id');
+	$('#work_type-'+id).val('selectedIndex',0).trigger('chosen:updated');
+	$('#charge-'+id+' option').filter(function(){ return this.innerHTML !='';}).remove();
+	$('#charge-'+id).trigger('chosen:updated');
+	$('#remarks-'+id).val('');
+	obj.find(':input[data-fv-field]').each(function() {
+		$('form').formValidation('resetField',$(this));
+	});	
+}
+</script>
+	

@@ -1,0 +1,99 @@
+<?php
+/**
+ * 
+ * View -- of Realestate/BuildingController/editbuildingAction
+ * 
+ */
+$this->headTitle($this->title);
+?>
+<?php 
+foreach($bankings as $rows):
+
+endforeach; //exit;
+foreach($tdetails as $td);
+//echo '<pre>';print_r($tdetails);exit;
+?>
+<form id="form" method="post" action="<?php echo $this->url('report',array('action' => 'reconcilation', 'id'=> $rows['id'])); ?>" enctype="multipart/form-data">  
+ <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+        <h4 class="modal-title"> <i class="fa fa-asterisk"></i>Reconcile this <strong><?php if($td['credit']!='0.000') { echo $td['credit']; } else { echo $td['debit']; };?></strong> transaction amount ?</h4>
+    </div>  <!-- /modal-header -->
+    <div class="modal-body">
+        <div class="panel panel-default">                       
+            <div class="panel-body"> 
+                <div class="row">
+					<div class="form-group col-lg-6">
+					<label for="voucher_dates" class="control-label">Voucher Date</label>
+						<div class="date input-group" id="voucher_dates" data-date="<?php echo date('Y-m-d', strtotime ($td['voucher_dates']));?>" data-date-format="yyyy-mm-dd" >
+							<input class="form-control span2" name="voucher_dates" id="voucher_dates" type="text" placeholder="Voucher Date" value="<?php echo $td['voucher_dates'];?>"required>
+							<span class="input-group-addon add-on"><i class="fa fa-calendar"></i></span>
+						</div>
+					</div>
+					<div class="form-group col-lg-6">
+					<label for="reconcile" class="control-label">Reconcile </label>
+						<div class="radio">                                			
+							<label>
+								<input class="ace" type="radio" name="reconcile" id="reconcile" value="1">
+								<span class="lbl"> Yes </span>
+							</label>
+						</div>
+					</div>
+				</div> 
+            </div>
+        </div>
+    </div> <!-- /modal-body -->
+     <div class="modal-footer">
+        <button type="submit" class="btn btn-success"><i class="fa fa-check"></i> Save </button>
+        <button type="button" class="btn btn-warning" data-dismiss="modal"><i class="fa fa-times"></i> Cancel </button>
+    </div>  
+</form>
+<script>
+$(function() {
+	$("#voucher_dates").datepicker();
+	$("#region").change(function() { 
+		$('#location').load("<?php echo $this->url('ajresponse', array('action' => 'getlocation')); ?>/"+ $("#region").val(), function() {
+			$("#location").trigger('chosen:updated');
+			$('form').formValidation('revalidateField','location');
+		});
+	});
+	/****** dynamic insertion of table row*******/
+	$('#head_table').subhead({src:'<?php echo $this->url("ajresponse", array("action" => "gethead")); ?>'});	
+
+	const fv = FormValidation.formValidation(document.getElementById('#form'), {
+		fields: {
+			voucher_account: {
+					validators: {
+						notEmpty: {
+							message: 'Please provide account.'
+						}
+					}
+				},
+				voucher_dates: {
+					validators: {
+						notEmpty: {
+							message: 'Please provide code.'
+						}
+					}
+				},
+				
+		},
+		plugins: {
+			trigger: new FormValidation.plugins.Trigger(),
+			bootstrap3: new FormValidation.plugins.Bootstrap3(),
+			submitButton: new FormValidation.plugins.SubmitButton(),
+			defaultSubmit: new FormValidation.plugins.DefaultSubmit(),
+		},
+	}).on('core.element.validated', function (e) {
+		if (e.valid) {
+			$('div#'+ e.field.replace('[]','') +'_chosen').removeClass('is-invalid');
+			$('div#'+ e.field.replace('[]','') +'_chosen').addClass('is-valid');
+		} else {
+			$('div#'+ e.field.replace('[]','') +'_chosen').removeClass('is-valid');
+			$('div#'+ e.field.replace('[]','') +'_chosen').addClass('is-invalid');
+		}
+	});
+	$('form select').chosen().change(function () {
+		fv.revalidateField($(this).attr('name'));
+	});
+});
+</script>

@@ -1,0 +1,20 @@
+<?php echo $this->partial('stock/sam/partial.phtml', array('active' => 'importdata')); ?><br/>
+<div class="row">
+	<div class="col-lg-12">
+		<div class="widget widget-box">
+			<div class="widget-header">
+				<h5 class="widget-title lighter smaller">
+					<i class="fa fa-pencil"></i>&nbsp;&nbsp;<strong>Import Opening Data From .CSV Files to Sql Server</strong>
+				</h5>
+			</div><!-- end of widget-header -->
+			<div class="widget-body">
+				<div class="widget-main">
+					<form name="import" method="post" action="<?php echo $this->url('sam',array('action'=>'import')); ?>" enctype="multipart/form-data">
+						<input type="file" name="file" /><br />
+						<input type="submit" name="submit" value="Submit" />
+					</form>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>

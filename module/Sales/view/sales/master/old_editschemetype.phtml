@@ -1,0 +1,77 @@
+<?php
+/**
+ * 
+ * View -- of Accounts/DemographyController/addactivityAction
+ * 
+ */
+?>
+<?php 
+    foreach($this->schemetypes as $schemetype):
+    $schemetype_id = $schemetype['id'];	
+    $scheme_type = $schemetype['scheme_type'];
+    $description = $schemetype['description'];
+    $type = $schemetype['type'];  
+    endforeach;
+?>
+
+<form method="post" action="<?php echo $this->url('slmaster', array('action' => 'editschemetype', 'id' => $schemetype_id)); ?>"  enctype="multipart/form-data" >                  
+    <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+        <h4 class="modal-title"> <i class="fa fa-pencil-square-o"></i> Edit Scheme Type</h4>
+    </div>  <!-- /modal-header -->
+    
+    <div class="modal-body">       
+		<div class="panel panel-default">                       
+			<div class="panel-body"> 
+				<div class="form-group">
+					<label for="scheme_type" class="control-label">Scheme Type</label>
+					<input type="text" class="form-control" name="scheme_type" id="scheme_type" value="<?php echo $scheme_type;?>" size="30" required> 
+				</div>
+				<div class="form-group">
+					<label for="description" class="control-label">Description</label>
+					<input type="text" class="form-control" name="description" id="description" value="<?php echo $description;?>" size="30" required> 
+				</div>
+				<div class="form-group">
+					<label for="type" class="control-label">Type</label>
+					<select id="type" name="type" class="form-control" data-placeholder="Select">
+						<?php if($type == '1'): $selected = 'Actual Qty';
+							else: $selected = "Rate";
+						endif;?>
+						<option value="<?php echo $type;?>">
+							<?php echo $selected;?></option>
+						<option value="1">Actual Qty</option>
+						<option value="2">Rate</option>
+					</select>
+				</div>
+			</div>
+		</div>
+	</div> <!-- /modal-body -->    
+    <div class="modal-footer">
+        <button type="submit" class="btn btn-success"><i class="fa fa-check"></i> Save </button>
+        <button type="button" class="btn btn-warning" data-dismiss="modal" ><i class="fa fa-times"></i> Cancel </button> 
+    </div>
+</form>
+<script>
+	$('document').ready(function(){
+		$('form').formValidation({
+			excluded: ':disabled',
+			message: 'Please enter a value.',
+			fields: {
+				scheme_type: {
+					validators: {
+						notEmpty: {
+							message: 'Please provide Scheme type.'
+						}
+					}
+				},
+				description: {
+					validators: {
+						notEmpty: {
+							message: 'Please provide Description for the Scheme'
+						}
+					}
+				},
+			}
+		});
+	});
+</script>

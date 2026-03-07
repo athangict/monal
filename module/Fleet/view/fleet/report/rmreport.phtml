@@ -1,0 +1,231 @@
+<?php
+/**
+ * 
+ * View -- of Fleet/ReportController/vehiclelogreportAction
+ * 
+ */
+	$this->headTitle($this->title);
+	foreach($repairs as $repair);
+	//print_r($repair);exit;
+?>
+<?php echo $this->partial('fleet/report/partial.phtml', array('active' => 'rmreport')); ?>
+<div class="card">
+	<div class="card-header">
+		<div class="row">
+			<div class="col-lg-12">
+				<form id="#form" method="post" action="<?php echo $this->url('ftreport', array('action' => 'rmreport')); ?>"  enctype="multipart/form-data" >    
+					<div class="row">
+						<div class="form-group col-lg-2">
+							<label class="control-label" for="location">Location</label>
+							<select class="form-control" name="location" id="location" data-placeholder="select" >
+								<option value="-1" <?php echo ($data['location']=='-1')?'selected':'';?>>All</option>
+								<?php 
+									$location = $this->locationObj->getAll();
+									foreach($location as $row):
+										$selected_location = ($row['id']==$data['location'])?'selected':'';
+								?>
+								
+									<option value="<?php echo $row['id'];?>" <?php echo $selected_location;?>>
+										<?php echo $row['location'];?>
+									</option>
+								<?php endforeach;?>
+							</select>
+						</div>
+						<div class="form-group col-lg-2">
+							<label class="control-label" for="license_plate">License plate</label>
+							<select class="form-control" name="license_plate" id="license_plate" data-placeholder="select" >
+								<option value="-1" <?php echo ($data['license_plate']=='-1')?'selected':'';?>>All</option>
+								<?php foreach($license as $li):?>
+									<option value="<?php echo $li['id'];?>" <?php echo ($li['id']==$data['license_plate'])?'selected':'';?>><?php echo $li['license_plate']?></option>
+								<?php endforeach;?>
+							</select>
+						</div>
+						<div class="form-group col-lg-2">
+							<label class="control-label" for="start_date">Start Date</label>
+							<div class="date input-group" id="start_date" data-date="<?php echo $data['start_date'];?>" data-date-format="yyyy-mm-dd" >
+								<input class="form-control span2" name="start_date" id="start_date" type="text" placeholder="Start Date" value="<?php echo $data['start_date'];?>" readonly required>
+								<span class="input-group-addon add-on"><i class="fa fa-calendar"></i></span>
+							</div>
+						</div>
+						<div class="form-group col-lg-2">
+							<label class="control-label" for="end_date">End Date</label>
+							<div class="date input-group" id="end_date" data-date="<?php echo $data['end_date'];?>" data-date-format="yyyy-mm-dd" >
+								<input class="form-control span2" name="end_date" id="end_date" type="text" placeholder="End Date" value="<?php echo $data['end_date'];?>" readonly required>
+								<span class="input-group-addon add-on"><i class="fa fa-calendar"></i></span>
+							</div>
+						</div>
+						<div class="form-group col-lg-1"><br>
+							<button type="submit" class="btn btn-sm btn-success pull-right"><i class="fa fa-gear"></i> Generate </button>
+						</div>
+					</div>	
+				</form>
+				<div class="hr hr-dotted"></div>
+				<div class="space-6"></div>
+				<div class="row col-lg-12">
+					<div class="clearfix">
+						<label><i class="blue fa fa-cube"></i> <strong>Transport : &nbsp;&nbsp;</strong></label><span><?php echo ($data["license_plate"] == -1 || !isset($data['license_plate']))? "All Transport":$this->TObject->getColumn($data['license_plate'],'license_plate');?></span>.&nbsp;&nbsp;
+						<label><i class="green fa fa-calendar"></i> <strong>Date : &nbsp;&nbsp;</strong></label><span><?php echo (!isset($data['start_date']))?'-select-':$data['start_date'].' to '.$data['end_date'];?></span>
+					</div>
+				</div>
+				<div class="row col-lg-12">
+					<div class="clearfix">
+					<input type="hidden" name="transport" id="transport" value="<?php echo ($data["transport"] == -1 || !isset($data['transport']))? "All Transport":$this->TObject->getColumn($data['transport'],'code');?>">
+					<input type="hidden" name="st_date" id="st_date" value="<?php echo $data['start_date']?>">
+					<input type="hidden" name="ed_date" id="ed_date" value="<?php echo $data['end_date'];?>">
+					</div>
+				</div>
+			</div>
+			<div class ="card-body">
+				<div class ="row">
+					<div class="col-lg-12">
+						<div>
+							<table class="table card-table text-nowrap" id="dataTables">
+								<thead>
+									<tr>
+										<th>Particulars</th>
+										<th>Amount</th>
+									</tr>
+								</thead>
+								<tbody>
+									<?php $totale=0;$totali=0;?>
+									<tr class="warning">
+										<td>INCOME</td>
+										<td></td>
+									</tr>
+									<?php foreach($this->RMDObject->getDistinctGroup('rmd.amount',$data['location'],$data['license_plate'],$data['start_date'],$data['end_date'],array('g.class'=>3)) as $group):?>
+										<tr class="info">
+											<td class="text-danger">&nbsp;&nbsp;<?php echo $group['group'];?></td>
+											<td><?php echo number_format($group['sum'], 2, '.', ',');?></td>
+										</tr>
+											<?php foreach($this->RMDObject->getDistinctHead('rmd.amount',$data['location'],$data['license_plate'],$data['start_date'],$data['end_date'],array('h.group'=>$group['group_id'])) as $head):?>
+											<tr class="success">
+												<td class="text-success">&nbsp;&nbsp;&nbsp;<?php echo $head['head'];?></td>
+												<td><?php echo number_format($head['sum'], 2, '.', ',');?></td>
+											</tr>
+												<?php foreach($this->RMDObject->getDistinctSubHead('rmd.amount',$data['location'],$data['license_plate'],$data['start_date'],$data['end_date'],array('sh.head'=>$head['head_id'])) as $sh):?>
+												<tr>
+													<td>&nbsp;&nbsp;&nbsp;&nbsp;<?php echo $sh['subhead'];?></td>
+													<td><?php echo number_format($sh['sum'], 2, '.', ',');?></td>
+												</tr>
+										<?php endforeach;endforeach;$totali+=$group['sum'];endforeach;
+										?>
+										<tr class="text-success">
+										<td><b>TOTAL INCOME:</b></td>
+										<td><b><?php echo number_format($totali, 2, '.', ',');?></b></td>
+									</tr>
+									<tr class="warning">
+										<td>Expense</td>
+										<td></td>
+									</tr>
+									 	<?php $total=0;foreach($this->RMDObject->getDistinctGroup('rmd.amount',$data['location'],$data['license_plate'],$data['start_date'],$data['end_date'],array('g.class'=>4)) as $group):?>
+										<tr class="info">
+											<td class="text-danger">&nbsp;&nbsp;<?php echo $group['group'];?></td>
+											<td><?php $pol_group_sum=$this->TSOObject->getGroupSum('so.amount',$data['location'],$data['license_plate'],$data['start_date'],$data['end_date'],array('g.class'=>4,'so.status'=>4,'g.id'=>$group['group_id']));
+											$tot_group=$group['sum']+$pol_group_sum;
+											echo number_format($tot_group, 2, '.', ',');?></td>
+										</tr>
+											<?php foreach($this->RMDObject->getDistinctHead('rmd.amount',$data['location'],$data['license_plate'],$data['start_date'],$data['end_date'],array('h.group'=>$group['group_id'])) as $head):?>
+											<tr class="success">
+												<td class="text-success">&nbsp;&nbsp;&nbsp;<?php echo $head['head'];?></td>
+												<td><?php echo number_format( $head['sum'], 2, '.', ',');?></td>
+											</tr>
+												<?php foreach($this->RMDObject->getDistinctSubHead('rmd.amount',$data['location'],$data['license_plate'],$data['start_date'],$data['end_date'],array('sh.head'=>$head['head_id'])) as $sh):?>
+												<tr>
+													<td>&nbsp;&nbsp;&nbsp;&nbsp;<?php echo $sh['subhead'];?></td>
+													<td><?php echo number_format($sh['sum'], 2, '.', ',');?></td>
+												</tr>
+										<?php endforeach;endforeach; 
+										foreach($this->TSOObject->getDistinctHead('so.amount',$data['location'],$data['license_plate'],$data['start_date'],$data['end_date'],array('h.group'=>$group['group_id'],'so.status'=>4)) as $head):?>
+											<tr class="success">
+												<td class="text-success">&nbsp;&nbsp;&nbsp;<?php echo $head['head'];?></td>
+												<td><?php echo number_format( $head['sum'], 2, '.', ',');?></td>
+											</tr>
+												<?php foreach($this->TSOObject->getDistinctSubHead('so.amount',$data['location'],$data['license_plate'],$data['start_date'],$data['end_date'],array('sh.head'=>$head['head_id'],'so.status'=>4)) as $sh):?>
+												<tr>
+													<td>&nbsp;&nbsp;&nbsp;&nbsp;<?php echo $sh['subhead'];?></td>
+													<td><?php echo number_format($sh['sum'], 2, '.', ',');?></td>
+												</tr>
+										<?php endforeach;endforeach;$totale+=$tot_group;endforeach;?>
+										
+									<tr class="text-danger">
+										<td><b>TOTAL EXPENSE:</b></td>
+										<td><b><?php echo number_format($totale, 2, '.', ',');?></b></td>
+									</tr> 
+									<tr >
+										<td><b>MARGIN:</b></td>
+										<td><b><?php echo number_format($totali-$totale, 2, '.', ',');?></b></td>
+									</tr> 
+								</tbody>
+							</table>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+<script type="text/javascript">
+	$(function(){	
+		$('#start_date').datepicker();
+		$('#end_date').datepicker();
+		$('#start_date').on('changeDate',function(){
+			$('form').formValidation('revalidateField', $(this).attr('id'));
+		});
+		$('#end_date').on('changeDate',function(){
+			$('form').formValidation('revalidateField', $(this).attr('id'));
+		});
+		$('select#location').on('change',function(){
+		//alert($('#location').val()); 
+		$.post(
+				"<?php echo $this->url('ftreport', array('action' => 'gettransport'));?>",
+				{
+					locationId: $('#location').val(),
+				},
+				function(data){
+					$('select#license_plate').html(data.license_plate);
+					$(license_plate).trigger('chosen:updated');
+
+				   },
+				'json'
+			);
+	    });
+		const fv = FormValidation.formValidation(document.getElementById('#form'), {
+				fields: {
+					start_date: {
+						validators: {
+							notEmpty: {
+								message: 'Please select start date'
+							}
+						}
+					},
+					end_date: {
+						validators: {
+							notEmpty: {
+								message: 'Please select end date'
+							}
+						}
+					},
+				},
+				plugins: {
+					trigger: new FormValidation.plugins.Trigger(),
+					bootstrap3: new FormValidation.plugins.Bootstrap3(),
+					submitButton: new FormValidation.plugins.SubmitButton(),
+					defaultSubmit: new FormValidation.plugins.DefaultSubmit(),
+				},
+			}).on('core.element.validated', function (e) {
+				if (e.valid) {
+					$('div#'+ e.field.replace('[]','') +'_chosen').removeClass('is-invalid');
+					$('div#'+ e.field.replace('[]','') +'_chosen').addClass('is-valid');
+				} else {
+					$('div#'+ e.field.replace('[]','') +'_chosen').removeClass('is-valid');
+					$('div#'+ e.field.replace('[]','') +'_chosen').addClass('is-invalid');
+				}
+			});
+		var title_table = $('input#transport').val()+' from '+$('input#st_date').val()+' to '+$('input#ed_date').val();
+		
+		$('document').ready(function(){
+			$('#dataTables').DataTable();
+		});
+	});
+</script>
+ 

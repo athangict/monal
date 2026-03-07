@@ -1,0 +1,319 @@
+<?php
+/**
+ * View -- of Stock/BatchController/movingitemAction
+ */
+	$this->headTitle($this->title);	
+?>
+<?php echo $this->partial('stock/batch/partial.phtml', array('active' => 'wmavg')); ?> <br/>
+<?php
+	$time = microtime();
+	$time = explode(' ', $time);
+	$time = $time[1] + $time[0];
+	$start = $time;
+?>
+<div class="row">
+	<div class="col-lg-12">
+		<div class="widget widget-box transparent">
+			<div class="widget-header">
+				<div class="col-lg-12">
+					<h5 class="widget-title lighter smaller">
+						<i class="fa fa-line-chart"></i> View Location Wise Selling Price
+					</h5>
+				</div>
+			</div>
+			<div class="widget-body">
+				<div class="widget-main padding-12">
+					<form id="#form" method="post" action="<?php echo $this->url('batch', array('action' => 'movingitem')); ?>"  enctype="multipart/form-data" >    
+						<div class="row">
+							<div class="form-group col-lg-2">
+								<label for="region" class="control-label">Region</label>
+								<input type="hidden" name="region_name" id="region_name" value="<?php echo ($data['region']=='-1')?'All Regions':$this->regionObj->getColumn($data['region'],'region');?>" />
+								<select id="region" name="region" class="form-control" data-placeholder="Select" required>
+									<option value=""></option>
+									<?php foreach($this->regionObj->getAll() as $region):
+										$selected_region = ($data['region']==$region['id'])?"selected":"";?>
+										<option value="<?php echo $region['id'];?>"<?php echo $selected_region;?>>
+											<?php echo $region['region'];?>
+										</option>
+										<?php endforeach;?>
+								</select>
+							</div>
+							<div class="form-group col-lg-2">
+								<label for="location" class="control-label">Location</label>
+								<input type="hidden" name="location_name" id="location_name" value="<?php echo ($data['location']=='-1')?'All Locations':$this->locationObj->getColumn($data['location'],'location');?>" />
+								<select name="location" id="location" class="form-control" data-placeholder="Select">
+									<option value="-1" <?php echo ($data['location']=='-1')?'selected':'';?>>All</option>
+									<?php foreach($this->locationObj->get(array('region' => $data['region'],'location_type'=>array(1,2,7,8))) as $location):
+										$selected_location = ($data['location']==$location['id'])?'selected':'';
+									?>
+										<option value="<?php echo $location['id'];?>" <?php echo $selected_location; ?>>
+											<?php echo $location['location'];?>
+										</option>
+									<?php endforeach;?>
+								</select>
+							</div>
+							<div class="form-group col-lg-2">
+								<label for="location_type" class="control-label">Location Type</label>
+								<input type="hidden" name="location_type_name" id="location_type_name" value="<?php echo ($data['location']=='-1')?'All Locations':$this->locationObj->getColumn($data['location'],'location');?>" />
+								<select name="location_type" id="location_type" class="form-control" data-placeholder="Select">
+									<option value="-1" <?php echo ($data['location_type']=='-1')?'selected':'';?>>All</option>
+									<?php foreach($this->locationtypeObj->get(array('id'=>array(1,2,7,8))) as $location_type):
+										$selected_location_type = ($data['location_type']==$location_type['id'])?'selected':'';
+									?>
+										<option value="<?php echo $location_type['id'];?>" <?php echo $selected_location_type; ?>>
+											<?php echo $location_type['location_type'];?>
+										</option>
+									<?php endforeach;?>
+								</select>
+							</div>
+							<div class="form-group col-lg-2">
+								<label class="control-label" for="activity">Activity</label>
+								<input type="hidden" name="activity_name" id="activity_name" value="<?php echo $this->activityObj->getColumn($data['activity'],'activity');?>" >
+								<select class="form-control" name="activity" id="activity" data-placeholder="select" >
+									<option value=""></option>
+									<?php 
+										$activities = $this->activityObj->getAll();
+										foreach($activities as $activity):
+										$selected_act = ($activity['id']==$data['activity'])?"selected":"";
+									?>
+										<option value="<?php echo $activity['id'];?>" <?php echo $selected_act;?>>
+											<?php echo $activity['activity'];?>
+										</option>
+									<?php endforeach;?>
+								</select>
+							</div>
+							<div class="form-group col-lg-2">
+								<label for="item" class="control-label">Stock Items</label>
+								<input type="hidden" name="item_name" id="item_name" value="<?php echo ($data['activity']=='-1')?'All Items':str_replace('*', '_', $this->itemObj->getColumn($data['item'],'code'));?>" />
+								<select id="item" name="item" class="form-control" data-placeholder="Select" required>
+									<option value="-1" <?php echo ($data['item']=='-1')?'selected':'';?>>All</option>
+									<?php foreach($this->batchObj->getDis(array('i.activity' => $data['activity'])) as $items):
+										$selected = ($data['item'] == $items['item_id'])?"selected":"";?>
+										<option value="<?php echo $items['item_id'];?>" <?php echo $selected;?>>
+											<?php echo $items['code'];?>
+										</option>
+									<?php endforeach;?>
+								</select> 
+							</div>
+						</div>
+						<div class="row">	
+							<div class="form-group col-lg-2">
+								<label class="control-label" for="start_date">Start Date</label>
+								<div class="date input-group" id="start_date" data-date="<?php echo $data['start_date'];?>" data-date-format="yyyy-mm-dd" >
+									<input class="form-control span2" name="start_date" id="start_date" type="text" placeholder="Start Date" value="<?php echo $data['start_date'];?>" readonly required>
+									<span class="input-group-addon add-on"><i class="fa fa-calendar"></i></span>
+								</div>
+							</div>
+							<div class="form-group col-lg-2">
+								<label class="control-label" for="end_date">End Date</label>
+								<div class="date input-group" id="end_date" data-date="<?php echo $data['end_date'];?>" data-date-format="yyyy-mm-dd" >
+									<input class="form-control span2" name="end_date" id="end_date" type="text" placeholder="End Date" value="<?php echo $data['end_date'];?>" readonly required>
+									<span class="input-group-addon add-on"><i class="fa fa-calendar"></i></span>
+								</div>
+							</div>
+							<div class="col-lg-8">
+								<div class="space-12"></div>
+								<button type="submit" class="btn btn-sm btn-primary pull-right"><i class="fa fa-refresh"></i> Refresh </button>
+							</div>
+						</div>
+					</form>
+					<div class="hr hr-dotted"></div>
+					<div>		
+						<?php 
+							$mv_sp_details = $this->movingitemspObj->getSellingPrice($data['start_date'], $data['end_date'],$data['item'],$data['activity']);
+							$batch_sp_details = $this->batchObj->getSellingPrice($data['start_date'], $data['end_date'],$data['item'],$data['activity']);
+						?>
+						<table class="table table-striped table-condensed table-bordered table-hover" id="dataTables">
+							<thead>
+								<tr>
+									<th>#</th>
+									<th>Location</th>
+									<th>Item</th>
+									<?php if($data['activity'] != 2):?>
+										<th>Batch</th>
+									<?php endif;?>
+									<th>Effect Date</th>
+									<th>UoM</th>
+									<th>Selling Price (<?php //echo $this->currency_code();?>)</th>
+								</tr>
+							</thead>
+							<tbody>
+								
+							<?php $i = 1;
+								$location_type = ($data['location_type'] == '-1')?array(1,2,7,8):$data['location_type'];
+								$locations = $this->locationObj->getviaRegionLocation($data['region'],$data['location'],$location_type);
+								foreach($locations as $location):
+									if(sizeof($mv_sp_details)>0):
+										foreach($mv_sp_details as $row):
+							?>
+								<tr>
+									<td><?php echo $i++;?></td>
+									<td><?php echo $location['location']; ?></td>
+									<td><?php echo $this->itemObj->getColumn($row['item'],'code');?></td>
+									<?php if($data['activity'] != 2):?>
+										<td><?php echo "-";?></td>
+									<?php endif;?>
+									<td><?php echo $row['sp_effect_date'];?></td>
+									<td><?php echo $this->uomObj->getColumn($this->batchObj->getColumn($row['batch'],'uom'),'code');?></td>
+									<td style="text-align:right">
+										<?php 
+											$sp = $this->batchdtlObj->getColumn(array('batch'=>$row['batch'],'location'=>$location['id']),'selling_price');
+											echo ($sp == '')?'-':$sp;
+										?>
+									</td>
+								</tr>
+							<?php endforeach;
+								endif;
+								if(sizeof($batch_sp_details)>0):
+									foreach($batch_sp_details as $row):
+								?>
+								<tr>
+									<td><?php echo $i++;?></td>
+									<td><?php echo $location['location']; ?></td>
+									<td><?php echo $this->itemObj->getColumn($row['item'],'code');?></td>
+									<?php if($data['activity'] != 2):?>
+										<td><?php echo $row['batch'];?></td>
+									<?php endif;?>
+									<td><?php echo $row['batch_date'];?></td>
+									<td><?php echo $this->uomObj->getColumn($this->batchObj->getColumn($row['id'],'uom'),'code');?></td>
+									<td style="text-align:right">
+										<?php 
+											$sp = $this->batchdtlObj->getColumn(array('batch'=>$row['id'],'location'=>$location['id']),'selling_price');
+											echo ($sp == '')?'-':$sp;
+										?>
+									</td>
+								</tr>
+							<?php	endforeach; 
+								endif;
+							endforeach;?>
+							</tbody>	
+						</table>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+<?php
+	$time = microtime();
+	$time = explode(' ', $time);
+	$time = $time[1] + $time[0];
+	$finish = $time;
+	$total_time = round(($finish - $start), 4);
+	echo "<p class='pull-right'>Selling Price Report generated in ".$total_time." seconds.</p>";
+?>
+<script type="text/javascript">
+	$(function() {
+		$('#start_date').datepicker();
+		$('#end_date').datepicker();
+		$('#start_date').on('changeDate',function(){
+			$('form').formValidation('revalidateField', $(this).attr('id'));
+		});
+		$('#end_date').on('changeDate',function(){
+			$('form').formValidation('revalidateField', $(this).attr('id'));
+		});
+		$('#region').on('change', function(){
+			//alert($(this).val());
+			$.post(
+				"<?php echo $this->url('batch', array('action' => 'getreglocation')); ?>",
+				{
+					region_id: $(this).val(),
+				},
+				function(data){
+					//console.log(data);
+					$("#location").html(data.location);
+					$("#location").trigger('chosen:updated');				
+				},
+				'json'
+			);	
+		});
+		$('#activity').on('change', function(){
+			//alert($(this).val());
+			$.post(
+				"<?php echo $this->url('batch', array('action' => 'getitemactivity')); ?>",
+				{
+					activity_id: $(this).val(),
+				},
+				function(data){
+					//console.log(data);
+					$("#item").html(data.item);
+					$("#item").trigger('chosen:updated');				
+				},
+				'json'
+			);	
+		});
+		/*** Form Validation ***/
+		const fv = FormValidation.formValidation(document.getElementById('#form'), {
+			fields: {
+				'region': {
+					validators: {
+						notEmpty: {
+							message: 'Please select Region'
+						}
+					}
+				},
+				'location': {
+					validators: {
+						notEmpty: {
+							message: 'Please select Location'
+						}
+					}
+				},
+				'location_type': {
+					validators: {
+						notEmpty: {
+							message: 'Please select Location Type'
+						}
+					}
+				},
+				'activity': {
+					validators: {
+						notEmpty: {
+							message: 'Please select Activity'
+						}
+					}
+				},
+				'item': {
+					validators: {
+						notEmpty: {
+							message: 'Please select Item'
+						}
+					}
+				},
+				'start_date': {
+					validators: {
+						notEmpty: {
+							message: 'Please select start date'
+						}
+					}
+				},
+				'end_date': {
+					validators: {
+						notEmpty: {
+							message: 'Please select end date'
+						}
+					}
+				},
+			},
+			plugins: {
+				trigger: new FormValidation.plugins.Trigger(),
+				bootstrap3: new FormValidation.plugins.Bootstrap3(),
+				submitButton: new FormValidation.plugins.SubmitButton(),
+				defaultSubmit: new FormValidation.plugins.DefaultSubmit(),
+			},
+		}).on('core.element.validated', function (e) {
+			if (e.valid) {
+				$('div#'+ e.field.replace('[]','') +'_chosen').removeClass('is-invalid');
+				$('div#'+ e.field.replace('[]','') +'_chosen').addClass('is-valid');
+			} else {
+				$('div#'+ e.field.replace('[]','') +'_chosen').removeClass('is-valid');
+				$('div#'+ e.field.replace('[]','') +'_chosen').addClass('is-invalid');
+			}
+		});
+		/** dataTable **/
+		var title_table = $('#region_name').val()+','+$('#location_name').val()+','+$('#activity_name').val()+'-'+$('#item_name').val()+' from '+$('input#start_date').val()+' to '+$('input#end_date').val();
+		$('#dataTables').DataTable({
+			"paging":   true,
+		});
+	});
+</script>

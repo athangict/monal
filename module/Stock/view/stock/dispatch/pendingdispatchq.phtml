@@ -1,0 +1,91 @@
+<?php $this->headTitle($this->title);?>
+<?php //echo "<pre>"; print_r($dispatch_details); exit;
+	foreach($this->dispatchdtlsObj->get(array('dispatch'=>$this->_id)) as $dd):
+		$check = $dd;
+	endforeach;
+	//print_r($this->_id); exit;
+	if($dispatch_details):
+?>
+	<div class="modal-header">
+		<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+		<h4 class="modal-title red"> <i class="red"></i> Check Out </h4>
+	</div>  <!-- /modal-header -->
+	<div class="modal-body">
+		<div class="panel panel-default">                       
+			<table class="table">
+				<thead>
+					<tr>
+						<th>Item</th>
+						<th>UOM</th>
+						<th>Source Qty</th>
+						<th class="red">Dispatch Qty</th>
+					</tr>
+				</thead>
+				<tbody>
+					<?php
+						$dispatch = $this->dispatchObj->get($id);
+						foreach($dispatch as $disp);
+						for($i=0; $i<sizeof($dispatch_details); $i++){
+						$dispatchdtl = $this->dispatchdtlsObj->get(array('d.id' => $dispatch_details[$i]));
+						foreach($dispatchdtl as $dispdtl);
+						$item_selected = $this->itemObj->get($dispdtl['item_id']);
+							foreach($item_selected as $items);
+							if($items['valuation'] == 0):
+								$sourceqty = $this->batchdtlsObj->getColumn(array('batch' => $dispdtl['batch'],'location' => $disp['from_location']),'quantity');
+								if($items['uom']!=$dispdtl['uom_id']):
+								$conversion = $this->itemuomObj->getColumn(array('item'=>$dispdtl['item_id'],'uom'=>$dispdtl['uom_id']),'conversion');
+								$sourceqty = $sourceqty/$conversion;
+								endif;
+							else:
+								$sourceqty = $this->movingitemObj->getColumn(array('item' => $dispdtl['item_id'],'location'=> $disp['from_location']),'quantity');
+								if($items['uom']!=$dispdtl['uom_id']):
+								$conversion = $this->itemuomObj->getColumn(array('item'=>$dispdtl['item_id'],'uom'=>$dispdtl['uom_id']),'conversion');
+								$sourceqty = $sourceqty/$conversion;
+								endif;
+							endif;
+					?>
+					<tr>
+						<td><?php echo $dispdtl['item'];?></td>
+						<td><?php echo $dispdtl['uom'];?></td>
+						<td><?php echo $sourceqty;?></td>
+						<td class="red"><?php echo $dispdtl['quantity'];?></td>
+					</tr>
+					<?php } ?>
+				</tbody>
+			</table>
+			<div class="row" style="padding:10px 10px 0 10px;">
+				<div class="col-lg-12">
+					<ul class="list-unstyled spaced">
+						<li>
+							<b class="red"><?php echo "Not enough source quantity to dispatch."; ?> </b>
+						</li>
+					</ul>
+				</div>
+			</div>
+		</div>
+	</div> <!-- /modal-body -->
+<?php else: ?>
+	<div class="modal-header">
+		<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+		<h4 class="modal-title red"> <i class="red"></i> Check Out </h4>
+	</div>  <!-- /modal-header -->
+	<div class="modal-body">
+		<div class="panel panel-default">
+			<div class="row" style="padding:10px 10px 0 10px;">
+				<div class="col-lg-12">
+					<ul class="list-unstyled spaced">
+						<li>
+							<b class="red"><?php echo "Are you sure you want to proceed with the dispatch?"; ?> </b>
+						</li>
+					</ul>
+				</div>
+			</div>
+			<div class="row" style="padding:10px 10px 0 10px;">
+				<div class="col-lg-12">
+					<a href="<?php echo $this->url('dispatch', array('action'=>'dodispatch', 'id'=>$id));?>" class="btn btn-success"> <i class="fa fa-plane"></i> Dispatch </a>
+				</div>
+			</div>
+			<div class="space-12"></div>
+		</div>
+	</div> <!-- /modal-body -->
+<?php endif; ?>

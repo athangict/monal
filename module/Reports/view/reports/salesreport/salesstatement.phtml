@@ -1,0 +1,236 @@
+<?php
+/**
+ * 
+ * View -- of Report/SalesreportController/salesstatementAction
+ * 
+ */
+	$this->headTitle($this->title);
+?>
+<?php echo $this->partial('reports/salesreport/partial.phtml', array('active' => 'salesstatement')); ?>
+<div class="row">
+	<div class="col-lg-12">
+		<div class="widget widget-box transparent">
+			<div class="widget-header">
+				<div class="col-lg-12">
+					<h5 class="widget-title lighter smaller">
+						<i class="fa fa-gears"></i> Generate Sales Statement Report
+					</h5>
+				</div>
+			</div>
+			<div class="widget-body">
+				<div class="widget-main padding-12">
+					<form method="post" action="<?php echo $this->url('salesreport', array('action' => 'salesstatement')); ?>"  enctype="multipart/form-data" >    
+						<div class="row">
+							<div class="form-group col-lg-3">
+								<label class="control-label" for="activity">Activity</label>
+								<select class="form-control" name="activity" id="activity" data-placeholder="select" >
+									<option value=""></option>
+									<?php $selected_all = ($data['activity'] == '-1')?'selected':'';?>
+									<option value="-1" <?php echo $selected_all;?> >All</option>
+									<?php 
+										$activities = $this->activityObj->getAll();
+										foreach($activities as $activity):
+											$selected_act = ($activity['id']==$data['activity'])?"selected":"";
+									?>
+										<option value="<?php echo $activity['id'];?>" <?php echo $selected_act;?>>
+											<?php echo $activity['activity'];?>
+										</option>
+									<?php endforeach;?>
+								</select>
+							</div>
+							<div class="form-group col-lg-3">
+								<label class="control-label" for="start_date">Start Date</label>
+								<div class="date input-group" id="start_date" data-date="<?php echo date('Y-m-d');?>" data-date-format="yyyy-mm-dd" >
+									<input class="form-control span2" name="start_date" id="start_date" type="text" placeholder="Start Date" value="<?php echo $data['start_date'];?>" readonly required>
+									<span class="input-group-addon add-on"><i class="fa fa-calendar"></i></span>
+								</div>
+							</div>
+							<div class="form-group col-lg-3">
+								<label class="control-label" for="end_date">End Date</label>
+								<div class="date input-group" id="end_date" data-date="<?php echo date('Y-m-d');?>" data-date-format="yyyy-mm-dd" >
+									<input class="form-control span2" name="end_date" id="end_date" type="text" placeholder="End Date" value="<?php echo $data['end_date'];?>" readonly required>
+									<span class="input-group-addon add-on"><i class="fa fa-calendar"></i></span>
+								</div>
+							</div>
+							<div class="col-lg-3">
+								<div class="space-12"></div>
+								<button type="submit" class="btn btn-sm btn-success pull-right"><i class="fa fa-gear"></i> Generate </button>
+							</div>
+						</div>
+					</form>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+<div class="hr hr-dotted"></div>
+<div id="report-print">
+	<div class="row">
+		<div class="col-lg-12">
+			<div class="table-header clearfix">
+				<label><i class="purple fa fa-tags"></i> <strong>Activity:</strong></label> <span><?php echo ($data["activity"] == -1 || !isset($data['activity']))? "All Activities": $this->activityObj->getColumn($data["activity"], 'activity');?></span>.&nbsp;&nbsp;
+				<label><i class="green fa fa-calendar"></i> <strong>Date:</strong></label> <span><?php echo (!isset($data['start_date']))?'-select-':$data['start_date'].' to '.$data['end_date'];?></span>
+				<div class="pull-right">
+					<a title="Export to Excel" id="excel">
+						<i class="ace-icon fa fa-file-excel-o fa-lg white"></i>
+					</a>&nbsp;&nbsp;
+					<a title="Print PDF" id="print">
+						<i class="ace-icon fa fa-file-pdf-o fa-lg white"></i>
+					</a>&nbsp;&nbsp;
+				</div>
+			</div>
+			<div class="space-12"></div>
+			<input type="hidden" id="activity" name="activity" value="<?php echo ($data["activity"] == -1 || !isset($data['activity']))? "All Activities": $this->activityObj->getColumn($data["activity"], 'activity');?>"/>
+            <input type="hidden" id="start_date" name="start_date" value="<?php echo $data['start_date'];?>"/>
+		    <input type="hidden" id="end_date" name="end_date" value="<?php echo $data['end_date'];?>"/>
+			<div>
+				<table class="table table-hover" id="table2excel" >
+					<thead>
+						<tr>
+							<th>#</th>
+							<th>Location</th>
+							<th>Cash Gross</th>
+							<th>Cash Dis</th>
+							<th>Net Cash</th>
+							<th>Credit Gross</th>
+							<th>Credit Dis</th>
+							<th>Net Credit</th>
+							<th>Total Gross</th>
+							<th>Total Net</th>
+						</tr>
+					</thead>
+					<tbody>	
+						<?php
+							$sl = 1;
+							$sum_cash_gross = 0;
+							$sum_cash_dis = 0;
+							$sum_net_cash = 0;
+							$sum_credit_gross = 0;
+							$sum_credit_dis = 0;
+							$sum_net_credit = 0;
+							$sum_total_gross = 0;
+							$sum_total_net = 0;
+							$locations = $this->salesObj->getSalesLocation($data, 'sales_date');
+							foreach($locations as $location):
+								//echo "<pre>";print_r($location);
+								$cash_gross = $this->salesObj->getSalesStatementGross($data, $location['location'], 'sales_date','0');
+								$credit_gross = $this->salesObj->getSalesStatementGross($data, $location['location'], 'sales_date','1');
+								
+								$cash_dis = $this->salesObj->getSalesStatementDis($data, $location['location'], 'sales_date','0');
+								$credit_dis = $this->salesObj->getSalesStatementDis($data, $location['location'], 'sales_date','1');
+								
+								$net_cash = $cash_gross - $cash_dis;
+								$net_credit = $credit_gross - $credit_dis;
+								
+								$total_gross = $cash_gross + $credit_gross;
+								$total_net = $net_cash + $net_credit;
+								
+								$sum_cash_gross += $cash_gross;
+								$sum_cash_dis += $cash_dis;
+								$sum_net_cash += $net_cash;
+								$sum_credit_gross += $credit_gross;
+								$sum_credit_dis += $credit_dis;
+								$sum_net_credit += $net_credit;
+								$sum_total_gross += $total_gross;
+								$sum_total_net += $total_net;
+								
+								//If the Amount is Empty
+								$cash_gross = ($cash_gross == '')?'-':number_format($cash_gross,'2','.',',');
+								$cash_dis = ($cash_dis == '')?'-':number_format($cash_dis,'2','.',',');
+								$net_cash = ($net_cash == '')?'-':number_format($net_cash,'2','.',',');
+								$credit_gross = ($credit_gross == '')?'-':number_format($credit_gross,'2','.',',');
+								$credit_dis = ($credit_dis == '')?'-':number_format($credit_dis,'2','.',',');
+								$net_credit = ($net_credit == '')?'-':number_format($net_credit,'2','.',',');
+								$total_gross = ($total_gross == '')?'-':number_format($total_gross,'2','.',',');
+								$total_net = ($total_net == '')?'-':number_format($total_net,'2','.',',');
+						?>
+						<tr>
+							<td><?php echo $sl++;?></td>
+							<td><?php echo $location['location_name'];?></td>
+							<td><?php echo $cash_gross;?></td>
+							<td><?php echo $cash_dis;?></td>
+							<td><?php echo $net_cash;?></td>
+							<td><?php echo $credit_gross;?></td>
+							<td><?php echo $credit_dis;?></td>
+							<td><?php echo $net_credit;?></td>
+							<td><?php echo $total_gross;?></td>
+							<td><?php echo $total_net;?></td>
+						</tr>
+						<?php endforeach;?>
+						<tr style="border-top:3px solid #ddd;border-bottom:3px solid #ddd;">
+							<td colspan='2'><strong>Total</strong></td>
+							<td><strong><?php echo number_format($sum_cash_gross, 2, '.', ',');?></strong></td>
+							<td><strong><?php echo number_format($sum_cash_dis, 2, '.', ',');?></strong></td>
+							<td><strong><?php echo number_format($sum_net_cash,2,'.',',');?></strong></td>
+							<td><strong><?php echo number_format($sum_credit_gross, 2, '.', ',');?></strong></td>
+							<td><strong><?php echo number_format($sum_credit_dis,'2','.',',');?></strong></td>
+							<td><strong><?php echo number_format($sum_net_credit,'2','.',',');?></strong></td>
+							<td><strong><?php echo number_format($sum_total_gross,'2','.',',');?></strong></td>
+							<td><strong><?php echo number_format($sum_total_net,'2','.',',');?></strong></td>
+						</tr>
+					</tbody>
+				</table>
+			</div>
+		</div>
+	</div>
+</div>
+<script type="text/javascript">
+	$('#start_date').datepicker();
+	$('#end_date').datepicker();
+	$('#start_date').on('changeDate',function(){
+		$('form').formValidation('revalidateField', $(this).attr('id'));
+	});
+	$('#end_date').on('changeDate',function(){
+		$('form').formValidation('revalidateField', $(this).attr('id'));
+	});
+	$(function() {
+			$('#print').genpdfinvoice({
+		content: '#report-print',
+		src:"<?php echo $this->url('pdfxls', array('action' => 'pdf'));?>",
+		orentation:"L",//L =landscape, P = potrait
+	});
+	
+	var doc_loc = $('input#activity').val() + '(from: '+$('input#start_date').val()+' to: '+$('input#end_date').val()+')';
+		$("#excel").click(function(){
+		  $("#table2excel").table2excel({
+			// exclude CSS class
+			exclude: ".noExl",
+			name: "Worksheet Name",
+			filename: "Salesstatement_for_"+doc_loc, //do not include extension
+		  }); 
+		});
+	/*** Form Validation ***/
+	$('form').formValidation({
+			framework: 'bootstrap',
+			excluded: ':disabled',
+			message: 'This value is not valid',
+			fields: {
+				'activity': {
+					validators: {
+						notEmpty: {
+							message: 'Please select activity'
+						}
+					}
+				},
+				'start_date': {
+					validators: {
+						notEmpty: {
+							message: 'Please select start date'
+						}
+					}
+				},
+				'end_date': {
+					validators: {
+						notEmpty: {
+							message: 'Please select end date'
+						}
+					}
+				},
+			}
+		}).on('success.field.fv', function(e, data) {
+			if (data.fv.getInvalidFields().length > 0) {    // There is invalid field
+				data.fv.disableSubmitButtons(true);
+			}
+		});
+	});
+</script>

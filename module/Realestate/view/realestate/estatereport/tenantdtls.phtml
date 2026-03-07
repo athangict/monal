@@ -1,0 +1,128 @@
+<?php
+/**
+ * 
+ * View -- of Purchase/PurchaseController/indexAction
+ * 
+ */
+ 	$this->headTitle($this->title);
+?>
+<?php $minYear = date('Y', strtotime($minYear)); ?> 
+<div class="card">
+	<div class="card-header">
+		<div class="row">
+			<form method="post" action="<?php echo $this->url('estatereport', array('action'=>'tenantdtls')); ?>"  enctype="multipart/form-data" >
+				<div class="form-group col-lg-2">
+					<label class="control-label" for="year">Year</label>
+					<select class="form-control" id="year" name="year" data-placeholder="Select" onchange='this.form.submit()'>
+						<option value=""></option>
+						<?php 
+							for($year=date('Y');$year>=$minYear;$year--):
+								$selected = ($year == $data['year'])?"selected":"";
+						?>
+							<option value="<?php echo $year;?>" <?php echo $selected;?> >
+								<?php echo $year;?> 
+							</option>
+						<?php endfor; ?>
+					</select>
+				</div>
+				<div class="form-group col-lg-2">
+					<label class="control-label" for="month">Month</label>
+					<select class="form-control" id="month" name="month" data-placeholder="Select" onchange='this.form.submit()'>
+						<option value="-1" <?php echo ($data['month'] == '-1')?'selected':'';?>>All</option>
+						<?php for($month=1; $month<=12; $month++):?>
+							<?php $selected = ($month == $data['month'])?'selected':'';?>
+							<option value="<?php echo $month;?>" <?php echo $selected; ?>>
+								<?php echo DateTime::createFromFormat('!m', $month)->format('F');?>
+							</option> 
+						<?php endfor;?>
+					</select>
+				</div>
+			</form>
+			
+	</div>
+	<table class="table card-table text-nowrap" id="dataTables">
+		<thead>
+			<tr>
+				<th>#</th>
+				<th>Tenants</th>
+				<th>Contact number</th>
+				<th>Tenants Status</th>
+				<th>Rent</th>
+				<th>Agreement Date</th>
+				
+				<th>Start Date</th>
+				<th>End Date</th>
+				<th>Remarks</th>
+				<th>action</th>	
+				<!-- <th class="no-sort no-printpdf">Action</th> -->
+			</tr>
+		</thead>
+		<tbody>
+			<?php
+				$i = 1;
+				foreach ($tenantsdtls as $rows):	?>
+				<tr data-href="<?php echo $this->button(4, $rows['id']); ?>">
+					<td><?php echo $i++; ?> </td>
+					<td><?php echo $rows['tenants']; ?></td>
+					<td><strong><?php echo $rows['contact']; ?></strong></td>
+					<td><?php echo $rows['flat_status']; ?></td>
+					<td><?php echo $rows['rent']; ?></td>
+					<td><?php echo $rows['agreement_date']; ?></td>
+					<td><?php echo $rows['start_date']; ?></td>
+					<td><?php echo $rows['end_date']; ?></td>
+					<td><?php echo $rows['remarks']; ?></td>
+					<td><?php echo $this->button(1, $rows['id']); ?></td>
+				
+				</tr>
+		<?php   endforeach;?>
+		</tbody>
+	</table>
+</div>
+<div class="row">
+			<div class="col-lg-12">
+				<h3 class="widget-title"> Sumarray: </h3>
+				<div class="hr dotted"></div>
+				<div class="col-md-3">
+					<label> Total Employee: </label> <strong><?php echo $i-1;?></strong>
+				</div>
+				<div class="col-md-3">
+					<label> Total Rent: </label> <strong><?php echo $this->currency($rent);?></strong>
+				</div>
+			</div>
+		</div>
+		<div class="hr dotted"></div>
+		<div class="space-12"></div>
+		<div class="row">
+			<div class="col-lg-12">
+				<div class="alert alert-warning"> 
+					<strong>Warning!</strong> Once you submit this payroll you cannot alter any data, So check it and make sure before submitting.
+				</div>
+				<center>
+					<a href="<?php echo $this->url('payroll', array('action'=>'submitpayroll','id'=>$this->year.'-'.$this->month));?>"  class="btn btn-success" onclick="confirmSubmit(this);" >
+						Submit Payroll for the month of <?php echo date('F, Y', strtotime('1-'.$this->month.'-'.$this->year));?>
+					</a>
+				</center>
+			</div>
+		</div>
+	</div>
+<div id="modal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+	<div class="modal-dialog">
+		<div class="modal-content">
+		</div>
+	</div>
+</div>
+<script type="text/javascript">
+$('document').ready(function(){
+	$('#dataTables').DataTable({
+		"paging":   true,
+	});
+	$("tr[data-href]").each(function(){
+		$(this).find('td').not('td.action').each(function(){
+			$(this).css('cursor','pointer');
+			$(this).bind('click',function() {
+				window.document.location = $(this).closest('tr').attr("data-href");
+			});
+		});
+	});
+});
+</script>

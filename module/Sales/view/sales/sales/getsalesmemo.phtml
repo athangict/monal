@@ -1,0 +1,198 @@
+<style>
+     h3{
+    display: block;
+    font-size: 1.5em;
+    margin-top: 0.00em;
+    margin-bottom: 0.00em;
+    margin-left: 0;
+    margin-right: 0;
+    font-weight: bold;
+    color : green;
+   // background-color : red;
+}
+</style>
+<?php if(sizeof($this->pendingCredit) == 0): ?>  
+<h4 class="widget-title grey lighter">
+        <h6> <b class="red">Penalty Calcualtion Formula(Proposed by Finance):</b></h6>
+	
+	<h3>pa = (((24/100) * d )/365) * x</h3></br>
+        <span class="blue">	where x = No. days after 30 days from date of sales</br>	
+	pa = Penalty amount</br>
+	d = Due amount = Payable amount </span>
+</h4>
+<table class="table" id="trdetails_table" style="border-top:2px solid #ddd;" >
+	<thead>
+	   <tr>
+		    <th>#</th> 
+			<th>Memo No.</th>
+			<th>Sales Date  -  Due Date</th>
+			<th>Location</th>
+			<th>Invoice Amount(<?php echo $this->currency_code();?>)</th>
+			<th>Penalty</th>
+			<th>TDS</th>
+			<th>Payable Amount</th>
+			<th>Due Amount</th>
+			<th>Payment Check</th>
+       </tr>
+   </thead>
+   <tbody>
+   <?php $sl = 1;    
+    foreach ($salesmemos as $memo): 	
+	 $difference_amount = $memo['payment_amount'] - $memo['received_amount']; 
+	 if($memo['payment_amount'] > $memo['received_amount']){
+		$payable_amount =  $difference_amount;
+		 ?>
+       <tr>
+            <td ><?php echo $sl++; ?><input type="hidden" class= "sales" name="sales_<?php echo $memo['id']; ?>" value="<?php echo $memo['id'];?>" id="sales"></td>
+		    <td><?php echo $memo['sales_no']; ?></td>
+		    <td><?php echo $this->dateformat($memo['sales_date']); ?> &nbsp; : &nbsp;<?php echo $this->dateformat($memo['due_date']); ?></td>
+		    <td><?php echo $this->locationObj->getColumn($memo['location'],'location'); ?></td>
+		    <td><?php echo $memo['payment_amount']; ?> <input type="hidden" name="invoice_<?php echo $memo['id']; ?>" value="<?php echo $difference_amount; ?>" id="invoice"></td>
+		    <td><input type="text" class="form-control" value="0.00" name="penalty_<?php echo $memo['id']; ?>" id="penalty" size = "6" disabled></td>
+		    <td><input class="form-control" type="text" name="tds_<?php echo $memo['id']; ?>" id="tds" size="5" value = "0.00" disabled></td>
+		    <td><input type="text" class="form-control" name="payable_<?php echo $memo['id']; ?>" id="payable" value="<?php echo  $payable_amount;?>" size="8"></td>
+		    <td><input type="text" class="form-control" name="due_amount_<?php echo $memo['id']; ?>" id="due_amount" value="0" size="5" readonly></td>
+		    <td><input type="checkbox" class="form-control payment_check" id="payment_check" name="payment_check[]" value="<?php echo $memo['id']; ?>"></td>
+       </tr>
+	 <?php }
+	 endforeach;  ?>
+   </tbody>
+</table>
+ <?php else: ?>
+    <div class="alert alert-warning fade in">  
+		* <b>Credit Payment still pending. There is possibility for double entry. So before you proceed, commit or cancel the credit payment listed below </b>
+		 <?php foreach($this->pendingCredit as $row ): ?>
+		 <ol>
+		  <ol> <li><a href="<?php echo $this->url('sales',array('action'=>'viewreceipt', 'id'=>$row['id'])); ?>"><?php echo $row['receipt_no']; ?> (<?php echo $row['receipt_date'];?>)</a></li> </ol>
+		 </ol>
+		 <?php endforeach; ?>
+	 </div> 
+ <?php endif; ?>
+ <script type="text/javascript">
+$(function() {
+	var tr_id = 0;
+	var total_invoice = 0;		
+	var payable = 0;
+	var due_amount = 0;	
+	var parentObj = $('#trdetails_table');	
+	parentObj.wrap("<div style='overflow-x:scroll;margin-bottom:5px;'> </div>");
+	parentObj.find("tbody tr").each(function(){
+		$(this).attr('id',++tr_id);				
+		$(this).find(':input').each(function(){
+			var old_id = $(this).attr('id');			
+			var new_id=(old_id.lastIndexOf('-') > 0)? old_id.substr(0, old_id.lastIndexOf('-')): old_id;
+			$(this).attr('id',new_id+'-'+tr_id);
+			$(this).addClass('tr-'+new_id);
+		});	
+		var id = $(this).attr('id');
+		$("#tds_applicable").click(function() {				   
+			if ($(this).prop('checked')==true){ 	
+				$("#tds-"+id).removeAttr("disabled");
+				$("#tds-"+id).focus();	   
+			}else{	
+				$("#tds-"+id).attr("disabled", "disabled");			   
+				$("#tds-"+id).val(0.00);	
+				if ($("#penalty_applicable").prop('checked')==true){
+				payable = parseFloat($("#invoice-"+id).val()) - parseFloat($("#tds-"+id).val());}else
+				{payable = parseFloat($("#invoice-"+id).val()) + parseFloat($("#tds-"+id).val());}
+					$("#payable-"+id).val(parseFloat(payable).toFixed(2));
+					tdsSum(parentObj);				   
+					payableSum(parentObj);			   
+				}
+		});
+		$("#penalty_applicable").click(function() {				   
+		if ($(this).prop('checked')==true){ 	
+			$("#penalty-"+id).removeAttr("disabled");
+			$("#penalty-"+id).focus();	   
+		}else{	
+			$("#penalty-"+id).attr("disabled", "disabled");			   
+			$("#penalty-"+id).val(0.00);	
+			if ($("#penalty_applicable").prop('checked')==true){
+			payable = parseFloat($("#invoice-"+id).val()) + parseFloat($("#penalty-"+id).val());}else
+			{payable = parseFloat($("#invoice-"+id).val());}
+				$("#payable-"+id).val(parseFloat(payable).toFixed(2));
+				penaltySum(parentObj);				   
+				payableSum(parentObj);			   
+			}
+		});	
+		$("#tds-"+id).change(function() {				
+			if ($("#penalty_applicable").prop('checked')==true){
+				payable = parseFloat($("#payable-"+id).val()) - parseFloat($(this).val());					
+			}else{
+				payable = parseFloat($("#payable-"+id).val()) - parseFloat($(this).val());	
+			}
+			tds = parseFloat($(this).val()); 
+			$("#tds").val(parseFloat(tds).toFixed(2));
+			$("#payable-"+id).val(parseFloat(payable).toFixed(2)); 
+			payableSum(parentObj);	
+			tdsSum(parentObj);	
+		});	
+		$("#penalty-"+id).change(function() {				
+			if ($("#penalty_applicable").prop('checked')==true){
+				payable = parseFloat($("#payable-"+id).val()) + parseFloat($(this).val());					
+			}else{
+				payable = parseFloat($("#payable-"+id).val()) - parseFloat($(this).val());	
+			}
+			penalty = parseFloat($(this).val()); 
+			$("#penalty").val(parseFloat(penalty).toFixed(2));
+			$("#payable-"+id).val(parseFloat(payable).toFixed(2)); 
+			payableSum(parentObj);	
+			penaltySum(parentObj);	
+		});	
+		$("#payable-"+id).change(function() {	
+		if ($("#penalty_applicable").prop('checked')==true ){
+				due_amount = parseFloat($("#invoice-"+id).val()) + parseFloat($("#penalty-"+id).val()) - parseFloat($(this).val());
+			}else{
+				due_amount = parseFloat($("#invoice-"+id).val()) - parseFloat($(this).val());
+			}
+			if(due_amount > 0 ) { $("#due_amount-"+id).val(parseFloat(due_amount).toFixed(2)); }else{  $("#due_amount-"+id).val('0.00'); }
+			payableSum(parentObj);
+		});
+		$("#payment_check-"+id).change(function() {				
+			payableSum(parentObj);
+			penaltySum(parentObj);
+			tdsSum(parentObj);
+		});
+	});		
+	function payableSum(obj){
+		var total_payable = 0;
+		obj.find('tbody tr').each(function(){
+			var id = $(this).attr("id");
+			if ($("#payment_check-"+id).prop('checked')==true){
+				total_payable += parseFloat($("#payable-"+id).val()); 
+			}				
+		});
+		$("#total_payable").val(parseFloat(total_payable).toFixed(2));
+		$("#payable").val();
+	}			
+	function penaltySum(obj){
+		var total_penalty = 0;
+		obj.find('tbody tr').each(function(){
+			var id = $(this).attr("id");
+			if($("#penalty_applicable").prop('checked')==true){
+				if ($("#payment_check-"+id).prop('checked')==true){
+					total_penalty += parseFloat($("#penalty-"+id).val()); 
+				}		
+			}					
+		});
+		$("#total_penalty").val(parseFloat(total_penalty).toFixed(2));
+	}	
+	function tdsSum(obj){
+		var total_tds = 0;
+		obj.find('tbody tr').each(function(){
+			var id = $(this).attr("id");
+			if($("#penalty_applicable").prop('checked')==true){
+				if ($("#payment_check-"+id).prop('checked')==true){
+					total_tds += parseFloat($("#tds-"+id).val()); 
+				}		
+			}
+			else
+			{
+				
+				total_tds += parseFloat($("#tds-"+id).val()); 
+			}				
+		});
+		$("#total_tds").val(parseFloat(total_tds).toFixed(2));
+	}	
+});			
+</script>

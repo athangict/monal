@@ -1,0 +1,414 @@
+<?php
+/**
+ * View -- of Stock/TransporterController/edittranspchargeAction
+ */
+  $this->headTitle($this->title);
+?>
+<?php echo $this->partial('stock/transporter/partial.phtml', array('active' => 'charge')); ?> <br/>
+<?php 
+	foreach($transport_charges as $transpcharge):
+		extract($transpcharge);
+		$tc_id = $id;
+		$tc_dispatch = $dispatch;
+		//echo "<pre>"; print_r($transpcharge);
+ 	endforeach;
+?>
+<div class="row">
+	<div class="col-lg-12">
+		<div class="widget widget-box">
+			<div class="widget-header">
+				<h5 class="widget-title lighter smaller">
+					<i class="fa fa-pencil"></i>&nbsp;&nbsp;&nbsp;Edit Transport Charge :	
+					<strong>&nbsp;<?php echo $transport_no; ?> | 
+					<?php echo $this->partyObj->getColumn($transporter,'code')?> | 
+					<?php echo $this->activityObj->getColumn($activity,'activity'); ?></strong>&nbsp;
+					<?php $this->status($status);?>
+				</h5>
+			</div>
+			<div class="widget-body">
+				<div class="widget-main">
+					<form id="#form" method="post" action="<?php echo $this->url('transporter', array('action' => 'edittranspcharge')); ?>" enctype="multipart/form-data">    
+						<input type="hidden" id="location" name="location" value="<?php echo $location;?>"/>
+						<div class="row" id="convert-tb0">
+							<div class="col-lg-8" id="convert-tb1">
+								<ul class="list-unstyled spaced">
+									<li>
+										<i class="ace-icon fa fa-caret-right blue"></i>
+										Transport No. : <b class="red"><?php echo $transport_no; ?></b>
+									</li>
+									<li>
+										<i class="ace-icon fa fa-caret-right blue"></i>
+										Location : <b class="red"><?php echo $this->locationObj->getColumn($location,'location'); ?></b>
+									</li>
+									<li>
+										<i class="ace-icon fa fa-caret-right blue"></i>
+										Source Location  : <b class="red"><?php echo $this->locationObj->getColumn($source_location,'location');?></b>
+									</li>
+									<li>
+										<i class="ace-icon fa fa-caret-right blue"></i>
+										Dispatch No : <b class="red"><?php echo $this->dispatchObj->getColumn($tc_dispatch,'challan_no'); ?></b>
+									</li>
+									<li>
+										<i class="ace-icon fa fa-caret-right blue"></i>
+										Vehicle No. : <b class="red"><?php echo $this->dispatchObj->getColumn($tc_dispatch,'vehicle_no');?></b>
+									</li>
+								</ul>
+							</div>
+							<div class="col-lg-4" id="convert-tb2">
+								<ul class="list-unstyled spaced">
+									<li>
+										<i class="ace-icon fa fa-caret-right blue"></i>
+										Transportation Date : <b class="red"><?php echo $transport_date; ?></b>
+									</li>
+									<li>
+										<i class="ace-icon fa fa-caret-right blue"></i>
+										Activity : <b class="red"><?php echo $this->activityObj->getColumn($activity,'activity'); ?></b>
+									</li>
+									<li>
+										<i class="ace-icon fa fa-caret-right blue"></i>
+										Destination Location  : <b class="red"><?php echo $this->locationObj->getColumn($destination_location,'location');?></b>
+									</li>
+									<li>
+										<i class="ace-icon fa fa-caret-right blue"></i>
+										Transporter : <b class="red"><?php echo $this->partyObj->getColumn($transporter,'code');?></b>
+									</li>
+									<li>
+										<i class="ace-icon fa fa-caret-right blue"></i>
+										Transport Charge : <b class="red"><?php echo $this->currency_code()."&nbsp".$transportation_charge;?></b>
+									</li>
+								</ul>
+							</div>
+						</div>
+						
+						<hr>
+						<div class="row">
+							<input type="hidden" name="tc_id" id="tc_id" value="<?php echo $tc_id;?>"/>
+							<input type="hidden" name="tc_dispatch" id="tc_dispatch" value="<?php echo $tc_dispatch;?>" />
+							
+							<div class="col-lg-12">
+								<table class="table table-striped table-bordered table-condensed">	
+									<thead>
+										<tr>
+											<th></th>
+											<th>Distance (KM)</th>
+											<th>Rate (<?php echo $this->currency_code();?>)</th>
+											<th>Quantity (MT)</th>
+											<th>Amount (<?php echo $this->currency_code();?>)</th>
+										</tr>
+									</thead>
+									<tbody>
+										<tr>
+											<th>Hill</th>
+											<td><input type="text" class="form-control" name="hill_distance" id="hill_distance" value="<?php echo $hill_distance;?>" /></td>
+											<td><input type="text" class="form-control" name="hill_rate" id="hill_rate" value="<?php echo $hill_rate;?>" /> </td>
+											<td rowspan="2" style="vertical-align:middle; text-align:center;"><input type="text" class="form-control" name="qty" id="qty" value="<?php echo $qty;?>" /></td>
+											<td><input type="text" class="form-control" name="h_charge" id="h_charge" value="<?php echo $h_charge = $hill_distance * $hill_rate * $qty;?>" /></td>
+										</tr>
+										<tr>
+											<th>Plain</th>
+											<td><input type="text" class="form-control" name="plain_distance" id="plain_distance" value="<?php echo $plain_distance;?>" /></td>
+											<td><input type="text" class="form-control" name="plain_rate" id="plain_rate" value="<?php echo $plain_rate;?>" /> </td>
+											<td><input type="text" class="form-control" name="p_charge" id="p_charge" value="<?php echo $p_charge = $plain_distance * $plain_rate * $qty;?>" /></td>
+										</tr>
+									</tbody>
+									<tfoot>
+										<tr>
+											<th colspan="4" style="text-align:right;">Net Transportation Charge (<?php echo $this->currency_code();?>)</th>
+											<th><input type="text" class="form-control" name="actual_tc" id="actual_tc" value="<?php echo $t_charge = $h_charge + $p_charge;?>" /></th>
+										</tr>
+									</tfoot>
+								</table>
+							</div>
+						</div>
+						<div class="row">
+							<div class="col-lg-12">
+								<h5>Transit Loss Details</h5>
+							</div>
+						</div>
+						<div class="row">
+							<div class="col-lg-12">
+								<div>
+									<table id="trdetails_table" class="table small-padding">
+										<thead>
+											<tr>
+												<th>Item</th>
+												<th>Batch</th>
+												<th>UOM</th>
+												<th>Rate (<?php echo $this->currency_code();?>)</th>
+												<th>Qty Loss</th>
+												<th>Recovery Qty</th>
+												<th>Loss-Amount(<?php echo $this->currency_code();?>)</th>
+												<th></th>
+											</tr>
+										</thead>
+										<tbody>
+										<?php
+										$transit_losses = $this->transit_lossObj->get(array('dispatch'=>$dispatch));
+										$batchitems = $this->batchObj->getBatchItems($activity);
+										$movingitems = $this->movingitemObj->getMovingItems($activity);
+										if(sizeof($transit_losses) > 0):
+											$sum_tlosses = 0;
+											foreach($transit_losses as $tloss):
+											//echo "<pre>"; print_r($tloss);
+										?>
+											<tr>
+												<td>
+													<div class="form-group">
+														<select id="item" name="item[]" class="form-control" data-placeholder="Select" >
+															<option value=""></option>
+															<?php
+																foreach($batchitems as $batchitem):
+																	$selected_item = ($batchitem['id']==$tloss['item'])?"selected":"";?>
+																	<option value="<?php echo $batchitem['id'];?>" <?php echo $selected_item;?>>
+																		<?php echo $batchitem['code'];?>
+																	</option>
+															<?php	
+																endforeach;
+																foreach($movingitems as $movingitem):
+																	$selected_item = ($movingitem['id']==$tloss['item'])?"selected":"";?>
+																	<option value="<?php echo $movingitem['id'];?>" <?php echo $selected_item;?>>
+																		<?php echo $movingitem['code'];?>
+																	</option>
+															<?php endforeach;?>	
+														</select>
+														<input type="hidden" name="tl_id[]" id="tl_id" value="<?php echo $tloss['id'];?>" />
+														<input type="hidden" name="tl_dispatch[]" id="tl_dispatch" value="<?php echo $tloss['dispatch'];?>" />
+													</div>
+												</td>
+												<td>
+													<div class="form-group">
+														<select name="batch[]" id="batch" class="form-control" data-placeholder="Select">
+															<option value=""></option>
+															<?php
+																$items = $this->itemsObj->get($tloss['item']);
+																foreach($items as $item):
+																	if($item['valuation'] == 1):
+															?>	
+																<option value="0" selected>N/A</option>
+															<?php
+																else:
+																	$batchs = $this->batchObj->get(array('item'=>$tloss['item']));
+																		foreach($batchs as $batch): 
+																			$selected_batch = ($batch['id']==$tloss['batch'])?"selected":"";
+															?>
+																<option value="<?php echo $batch['id'];?>" <?php echo $selected_batch;?>>
+																	<?php echo $batch['batch'];?>
+																</option>
+															<?php 		endforeach;
+																	endif;
+																endforeach;
+															?>
+														</select>
+													</div>
+												</td>
+												<td>
+													<div class="form-group">
+														<select id="uom" name="uom[]" class="form-control" data-placeholder="Select" >
+															<option value=""></option>
+															<?php 
+															$items = $this->itemsObj->get($tloss['item']);
+																foreach($items as $item):
+																	$selected = ($item['uom']==$tloss['uom'])?"selected":"";
+															?>
+																<option value="<?php echo $item['uom']?>" <?php echo $selected;?>>
+																	<?php echo $this->uomObj->getColumn($item['uom'], 'code');?>
+																</option>
+															<?php endforeach;?>
+															<?php   
+																$itemuoms = $this->itemuomObj->get(array('ui.item' => $tloss['item']));
+																foreach($itemuoms as $uom):
+																	$selected = ($uom['uom']==$tloss['uom'])?"selected":"";
+															?>
+																<option value="<?php echo $uom['uom'];?>" <?php echo $selected;?>>
+																	<?php echo $uom['uom_code'];?>
+																</option>
+															<?php endforeach;?>
+														</select>
+													</div>
+												</td>
+												<td>
+													<div class="form-group">
+														<input name="rate[]" id="rate" value="<?php echo $tloss['rate'];?>" type="text" class="form-control" />
+													</div>         
+												</td>
+												<td>
+													<div class="form-group">
+														<input name="qty_loss[]" id="qty_loss" value="<?php echo $tloss['qty_loss'];?>" type="text" class="form-control" />
+													</div>
+												</td>
+												<td>
+													<div class="form-group">
+														<input name="recovery_qty[]" id="recovery_qty" value="<?php echo $tloss['recovery_qty'];?>" type="text" class="form-control"/>
+													</div>         
+												</td>
+												<td>
+													<div class="form-group">
+														<?php 
+															$sum_tlosses += $tloss['amount'];
+														?>
+														<input name="amount[]" id="amount" value="<?php echo $tloss['amount'];?>" type="text" class="form-control" readonly/>  
+													</div>
+												</td>
+												<td></td>											
+											</tr>
+											<?php
+												endforeach;
+											else: 
+											?>
+											<tr>
+												<td>
+													<div class="form-group">
+														<select id="item" name="item[]" class="form-control" data-placeholder="Select" >
+															<option value=""></option>
+															<?php
+																foreach($batchitems as $batchitem):
+																	$selected_item = ($batchitem['id']==$tloss['item'])?"selected":"";?>
+																	<option value="<?php echo $batchitem['id'];?>" <?php echo $selected_item;?>>
+																		<?php echo $batchitem['code'];?>
+																	</option>
+															<?php	
+																endforeach;
+																foreach($movingitems as $movingitem):
+																	$selected_item = ($movingitem['id']==$tloss['item'])?"selected":"";?>
+																	<option value="<?php echo $movingitem['id'];?>" <?php echo $selected_item;?>>
+																		<?php echo $movingitem['code'];?>
+																	</option>
+															<?php endforeach;?>	
+														</select>
+													</div>
+												</td>
+												<td>
+													<div class="form-group">
+														<select name="batch[]" id="batch" class="form-control" data-placeholder="Select">
+															<option value=""></option>
+														</select>
+													</div>
+												</td>
+												<td>
+													<div class="form-group">
+														<select id="uom" name="uom[]" class="form-control" data-placeholder="Select" >
+															<option value=""></option>
+														</select>
+													</div>
+												</td>
+												<td>
+													<div class="form-group">
+														<input name="rate[]" id="rate" type="text" value="0.00" class="form-control" />
+													</div>         
+												</td>
+												<td>
+													<div class="form-group">
+														<input name="qty_loss[]" id="qty_loss" type="text" value="0.00" class="form-control" />
+													</div>
+												</td>
+												<td>
+													<div class="form-group">
+														<input name="recovery_qty[]" id="recovery_qty" type="text" value="0.00" class="form-control"/>
+													</div>         
+												</td>
+												<td>
+													<div class="form-group">
+														<input name="amount[]" id="amount" type="text" class="form-control" value="0.00" readonly />  
+													</div>
+												</td>
+												<td></td>											
+											</tr>
+										<?php endif?>
+										</tbody>
+									</table>
+								</div>
+							</div>
+						</div>	
+						<div class="row"> 
+							<div class="col-lg-6"></div>
+							<div class="col-lg-3">
+								<div class="form-group">
+									<label for="net_transit_loss">Net Transit Loss Amount(<?php echo $this->currency_code();?>)</label>
+									<input type="text" class="form-control tr-net_transit_loss" name="net_transit_loss" id="net_transit_loss" value="<?php echo $sum_tlosses;?>" readonly/>
+								</div>
+							</div>
+							<div class="col-lg-3">
+								<div class="form-group">
+									<label for="transp_charge" class="control-label">Transport Charge After Transit Loss</label>
+									<input type="text" class="form-control" name="transp_charge" id="transp_charge" value="<?php echo $actual_tc - $sum_tlosses;?>" />
+								</div>
+							</div> 
+						</div>	
+						<div class="space-6"></div>
+						<div class="row"> 	
+							<div class="col-lg-9"> 
+								<button type="submit" class="btn btn-success"><i class="fa fa-check"></i> Save </button>
+								<button type="button" class="btn btn-warning" onclick="javascript:history.back();" ><i class="fa fa-times"></i> Cancel </button> 					
+							</div>
+						</div>
+					</form>  
+				</div> <!-- end of widget-main -->  
+	        </div> <!-- end of widget-body -->
+        </div> <!-- end of widget widget-default -->
+    </div> <!-- end of col-lg-12 -->
+</div> <!-- end of row -->
+
+<script type="text/javascript">
+$(function() {
+	$('#trdetails_table').transportationcharge({
+		getDetails:"<?php echo $this->url('transporter', array('action' => 'getdetails'));?>",
+		getSellingPrice:"<?php echo $this->url('transporter', array('action'=>'getsellingprice'));?>",
+		getConvertedrate:"<?php echo $this->url('transporter', array('action'=>'getconvertedrate'));?>",
+	});
+});
+
+/******** formValidation *************/
+const fv = FormValidation.formValidation(document.getElementById('#form'), {
+	fields: {
+		/*'item[]': {
+			validators: {
+				notEmpty: {
+					message: 'Please select item'
+				}
+			}
+		},
+		'batch[]': {
+			validators: {
+				notEmpty: {
+					message: 'Please select batch'
+				}
+			}
+		},
+		'uom[]': {
+			validators: {
+				notEmpty: {
+					message: 'Please select uom'
+				}
+			}
+		},
+		'qty_loss[]': {
+			validators: {
+				notEmpty: {
+					message: 'Please provide loss quantity'
+				}
+			}
+		},  
+		'rate[]':{
+			validators: {
+				notEmpty:{
+					message: 'Please provide rate'
+				},
+			}
+		}, */         
+	},
+	plugins: {
+		trigger: new FormValidation.plugins.Trigger(),
+		bootstrap3: new FormValidation.plugins.Bootstrap3(),
+		submitButton: new FormValidation.plugins.SubmitButton(),
+		defaultSubmit: new FormValidation.plugins.DefaultSubmit(),
+	},
+}).on('core.element.validated', function (e) {
+	if (e.valid) {
+		$('div#'+ e.field.replace('[]','') +'_chosen').removeClass('is-invalid');
+		$('div#'+ e.field.replace('[]','') +'_chosen').addClass('is-valid');
+	} else {
+		$('div#'+ e.field.replace('[]','') +'_chosen').removeClass('is-valid');
+		$('div#'+ e.field.replace('[]','') +'_chosen').addClass('is-invalid');
+	}
+});
+</script>

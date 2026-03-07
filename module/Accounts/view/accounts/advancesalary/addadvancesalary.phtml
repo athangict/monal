@@ -1,0 +1,711 @@
+<?php
+/**
+ * View -- of Accounts/AdvancesalaryController/addadvancesalaryAction
+ */
+  $this->headTitle($this->title);
+?>
+<div class="modal-body">
+	<div class="panel panel-default">                       
+		<div class="panel-body"> 
+			<div class="row">
+				<div class="col-lg-12"> 
+					<form method="post" action="<?php echo $this->url('advancesalary', array('action' => 'addadvancesalary')); ?>"  enctype="multipart/form-data" >    
+						<div class="row">
+							<div class="form-group col-lg-3">
+								<input type="hidden" name="advance_id" id="advance_id" value="<?php echo $advance['id'];?>" />
+								<label for="employee" class="control-label">Employee</label>
+								<select id="employee" name="employee" class="form-control" data-placeholder="Select" required>
+									<option value=""></option>		
+									<?php foreach($employees as $emp):
+										$selected_emp = ($data['employee_id'] == $emp['id'])?'selected':'';
+									?>
+									<option value="<?php echo $emp['id'];?>" <?php echo $selected_emp;?>>
+										<?php echo $emp['full_name'].', '.$emp['emp_id'];?>
+									</option>
+									<?php endforeach;?>
+								</select> 
+							</div>
+							<div class="form-group col-lg-3">
+								<label for="payhead" class="control-label">Pay Head</label>
+								<select id="payhead" name="payhead" class="form-control" data-placeholder="Select" required>
+									<option value=""></option>		
+									<?php foreach($payheads as $pay):
+										$selected_pay = ($data['payhead_id'] == $pay['id'])?'selected':'';
+									?>
+										<option value="<?php echo $pay['id'];?>" <?php echo $selected_pay; ?>>
+											<?php echo $pay['head_type'].' ('.$pay['code'].')';?>
+										</option>
+									<?php endforeach;?>
+								</select> 
+							</div>
+							<div class="form-group col-lg-3">
+								<label for="initial_date" class="control-label">Initial Date</label>
+								<div class="date input-group" id="initial_date" data-date="<?php //echo date('Y-m-d');?>" data-date-format="yyyy-mm-dd" >
+									<input class="form-control span2" name="initial_date" id="initial_date" type="text" placeholder="Initial Date" value="<?php //echo (sizeof($advance)>0)?$advance['initial_date']:date('Y-m-d');?>" readonly required>
+									<span class="input-group-addon add-on"><i class="fa fa-calendar"></i></span>
+								</div>
+							</div>
+							<div class="form-group col-lg-3">
+								<label for="paid_amount" class="control-label">Paid Amount</label>
+								<input type="text" class="form-control" name="paid_amount" id="paid_amount" placeholder="Paid Amount" value="<?php //echo $this->payrollObj->getSumYearMonth(array('pr.employee' => $data['employee_id'],'pd.pay_head' => $data['payhead_id']),date_create_from_format('Y-m-d', $advance['initial_date']));?>" readonly /> 
+							</div>
+						</div>
+						<div class="row message_box">
+							<div class="col-lg-12"> 
+								<div class="alert alert-block alert-info">
+									<i class="ace-icon fa fa-check blue"></i>
+									Please select Employee and Payhead to add <strong class="blue"> advance salary details </strong> of the employee. 
+								</div>
+							</div>
+						</div>
+						<div class="row status_message">
+							<div class="col-lg-12"> 
+								<?php if(!empty($advances)):
+									//echo '<pre>';print_r(sizeof($advances));exit;?>
+									<div class="alert alert-block alert-warning">
+										<i class="ace-icon fa fa-check yellow"></i>
+										Salary Advance is <strong class="yellow"> Pending </strong> for this employee. You are not allowed to add new Advance Salary unless this account is closed but You still Top up on this account!
+										<i>PLEASE NOTE THAT INITIAL DATE SHOULD NOT BE CHANGED.</i>	
+									</div>
+								<?php else:?>
+									<div class="alert alert-block alert-success">
+										<i class="ace-icon fa fa-check green"></i>
+										<strong class="green"> No Salary Advance is pending for this employee under this payhead</strong> 
+									</div>
+								<?php endif;?>
+							</div>
+						</div>
+						<div class="row"><div class="col-lg-12"><div id="employee_dtls"></div></div></div>
+						<h5>Details of Advance Salary : </h5>
+						<div class="row">
+							<div class="col-lg-12">
+								<div>
+									<table class="table" id="trdetails_table">
+										<thead>
+											<tr>
+												<th>Salary Advance Type</th>
+												<th>Avail Date</th>
+												<th>End Date</th>
+												<th>Amount (<?php //echo $this->currency_code();?>)</th>
+												<th>Payment Duration</th>
+												<th>Monthly Deduction (<?php //echo $this->currency_code();?>)</th>
+												<th>Status</th>
+												<th></th>
+											</tr>
+										</thead>
+										<tbody>
+											<?php 
+												if(!empty($advance_dtls)):
+													foreach($advance_dtls as $advance_dtl):
+											?>
+											<tr>
+												<td>
+													<div class="form-group">
+														<select id="advance_ded_type" name="advance_ded_type[]" class="form-control" data-placeholder="Select" required>
+															<option value=""></option>		
+															<?php foreach($advance_ded_types as $adv_ded):
+																$selected_ded = ($advance_dtl['advance_ded_type'] == $adv_ded['id'])?'selected':'';
+															?>
+															<option value="<?php echo $adv_ded['id'];?>" <?php echo $selected_ded;?>>
+																<?php echo $adv_ded['advance_ded_type'];?>
+															</option>
+															<?php endforeach;?>
+														</select> 
+														<input type="hidden" name="adv_dtl_id[]" id="adv_dtl_id" value="<?php echo $advance_dtl['id']?>" />
+														<input type="hidden" name="status[]" id="status" value="<?php echo $advance_dtl['status']?>" />
+													</div>
+												</td>
+												<td>
+													<div class="form-group">
+														<div class="date input-group" id="avail_date" data-date="<?php echo date('Y-m-d');?>" data-date-format="yyyy-mm-dd" >
+															<input class="form-control span2" name="avail_date[]" id="avail_date" type="text" placeholder="Avail Date" value="<?php echo $advance_dtl['avail_date'];?>" readonly required>
+															<span class="input-group-addon add-on"><i class="fa fa-calendar"></i></span>
+														</div>
+													</div>
+												</td>
+												<td>
+													<div class="form-group">
+														<div class="date input-group" id="end_date" data-date="<?php echo date('Y-m-d');?>" data-date-format="yyyy-mm-dd" >
+															<input class="form-control span2" name="end_date[]" id="end_date" type="text" placeholder="End Date" value="<?php echo $advance_dtl['end_date'];?>" readonly required>
+															<span class="input-group-addon add-on"><i class="fa fa-calendar"></i></span>
+														</div>
+													</div>
+												</td>
+												<td>
+													<div class="form-group">
+														<input type="text" class="form-control" name="amount[]" id="amount" value="<?php echo $advance_dtl['amount'];?>" placeholder="Amount" required/> 
+													</div>
+												</td>
+												<td>
+													<div class="form-group">
+														<input type="text" class="form-control" name="payment_duration[]" id="payment_duration" value="1" placeholder="Payment Duration" readonly /> 
+													</div>
+												</td>
+												<td>
+													<div class="form-group">
+														<input type="text" class="form-control" name="monthly_deduction[]" id="monthly_deduction" value="<?php echo $advance_dtl['monthly_deduction'];?>" placeholder="Monthly Deduction"/> 
+													</div>
+												</td>
+												<td><div class="status" id="status"><?php echo $this->status($advance_dtl['status']);?></div></td>
+												<td></td>
+											</tr>
+											<?php endforeach;
+											else:?>
+											<tr>
+												<td>
+													<div class="form-group">
+														<select id="advance_ded_type" name="advance_ded_type[]" class="form-control" data-placeholder="Select" required>
+															<option value=""></option>		
+															<?php foreach($advance_ded_types as $adv_ded):?>
+															<option value="<?php echo $adv_ded['id'];?>">
+																<?php echo $adv_ded['advance_ded_type'];?>
+															</option>
+															<?php endforeach;?>
+														</select> 
+														<input type="hidden" name="status[]" id="status" value="1" />
+													</div>
+												</td>
+												<td>
+													<div class="form-group">
+														<div class="date input-group" id="avail_date" data-date="<?php echo date('Y-m-d');?>" data-date-format="yyyy-mm-dd" >
+															<input class="form-control span2" name="avail_date[]" id="avail_date" type="text" placeholder="Avail Date" value="<?php echo date('Y-m-d');?>" readonly required>
+															<span class="input-group-addon add-on"><i class="fa fa-calendar"></i></span>
+														</div>
+													</div>
+												</td>
+												<td>
+													<div class="form-group">
+														<div class="date input-group" id="end_date" data-date="<?php echo date('Y-m-d');?>" data-date-format="yyyy-mm-dd" >
+															<input class="form-control span2" name="end_date[]" id="end_date" type="text" placeholder="End Date" value="<?php echo date('Y-m-d');?>" readonly required>
+															<span class="input-group-addon add-on"><i class="fa fa-calendar"></i></span>
+														</div>
+													</div>
+												</td>
+												<td>
+													<div class="form-group">
+														<input type="text" class="form-control" name="amount[]" id="amount" value="0.00" placeholder="Amount" required/> 
+													</div>
+												</td>
+												<td>
+													<div class="form-group">
+														<input type="text" class="form-control" name="payment_duration[]" id="payment_duration" value="1" placeholder="Payment Duration" readonly /> 
+													</div>
+												</td>
+												<td>
+													<div class="form-group">
+														<input type="text" class="form-control" name="monthly_deduction[]" id="monthly_deduction" value="0.00" placeholder="Monthly Deduction"/> 
+													</div>
+												</td>
+												<td><div class="status" id="status"><?php echo $this->status(1);?></div></td>
+												<td></td>
+											</tr>
+											<?php endif;?>
+										</tbody>
+									</table>
+								</div>
+							</div>
+						</div>
+						<div class="row">
+							<div class="col-lg-6"></div>
+							<div class="col-lg-3 form-group">
+								<label for="total_amount" class="control-label">Total Amount (<?php //echo $this->currency_code();?>)</label>
+								<input type="text" class="form-control" name="total_amount" id="total_amount" value="<?php //echo $advance['total_amount'];?>" placeholder="Total Amount"/> 
+							</div>
+							<div class="col-lg-3 form-group">
+								<label for="total_deduction" class="control-label">Total Monthly Deduction (<?php //echo $this->currency_code();?>)</label>
+								<input type="text" class="form-control" name="total_deduction" id="total_deduction" value="<?php //echo $advance['total_deduction'];?>" placeholder="Monthly Deduction"/> 
+							</div>
+						</div>
+						<div class="hr dotted"></div>
+						<div class="row"> 	
+							<div class="col-lg-9"> 
+								<button type="submit" class="btn btn-success"><i class="fa fa-check"></i> Save </button>
+								<button type="button" class="btn btn-warning" onclick="javascript:history.back();" ><i class="fa fa-times"></i> Cancel </button> 					
+							</div>
+						</div>
+					</form>	
+				</div><!-- widget widget-main -->
+			</div>  <!-- widget widget-body -->   
+		</div> <!-- widget widget-box --> 
+	</div><!-- col-lg-12 -->
+</div>
+<script type="text/javascript">	 
+    $(function() {
+		$('#initial_date').datepicker();
+		$('#initial_date').on('changeDate',function(){
+			$('form').formValidation('revalidateField', $(this).attr('id'));
+		});
+		$('#employee').on('change',function(){
+			$.post( 
+				"<?php echo $this->url('advancesalary', array('action' => 'getemployeedtls'));?>",
+				{	
+					'employee': $(this).val(),
+				}, 
+				function(data) {
+					$('div#employee_dtls').html( data.emp_details ); 
+				},
+				'json'
+			);
+			$('#payhead').val('selectedIndex',0).trigger('chosen:updated');
+			$('div.status_message').hide();
+			$('div.message_box').show();
+		});
+		if($('#payhead').val() > 0){
+			$('div.message_box').hide();
+		}
+		if($('#employee').val() > 0 && $('#payhead').val() > 0){
+			$('div.status_message').show();
+		}else{
+			$('div.status_message').hide();
+		}
+		$('#payhead').on('change', function(){
+			if($("#employee").val() == ""){
+				$('form').formValidation('revalidateField', $('select#employee'));
+			}else{
+				var param = $("#employee").val() + "-" + $("#payhead").val();
+				window.document.location = "<?php echo $this->url('advancesalary', array('action' => 'addadvancesalary', 'id' => $param));?>/"+ param;
+			}
+		});
+
+		const fv = FormValidation.formValidation(document.getElementById('#form'), {
+			fields: {
+				'employee': {
+						validators: {
+							notEmpty: {
+								message: 'Please select employee'
+							}
+						}
+					},
+					'payhead': {
+						validators: {
+							notEmpty: {
+								message: 'Please select payhead'
+							}
+						}
+					},
+					'initial_date' : {
+						validators: {
+							notEmpty: {
+								message: 'Please select initial date'
+							},
+						}
+					},
+					'advance_ded_type[]' : {
+						validators: {
+							notEmpty: {
+								message: 'Please select advance deduction type'
+							},
+						}
+					},
+					'avail_date[]' : {
+						validators: {
+							notEmpty: {
+								message: 'Please select avail date'
+							},
+							date: {
+								message: 'The avail date is not valid',
+								format: 'YYYY-MM-DD',
+								max: 'end_date[]'
+							}
+						}
+					},
+					'end_date[]' : {
+						validators: {
+							notEmpty: {
+								message: 'Please select end date'
+							},
+							date: {
+								message: 'The end date is not valid',
+								format: 'YYYY-MM-DD',
+								min: 'avail_date[]'
+							}
+						}
+					},
+					'amount[]' : {
+						validators: {
+							notEmpty: {
+								message: 'Please provide amount'
+							},
+							greaterThan: {
+								value: 1,
+								message: 'The amount must be greater than 0.00'
+							},
+						}
+					},
+					'payment_duration[]' : {
+						validators: {
+							notEmpty: {
+								message: 'Please provide payment_duration'
+							},
+						}
+					},
+					'monthly_deduction[]' : {
+						validators: {
+							notEmpty: {
+								message: 'Please provide monthly deduction'
+							},
+						}
+					},
+			},
+			plugins: {
+				trigger: new FormValidation.plugins.Trigger(),
+				bootstrap3: new FormValidation.plugins.Bootstrap3(),
+				submitButton: new FormValidation.plugins.SubmitButton(),
+				defaultSubmit: new FormValidation.plugins.DefaultSubmit(),
+			},
+		}).on('core.element.validated', function (e) {
+			if (e.valid) {
+				$('div#'+ e.field.replace('[]','') +'_chosen').removeClass('is-invalid');
+				$('div#'+ e.field.replace('[]','') +'_chosen').addClass('is-valid');
+			} else {
+				$('div#'+ e.field.replace('[]','') +'_chosen').removeClass('is-valid');
+				$('div#'+ e.field.replace('[]','') +'_chosen').addClass('is-invalid');
+			}
+		});
+		$('form select').chosen().change(function () {
+			fv.revalidateField($(this).attr('name'));
+		});
+		function getCompare(obj){
+			console.log(obj);
+		}
+		var tr_id =0;
+		var parentObj = $('#trdetails_table');
+		parentObj.wrap("<div style='overflow-x:scroll;margin-bottom:5px;'> </div>");
+		parentObj.find("tbody tr").each(function(){
+			$(this).attr('id',++tr_id);			
+			$(this).find('div.chosen-search input').each(function(){
+				$(this).addClass('ch-search');
+			});
+			$(this).find('div.chosen-container .chosen-drop').each(function(){
+				$(this).css({'position':'relative'});
+			});
+			$(this).find(':input').not('input.ch-search').each(function(){
+	            var old_id = $(this).attr('id');
+	            var new_id=(old_id.lastIndexOf('-') > 0)? old_id.substr(0, old_id.lastIndexOf('-')): old_id;
+	            $(this).attr('id',new_id+'-'+tr_id);
+	            $(this).addClass('tr-'+new_id);
+	        });
+			$(this).find('div.date, div.status').each(function(){
+				var old_id = $(this).attr('id');
+	            var new_id=(old_id.lastIndexOf('-') > 0)? old_id.substr(0, old_id.lastIndexOf('-')): old_id;
+	            $(this).attr('id',new_id+'-'+tr_id);
+			});
+			$(this).find('select.tr-advance_ded_type').each(function(){
+				var id = $(this).closest('tr').attr('id');
+				
+				$('#avail_date-'+id).datepicker();
+				$('#avail_date-'+id).on('changeDate',function(){
+					$('form').formValidation('revalidateField', $(this).attr('id'));
+				});
+				$('#end_date-'+id).datepicker();
+				$('#end_date-'+id).on('changeDate',function(){
+					$('form').formValidation('revalidateField', $(this).attr('id'));
+				});
+				
+				d1 = new Date($( "input#avail_date-"+id).val());
+				d2 = new Date($( "input#end_date-"+id).val());
+				
+				if(d1<=d2){
+					if(d1.getYear() == d2.getYear() && d1.getMonth() == d2.getMonth() || d1 == d2){
+						var no_of_months = 1;
+					}else{
+						var no_of_months = monthDiff(d1, d2) + 2;
+					}
+				}else{
+					var no_of_months = 0;
+				}
+				$('#payment_duration-'+id).val(no_of_months);
+			});
+			
+			$(this).find('input.tr-avail_date').each(function(){
+				var id = $(this).closest('tr').attr('id');
+	    		$(this).bind('change', function(){
+					d1 = new Date($( "input#avail_date-"+id).val());
+					d2 = new Date($( "input#end_date-"+id).val());
+					
+					if(d1<=d2){
+						if(d1.getYear() == d2.getYear() && d1.getMonth() == d2.getMonth() || d1 == d2){
+							var no_of_months = 1;
+						}else{
+							var no_of_months = monthDiff(d1, d2) + 2;
+						}
+					}else{
+						var no_of_months = 0;
+					}
+					$('#payment_duration-'+id).val(no_of_months);
+					var amount = parseFloat($('#amount-'+id).val());
+					var payment_duration = parseFloat($('#payment_duration-'+id).val());
+					var monthly_deduction = amount / payment_duration;
+					$('#monthly_deduction-'+id).val(monthly_deduction);
+					adv_calculation(parentObj);
+					$('form').formValidation('revalidateField', $('input#end_date-'+id));
+					$('form').formValidation('revalidateField', $('input#avail_date-'+id));
+				});
+			});
+			$(this).find('input.tr-end_date').each(function(){
+				var id = $(this).closest('tr').attr('id');
+	    		$(this).bind('change', function(){
+					d1 = new Date($( "input#avail_date-"+id).val());
+					d2 = new Date($( "input#end_date-"+id).val());
+					
+					if(d1<=d2){
+						if(d1.getYear() == d2.getYear() && d1.getMonth() == d2.getMonth() || d1 == d2){
+							var no_of_months = 1;
+						}else{
+							var no_of_months = monthDiff(d1, d2) + 2;
+						}
+					}else{
+						var no_of_months = 0;
+					}
+					$('#payment_duration-'+id).val(no_of_months);
+					var amount = parseFloat($('#amount-'+id).val());
+					var payment_duration = parseFloat($('#payment_duration-'+id).val());
+					var monthly_deduction = amount / payment_duration;
+					$('#monthly_deduction-'+id).val(monthly_deduction);
+					adv_calculation(parentObj);
+					$('form').formValidation('revalidateField', $('input#avail_date-'+id));
+					$('form').formValidation('revalidateField', $('input#end_date-'+id));
+				});
+			});
+			$(this).find('input.tr-monthly_deduction').each(function(){
+				var id = $(this).closest('tr').attr('id');
+	    		$(this).bind('change', function(){
+					adv_calculation(parentObj);
+				});
+			});
+		});
+		adv_delbtn(parentObj);
+		if($('#addRow').length == 0){
+			var addbutton = "<div class='row'><div class='col-lg-12'><a value='Add' id='addRow' class='pull-right btn btn-success btn-xs' ><i class='fa fa-plus'></i> Add Row</a>&nbsp;&nbsp;&nbsp;&nbsp;</div></div>";
+			$(parentObj).parent().parent().parent().append(addbutton);
+		};		
+		$("#addRow").click(function(){
+			adv_addrow(parentObj);			     
+		});	
+		adv_calculation(parentObj);
+	});
+	function monthDiff(d1, d2) {
+		var months;
+		months = (d2.getFullYear() - d1.getFullYear()) * 12;
+		months -= d1.getMonth() + 1;
+		months += d2.getMonth();
+		return months <= 0 ? 0 : months;
+	}
+	function currentDate() {
+		var today = new Date();
+		var dd = today.getDate();
+		var mm = today.getMonth()+1; //January is 0!
+
+		var yyyy = today.getFullYear();
+		if(dd<10){
+			dd='0'+dd
+		} 
+		if(mm<10){
+			mm='0'+mm
+		} 
+		var today = yyyy+'-'+mm+'-'+dd;
+		return today;
+	}
+	function adv_addrow(obj){
+		var lastRow = obj.find("tbody tr:last").attr('id');
+		var tmplt_row = obj.find("tbody tr:last").clone(true);
+		clone = tmplt_row.clone();
+		clone.find('div.chosen-container').each(function(){
+			$(this).remove();
+		});
+		clone.attr('id',++lastRow);
+		clone.find(':input').each(function(){
+			var old_id = $(this).attr('id');
+			var new_id=(old_id.lastIndexOf('-') > 0)? old_id.substr(0, old_id.lastIndexOf('-')): old_id;
+			$(this).attr('id',new_id+'-'+lastRow);
+			$(this).addClass('tr-'+new_id);
+			$('form').formValidation('addField', $(this));
+		});
+		clone.find('div.date, div.status').each(function(){
+			var old_id = $(this).attr('id');
+			var new_id=(old_id.lastIndexOf('-') > 0)? old_id.substr(0, old_id.lastIndexOf('-')): old_id;
+			$(this).attr('id',new_id+'-'+lastRow);
+		});
+		$('#'+obj.attr('id')+' tbody').append(clone);
+		adv_reset(clone);
+		$('form select').chosen();//{ allow_single_deselect: true }
+		clone.find('div.chosen-container .chosen-drop').each(function(){
+			$(this).css({'position':'relative'});
+		});
+		clone.find('div.chosen-search input').each(function(){
+			$(this).addClass('ch-search');
+		});
+		
+		clone.find('select.tr-advance_ded_type').each(function(){
+			var id = $(this).closest('tr').attr('id');
+			$('#avail_date-'+id).datepicker();
+			$('#avail_date-'+id).on('changeDate',function(){
+				$('form').formValidation('revalidateField', $(this).attr('id'));
+			});
+			$('#end_date-'+id).datepicker();
+			$('#end_date-'+id).on('changeDate',function(){
+				$('form').formValidation('revalidateField', $(this).attr('id'));
+			});
+		});
+		clone.find('input.tr-avail_date').each(function(){
+			var id = $(this).closest('tr').attr('id');
+			$(this).bind('change', function(){
+				d1 = new Date($( "input#avail_date-"+id).val());
+				d2 = new Date($( "input#end_date-"+id).val());
+				
+				if(d1<=d2){
+					if(d1.getYear() == d2.getYear() && d1.getMonth() == d2.getMonth() || d1 == d2){
+						var no_of_months = 1;
+					}else{
+						var no_of_months = monthDiff(d1, d2) + 2;
+					}
+				}else{
+					var no_of_months = 0;
+				}
+				$('#payment_duration-'+id).val(no_of_months);
+				var amount = parseFloat($('#amount-'+id).val());
+				var payment_duration = parseFloat($('#payment_duration-'+id).val());
+				var monthly_deduction = amount / payment_duration;
+				$('#monthly_deduction-'+id).val(monthly_deduction);
+				adv_calculation(obj);
+				$('form').formValidation('revalidateField', $('input#end_date-'+id));
+				$('form').formValidation('revalidateField', $('input#avail_date-'+id));
+			});
+		});
+		clone.find('input.tr-end_date').each(function(){
+			var id = $(this).closest('tr').attr('id');
+			$(this).bind('change', function(){
+				d1 = new Date($( "input#avail_date-"+id).val());
+				d2 = new Date($( "input#end_date-"+id).val());
+				
+				if(d1<=d2){
+					if(d1.getYear() == d2.getYear() && d1.getMonth() == d2.getMonth() || d1 == d2){
+						var no_of_months = 1;
+					}else{
+						var no_of_months = monthDiff(d1, d2) + 2;
+					}
+				}else{
+					var no_of_months = 0;
+				}
+				$('#payment_duration-'+id).val(no_of_months);
+				var amount = parseFloat($('#amount-'+id).val());
+				var payment_duration = parseFloat($('#payment_duration-'+id).val());
+				var monthly_deduction = amount / payment_duration;
+				$('#monthly_deduction-'+id).val(monthly_deduction);
+				adv_calculation(obj);
+				$('form').formValidation('revalidateField', $('input#avail_date-'+id));
+				$('form').formValidation('revalidateField', $('input#end_date-'+id));
+			});
+		});
+		clone.find('input.tr-monthly_deduction').each(function(){
+			var id = $(this).closest('tr').attr('id');
+			$(this).bind('change', function(){
+				adv_calculation(obj);
+			});
+		});
+		adv_delbtn(obj);		
+		adv_calculation(obj);
+	};	
+	function adv_delbtn(obj){
+		if(obj.find("tbody tr").length > 1){
+			delBtn = "<a value='Delete' class='btn btn-warning btn-xs delRow' style='margin-top:5px;' ><i class='fa fa-times'></i></a>";
+			delBtn_disabled = "<a value='Delete' class='btn btn-warning btn-xs disabled' style='margin-top:5px;' ><i class='fa fa-times'></i></a>";
+			obj.find("tbody tr").each(function(){
+				var id = $(this).attr('id');
+				if($('#status-'+id).val()==2 || $('#status-'+id).val()==3){
+					$(this).find("td:last").html(delBtn_disabled);
+				}else{
+					$(this).find("td:last").html(delBtn);			
+				}
+			});
+			obj.find("td a.delRow").each(function(){
+				$(this).click(function(){adv_delrow($(this).closest('tr'));});	
+			});
+		}else{
+			delBtn = "<a value='Delete' class='btn btn-warning btn-xs resetRow' style='margin-top:5px;' ><i class='fa fa-refresh'></i></a>";
+			delBtn_disabled = "<a value='Delete' class='btn btn-warning btn-xs resetRow' style='margin-top:5px;' ><i class='fa fa-refresh'></i></a>";
+			obj.find("tbody tr").each(function(){
+				var id = $(this).attr('id');
+				if($('#status-'+id).val()==2 || $('#status-'+id).val()==3){
+					$(this).find("td:last").html(delBtn_disabled);
+				}else{
+					$(this).find("td:last").html(delBtn);
+				}
+			});
+			obj.find("td a.resetRow").each(function(){
+				$(this).click(function(){adv_reset($(this).closest('tr'));});	
+			});
+		}		
+	};	
+	function adv_delrow(obj){
+		obj.find(':input[data-fv-field]').each(function() {
+			$('form').formValidation('removeField', $(this));
+		});	
+		var tr_length = obj.parent().find('tr').length;
+		var tbody = obj.parent();
+		obj.closest("tr").remove();
+		if(tr_length == 2){
+			var delBtn = "<a value='Delete' class='btn btn-warning btn-xs resetRow' style='margin-top:5px;' ><i class='fa fa-refresh'></i></a>";
+			var delBtn_disabled = "<a value='Delete' class='btn btn-warning btn-xs disabled' style='margin-top:5px;' ><i class='fa fa-refresh'></i></a>";
+			id = tbody.find('tr:last').attr('id');
+			
+			if($('#status-'+id).val()==2 || $('#status-'+id).val()==3){
+				tbody.find('tr td:last').html(delBtn_disabled);
+			}else{
+				tbody.find('tr td:last').html(delBtn);
+			}
+			tbody.find('tr td:last a.resetRow').each(function(){
+				$(this).click(function(){adv_reset($(this).closest("tr"));});
+			});
+		}
+		adv_calculation(tbody.parent());
+	}	
+	function adv_calculation(obj){
+		obj.find('tbody tr').each(function(){
+			var id = $(this).attr('id');
+			$('#amount-'+id).on('change',function(){
+				var amount = parseFloat($('#amount-'+id).val());
+				var payment_duration = parseFloat($('#payment_duration-'+id).val());
+				var monthly_deduction = amount / payment_duration;
+				$('#monthly_deduction-'+id).val(monthly_deduction);
+				
+				var netamt = 0;
+				var netded = 0;
+				obj.find('tbody tr').each(function(){
+					var id = $(this).attr('id');
+					netamt += parseFloat($('#amount-'+id).val());
+					netded += parseFloat($('#monthly_deduction-'+id).val());
+				});
+				var netamt = parseFloat(netamt).toFixed(2);
+				$('#total_amount').val(($.isNumeric(netamt))? netamt:'0.00');
+				var netded = parseFloat(netded).toFixed(2);
+				$('#total_deduction').val(($.isNumeric(netded))? netded:'0.00');
+			});	
+		});
+		var netamt = 0;
+		var netded = 0;
+		obj.find('tbody tr').each(function(){
+			var id = $(this).attr('id');
+			netamt += parseFloat($('#amount-'+id).val());
+			netded += parseFloat($('#monthly_deduction-'+id).val());
+		});
+		var netamt = parseFloat(netamt).toFixed(2);
+		$('#total_amount').val(($.isNumeric(netamt))? netamt:'0.00');
+		var netded = parseFloat(netded).toFixed(2);
+		$('#total_deduction').val(($.isNumeric(netded))? netded:'0.00');
+	};
+	function adv_reset(obj){
+		var id = obj.attr('id');
+		$('div#status-'+id).html("<?php echo $this->status(1);?>");
+		$('input#avail_date-'+id).val(currentDate());
+		$('input#end_date-'+id).val(currentDate());
+		$('#amount-'+id).val('0.00');
+		$('#payment_duration-'+id).val('1');
+		$('#monthly_deduction-'+id).val('0.00');
+		$('#advance_ded_type-'+id).val('selectedIndex',0).trigger('chosen:updated');
+		obj.find(':input:hidden').each(function(){$(this).val('');});
+		obj.find(':input[data-fv-field]').each(function() {
+			$('form').formValidation('resetField',$(this));
+		});	
+	}
+</script>

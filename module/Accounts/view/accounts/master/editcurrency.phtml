@@ -1,0 +1,107 @@
+<?php
+/**
+ * 
+ * View -- of Accounts/DemographyController/editcurrencyAction
+ * 
+ */
+//echo '<pre>';print_r($currencies);exit;
+?>
+<?php foreach($currencies as $row);?>                      
+<form method="post" action="<?php echo $this->url('accmaster', array('action' => 'editcurrency', 'id' => $row['id'])); ?>"  enctype="multipart/form-data" >                 
+    <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+        <h4 class="modal-title"><i class="fa fa-pencil-square-o"></i> Edit Currency</h4>
+    </div><!-- /modal-header -->
+	<div class="modal-body">
+		<div class="panel panel-default">
+			<div class="panel-body">  
+				<div class="row"> 
+					<div class="col-lg-12">
+						<div class="form-group">
+						    <input type="hidden" id="currency_id" name="currency_id" value="<?php echo $row['id'];?>" />
+							<label for="currency" class="control-label">Currency</label>
+							<input class="form-control" placeholder="currency" name="currency" id="currency" value="<?php echo $row['currency']; ?>" required >
+						</div>
+							
+						<div class="form-group">
+							<label for="country" class="control-label">Country</label>
+							<input class="form-control" placeholder="country" name="country" id="country" value="<?php echo $row['country'] ; ?>" required >
+						</div>
+							
+						<div class="form-group">
+							<label for="code" class="control-label">Code</label>
+							<input class="form-control" placeholder="code" name="code" id="code" value="<?php $row['code'];?>" >
+						</div>
+						<div class="form-group">
+							<label for="fraction" class="control-label">Fraction</label>
+							<input class="form-control" placeholder="fraction" name="fraction" id="fraction" value="<?php echo  $row['fraction']; ?>">
+						</div>
+						<input type="hidden" name="status" id="status" value="<?php echo $row['status']; ?>">
+					</div>
+				</div>
+		    </div>
+	    </div>
+    </div>       
+    <div class="modal-footer">
+        <button type="submit" class="btn btn-success"><i class="fa fa-check"></i> Save </button>
+        <button type="button" class="btn btn-warning" data-dismiss="modal" ><i class="fa fa-times"></i> Cancel </button> 
+    </div><!-- /modal-footer -->
+</form>
+<script>
+	$('select').chosen({ allow_single_deselect: true });		
+	$('document').ready(function(){
+		const fv = FormValidation.formValidation(document.getElementById('#form'), {
+			fields: {
+				currency: {
+						validators: {
+							notEmpty: {
+								message: 'Please provide currency.'
+							}
+						}
+					},
+					country: {
+						validators: {
+							notEmpty: {
+								message: 'Please provide country.'
+							}
+						}
+					},
+					code: {
+						validators: {
+							notEmpty: {
+								message: 'Please provide code.'
+							}
+						}
+					},
+					fraction: {
+						validators: {
+							notEmpty: {
+								message: 'Please provide code.'
+							}
+						}
+					},
+			},
+		plugins: {
+			trigger: new FormValidation.plugins.Trigger(),
+			bootstrap3: new FormValidation.plugins.Bootstrap3(),
+			submitButton: new FormValidation.plugins.SubmitButton(),
+			defaultSubmit: new FormValidation.plugins.DefaultSubmit(),
+		},
+	}).on('core.element.validated', function (e) {
+		if (e.valid) {
+			$('div#'+ e.field.replace('[]','') +'_chosen').removeClass('is-invalid');
+			$('div#'+ e.field.replace('[]','') +'_chosen').addClass('is-valid');
+		} else {
+			$('div#'+ e.field.replace('[]','') +'_chosen').removeClass('is-valid');
+			$('div#'+ e.field.replace('[]','') +'_chosen').addClass('is-invalid');
+		}
+	});
+	$('form select').chosen().change(function () {
+		fv.revalidateField($(this).attr('name'));
+	});
+	});
+</script>
+
+                                
+
+      

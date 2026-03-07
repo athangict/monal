@@ -1,0 +1,549 @@
+<?php
+/**
+ * View -- of Sales/SchemeController/editsdetailsAction
+ */
+?>
+<?php
+	foreach($scheme as $schemes):
+		extract($schemes);
+		$sc_id = $id;
+		$note_edit = $note;
+		$sub_head_id = $sub_head;
+		//echo "<pre>";print_r($schemes);
+	endforeach;
+?>
+<div class="row">
+	<div class="col-lg-12">
+		<div class="widget widget-box">
+			<div class="widget-header">
+				<h5 class="widget-title lighter smaller">
+					<i class="fa fa-pencil"></i>&nbsp;&nbsp;&nbsp;Edit Schemes : &nbsp;<strong><?php echo $scheme_no; ?> | <?php echo $scheme_type; ?> | <?php echo $activity;?></strong>&nbsp;
+					<?php
+						 $status_list  = $this->statusObj->get($status); 
+						 foreach ($status_list as $status):
+							 extract($status);
+						 endforeach;
+					 ?>
+					<span class="label label-<?php echo $label;?>">
+						&nbsp; <?php echo $status; ?> &nbsp;
+					</span>
+				</h5>
+			</div><!-- end of widget-header -->
+			<div class="widget-body">
+				<div class="widget-main">
+					<form method="post" action="<?php echo $this->url('schemes', array('action' => 'editsdetails')); ?>"  enctype="multipart/form-data" >   
+						<div class="row">
+							<div class="col-lg-4">  
+								<div class="form-group">
+									<input type="hidden" name="sc_id" id="sc_id" value="<?php echo $sc_id; ?>">
+									<input type="hidden" name="scheme_no" id="scheme_no" value="<?php echo $scheme_no; ?>"> 
+									<label for="scheme_type" class="control-label">Scheme Type</label>
+									<select id="scheme_type" name="scheme_type" class="form-control" data-placeholder="Select" readonly>
+										<option value=""></option>	
+										<?php foreach ($this->schemetype as $schemetypes):?>
+											<?php $selected = ($scheme_type_id == $schemetypes['id'])?"selected":"";?>
+											<option value="<?php echo $schemetypes['id'];?>"
+												<?php echo $selected; ?> >
+												<?php echo $schemetypes['scheme_type']; ?>
+											</option>
+										<?php endforeach; ?>
+									</select> 
+								</div>	
+							</div>		
+							<div class="col-lg-4"> 
+								<div class="form-group">
+									<label for="supplier" class="control-label">Supplier</label>
+									<select id="supplier" name="supplier" class="form-control" data-placeholder="Select" required>
+										<option value=""></option>
+										<?php foreach ($this->suppliers as $supplier): $selected = ($supplier['id'] == $supplier_id)?"selected":""; ?>
+											<option value="<?php echo $supplier['id'];?>"<?php echo $selected; ?> >
+												<?php echo $supplier['code']; ?></option>
+										<?php endforeach; ?>
+									</select> 
+								</div>
+							</div>
+							<div class="col-lg-4"> 
+								<div class="form-group">
+									<label for="activity" class="control-label">Activity</label>
+									<select id="activity" name="activity" class="form-control" data-placeholder="Select" required>
+										<option value=""></option>
+										<?php foreach($this->activityObj->getAll() as $activity):
+										$selected = ($activity['id'] == $activity_id)?'selected':'';?>
+											<option value="<?php echo $activity['id'];?>" <?php echo $selected;?>>
+										   		<?php echo $activity['activity']; ?>
+										   	</option>
+										<?php endforeach; ?>						
+									</select> 
+								</div>
+							</div>
+						</div>	
+						<div class="row">	
+							<div class="col-lg-4"> 
+								<div class="form-group">
+									<label for="item" class="control-label">Item</label>
+									<select id="item" name="item" class="form-control" data-placeholder="Select" required>
+										<option value=""></option>
+										<?php 
+											$item = $this->itemObj->get(array('i.activity' => $activity_id));
+											foreach ($item as $items): 
+												$selected = ($items['id'] == $schemes['item_id'])?"selected":"";
+										?>
+										   <option value="<?php echo $items['id']; ?>" <?php echo $selected;?>>
+										   		<?php echo $items['code'];?>
+										   </option>
+										<?php endforeach; ?>
+									</select> 
+								</div>
+							</div>
+							<div class="col-lg-4">
+								<div class="form-group">
+									<label for="head" class="control-label">Head</label>
+									<select id="head" name="head" class="form-control" data-placeholder="Select" required>
+										<option value=""> </option>
+										<?php 
+										$selected_head = $this->subheadObj->getColumn($sub_head,'head');
+										foreach($this->headObj->getAll() as $heads):
+										$selected = ($heads['id'] == $selected_head)?'selected':'';?>
+										<option value="<?php echo $heads['id'];?>" <?php echo $selected; ?>>
+											<?php echo $heads['code'];?>
+										</option>
+									<?php endforeach;?>
+									</select>		
+								</div>
+							</div>		
+							<div class="col-lg-4"> 
+								<div class="form-group">
+									<label for="sub_head" class="control-label">Sub Head</label>
+									<select id="sub_head" name="sub_head" class="form-control" data-placeholder="Select" required>
+										<option value=""></option>
+										<?php
+											$subheads = $subheadObj->get(array('sh.head' => $selected_head)); 
+											foreach($subheads as $subheadd):
+											$selected = ($subheadd['id'] == $sub_head_id)?'selected':'';
+										?>
+											<option value="<?php echo $subheadd['id'];?>" <?php echo $selected; ?>>
+												<?php echo $subheadd['code'];?>
+											</option>
+										<?php endforeach;?>	
+									</select> 
+								</div>
+							</div>
+						</div>
+						<div class="row">
+							<div class="col-lg-4">    
+								<div class="form-group">
+									<label for="scheme_date" class="control-label">Scheme Date</label>
+									<div class="date input-group" id="scheme_date" data-date="<?php echo date('Y-m-d');?>" data-date-format="yyyy-mm-dd" >
+										<input class="form-control span2" name="scheme_date" id="scheme_date" value="<?php echo $scheme_date; ?>" type="text" placeholder="Scheme Date" readonly required>
+										<span class="input-group-addon add-on"><i class="fa fa-calendar"></i></span>
+									</div>
+								</div>
+							</div>		
+							<div class="col-lg-4">    
+								<div class="form-group">
+									<label for="from_date" class="control-label">Start Date</label>
+									<div class="date input-group" id="from_date" data-date="<?php echo date('Y-m-d');?>" data-date-format="yyyy-mm-dd" >
+										<input class="form-control span2" name="from_date" id="from_date" value="<?php echo $schemes['from_date'];?>" type="text" placeholder="From Date" readonly required>
+										<span class="input-group-addon add-on"><i class="fa fa-calendar"></i></span>
+									</div>
+								</div>
+							</div>
+							<div class="col-lg-4">    
+								<div class="form-group">
+									<label for="to_date" class="control-label">End Date</label>
+									<div class="date input-group" id="to_date" data-date="<?php echo date('Y-m-d');?>" data-date-format="yyyy-mm-dd" >
+										<input class="form-control span2" name="to_date" id="to_date" value="<?php echo $schemes['to_date'];?>" type="text" placeholder="To Date" readonly required>
+										<span class="input-group-addon add-on"><i class="fa fa-calendar"></i></span>
+									</div>
+								</div>
+							</div>
+						</div>
+						<div class="row">		
+							<div class="col-lg-4">
+								<div class="form-group">
+									<label for="claim" class="control-label"> Claim:</label>
+									<?php 
+									$checked1 = ($schemes['claim'] == "1")?"checked":"";
+									$checked2 = ($schemes['claim'] == "0")?"checked":"";
+									?>
+									<div class="radio">
+										<label> 
+											<input class="ace" type="radio" name="claim" id="claim" value="1" <?php echo $checked1;?> checked />
+											<span class="lbl"> Yes </span>
+										</label> 
+										<label> 
+											<input class="ace" type="radio" name="claim" id="claim" value="0" <?php echo $checked2;?> /> 
+											<span class="lbl"> No </span>
+										</label>
+									</div>
+								</div>	
+							</div>
+						</div>
+						<div class="row">
+						   <div class="col-lg-12"> 
+								<h5>Scheme Details</h5>
+								<div>
+									<table id="trdetails_table" class="table small-padding">
+										<thead>
+											<tr>
+												<th>UOM</th>
+												<?php
+												switch($scheme_type_id){
+													case '1': 
+													?>
+														<th class="qty_slab_sc">Qty Slab 1</th>
+														<th class="qty_slab_sc">Qty Slab 2</th>
+														<th class="free_item_sc">Free Item</th>
+														<th class="free_item_sc">Free Item UOM</th>
+													<?php 
+													break;
+													case '2':
+													case '3':
+													?>
+														<th class="qty_slab_sc">Qty Slab 1</th>
+														<th class="qty_slab_sc">Qty Slab 2</th>
+													<?php 
+													break;
+													case '4': 
+													?>
+														<th class="unit_qty_sc">Unit Qty</th>
+														<th class="free_item_sc">Free Item</th>
+														<th class="free_item_sc">Free Item UOM</th>
+													<?php 
+													break;
+													case '5':
+													case '6': 
+													?>
+														<th class="unit_qty_sc">Unit Qty</th>
+													<?php 
+													break;
+												}?>
+												<th>Discount/Qty</th>
+												<th>&nbsp;</th>
+											</tr>
+										</thead>
+										<tbody>
+											<?php $i=1;?>
+											<?php foreach($this->schemedetails as $schemedtls):?>
+												<tr>
+													<td  class="col-lg-3">
+														<div class="form-group">
+															<input type="hidden" name="details_id[]" id="details_id" value="<?php echo $schemedtls['id'];?>">
+															<select id="uom" name="uom[]" class="form-control"  data-placeholder="Select" required>
+																<option value=""></option>
+															<?php
+																$items = $this->itemObj->get($item_id); 
+																foreach($items as $item):
+																$selected = ($item['st_uom_id'] == $schemedtls['uom'])?"selected":"";
+															?>
+																<option value="<?php echo $item['st_uom_id']?>" <?php echo $selected;?>>
+																	<?php echo $item['st_uom_code'];?>
+																</option>
+															<?php endforeach;?>
+															<?php 
+																$item_uoms = $this->itemuomObj->get(array('ui.item' => $item_id));
+																foreach ($item_uoms as $item_uom): 
+																	$selected = ($item_uom['uom_id'] == $schemedtls['uom'])?"selected":"";
+															?>
+															   <option value="<?php echo $item_uom['uom_id']; ?>" <?php echo $selected;?>>
+																	<?php echo $item_uom['uom_code'];?>
+															   </option>
+															<?php endforeach; ?>
+															</select>
+														</div>
+													</td> 
+												<?php
+												switch($scheme_type_id){
+													case '1':
+													?>
+													<td class="qty_slab_sc">
+														<div class="form-group">
+															<input type="text" class="form-control" value="<?php echo $schemedtls['qty_slab1'];?>" name="qty_slab1[]" id="qty_slab1">
+														</div>
+													</td>
+													<td class="qty_slab_sc">
+														<div class="form-group">
+															<select id="qty_slab2" name="qty_slab2[]" class="form-control" data-placeholder="Select">
+															<option value="-1">Above</option>
+															<?php for ($i = 1; $i <= 100; $i++) : 
+																$selected = ($i == $schemedtls['qty_slab2'])?'selected':'';
+															?>
+																<option value="<?php echo $i; ?>" <?php echo $selected;?>><?php echo $i; ?></option>
+															<?php endfor; ?>
+															</select>
+														</div>
+													</td>
+													<td class="col-lg-4 free_item_sc">
+														<div class="form-group">
+															<select id="free_item" name="free_item[]" class="form-control" data-placeholder="Select">
+																<option value=""></option>
+																<?php 
+																	$item = $this->itemObj->get(array('i.activity' => $activity_id));
+																	foreach ($item as $items): 
+																		$selected = ($items['id'] == $schemedtls['free_item'])?"selected":"";
+																?>
+																   <option value="<?php echo $items['id']; ?>" <?php echo $selected;?>>
+																		<?php echo $items['code'];?>
+																   </option>
+																<?php endforeach; ?>
+															</select>
+														</div>
+													</td>
+													<td class="col-lg-3 free_item_sc">
+														<div class="form-group">
+															<select id="free_item_uom" name="free_item_uom[]" class="form-control" data-placeholder="Select">
+																<option value=""></option>
+																<?php
+																	$items = $this->itemObj->get($item_id); 
+																	foreach($items as $item):
+																		$selected = ($item['st_uom_id'] == $schemedtls['free_item_uom'])?"selected":"";
+																?>
+																	<option value="<?php echo $item['st_uom_id']?>" <?php echo $selected;?>>
+																		<?php echo $item['st_uom_code'];?>
+																	</option>
+																<?php endforeach;?>
+																<?php 
+																	$item_uoms = $this->itemuomObj->get(array('ui.item' => $item_id));
+																	foreach ($item_uoms as $item_uom): 
+																		$selected = ($item_uom['uom_id'] == $schemedtls['free_item_uom'])?"selected":"";
+																?>
+																   <option value="<?php echo $item_uom['uom_id']; ?>" <?php echo $selected;?>>
+																		<?php echo $item_uom['uom_code'];?>
+																   </option>
+																<?php endforeach; ?>
+															</select>
+														</div>
+													</td>
+													<?php 
+													break;
+													case '2':
+													case '3': 
+													?>
+													<td class="qty_slab_sc">
+														<div class="form-group">
+															<input type="text" class="form-control" value="<?php echo $schemedtls['qty_slab1'];?>" name="qty_slab1[]" id="qty_slab1">
+														</div>
+													</td>
+													<td class="qty_slab_sc">
+														<div class="form-group">
+															<select id="qty_slab2" name="qty_slab2[]" class="form-control" data-placeholder="Select">
+															<option value="-1">Above</option>
+															<?php for ($i = 1; $i <= 100; $i++) : 
+																$selected = ($i == $schemedtls['qty_slab2'])?'selected':'';
+															?>
+																<option value="<?php echo $i; ?>" <?php echo $selected;?>><?php echo $i; ?></option>
+															<?php endfor; ?>
+															</select>
+														</div>
+													</td>
+													<?php 
+													break;
+													case '4': 
+													?>
+													<td class="unit_qty_sc">
+														<div class="form-group">
+															<input type="text" class="form-control" name="unit_quantity[]" value="<?php echo $schemedtls['unit_quantity'];?>" id="unit_quantity" >
+														</div>
+													</td>
+													<td class="col-lg-4 free_item_sc">
+														<div class="form-group">
+															<select id="free_item" name="free_item[]" class="form-control" data-placeholder="Select">
+																<option value=""></option>
+																<?php 
+																	$item = $this->itemObj->get(array('i.activity' => $activity_id));
+																	foreach ($item as $items): 
+																		$selected = ($items['id'] == $schemedtls['free_item'])?"selected":"";
+																?>
+																   <option value="<?php echo $items['id']; ?>" <?php echo $selected;?>>
+																		<?php echo $items['code'];?>
+																   </option>
+																<?php endforeach; ?>
+															</select>
+														</div>
+													</td>
+													<td class="col-lg-3 free_item_sc">
+														<div class="form-group">
+															<select id="free_item_uom" name="free_item_uom[]" class="form-control" data-placeholder="Select">
+																<option value=""></option>
+																<?php
+																	$items = $this->itemObj->get($item_id); 
+																	foreach($items as $item):
+																		$selected = ($item['st_uom_id'] == $schemedtls['free_item_uom'])?"selected":"";
+																?>
+																	<option value="<?php echo $item['st_uom_id']?>" <?php echo $selected;?>>
+																		<?php echo $item['st_uom_code'];?>
+																	</option>
+																<?php endforeach;?>
+																<?php 
+																	$item_uoms = $this->itemuomObj->get(array('ui.item'=>$item_id));
+																	foreach ($item_uoms as $item_uom): 
+																		$selected = ($item_uom['uom_id'] == $schemedtls['free_item_uom'])?"selected":"";
+																?>
+																   <option value="<?php echo $item_uom['uom_id']; ?>" <?php echo $selected;?>>
+																		<?php echo $item_uom['uom_code'];?>
+																   </option>
+																<?php endforeach; ?>
+															</select>
+														</div>
+													</td>
+													<?php 
+													break;
+													case '5':
+													case '6': 
+													?>
+													<td class="unit_qty_sc">
+														<div class="form-group">
+															<input type="text" class="form-control" name="unit_quantity[]" value="<?php echo $schemedtls['unit_quantity'];?>" id="unit_quantity"  >
+														</div>
+													</td>
+													<?php 
+													break;
+												}?>
+													<td>
+														<div class="form-group">
+															<input type="text" class="form-control" value="<?php echo $schemedtls['discount_qty'];?>" name="discount_qty[]" id="discount_qty" required>
+														</div>
+													</td>
+													<td></td>
+												</tr>
+											<?php $i++; endforeach;?>
+										</tbody>
+									</table>
+								</div>
+							</div>
+						</div>	
+						<div class="row">
+							<div class="col-lg-12">
+								<label class="control-label" for="note">Note: </label>
+								<textarea class="form-control" value="<?php echo $note_edit;?>" name="note" id="note"> <?php echo $note_edit;?></textarea>
+							</div>
+						</div>
+						<div class="space-12"></div>
+						<div class="row"> 	
+							<div class="col-lg-9"> 
+								<button type="submit" class="btn btn-success"><i class="fa fa-check"></i> Save </button>
+								<a class="btn btn-warning" onclick="javascript:history.back();"><i class="fa fa-times"></i> Cancel </a>  			
+							</div>
+						</div>
+					</form>	
+				</div><!-- widget widget-main -->
+			</div>  <!-- widget widget-body -->   
+		</div> <!-- widget widget-box --> 
+	</div><!-- col-lg-12 -->
+</div><!-- row -->
+
+<script type="text/javascript">
+    $(function() {
+		$('#scheme_date').datepicker();
+	  	$('#from_date').datepicker();
+	  	$('#to_date').datepicker();
+		$('#trdetails_table').schemej({
+			getSubhead:"<?php echo $this->url('ajresponse', array('action'=>'getsubhead'));?>",
+			getItem: "<?php echo $this->url("schemes", array("action" => "getitemactivity")); ?>",
+			getItemUom: "<?php echo $this->url("schemes", array("action" => "getitemuom")); ?>",
+		});
+	    //formValidation
+		$('form').formValidation({
+				framework: 'bootstrap',
+				excluded: ':disabled',
+				message: 'This value is not valid',
+				fields: {
+					'scheme_date': {
+					 	validators: {
+							notEmpty: {
+								message: 'Please select scheme date'
+						  	}
+					  	}
+				  	},
+					'activity': {
+						validators: {
+							notEmpty: {
+								message: 'Please select activity'
+							}
+						}
+					},
+					'supplier': {
+						validators: {
+							notEmpty: {
+								message: 'Please select supplier'
+							}
+						}
+					},
+					'head': {
+						validators: {
+							notEmpty: {
+								message: 'Please select head'
+							}
+						}
+					},
+					'sub_head': {
+						validators: {
+							notEmpty: {
+								message: 'Please select sub head'
+							}
+						}
+					},
+					'item': {
+						validators: {
+							notEmpty: {
+								message: 'Please select item'
+							}
+						}
+					}, 
+					'scheme_type': {
+						validators: {
+							notEmpty: {
+								message: 'Please select scheme type'
+							}
+						}
+					},    
+					'from_date': {
+						validators: {
+							notEmpty: {
+								message: 'Please select quotation date'
+							}
+						}
+					},
+					'to_date': {
+						validators: {
+							notEmpty: {
+								message: 'Please select quotation date'
+							}
+						}
+					},
+					'uom[]': {
+						validators: {
+							notEmpty: {
+								message: 'Please select uom'
+							}
+						}
+					},
+					'discount_qty[]': {
+						validators: {
+							notEmpty: {
+								message: 'Please enter discount quantity'
+							}
+						}
+					},
+				}
+				}).on('success.field.fv', function(e, data) {
+				  if (data.fv.getInvalidFields().length > 0) {    // There is invalid field
+						data.fv.disableSubmitButtons(true);
+			      }
+		});
+	  
+		$('#scheme_date').on('changeDate',function(){
+			$('form').formValidation('revalidateField', $(this).attr('id'));
+		});
+
+		$('#from_date').on('changeDate',function(){
+			$('form').formValidation('revalidateField', $(this).attr('id'));
+		});
+
+		$('#to_date').on('changeDate',function(){
+			$('form').formValidation('revalidateField', $(this).attr('id'));
+		});
+	});  
+</script>
+
+

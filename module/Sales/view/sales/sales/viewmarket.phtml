@@ -1,0 +1,144 @@
+se/PurchaseController/viewporder
+ * 
+ */
+?>
+<?php 
+	foreach($this->markets as $row ):
+		extract($row);
+	    $do_status = $status; 
+	    $do_id = $id; 
+	endforeach;
+?>
+<style>
+	.mytable tr th,.mytable tr td {
+		padding:5px;
+	}
+</style>
+<div class="row">
+	<div class="col-lg-12">
+		<div class="widget widget-box">
+			<form id="#form" method="post" action="<?php echo $this->url('sales', array('action' => 'viewmarket')); ?>" >
+				<div class="widget-header">
+					<h5 class="widget-title lighter smaller">
+						# Market Information:<strong>&nbsp;&nbsp;<?php echo $document_no; ?> | <?php echo $this->activityObj->getColumn($activity,'activity')?></strong>&nbsp;
+						<?php $this->status($status);?>
+					</h5>
+					<div class="widget-toolbar hidden-xs">
+						<div class="btn-group">
+							<a class="btn btn-xs btn-danger" data-toggle="modal" data-target="#modal" href="<?php echo $this->url('acl', array('action' => 'activitylog', 'id' => "1-".$po_id)); ?>" title="View Activity Logs">
+								<i class="ace-icon fa fa-plus bigger-120" ></i>  
+							</a> 
+							<a class="btn btn-xs" id="print" title="Print">
+								<i class="ace-icon fa fa-file-pdf-o bigger-120"></i>
+							</a>
+						</div>
+					</div>
+				</div>
+			</form>
+			<div class="widget-body">
+				<div class="widget-main padding-12">
+					<div id="report-print">
+						<div class="row" id="convert-tb0">
+							<div class="col-lg-8" id="convert-tb1">
+								<ul class="list-unstyled spaced">
+									<li>
+										<i class="ace-icon fa fa-caret-right blue"></i>
+										Document  no : <b class="red"><?php echo $document_no; ?></b>
+									</li>
+									<li>
+										<i class="ace-icon fa fa-caret-right blue"></i>
+										Location : <b class="red"><?php echo $location_name; ?></b>
+									</li>
+									<li>
+										<i class="ace-icon fa fa-caret-right blue"></i>
+										Status : <b class="blue"><?php echo $this->status($status);?></b>
+									</li>
+								</ul>
+							</div>
+							<div class="col-lg-4" id="convert-tb2">
+								<ul class="list-unstyled spaced">
+									<li>
+										<i class="ace-icon fa fa-caret-right blue"></i>
+										Document Date : <b class="red"><?php echo $this->dateformat($document_date); ?></b>
+									</li>
+									<li>
+										<i class="ace-icon fa fa-caret-right blue"></i>
+										Activity : <b class="red"><?php echo $this->activityObj->getColumn($activity,'activity'); ?></b>
+									</li>
+								</ul>
+							</div>
+						</div>
+						<div class="row">
+							<div class="col-lg-12">
+								<ul class="list-unstyled spaced">
+									<li>
+										<i class="ace-icon fa fa-caret-right blue"></i>Note: <b class="red"><?php echo $note;?> </b>
+									</li>
+								</ul>
+							</div>
+						</div>
+						<div class="space-6"></div>
+						<div class="row">
+							<div class="col-lg-12" >
+								<table class="table" style="border-top:2px solid #ddd;">
+									<thead>
+										<tr>
+											<th>#</th>
+											<th>Item</th>
+											<th>Batch</th>
+											<th>UOM</th>
+											<th>Rate(<?php echo $this->currency_code();?>)</th>
+											<th>Remarks</th>
+										</tr>
+									</thead>
+									<tbody>
+										<?php $sl = 1; 
+											foreach($this->mtDtls as $tdrow):
+											?>
+											<tr>
+												<td><?php echo $sl++; ?></td>
+												<td><?php echo $tdrow['name'];?></td>
+												<?php $valuation = $this->itemObj->getColumn($tdrow['item_id'],'valuation');
+												if($valuation == '0'):?>
+												<td><?php echo $this->batchObj->getColumn($tdrow['batch'],'batch');?></td>
+												<?php else:?>
+												<td><?php echo "NA";?></td>
+												<?php endif;?>
+												<td><?php echo $tdrow['uom_code'];?></td>
+												<td><?php echo $tdrow['rate'];?></td>
+												<td><?php echo $tdrow['remarks'];?></td>
+											</tr>
+										<?php endforeach;?>
+									</tbody>
+								</table>
+							</div>
+						</div>
+					</div>
+					<div class="row">
+						<div class="col-lg-7">
+						</div>
+						<div class="col-lg-5" style="text-align: right">
+							<?php if($do_status == '1'):?>
+								<a href="<?php echo $this->url('sales', array('action'=>'editmarket', 'id'=>$do_id));?>" class="btn btn-info"> <i class="fa fa-pencil"></i> Edit </a>
+								<a href="<?php echo $this->url('sales', array('action'=>'commitmarket', 'id'=>$do_id));?>" class="btn btn-success"> <i class="fa fa-thumbs-o-up"></i> Send Market Info </a>
+							<?php endif;?>
+						</div>
+					</div>
+					<!-- Upload and Download file attachments -->			
+					<?php   
+					   echo $this->partial('partial/attachment.phtml', array('process' => '1', 'process_id'=> $do_id , 'status' => $do_status));
+					?>					
+				    <!-- End of attachment -->
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+<script type="text/javascript">
+	$('#print').genpdfinvoice({
+		content: '#report-print',
+		src:"<?php echo $this->url('pdfxls', array('action' => 'pdf'));?>",
+		orentation:"L",//L =landscape, P = potrait
+	});
+</script>
+

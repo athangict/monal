@@ -1,0 +1,237 @@
+<?php
+/**
+ * 
+ * View -- of Stock/ClaimsreportController/freeitemclsrpAction
+ * 
+ */
+	$this->headTitle($this->title);
+?>
+<?php echo $this->partial('reports/claimsreport/partial.phtml', array('active' => 'freeitemclsrp')); ?>
+<br/>
+<div class="row">
+	<div class="col-lg-12">
+		<form method="post" action="<?php echo $this->url('claimsreport', array('action' => 'freeitemclsrp')); ?>"  enctype="multipart/form-data" >    
+			<div class="row">
+				<div class="form-group col-lg-3">
+					<label class="control-label" for="supplier">Suppliers</label>
+					<select class="form-control" name="supplier" id="supplier" data-placeholder="Select Supplier" >
+						<option value=""></option>
+						<?php  
+							$supplierss = $this->supplierObj->get(array('p.role'=>1));
+							foreach ($supplierss as $suppliers):
+								$selected_sup = ($suppliers['id']==$supplier)?"selected":"";
+						?>
+							<option value="<?php echo $suppliers['id']; ?>" <?php echo $selected_sup;?>>
+								<?php echo $suppliers['code']; ?>
+							</option>
+						<?php endforeach;?>
+					</select>
+				</div>
+				<div class="form-group col-lg-3">
+					<label class="control-label" for="location">Location</label>
+					<select class="form-control" name="location" id="location" data-placeholder="select" >									
+						<option value="-1">All</option>
+						<?php foreach($regions as $region):?>
+							<optgroup label="<?php echo $region['region'];?>">
+							<?php  
+								$locationss = $locationObj->get(array('l.region'=>$region['id']));
+								foreach ($locationss as $locations):
+									$selected_loc = ($locations['id']==$location)?"selected":"";
+							?>
+								<option value="<?php echo $locations['id']; ?>" <?php echo $selected_loc;?>>
+									<?php echo $locations['location']; ?>
+								</option>
+							<?php endforeach;?>
+							</optgroup>
+						<?php endforeach;  ?>									
+					</select>
+				</div>
+				<div class="col-lg-2">
+					<div class="form-group">
+						<label for="start_date" class="control-label">Start Date</label>
+						<div class="date input-group" id="start_date" data-date-format="yyyy-mm-dd" >
+							<input class="form-control span2" name="start_date" id="start_date" value="<?php echo $start_date;?>" type="text" placeholder="Start Date" readonly required>
+							<span class="input-group-addon add-on"><i class="fa fa-calendar"></i></span>
+						</div>
+					</div>
+				</div>
+				<div class="col-lg-2">
+					<div class="form-group">
+						<label for="end_date" class="control-label">End Date</label>
+						<div class="date input-group" id="end_date" data-date-format="yyyy-mm-dd" >
+							<input class="form-control span2" name="end_date" id="end_date" value="<?php echo $end_date;?>" type="text" placeholder="End Date" readonly required>
+							<span class="input-group-addon add-on"><i class="fa fa-calendar"></i></span>
+						</div>
+					</div>
+				</div>
+				<div class="col-lg-1"></div>
+				<div class="col-lg-1">
+					<div class="space-8"></div>
+					<button type="submit" class="btn btn-primary pull-right"><i class="fa fa-refresh"></i>Refresh</button>
+				</div>
+			</div>
+		</form>
+    </div>
+</div>
+<div class="hr hr-dotted"></div>
+<div id="report-print">
+    <div class="row">
+	    <?php if($supplier != NULL):?>	
+		<div class="col-lg-12">			
+			<div class="table-header clearfix">
+				<input type="hidden" id="sup" name="sup" value="<?php echo $this->supplierObj->getColumn($supplier, 'code');?>"/>
+				<input type="hidden" id="start_date" name="start_date" value="<?php echo $start_date;?>"/>
+				<input type="hidden" id="end_date" name="end_date" value="<?php echo $end_date;?>"/>
+				<div class="pull-right">
+					<a title="Export to Excel" id="excel">
+						<i class="ace-icon fa fa-file-excel-o fa-lg white"></i>
+					</a>&nbsp;&nbsp;
+					<a title="Print PDF" id="print">
+						<i class="ace-icon fa fa-file-pdf-o fa-lg white"></i>
+					</a>&nbsp;&nbsp;
+			    </div>
+				Free Item Report <?php echo $this->supplierObj->getColumn($supplier, 'code');?> from <?php echo $start_date." to ".$end_date;?>
+			</div>
+			<table class="table table-hover" id="table2excel ">
+				<thead>
+					<tr>
+						<th>#</th>
+						<th>Location</th>
+						<th>Item</th>
+						<th>Batch NO</th>
+						<th>Quantity</th>
+						<th>ELC</th>
+						<th>Uom</th>
+						<th>Amount</th>
+					</tr>
+				</thead>
+				<tbody>					
+				   <?php if(sizeof($saledtls)>0):
+					$i = 1; 
+					foreach($saledtls as $saledtl):
+						if(($saledtl['free_item'] > 0) && ($saledtl['discount_qty'] > 0)):
+						?>
+						<tr>
+							<td><?php echo $i++;?></td>
+							<td><?php echo $this->locationObj->getColumn($saledtl['location'], 'location');?></td>
+							<td><?php echo $this->itemObj->getColumn($saledtl['item'], 'code');?></td>
+							<td><?php echo $this->batchObj->getColumn($saledtl['batch'], 'batch');?></td>
+							<td><?php echo $saledtl['discount_qty'];?></td>
+							<td><?php $landedCost_MT = $this->batchObj->getColumn($saledtl['batch'], 'landed_cost');
+									  $unit_uom = $this->batchObj->getColumn($saledtl['batch'], 'unit_uom');
+									  $elc = $landedCost_MT / $unit_uom;
+								  echo sprintf('%0.3f', $elc);?></td>
+							<td><?php echo $this->uomObj->getColumn($saledtl['free_item_uom'],'code');?></td>
+							<td><?php $amount = $elc * $saledtl['discount_qty'];
+								  echo sprintf('%0.3f', $amount);
+									  $sum += $amount;?></td>
+						</tr>
+					<?php endif; 
+					endforeach;?>
+						<tr>
+						    <td></td>
+						    <td></td>
+						    <td></td>
+						    <td></td>
+						    <td></td>
+						    <td></td>
+							<td><strong>Total Claim Amount</strong></td>
+							<td><?php echo "<strong>".$this->currency($sum)."</strong>";?></td>
+						</tr>
+						<tr><td colspan="8"></td></tr>
+					<?php
+					else:?>
+						<tr>
+							<td colspan="8"><?php
+								echo "No Data found in this table, please select required Supplier, location and dates!";?>
+							</td>
+						</tr>
+						<tr>
+							<td colspan="7" style="text-align:right"><strong>Total Claim Amount</strong></td>
+							<td><?php echo "<strong>".$this->currency($sum)."</strong>";?></td>
+						</tr>
+						<tr><td colspan="8"></td></tr>
+					<?php endif;?>
+				</tbody>
+			</table>
+		</div>
+			<?php else:?>
+		<div class = "col-lg-12">
+			<div class="alert alert-block alert-success">
+					<i class="ace-icon fa fa-check green"></i>
+					Please select the required Supplier, Location , Date and then click the Refresh button to generate 
+					report.
+				</div>
+				<div class="space-12"></div>
+			<?php endif;?>
+		</div>
+	</div>
+</div>
+<script type="text/javascript">
+	$('#print').genpdfinvoice({
+		content: '#report-print',
+		src:"<?php echo $this->url('pdfxls', array('action' => 'pdf'));?>",
+		orentation:"P",//L = landscape, P = potrait
+	});
+	
+	var doc_loc = $('input#sup').val()+'(from: '+$('input#start_date').val()+' to: '+$('input#end_date').val()+')';
+	$("#excel").click(function(){
+	  $("#table2excel").table2excel({
+		// exclude CSS class
+		exclude: ".noExl",
+		name: "Worksheet Name",
+		filename: "Free Item_"+doc_loc, //do not include extension
+	  }); 
+	});
+	$(function() {
+		$('#start_date').datepicker();
+		$('#start_date').on('changeDate', function(){
+			$('form').formValidation('revalidateField', $(this).attr('id'));
+		});
+		$('#end_date').datepicker();
+		$('#end_date').on('changeDate', function(){
+			$('form').formValidation('revalidateField', $(this).attr('id'));
+	});
+	/*** Form Validation ***/
+	$('form').formValidation({
+			framework: 'bootstrap',
+			excluded: ':disabled',
+			message: 'This value is not valid',
+			fields: {
+				'supplier': {
+					validators: {
+						notEmpty: {
+							message: 'Please select supplier'
+						}
+					}
+				},
+				'location': {
+					validators: {
+						notEmpty: {
+							message: 'Please select location'
+						}
+					}
+				},
+				'start_date': {
+					validators: {
+						notEmpty: {
+							message: 'Please select start date'
+						}
+					}
+				},
+				'end_date': {
+					validators: {
+						notEmpty: {
+							message: 'Please select end date'
+						}
+					}
+				},
+			}
+		}).on('success.field.fv', function(e, data) {
+			if (data.fv.getInvalidFields().length > 0) {    // There is invalid field
+				data.fv.disableSubmitButtons(true);
+		}
+	});
+});
+</script>
+

@@ -1,0 +1,91 @@
+<?php 
+/**
+ * View -- of Administration/AssetController/assetAction
+ * chophel@athang.com -- 2022
+ */
+	$this->headTitle($this->title);
+?>
+<?php echo $this->tabs_helper(array(652,653,654,662,666,669,672,674)); ?>
+<div class="card">
+    <div class="card-header">
+		<div class="row">
+			<div class="col-lg-9">
+				<form id="#form" method="POST" action="<?php echo $this->url('asset', array('action' => 'party')); ?>" enctype="multipart/form-data" >    
+					<div class="row">
+						<div class="form-group col-lg-4">
+							<label for="party" class="control-label">Party Role</label>
+							<select class="form-control" name="party" id="party" data-placeholder="Select" onChange='this.form.submit()' required>
+								<option value="-1">All</option>
+								<?php foreach($this->partyroleObj->getAll() as $partyrole):
+									$selected = ($partyroleID == $partyrole['id'])?'selected':'';?>
+								<option value="<?php echo $partyrole['id'];?>"<?php echo $selected;?>>
+									<?php echo $partyrole['role']; ?>
+								</option>
+							<?php endforeach ?>
+							</select>
+						</div>
+					</div>
+				</form>
+			</div>
+			<div class="col-lg-3 ">
+				<div class="space"></div>
+				<div class="btn-group pull-right">
+					<?php echo $this->button(2,$page);?>
+				</div>
+			</div>
+		</div>
+	</div>
+	<div class="table-responsive">
+		<table class="table card-table table-vcenter text-nowrap datatable" id="dataTables">
+			<thead>
+				<tr>
+					<th>#</th>
+					<th>Party</th>
+					<th>TPN</th>
+					<th>Party Code</th>
+					<th>Role</th>
+					<?php if($this->button(1)!=""):?>
+						<th class="no-sort no-printpdf">Action</th>
+					<?php endif;?>	
+				</tr>
+			</thead>
+			<tbody>
+			<?php $i=1+(($page-1)*20); foreach ($paginator as $row):
+				//echo '<pre>';print_r($paginator);exit;?>
+				<tr data-href="<?php echo $this->button(4,$row['id']); ?>">
+					<td><?php  echo $i++; ?></td>								       
+					<td class="fw-bold"><?php echo $row['name'];?></td>
+					<td><?php echo $row['tpn']; ?></td>
+					<td><?php echo $row['code']; ?></td>
+					<td><?php echo $row['role'];?></td>
+					<?php if($this->button(1)!=""):?>
+						<td><?php echo $this->button(1, $row['id'].'_'.$page);?></td>
+					<?php endif;?>
+				</tr>
+			<?php endforeach; ?>
+			</tbody>
+		</table>
+	</div>
+</div>
+<div class="modal fade" id="modal" tabindex="-1" role="dialog" aria-hidden="true">
+	<div class="modal-dialog modal-lg" role="document">
+		<div class="modal-content">
+		</div><!-- /.modal-content -->
+	</div><!-- /.modal-dialog -->
+</div><!-- /.modal -->
+<script>
+$('document').ready(function(){
+	$("tr[data-href]").each(function(){ 
+		if($(this).attr('data-href')!='#'){
+			$(this).css('cursor','pointer');
+			$(this).bind('click',function() {
+				window.document.location = $(this).attr("data-href");
+			});
+		}
+	});
+	$('#dataTables').DataTable({
+		"paging":   true,
+	});
+	
+});
+</script>

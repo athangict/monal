@@ -1,0 +1,70 @@
+<?php
+/**
+ * 
+ * View -- of Hr/TrainingController/indexAction
+ * 
+ */
+	$this->headTitle($this->title);
+	
+?>
+<?php foreach ($this->employee as $emprows):
+	extract ($emprows);
+endforeach;
+echo $this->partial('hr/employee/partial.phtml', array('active' => 'training', 'id' => $id));
+?>
+<div class="card">
+	<div class="card-header">
+		<div class="btn-group pull-right">
+			<?php echo $this->button(2,$id);?>
+		</div>
+	</div>
+	<div class="table-responsive">
+		<div class="table-header col-lg-4"> Training's of <?php echo $full_name; ?> </div>
+		<table class="table card-table text-nowrap" id="dataTables">
+			<thead>
+				<tr>
+					<th>#</th>
+					<th>Training</th>
+					<th>Start And End Date</th>
+					<th>Level</th>
+					<th>Training Type</th>
+					<th>Location</th>
+					<th>Funding</th>
+					<th>Approval No.</th>
+					<?php if($this->button(1)!=""):?>
+						<th class="no-sort no-printpdf">Action</th>
+					<?php endif;?>
+				</tr>
+			</thead>
+			<tbody>
+				<?php
+					$i = 1; 
+					foreach ($this->training as $rows):
+				?>
+					<tr>
+						<td><?php echo $i; ?> </td>
+						<td><?php echo $rows['training_name']; ?></td>
+						<td><?php echo $rows['start_date']; ?> to <?php echo $rows['end_date']; ?></td>
+						<td><?php echo $rows['level']; ?></td>
+						<td><?php echo ($rows['country']== 1)? 'In-country': 'Ex-country'; ?></td>
+						<td><?php echo $rows['location']; ?></td>
+						<td><?php echo $rows['funding'];?></td>
+						<td><?php echo $rows['govt_approval_no'];?></td>
+						<?php if($this->button(1)!=""):?>
+						<td><?php echo $this->button(1, $rows['id']);?></td>
+						<?php endif;?>
+					</tr>
+				<?php 
+				$i++;
+				endforeach;  
+				?>
+			</tbody>
+		</table>
+	</div>
+</div>
+<script>
+$('document').ready(function(){
+	$('#dataTables').DataTable({"paging":   true,});
+});
+</script>
+

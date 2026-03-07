@@ -1,0 +1,93 @@
+<?php
+/**
+ * 
+ * View -- of Sales/MasterController/editcreditauthority
+ * 
+ */
+?>
+<?php foreach($creditauthoritys as $creditauth):
+	extract($creditauth);
+	$credit_id = $id;
+endforeach;?>
+<form id="#form" method="post" action="<?php echo $this->url('slmaster', array('action' => 'editcreditauthority', 'id' => $credit_id)); ?>" enctype="multipart/form-data">
+    <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+        <h4 class="modal-title"> <i class="fa fa-asterisk"></i>Edit Credit Authority</h4>
+    </div>  <!-- /modal-header -->
+    <div class="modal-body">
+		<div class="panel panel-default">                       
+			<div class="panel-body">   
+				<div class="form-group">
+					<label for="authority" class="control-label">Authority</label>
+					<input type="text" class="form-control" name="authority" id="authority" value="<?php echo $authority;?>" size="30" placeholder="Authority" required/> 
+				</div>
+				<div class="form-group">
+					<label for="approval_limit" class="control-label">Approval Limit</label>
+					<input type="text" class="form-control" name="approval_limit" id="approval_limit" value="<?php echo $approval_limit;?>" size="30" placeholder="Approval Limit" required/> 
+				</div>
+				<div class="form-group">
+					<label for="condition" class="control-label">Condition</label>
+					<select id="condition" name="condition" class="form-control" placeholder="Select">
+						<?php 
+							$selected1 = ($condition == 1 || $condition == "")?"selected":"";
+							$selected2 = ($condition == 2)?"selected":""; ?>
+							<option value=""></option>
+							<option value="1" <?php echo $selected1;?>>Less than equal</option>
+							<option value="2" <?php echo $selected2;?>>More than</option>
+					</select>
+				</div>
+				<div class="form-group">
+					<label for="remark" class="control-label">Remark</label>
+					<input type="text" class="form-control" name="remark" id="remark" value="<?php echo $remark;?>" size="30" placeholder="Remarks"/> 
+				</div>
+			</div>
+		</div>
+    </div> <!-- /modal-body -->
+    <div class="modal-footer">
+        <button type="submit" class="btn btn-success"><i class="fa fa-check"></i> Save </button>
+        <button type="button" class="btn btn-warning" data-dismiss="modal" ><i class="fa fa-times"></i> Cancel </button> 
+    </div>  
+</form>
+<script>
+$('document').ready(function(){
+	const fv = FormValidation.formValidation(document.getElementById('#form'), {
+		fields: {
+			authority: {
+				validators: {
+					notEmpty: {
+						message: 'Please provide authority.'
+					}
+				}
+			},
+			description: {
+				validators: {
+					notEmpty: {
+						message: 'Please provide approval limit for the authority'
+					}
+				}
+			},
+			condition: {
+				validators: {
+					notEmpty: {
+						message: 'Please select condition'
+					}
+				}
+			},
+		},
+		plugins: {
+			trigger: new FormValidation.plugins.Trigger(),
+			bootstrap3: new FormValidation.plugins.Bootstrap3(),
+			submitButton: new FormValidation.plugins.SubmitButton(),
+			defaultSubmit: new FormValidation.plugins.DefaultSubmit(),
+		},
+	}).on('core.element.validated', function (e) {
+		if (e.valid) {
+			$('div#'+ e.field.replace('[]','') +'_chosen').removeClass('is-invalid');
+			$('div#'+ e.field.replace('[]','') +'_chosen').addClass('is-valid');
+		} else {
+			$('div#'+ e.field.replace('[]','') +'_chosen').removeClass('is-valid');
+			$('div#'+ e.field.replace('[]','') +'_chosen').addClass('is-invalid');
+		}
+	});
+});
+</script>

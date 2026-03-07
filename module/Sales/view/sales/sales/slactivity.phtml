@@ -1,0 +1,237 @@
+<?php 
+/**
+*
+* slbooking  Sales/SalesController/slactivity
+*
+*/
+	$this->headTitle($this->title);
+?>
+<style>
+	table#trdetails_table > thead > tr {
+		background: rgba(179, 174, 174, 0.18);
+		border-top:2px solid #ddd;
+	}
+</style>
+<?php echo $this->partial('reports/salesreport/partial.phtml', array('active' => 'slactivity')); ?>
+<div class="space-12"></div>
+<div class="row">
+	<div class="col-lg-12">
+		<div class="widget widget-box">
+			<div class="widget-header">
+				<h5 class="widget-title lighter smaller"> 
+					<i class="fa fa-taxi"></i> Sales with activity
+				</h5>
+				<div class="widget-toolbar hidden-xs">
+					<a style='cursor:pointer' id="print">
+						<i class="ace-icon fa fa-file-pdf-o red"></i>
+					</a>
+				</div>
+			</div>
+			<div class="widget-body">
+				<div class="widget-main">
+					<form id="#form" method="post" action="<?php echo $this->url('sl_activity', array('action' => 'slactivity')); ?>">
+						<div class="row">
+							<div class="form-group col-lg-3">
+								<label for="location" class="control-label">Location </label>
+								<select class="form-control" name="location" id="location" data-placeholder="Select" required >
+									<option value=""></option>
+									<?php foreach($locationObj->getLocIn('location_type',array(1,2)) as $locations):
+										$selected = ($location_id == $locations['id'])?'selected':'';?>
+										<option value="<?php echo $locations['id'];?>" <?php echo $selected;?>>
+											<?php echo $locations['location'];?>
+										</option>
+									<?php endforeach; ?>
+								</select>
+							</div>
+							<div class="form-group col-lg-3">
+								<label for="activity" class="control-label">Activity</label>
+								<select class="form-control" name="activity" id="activity" data-placeholder="Select" required>
+									<option value=""></option>
+									<?php foreach($activities as $activity):
+										$selected = ($activity_id == $activity['id'])?'selected':'';?>
+									<option value="<?php echo $activity['id'];?>"<?php echo $selected;?>>
+										<?php echo $activity['activity']; ?>
+									</option>
+								<?php endforeach ?>
+								</select>
+							</div>
+							<div class="form-group col-lg-3">
+								<label for="sales_date" class="control-label">Sales Date</label>
+								<div class="date input-group" id="sales_date" data-date="<?php echo date('Y-m-d');?>" data-date-format="yyyy-mm-dd" >
+									<input class="form-control span2" name="sales_date" id="sales_date" value="<?php echo $sales_date_id;?>" type="text" placeholder="Sales Details Date" readonly required>
+									<span class="input-group-addon add-on"><i class="fa fa-calendar"></i></span>
+								</div>
+							</div>
+							<div class="form-group col-lg-1">
+								<label for="credit" class="control-label">Credit</label>
+								<select class="form-control" name="credit" id="credit" data-placeholder="Select" required >
+									<?php
+									$selected1 = ($credit_id == 0 || $credit_id == "")?"selected":"";
+									$selected2 = ($credit_id == 1)?"selected":""; ?>
+									<option value=""></option>
+									<option value="0" <?php echo $selected1;?>>No</option>
+									<option value="1" <?php echo $selected2;?>>Yes</option>
+								</select>
+							</div>
+							<div class="col-lg-2"> <br/>
+								<button type="submit" id="refresh_btn" class="btn btn-info pull-right"><i class="fa fa-refresh"></i> Refresh </button>
+							</div>
+						</div>	  
+					</form>	
+					<div id="report-print">
+					<div class="row">
+						<div class="col-lg-12">
+							<div class="page-header">
+								<h1>
+									<div class="col-lg-9">
+										Sales Details
+										<small>
+											<i class="ace-icon fa fa-angle-double-right"></i>
+											From Sales Details for Booking Sales
+										</small>
+									</div>
+								</h1>
+								<div class="space-12"></div>
+							</div>
+						</div>
+					</div>
+					
+					<div class="sale_details">
+						<table class="table table-bordered table-striped table-hover" id="reportTables">
+							<thead>
+								<tr>
+									<th>#</th>
+									<th>Item</th>
+									<th>Batch</th>
+									<th>UOM</th>
+									<th>Rate</th>
+									<th>Quantity</th>
+									<th>Amount</th>
+									<th>Discount/Qty</th>
+									<th>Net Amt</th>
+									<th>Transaction</th>
+								</tr>
+							</thead>
+							<tbody>
+								<?php 	
+								$i = 1;
+								$amt = 0;
+								$sum = 0;
+								$discount = 0;
+								$netamt = 0;
+								foreach($this->saledetails as $saledetail):
+								if($saledetail['transaction'] == 0):?>
+					        	<tr>
+							        <td><?php echo $i++; ?></td>
+							        <td><?php echo $saledetail['item']; ?></td>
+							        <td><?php echo ($saledetail['item_valuation']==0)?$this->batchObj->getColumn($saledetail['batch'],'batch'):'NA'; ?></td>
+							        <td><?php echo $this->uomObj->getColumn($saledetail['uom'], 'code');?></td>
+							        <td><?php echo $saledetail['rate'];?></td>
+							        <td><?php echo $saledetail['quantity'];?></td>
+							        <td><?php $amt = $saledetail['rate'] * $saledetail['quantity'];
+							          $sum += $amt; echo $amt;?></td>
+							        <td><?php echo $saledetail['discount_qty'];
+							          		$discount += $saledetail['discount_qty'];?></td>
+							        <td><?php $n_amt = $amt - $saledetail['discount_qty'];
+							          		$netamt += $n_amt; echo $n_amt;?></td>
+							        <td><?php echo $saledetail['transaction'];?></td>
+						    	</tr>
+						  		<?php endif; endforeach; ?>
+						  		<tr align="right">
+						  			<td colspan='6'><strong><i>Total</i></strong></td>
+						  			<td><strong><i><?php echo $this->currency($sum);?></i></strong></td>
+						  			<td><strong><i><?php echo $this->currency($discount);?></i></strong></td>
+						  			<td><strong><i><?php echo $this->currency($netamt);?></i></strong></td>
+						  			<td></td>
+						  		</tr>
+							</tbody>	
+						</table>
+					</div>	
+					</div>
+				</div> 
+			</div>
+		</div>
+	</div>
+</div>
+<script type="text/javascript">
+$('#print').genpdfinvoice({
+	content: '#report-print',
+	src:"<?php echo $this->url('pdfxls', array('action' => 'pdf'));?>",
+	orentation:"P",//L =landscape, P = potrait
+});
+$(function() {
+	$('#sales_date').datepicker();
+	$('#sales_date').on('changeDate', function(){
+		$('form').formValidation('revalidateField', $(this).attr('id'));
+	});
+	
+	$('#refresh_btn').click(function(){
+		$('form').formValidation('revalidateField',$('input#sales_date'));
+		$('form').formValidation('revalidateField',$('#location'));
+		$('form').formValidation('revalidateField',$('#activity'));
+		$('form').formValidation('revalidateField',$('input#credit'));
+		var validation = $('form small[data-fv-result = "INVALID"]').length;
+		if(validation <= 0){
+			$.post( 
+				"<?php echo $this->url('sl_activity', array('action' => 'getsaledetails'));?>",
+				{	
+					'sales_date': $('input#sales_date').val(),
+					'location': $('#location').val(), 
+					'activity': $('#activity').val(),
+					'credit': $('input#credit').val(),
+				}, 
+				function(data) {
+					$('div.sale_details').html( data ); 
+			});	
+			$('div.message_box').hide();
+		}
+	});
+});
+//formValidation
+const fv = FormValidation.formValidation(document.getElementById('#form'), {
+	fields: {
+		'location': {
+			validators: {
+				notEmpty: {
+					message: 'Please select location'
+				}
+			}
+		},
+		'activity': {
+			validators: {
+				notEmpty: {
+					message: 'Please select activity'
+				}
+			}
+		},
+		'sales_date': {
+			validators: {
+				notEmpty: {
+					message: 'Please select sales date'
+				}
+			}
+		},
+		'credit': {
+			validators: {
+				notEmpty: {
+					message: 'Please select credit'
+				}
+			}
+		},
+	},
+	plugins: {
+		trigger: new FormValidation.plugins.Trigger(),
+		bootstrap3: new FormValidation.plugins.Bootstrap3(),
+		submitButton: new FormValidation.plugins.SubmitButton(),
+		defaultSubmit: new FormValidation.plugins.DefaultSubmit(),
+	},
+}).on('core.element.validated', function (e) {
+	if (e.valid) {
+		$('div#'+ e.field.replace('[]','') +'_chosen').removeClass('is-invalid');
+		$('div#'+ e.field.replace('[]','') +'_chosen').addClass('is-valid');
+	} else {
+		$('div#'+ e.field.replace('[]','') +'_chosen').removeClass('is-valid');
+		$('div#'+ e.field.replace('[]','') +'_chosen').addClass('is-invalid');
+	}
+});
+</script>

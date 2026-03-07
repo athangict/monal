@@ -1,0 +1,153 @@
+<?php
+/**
+ * 
+ * View -- of Purchase/PurchaseController/viewporder
+ * 
+ */
+?>
+<?php 
+	foreach($this->requisitions as $row ):
+		extract($row); 
+                $vr_id = $row['id'];
+                $vr_status = $row['status'];
+	endforeach;
+    //print_r($this->requisitions); exit;
+?>
+<style>
+	.mytable tr th,.mytable tr td {
+		padding:5px;
+	}
+</style>
+<div class="row">
+	<div class="col-lg-12">
+		<div class="widget widget-box">
+			<form method="post" action="<?php echo $this->url('vehicle', array('action' => 'addvehiclerequisition')); ?>" >
+				<div class="widget-header">
+					<h5 class="widget-title lighter smaller">
+						# Vehicle Requesition:<strong>&nbsp;&nbsp;<?php echo $requisition_no; ?> |</strong>&nbsp;<?php $this->status($status);?>
+					</h5>
+					<div class="widget-toolbar hidden-xs">
+							<button type="button" id="rq_btn" class="btn btn-white btn-warning btn-bold btn-xs"><i class="fa fa-plus"></i> <a href="<?php echo $this->url('vehicle', array('action'=>'addrequisition'));?>"> Add New Requisition</a></button>
+					</div>
+					<div class="widget-toolbar hidden-xs">
+						<div class="btn-group">
+							<a class="btn btn-xs btn-danger" data-toggle="modal" data-target="#modal" href="<?php echo $this->url('acl', array('action' => 'activitylog', 'id' => "31-".$id)); ?>" title="View Activity Logs">
+								<i class="ace-icon fa fa-plus bigger-120" ></i>  
+							</a> 
+							<a class="btn btn-xs" id="print" title="Print">
+								<i class="ace-icon fa fa-file-pdf-o bigger-120"></i>
+							</a>
+						</div>
+					</div>
+				</div>
+			</form>
+			<div class="widget-body">
+				<div class="widget-main padding-12">
+					<div id="report-print">
+						<div class="row" id="convert-tb0">
+							<div class="col-lg-8" id="convert-tb1">
+								<ul class="list-unstyled spaced">
+								    <li>
+										<i class="ace-icon fa fa-caret-right blue"></i>
+										<b>Issue Date : </b><?php echo $this->dateformat($work_ref_date); ?>
+									</li>
+									<li>
+										<i class="ace-icon fa fa-caret-right blue"></i>
+										<b>Requisition no : </b><?php echo $requisition_no; ?>
+									</li>
+									<li>
+										<i class="ace-icon fa fa-caret-right blue"></i>
+										<b>Location :  </b><?php echo $location;?>
+									</li>
+								</ul>
+							</div>
+							<div class="col-lg-4" id="convert-tb2">
+								<ul class="list-unstyled spaced">
+								    <li>
+										<i class="ace-icon fa fa-caret-right blue"></i>
+										<b>Transport : </b><?php echo $transport; ?>
+									</li>
+									<li>
+										<i class="ace-icon fa fa-caret-right blue"></i>
+										<b> Driver : </b> <?php echo $driver; ?> 
+									</li>
+                                    <li>
+										<i class="ace-icon fa fa-caret-right blue"></i>
+										<b> Total Quantity: </b> <?php echo $total_quantity; ?> 
+									</li>
+								</ul>
+							</div>
+						</div>
+						<div class="row">
+							<div class="col-lg-12">
+								<ul class="list-unstyled spaced">
+									<li>
+										<i class="ace-icon fa fa-caret-right blue"></i><b>Note:</b><?php echo $remarks;?> 
+									</li>
+								</ul>
+							</div>
+						</div>
+						<div class="space-6"></div>
+						<div class="row">
+							<div class="col-lg-12" >
+								<table class="table" style="border-top:2px solid #ddd;">
+									<thead>
+										<tr>
+											<th>#</th>
+											<th>Item</th>
+											<th>UOM</th>
+											<th>Quantity</th>
+		
+										</tr>
+									</thead>
+									<tbody>
+										<?php $sl = 1; 
+											foreach($this->requisitions_dtls as $tdrow):
+											?>
+											<tr>
+												<td><?php echo $sl++; ?></td>
+												<td><?php echo $tdrow['item'];?></td>
+												<td><?php foreach($this->vehiclepartObj->getAll() as $vparts); echo $this->uomObj->getColumn($vparts['uom'],'code');?></td>
+												<td><?php echo $tdrow['quantity'];?></td>
+											</tr>
+										<?php endforeach;?>
+										<tr style="border-top:2px solid #ddd;border-bottom:2px solid #ddd;">
+											<th colspan="2"></th>
+											<th colspan="2">Total Quantity: 
+											<?php echo $this->currency($total_quantity);?></th>
+										</tr>
+									</tbody>
+								</table>
+							</div>
+						</div>
+					</div>
+					<div class="row">
+						<div class="col-lg-7">
+						</div>
+						<div class="col-lg-5" style="text-align: right">
+							<?php if($status == '1'):?>
+								<a href="<?php echo $this->url('vehicle', array('action'=>'editvehiclerequisition', 'id'=>$id));?>" class="btn btn-info"> <i class="fa fa-pencil"></i> Edit </a>
+								<a href="<?php echo $this->url('vehicle', array('action'=>'commitrequisition', 'id'=>$id));?>" class="btn btn-success"> <i class="fa fa-check-square-o"></i> Commit</a>
+							<?php endif;?>
+						</div>
+					</div>
+					<!-- Upload and Download file attachments -->			
+					<?php   
+					   echo $this->partial('partial/attachment.phtml', array('process' => '1', 'process_id'=> $vr_id , 'status' => $vr_status));
+					?>					
+				    <!-- End of attachment -->
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+<script type="text/javascript">
+	$('#rq_btn').on('click',function(){
+		window.document.location = "<?php echo $this->url('vehicle', array('action' => 'addrequisition'));?>";
+	});
+	$('#print').genpdfinvoice({
+		content: '#report-print',
+		src:"<?php echo $this->url('pdfxls', array('action' => 'pdf'));?>",
+		orentation:"L",//L =landscape, P = potrait
+	});
+</script>

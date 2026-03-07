@@ -1,0 +1,177 @@
+<?php
+/**
+ * View -- of Stock/CostingController/elccostingAction
+ */
+$this->headTitle($this->title);
+?>
+<div class="row">
+	<div class="col-lg-12">
+		<div class="widget widget-box">
+			<div class="widget-header">
+				<h5 class="widget-title lighter smaller">
+					<i class="fa fa-asterisk"></i>&nbsp;&nbsp; ELC Costing Sheet
+				</h5>	
+			</div>
+			<div class="widget-body">
+				<div class="widget-main">
+					<form id="#form" method="post" action="<?php echo $this->url('cost', array('action' => 'elccosting')); ?>"  enctype="multipart/form-data" >    
+						<div class="row">	
+							<div class="col-lg-4">    
+								<div class="form-group">
+									<label for="sheet_date" class="control-label">Date of Costing</label>
+									<div class="date input-group" id="sheet_date" data-date="<?php echo date('Y-m-d');?>" data-date-format="yyyy-mm-dd" >
+										<input class="form-control span2" name="sheet_date" id="sheet_date" type="text" value="<?php echo date('Y-m-d');?>" placeholder="Costing Sheet Date" readonly required>
+										<span class="input-group-addon add-on"><i class="fa fa-calendar"></i></span>
+									</div>
+								</div>
+							</div>
+							<div class="col-lg-4"> 
+								<div class="form-group">
+									<label for="activity" class="control-label">Location</label>
+									<select id="location" name="location" class="form-control" data-placeholder="Select" required>
+										<option value=""></option>
+										<?php 
+										$regions = $this->regionObj->getAll();
+										foreach ($regions as $region): ?>
+										<optgroup label="<?php echo $region['region'];?>">
+											<?php  
+												 // retrive locations under the above region ID
+												//$locations = $locationObj->get(array('region'=>$region['id'], 'lt.sales'=>'1'));
+												$locations = $locationObj->get(array('region'=>$region['id']));
+												foreach ($locations as $location):	
+                                                  $selected = ($userLocation == $location['id'])?"selected":"";												
+											?>
+												 <option value="<?php echo $location['id']; ?>" <?php echo $selected; ?>>
+													<?php echo $location['location']; ?>
+												 </option>
+											<?php 
+											 endforeach;
+											?>
+										</optgroup>
+										<?php endforeach;  ?>									
+									</select> 
+								</div>
+							</div>
+							<div class="col-lg-4">
+								<div class="form-group">
+								  <label for="activity_id" class="control-label">ELC Costing Source</label>
+								  <select class="form-control" name="elc_source" id="elc_source">
+									    <option>select</option>
+									    <option value="1"> Purchase Order</option>
+									   <option value="2"> Supplier Invoice</option>
+								  </select>
+								</div>
+							</div> 
+						</div>
+						<div class="row">	
+							<div class="col-lg-4">
+								<div class="form-group">
+									<label for="supplier_invoice" class="control-label">Purchase Order/Supplier Invoice</label>									
+									<select class="form-control" name="supplier_invoice" id="supplier_invoice"> 
+								       <option value="">select ECL Source</option>
+								     </select>
+								</div>
+							</div> 				
+							<div class="col-lg-4">
+								<div class="form-group">
+								  <label for="activity_id" class="control-label">Activity</label>
+									<select class="form-control" name="activity" id="activity_id">
+									   <option value="">select supplier invoice</option>
+									</select>
+								</div>
+							</div> 
+							<div class="col-lg-4"> 
+								<div class="form-group">
+									<label for="supplier" class="control-label">Supplier</label>
+									<select  class="form-control" name="supplier" id="supplier">
+									   <option> select supplier invoice</option>
+									</select>
+								</div>
+							</div>
+					    </div>
+					     <div id="row">
+					         <div id="invoicedtls"></div>	
+					    </div>
+					    <div id="row">
+					       <div id="costingdtls"></div>
+					    </div>
+					    <div id="row">
+						  <div id="costdtls"></div>
+						</div>	
+						<div class="row"> 	
+							<div class="col-lg-8"></div>
+							<div class="col-lg-4">
+								<button type="submit" class="btn btn-success"  name="btn" value="save_costing" onclick="return confirm('Are you sure to proceed further?')">
+								<i class="fa fa-save"></i> Save Costing Details</button>			
+								<button type="button" class="btn btn-warning" onclick="window.location.href='<?php echo $this->url('cost');?>'" ><i class="fa fa-times"></i> 
+									Cancel 
+								</button> 					
+							</div>
+						</div>
+					</form>  
+				</div> <!-- end of widget-main -->  
+	        </div> <!-- end of widget-body -->
+        </div> <!-- end of widget widget-default -->
+    </div> <!-- end of col-lg-12 -->
+</div> <!-- end of row -->
+
+<script type="text/javascript">		
+    // $('#sheet_date').datepicker();
+	$("#elc_source").change(function() {  
+		$('#supplier_invoice').load("<?php echo $this->url('cost', array('action' => 'getelcsource')); ?>/"+ $("#elc_source").val(), function() {
+			$("#supplier_invoice").trigger('chosen:updated');
+		});	   	
+		$("#invoicedtls").html("");
+		$("#costingdtls").html("");
+		$("#costdtls").html("");
+	});     
+
+	$("#supplier_invoice").change(function() {    
+		var param = $("#supplier_invoice").val() + "-" + $("#elc_source").val();  
+		$('#activity_id').load("<?php echo $this->url('cost', array('action' => 'getactivity')); ?>/"+ param, function() {       
+			$("#activity_id").trigger('chosen:updated');
+		});
+
+		$('#supplier').load("<?php echo $this->url('cost', array('action' => 'getparty')); ?>/"+ param, function() {
+			$("#supplier").trigger('chosen:updated');
+		});
+      
+		$('#invoicedtls').load("<?php echo $this->url('cost', array('action' => 'suppinvlist')); ?>/"+ param, function() {
+			$("#invoicedtls").trigger('chosen:updated');    		 
+			$("#costdtls").html("");
+		});		 
+    });
+	/*** Form Validation of PO ***/
+	const fv = FormValidation.formValidation(document.getElementById('#form'), {
+		fields: {
+			'location': {
+				validators: {
+					notEmpty: {
+						message: 'Please select location'
+					}
+				}
+			}, 
+			'supplier_invoice': {
+				validators: {
+						notEmpty: {
+							message: 'Please select Invoce'
+						}
+					}
+			},
+		},
+		plugins: {
+			trigger: new FormValidation.plugins.Trigger(),
+			bootstrap3: new FormValidation.plugins.Bootstrap3(),
+			submitButton: new FormValidation.plugins.SubmitButton(),
+			defaultSubmit: new FormValidation.plugins.DefaultSubmit(),
+		},
+	}).on('core.element.validated', function (e) {
+		if (e.valid) {
+			$('div#'+ e.field.replace('[]','') +'_chosen').removeClass('is-invalid');
+			$('div#'+ e.field.replace('[]','') +'_chosen').addClass('is-valid');
+		} else {
+			$('div#'+ e.field.replace('[]','') +'_chosen').removeClass('is-valid');
+			$('div#'+ e.field.replace('[]','') +'_chosen').addClass('is-invalid');
+		}
+	});
+</script>

@@ -1,0 +1,273 @@
+<?php
+/**
+ * View -- of Purchase/VehicleController editvehiclerequisitionAction
+ */
+  $this->headTitle($this->title);
+foreach($this->requisitions as $requisition):
+       extract($requisition);
+  endforeach;
+//print_r($requisition); exit;
+?>
+<div class="row">
+	<div class="col-lg-12">
+		<div class="widget widget-box">
+			<div class="widget-header">
+				<h5 class="widget-title lighter smaller">
+					<i class="fa fa-asterisk"></i>&nbsp;&nbsp;Edit Vehicle Requisition
+				</h5>
+			</div><!-- end of widget-header -->
+			<div class="widget-body">
+				<div class="widget-main">
+					<form id="#form" method="post" action="<?php echo $this->url('vehicle', array('action' => 'editvehiclerequisition')); ?>"  enctype="multipart/form-data" >    
+						<div class="row">	
+							<div class="col-lg-3">    
+								<div class="form-group">
+									<label for="issue_date" class="control-label">Issue Date</label>
+									<div class="date input-group" id="issue_date" data-date="<?php echo date('Y-m-d');?>" data-date-format="yyyy-mm-dd" >
+									    <input type="hidden" name="_id" id="dispatch_id" value="<?php echo $requisition_id;?>"/>
+                                        <input class="form-control span2" name="issue_date" id="issue_date" type="text" value="<?php echo $issue_date;?>" placeholder="issue date" readonly required>
+										<span class="input-group-addon add-on"><i class="fa fa-calendar"></i></span>
+									</div>
+								</div>
+							</div>
+							<div class="form-group col-lg-3">
+								<label for="transport" class="control-label">Assets/ Transport</label>
+								<select id="transport" name="transport" class="form-control" data-placeholder="Select" required>
+									<option value=""></option>
+									<?php
+										foreach ($rowsets as $rowset):
+                                        $selected_assets = ($transport_id == $rowset['id'])?"selected":"";
+									?>
+									 <option value="<?php echo $rowset['id']; ?>"<?php echo $selected_assets;?>>
+										<?php echo $rowset['code']; ?>
+									 </option>
+									<?php endforeach;?>								
+								</select> 
+							</div>
+							<div class="form-group col-lg-3">
+								<label for="location" class="control-label">Location</label>
+								<select id="location" name="location" class="form-control" data-placeholder="Select" required>
+									<option value=""></option>	
+                                    <option value="<?php echo $location_id; ?>" selected><?php echo $location;?></option>						
+								</select> 
+							</div> 
+							<div class="col-lg-3">
+								<div class="form-group">
+									<label for="transporter_fcb" class="control-label">Name of Driver</label>
+									<select class="form-control" name="transporter_fcb" id="transporter_fcb"  data-placeholder="Select" > 
+										<option value=""></option>
+                                        <option value="<?php echo $driver_id; ?>" selected><?php echo $driver;?></option>						
+									</select>
+								</div>
+							</div>
+						</div>
+						<div class="row"> 
+                            <div class="col-lg-3">
+								<div class="form-group">
+									<label for="previous_reading" class="control-label">Previous Reading</label>
+									<input type="text" class="form-control" name="previous_reading" id="previous_reading" value = "<?php echo $previous_reading;?>" placeholder="previous reading" > 
+								</div>
+							</div>
+                            <div class="col-lg-3">
+								<div class="form-group">
+									<label for="current_reading" class="control-label">Current Reading</label>
+									<input type="text" class="form-control" name="current_reading" id="current_reading" value = "<?php echo $current_reading;?>" placeholder="current reading" > 
+								</div>
+							</div>
+                           	<div class="col-lg-3">
+								<div class="form-group">
+									<label for="km_covered" class="control-label">Kilometer Covered</label>
+									<input type="text" class="form-control" name="km_covered" id="km_covered" value = "<?php echo $km_covered;?>" placeholder="km covered" > 
+								</div>
+							</div>					
+                            <div class="col-lg-3">
+								<div class="form-group">
+									<label for="remarks" class="control-label">Remark</label>
+									<input type="text" class="form-control" name="remarks" id="remarks" value = "<?php echo $remarks;?>" placeholder="Remarks" > 
+								</div>
+							</div>							
+						</div>							
+						<div class="row">
+						   <div class="col-lg-12"> 
+							  <h4>Vehicle Requistion Details</h4>
+								 <div>
+									<table id="trdetails_table" class="table small-padding">
+										<thead>
+											<tr>
+												<th>Service Item</th>
+												<th>UOM</th>
+												<th>Quantity</th>
+												<th>&nbsp;</th>
+											</tr>
+										</thead>
+										<tbody>
+                                            <?php if(sizeOf($requisitions_dtls)>0):
+											    foreach($requisitions_dtls as $requisitions_dtl):?>
+											<tr>
+												<td>
+													<div class="form-group">
+														<select class="form-control" name="service_item[]" id="service_item" data-placeholder="Select" required>
+															<option value=""></option>
+															<?php  
+																$items = $this->vehiclepartObj->getAll(); 
+																foreach($items as $item):
+                                                                $selected_items = ($requisitions_dtl['item_id'] == $item['id'])?"selected":"";
+															?>
+															 <option value="<?php echo $item['id']; ?>"<?php echo $selected_items;?>>
+																<?php echo $item['code']; ?>
+															 </option>
+															 <?php endforeach;?>
+														</select>
+													</div>
+												</td>
+												<td>
+												    <div class="form-group">
+														<select class="form-control" name="uom" id="uom" data-placeholder="Select" required>
+														    <?php
+															    $basic_unit = $this->vehiclepartObj->getColumn($requisitions_dtl['item_id'], 'uom');
+																$basic_unit_code = $this->uomObj->getColumn($basic_unit, 'code');
+																$selected_basic = ($basic_unit==$requisitions_dtl['uom_id'])?"selected":"";
+															?>	
+																<option value="<?php echo $basic_unit; ?>" <?php echo $selected_basic;?>>
+																	<?php echo $basic_unit_code;?>
+																</option>
+														</select>
+													    <input type="hidden" name="details_id[]" id="details_id" value="<?php echo $requisitions_dtl['id'];?>"/>
+													</div>
+												</td>
+												<td>
+													<div class="form-group">
+														<input type="text" class="form-control" name="quantity[]" id="quantity" value="<?php echo $requisitions_dtl['quantity'];?>"  value="0.00" required/>
+													</div>
+												</td>        
+												<td></td>											
+											</tr>
+                                            <?php endforeach;endif;?>
+										</tbody>
+									</table>
+								</div>
+							</div>
+						</div>	
+						<div class="row">
+                            <div class="col-lg-9"></div>
+                            <div class="col-lg-3">
+								<div class="form-group">
+									<label for="rq_quantity" class="control-label">Total Quantity</label>
+									<input type="text" class="form-control" name="rq_quantity" id="rq_quantity" value ="0.00" placeholder="Amount" readonly > 
+								</div>
+							</div>
+							<div class="col-lg-12">
+								<label class="control-label" for="remarks">Notes/Remarks: </label>
+								<textarea class="form-control" name="remarks" id="remarks"></textarea>
+							</div>
+						</div>
+						<div class="space-12"></div>
+						<div class="row"> 	
+							<div class="col-lg-9"> 
+								<button type="submit" class="btn btn-success"><i class="fa fa-check"></i> Save </button>
+								<button type="button" class="btn btn-warning" onclick="javascript:history.back();" ><i class="fa fa-times"></i> Cancel </button> 					
+							</div>
+						</div>
+					</form>	
+				</div><!-- widget widget-main -->
+			</div>  <!-- widget widget-body -->   
+		</div> <!-- widget widget-box --> 
+	</div><!-- col-lg-12 -->
+</div><!-- row -->
+
+<script type="text/javascript">	 
+    $(function(){
+		$('#issue_date').datepicker();
+		$('#issue_date').on('changeDate',function(){
+			$('form').formValidation('revalidateField', $(this).attr('id'));
+		});
+	    $('#trdetails_table').requisition({
+			getUom:"<?php echo $this->url("vehicle", array("action" => "getUom"));?>",
+		});
+	     $('#transport').on('change',function(){
+		//alert($(this).val()); 
+		$.post(
+			"<?php echo $this->url('vehicle', array('action' => 'gettransportDetails'));?>",
+			{
+				assets_id: $(this).val(),
+			},
+			function(data){
+				//console.log(data);
+				$('select#location').html(data.locs);
+				$('select#location').trigger('chosen:updated');
+				$('select#transporter_fcb').html(data.driver);
+				$('select#transporter_fcb').trigger('chosen:updated');
+			   },
+			'json'
+		    );
+	    });
+	    /*** Form Validation of RM ***/
+		const fv = FormValidation.formValidation(document.getElementById('#form'), {
+			fields: {
+				issue_date: {
+					validators: {
+						notEmpty: {
+							message: 'Please select issue date'
+						}
+					}
+				},
+				transport: {
+					validators: {
+						notEmpty: {
+							message: 'Please select transport'
+						}
+					}
+				},
+				location: {
+					validators: {
+						notEmpty: {
+							message: 'Please select location'
+						}
+					}
+				},
+				driver: {
+					validators: {
+						notEmpty: {
+							message: 'Please select driver'
+						}
+					}
+				}, 
+				item[]: {
+					validators: {
+						notEmpty: {
+							message: 'Please select item'
+						}
+					}
+				},
+				uom[]: {
+					validators: {
+						notEmpty: {
+							message: 'Please select uom'
+						}
+					}
+				},
+				quantity[]: {
+					validators: {
+						notEmpty: {
+							message: 'Please provide quantity'
+						}
+					}
+				},
+			},
+			plugins: {
+				trigger: new FormValidation.plugins.Trigger(),
+				bootstrap3: new FormValidation.plugins.Bootstrap3(),
+				submitButton: new FormValidation.plugins.SubmitButton(),
+				defaultSubmit: new FormValidation.plugins.DefaultSubmit(),
+			},
+		}).on('core.element.validated', function (e) {
+			if (e.valid) {
+				$('div#'+ e.field.replace('[]','') +'_chosen').removeClass('is-invalid');
+				$('div#'+ e.field.replace('[]','') +'_chosen').addClass('is-valid');
+			} else {
+				$('div#'+ e.field.replace('[]','') +'_chosen').removeClass('is-valid');
+				$('div#'+ e.field.replace('[]','') +'_chosen').addClass('is-invalid');
+			}
+		});
+	});    
+</script>

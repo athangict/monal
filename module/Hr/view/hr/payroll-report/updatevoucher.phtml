@@ -1,0 +1,78 @@
+<?php
+/**
+ * 
+ * View -- of Hr/MasterController/addtpnAction
+ * 
+ */
+?>
+
+<form method="post" id="#form" action="<?php echo $this->url('preport', array('action' => 'updatevoucher')); ?>"  enctype="multipart/form-data" >    
+    <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+        <h4 class="modal-title"> <i class="fa fa-asterisk"></i> Update Voucher  <?php //echo date("F", strtotime(date("1-$this->month-$this->year"))).', '.$this->year; ?> </h4>
+    </div>     
+    <div class="modal-body">       
+		<div class="panel panel-default">                       
+			<div class="panel-body">
+				<div class="form-group">
+					<label for="date" class="control-label">Date</label>
+					<div class="date input-group" id="date" data-date="<?php echo date('Y-m-d');?>" data-date-format="yyyy-mm-dd" >
+						<input class="form-control span2" name="date" id="date" type="text" placeholder="claim Date" value="<?php echo date('Y-m-d');?>" readonly>
+						<span class="input-group-addon add-on"><i class="fa fa-calendar"></i></span>
+					</div>
+				</div>
+					<div class="form-group">
+					<label for="type" class="control-label">Type</label>
+					<select type="text" class="form-control" name="type" id="type"> 
+						<option value=""></option>
+						<option value="1">Salary</option>
+						<option value="2">Leave Encashment</option>
+						<option value="3">Sitting Fee</option>
+						<option value="4">Bonus</option>
+					</select>
+				</div>
+				<div class="form-group">
+					<label for="voucher" class="control-label">Voucher No</label>
+					<input type="text" class="form-control" name="voucher" id="voucher"> 
+				</div>
+			</div>
+		</div>
+	</div> <!-- /modal-body -->        
+	<div class="modal-footer">
+		<button type="submit" class="btn btn-success"><i class="fa fa-check"></i> Save </button>
+		<button type="button" class="btn btn-warning" data-dismiss="modal" ><i class="fa fa-times"></i> Cancel </button> 
+    </div>  
+</form>   
+<script>
+	$(function(){
+		$('#date').datepicker();
+	const fv = FormValidation.formValidation(document.getElementById('#form'), {
+		fields: {
+			voucher: {
+				validators: {
+					notEmpty: {
+						message: 'Please Enter Voucher.'
+					}
+				}
+			},
+		},
+		plugins: {
+			trigger: new FormValidation.plugins.Trigger(),
+			bootstrap3: new FormValidation.plugins.Bootstrap3(),
+			submitButton: new FormValidation.plugins.SubmitButton(),
+			defaultSubmit: new FormValidation.plugins.DefaultSubmit(),
+		},
+	}).on('core.element.validated', function (e) {
+		if (e.valid) {
+			$('div#'+ e.field.replace('[]','') +'_chosen').removeClass('is-invalid');
+			$('div#'+ e.field.replace('[]','') +'_chosen').addClass('is-valid');
+		} else {
+			$('div#'+ e.field.replace('[]','') +'_chosen').removeClass('is-valid');
+			$('div#'+ e.field.replace('[]','') +'_chosen').addClass('is-invalid');
+		}
+	});
+	$('form select').chosen().change(function () {
+		fv.revalidateField($(this).attr('name'));
+	});
+});
+</script> 

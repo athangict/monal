@@ -1,0 +1,131 @@
+<?php
+/**
+ * 
+ * View -- of Store/StoreController/indexAction
+ * 
+ */
+	$this->headTitle($this->title);
+?>
+<div class="space-12"></div>
+<div class="row">
+	<div class="col-lg-12">
+		<div class="space-4"></div>
+		<form method="post"> 
+			<div class="row">
+				<div class="form-group col-lg-3">
+					<label for="item_group" class="label-control">Item Group</label>
+					<select class="form-control" data-placeholder="Select" name="item_group" id="item_group" onchange='this.form.submit()' >
+						<option value="" ></option>
+						<option value="-1" <?php echo ($group_id == '-1')?"selected":"";?>>All</option>
+						<?php 
+							$groups = $this->itemgroupObj->getAll();
+							foreach($groups as $group):
+								$selected_group = ($group['id'] == $group_id)?"selected":"";
+						?>
+							<option value="<?php echo $group['id'];?>" <?php echo $selected_group;?>>
+								<?php echo $group['code'];?>
+							</option>
+						<?php endforeach;?>
+					</select>
+				</div>
+				<div class="form-group col-lg-3">
+					<label for="item_subgroup" class="label-control">Item Sub Group</label>
+					<select class="form-control" data-placeholder="Select" name="item_subgroup" id="item_subgroup" onchange='this.form.submit()' >
+						<option value="" ></option>
+						<option value="-1" <?php echo ($subgroup_id == '-1')?"selected":"";?>>All</option>
+						<?php 
+							$subgroups = $this->itemsubgroupObj->getAll();
+							foreach($subgroups as $subgroup):
+								$selected_subgroup = ($subgroup['id'] == $subgroup_id)?"selected":"";
+						?>
+							<option value="<?php echo $subgroup['id'];?>" <?php echo $selected_subgroup;?>>
+								<?php echo $subgroup['code'];?>
+							</option>
+						<?php endforeach;?>
+					</select>		
+				</div> 
+				<div class="form-group col-lg-6">
+					<div class="clearfix">
+						<div class="pull-right tableTools-container"></div>
+						<?php echo $this->button(2);?>
+					</div>
+				</div>
+			</div>
+		</form>		
+		<div class="space-4"></div>
+		<table class="table table-bordered table-striped table-hover" id="dataTables">
+			<thead>
+				<tr>
+					<th>#</th>
+					<th>Stock Items</th>
+					<th>UOM</th>
+					<th>Valuation</th>
+					<th>Group</th>
+					<th>Sub-Group</th>
+					<th class="no-sort no-printpdf">Action</th>	
+				</tr>
+			</thead>
+			<tbody>
+				<?php  $i = 1; 
+				foreach ($this->items as $item):?>
+				 <tr data-href="<?php echo $this->url('store', array('action'=>'viewitem', 'id'=>$item['id']));?>">
+					<td><?php echo $i++;?></td>
+					<td><b><?php echo $item['name'];?> </b> &nbsp;&nbsp;&nbsp;
+					<?php if($item['status'] == '1'):?>
+							<span class="badge badge-success">Active</span>
+						<?php else:?>
+							<span class="badge badge-danger">Inactive</span>
+						<?php endif;?>
+					</td>
+					<td>
+						<?php echo $this->uomObj->getColumn($item['uom'],'code');?>
+					</td>
+					<td>	
+						<?php if($item['valuation'] == '1'):?>
+							Simple Average
+						<?php else:?>
+							FIFO
+						<?php endif;?>
+					</td>
+					<td>
+						<?php echo $this->itemgroupObj->getColumn($item['item_group'],'name'); ?>
+					</td>
+					<td>
+						<?php 
+							echo $this->itemsubgroupObj->getColumn($item['item_sub_group'],'name');
+						?>
+					</td>
+					<td class="action">
+						<div class="btn-group">
+							<a class="btn btn-xs btn-danger" data-toggle="modal" data-target="#modal" href="<?php echo $this->url('acl', array('action' => 'activitylog', 'id' => "24-".$item['id'])); ?>" title="View Activity Logs">
+								<i class="ace-icon fa fa-plus bigger-120" ></i>  
+							</a>
+						</div>
+					</td>		                              
+				</tr>
+				<?php endforeach;?>
+			</tbody>
+		</table>
+	</div>
+</div>
+<div id="modal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+	<div class="modal-dialog">
+		<div class="modal-content">
+		</div>
+	</div>
+</div>
+<script>		
+	$("tr[data-href]").each(function(){
+		$(this).find('td').not('td.action').each(function(){
+			$(this).css('cursor','pointer');
+			$(this).bind('click',function() {
+				window.document.location = $(this).closest('tr').attr("data-href");
+			});
+		});
+	});
+	$('document').ready(function(){
+		$('#dataTables').DataTable({"paging":   true,});
+	});
+</script>
+
+ 

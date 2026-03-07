@@ -1,0 +1,277 @@
+<?php
+/**
+* 
+* View -- of Accounts/ChartaccountController/editheadAction
+* 
+*/
+?>
+<?php 
+  foreach($this->subhead as $subheadrow):
+ //	 echo"<pre>"; print_r($subheadrow); exit; 
+    extract($subheadrow);
+  endforeach;
+?>
+<form method="post" action="<?php echo $this->url('pchartaccount', array('action' => 'editsubhead', 'id' => $id)); ?>"  enctype="multipart/form-data" >                              
+	<div class="modal-header">
+		<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+		<h4 class="modal-title"> <i class="fa fa-pencil-square-o"></i> Edit Sub Head</h4>
+	</div>  <!-- /modal-header -->    
+	<div class="modal-body">  
+		<div class="panel panel-default">                       
+			<div class="panel-body">
+				<div class="row">
+					<div class="col-lg-6">
+						<div class="form-group">
+							<label for="type" class="control-label">Type</label>
+							<select id="type" name="type" class="form-control" data-placeholder="Select" required >
+								<option value=""></option>
+								<?php 
+								foreach ($types as $type):
+								$selected = ($type_id == $type['id'])?'selected':'';
+								?>
+									<option value="<?php echo $type['id'];?>" <?php echo $selected;?>>
+									<?php echo $type['type'];?>
+									</option>
+								<?php 
+								endforeach;
+								?>
+							</select>
+						</div> 
+					</div>
+					<div class="col-lg-6">
+						<div class="form-group">
+							<label for="code" class="control-label">sub type</label>
+							<select id="code" name="code" class="form-control" data-placeholder="Select" >
+								<option value=""></option>
+								<?php if($type_id > 0):
+									switch ($type_id){
+										case 1: // Sub Head for Assets
+												foreach($this->assets as $asset):?>
+													<?php $selected = ($ref_id == $asset['id'])?"selected":""; ?>
+													<option value="<?php echo $asset['id']; ?>" <?php echo $selected; ?>>					 
+														  <?php echo $asset['code']; ?>						
+													</option>	
+												<?php endforeach;
+												break;
+										case 2: // Sub Head for Party
+												foreach($this->partys as $party):?>
+													<?php $selected = ($ref_id == $party['id'])?"selected":"";?>
+													<option value="<?php echo $party['id'];?>" <?php echo $selected; ?>>					 
+														  <?php echo $party['code']; ?>						
+													</option>	
+												<?php endforeach;
+												break;
+										case 3: // Sub Head for Bank Accounts
+												foreach($this->bankaccounts as $bankaccount):?>
+													<?php $selected = ($ref_id == $bankaccount['id'])?"selected":""; ?>
+													<option value="<?php echo $bankaccount['id']; ?>" <?php echo $selected; ?>>					 
+														  <?php echo $bankaccount['code']; ?>						
+													</option>	
+												<?php endforeach;
+												break;
+										case 4: // Sub Head for Fund
+												foreach($this->funds as $fund):?>
+													<?php $selected = ($ref_id == $fund['id'])?"selected":""; ?>
+													<option value="<?php echo $fund['id']; ?>" <?php echo $selected; ?>>					 
+														  <?php echo $fund['code']; ?>						
+													</option>	
+												<?php endforeach;
+												break;
+										case 5: // Sub Head for Pay Head
+												foreach($this->payheads as $payhead):?>
+													<?php $selected = ($ref_id == $payhead['id'])?"selected":""; ?>
+													<option value="<?php echo $payhead['id']; ?>" <?php echo $selected; ?>>					 
+														  <?php echo $payhead['code']; ?>						
+													</option>	
+												<?php endforeach;
+												break;
+										case 6: // Sub Head for Cash Accounts
+												foreach($this->cashaccounts as $cashaccount):?>
+													<?php $selected = ($ref_id == $cashaccount['id'])?"selected":""; ?>
+													<option value="<?php echo $cashaccount['id']; ?>" <?php echo $selected; ?>>					 
+														  <?php echo $cashaccount['code']; ?>						
+													</option>	
+												<?php endforeach;
+												break;
+										case 7: // Sub Head for Income Head
+												foreach($this->incomeheads as $incomehead):?>
+													<?php $selected = ($ref_id == $incomehead['id'])?"selected":"";?>
+													<option value="<?php echo $incomehead['id']; ?>" <?php echo $selected;?>>					 
+														  <?php echo $incomehead['code']; ?>						
+													</option>	
+												<?php endforeach;
+												break;
+										case 8: // Sub head for Employee
+												foreach($this->employees as $employee):?>
+													<?php $selected = ($ref_id == $employee['id'])?"selected":""; ?>
+													<option value="<?php echo $employee['id']; ?>" <?php echo $selected; ?>>					 
+														<?php echo $employee['full_name']; ?>		
+													</option>	
+												<?php endforeach;
+										        break;
+									}
+								endif;
+								?>
+							</select>
+						</div>  
+					</div>
+				</div>
+				<div class="row">
+					<div class="col-lg-6">
+						 <div class="form-group">
+							<label for="shcode" class="control-label">Sub Head Code</label>
+							<input type="text" id="shcode" name="shcode" class="form-control" value="<?php echo $code;?>" size="14" maxlength="1000" placeholder="Enter Sub Head Code" required />
+						</div>
+					</div>
+					<div class="col-lg-6">
+						<div class="form-group">
+							<label for="shname" class="control-label">Sub Head Name</label>
+							<input type="text" id="shname" name="shname" class="form-control" value = "<?php echo $name;?>" placeholder="Enter Sub Head Name" required />
+						</div>
+					</div>
+				</div>	
+				<div class="row">	
+					<div class="col-lg-6">
+						<div class="form-group">
+							<label for="head_type" class="control-label">Head Type</label>
+							<select id="head_type" name="head_type" class="form-control" data-placeholder="Head Type" required >
+								<option value=""></option>
+								<?php 
+								foreach ($this->headtype as $headtyperow):
+									$selected = ($headtype_id == $headtyperow['id'])?"selected":"";
+								?>
+									<option value="<?php echo $headtyperow['id'];?>" <?php echo $selected;?>>
+										<?php echo $headtyperow['head_type']; ?>
+									</option>
+								<?php 
+								endforeach;
+								?>
+							</select>
+						</div>
+					</div>
+					<div class="col-lg-6">
+						<div class="form-group">
+							<label for="head_type" class="control-label">Head</label>
+							<select id="head" name="head" class="form-control" data-placeholder="Head" required >
+								<option value=""></option>
+								<?php 
+								foreach ($this->headObj->get(array('ht.id'=>$headtype_id)) as $headrow):
+									$selected = ($head_id==$headrow['id'])?"selected":"";
+								?>
+									<option value="<?php echo $headrow['id'];?>" <?php echo $selected;?>>
+										<?php echo $headrow['name']; ?>
+									</option>
+								<?php 
+								endforeach;
+								?>
+							</select>
+						</div>
+					</div>
+				</div>	
+			</div>  
+		</div> 
+	</div>	                          
+	<div class="modal-footer">
+		<button type="submit" class="btn btn-success"><i class="fa fa-check"></i> Save </button>
+		<button type="button" class="btn btn-warning" data-dismiss="modal" ><i class="fa fa-times"></i> Cancel </button> 
+	</div> 
+</form> 
+<script>
+$('document').ready(function(){
+	$("#head_type").change(function() { 
+		//alert($(this).val());
+		$("#head").load('<?php echo $this->url("ajresponse", array("action" => "gethead")); ?>/'+ $("#head_type").val(), function() {
+			$("#head").trigger("chosen:updated");
+			$('form').formValidation('revalidateField','head');
+		});
+    });
+	$('#type').change(function(){
+		//alert($(this).val());
+		$.post(
+			'<?php echo $this->url('pchartaccount', array('action' => 'getCodeName')); ?>',
+			{
+				type: $(this).val(),
+			},
+			function(data){
+				//console.log(data);
+				$("#code").html(data.code);
+				$("#code").trigger('chosen:updated');
+			},
+			'json'
+		);
+	});
+	$('#code').on('change',function(){
+		//alert($('#type').val());
+		$.post(
+			'<?php echo $this->url("chartaccount", array("action" => "getSHCodeName")); ?>',
+			{
+				sub_head: $(this).val(),
+				type : $('#type').val(),
+			},
+			function(data){
+				//console.log(data);
+				$('#shcode').val(data.scode);	
+				$('#shname').val(data.shname);				
+			},
+			'json'
+		);
+	});
+	$('#dataTables').DataTable();
+	const fv = FormValidation.formValidation(document.getElementById('#form'), {
+		fields: {
+			type: {
+				validators: {
+					notEmpty: {
+						message: 'Please select Type.'
+					}
+				}
+			},
+			shcode: {
+				validators: {
+					notEmpty: {
+						message: 'Please provide Subhead Code.'
+					}
+				}
+			},
+			shname: {
+				validators: {
+					notEmpty: {
+						message: 'Please provide Subhead Name.'
+					}
+				}
+			},
+			head: {
+				validators: {
+					notEmpty: {
+						message: 'Please select Head.'
+					}
+				}
+			},
+			head_type: {
+				validators: {
+					notEmpty: {
+						message: 'Please select Head Type.'
+					}
+				}
+			},
+		},
+		plugins: {
+			trigger: new FormValidation.plugins.Trigger(),
+			bootstrap3: new FormValidation.plugins.Bootstrap3(),
+			submitButton: new FormValidation.plugins.SubmitButton(),
+			defaultSubmit: new FormValidation.plugins.DefaultSubmit(),
+		},
+	}).on('core.element.validated', function (e) {
+		if (e.valid) {
+			$('div#'+ e.field.replace('[]','') +'_chosen').removeClass('is-invalid');
+			$('div#'+ e.field.replace('[]','') +'_chosen').addClass('is-valid');
+		} else {
+			$('div#'+ e.field.replace('[]','') +'_chosen').removeClass('is-valid');
+			$('div#'+ e.field.replace('[]','') +'_chosen').addClass('is-invalid');
+		}
+	});
+	$('form select').chosen().change(function () {
+		fv.revalidateField($(this).attr('name'));
+	});
+});
+</script>

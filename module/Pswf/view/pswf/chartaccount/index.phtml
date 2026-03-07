@@ -1,0 +1,141 @@
+<?php
+/**
+ * 
+ * View -- of Accounts/ChartaccountController/indexAction
+ * 
+ */
+	$this->headTitle($this->title);
+?>
+<!--for modal -->
+<div id="modal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content"> </div>
+    </div>
+</div>
+<?php echo $this->tabs_helper(array(3101,3102,3108,3105,3111)); ?>
+<div class="card">
+	<div class="card-body">
+		<!-- PAGE CONTENT BEGINS -->
+		<div class="row">
+			<div class="col-sm-9">
+				<ol class="dd-list" id="class">
+					<?php 
+						$cs = 1;$i='';
+						foreach($classes as $class):
+							$in = ($i==0)?'':'';
+							$icon = ($i==0)?'fa-plus':'fa-plus';
+					?>
+					<a style="text-decoration:none;" data-toggle="collapse" data-parent="#class" href="#group<?php echo $class['id'];?>">
+						<li class="dd-item">
+							<div class="dd-handle btn-yellow">
+								<i class="ace-icon fa <?php echo $icon;?>" data-icon-show="fa-plus" data-icon-hide="fa-minus"></i>
+								<?php echo $cs++."&nbsp;".$class['name'];?>
+							</div>
+						</li>
+					</a>
+					<ol class="collapse <?php echo $in;?>" id="group<?php echo $class['id'];?>">
+						<?php
+							$gp = 1;
+							$groups = $this->groupObj->get(array('class'=>$class['id']));
+							foreach($groups as $group):
+						?>
+						<a style="text-decoration:none;" data-toggle="collapse" data-parent="#group<?php echo $class['id'];?>" href="#head<?php echo $group['id'];?>">
+							<li class="dd-item">
+								<div class="dd-handle btn-primary">
+									<i class="ace-icon fa <?php echo $icon;?>" data-icon-show="fa-plus" data-icon-hide="fa-minus"></i>
+									<?php echo $gp++."&nbsp;".$group['name'];?>
+								</div>
+							</li>
+						</a>
+						<ol class="collapse <?php echo $in;?>" id="head<?php echo $group['id'];?>">
+							<?php
+								$hd = 1;
+								$heads = $this->headObj->get(array('g.id'=>$group['id']));
+								foreach($heads as $head):
+							?>
+							<a style="text-decoration:none;" data-toggle="collapse" data-parent="#head<?php echo $group['id'];?>" href="#subhead<?php echo $head['id'];?>">
+								<li class="dd-item">
+									<div class="dd-handle btn-success">
+										<i class="ace-icon fa <?php echo $icon;?>" data-icon-show="fa-plus" data-icon-hide="fa-minus"></i>
+										<?php echo $hd++."&nbsp;".$head['name'];?>
+									</div>
+								</li>
+							</a>
+							<ol class="collapse <?php echo $in;?>" id="subhead<?php echo $head['id'];?>">
+								<?php
+									$subheads = $this->subheadObj->get(array('head'=>$head['id']));
+									$sl = 1;
+									foreach($subheads as $subhead):
+								?>
+								<li class="dd-item">
+									<div class="dd-handle">
+										<?php echo $sl++;?>. &nbsp;
+										<?php echo $subhead['code'];?> &nbsp; | &nbsp;
+										<i><?php echo $subhead['name'];?></i>
+										<a class="pull-right blue" data-toggle="modal" data-target = "#modal" href="<?php echo $this->url('chartaccount', array('action' => 'editsubhead', 'id' => $subhead['id'])); ?>" >
+											<i class="normal-icon ace-icon fa fa-pencil bigger-130"></i>
+										</a>
+									</div>
+								</li>
+								<?php endforeach;?>
+							</ol>
+							<?php endforeach;?>
+						</ol>
+						<?php endforeach;?>
+					</ol>
+					<?php endforeach;?>
+				</ol>
+			</div>
+			
+			<div class="col-sm-3">
+				<div class="space-6"></div>
+				<div class="row">
+					<ul class="tree tree-unselectable">
+						<li class="tree-branch tree-open">
+							<span class="tree-item-name">				  			
+								<span class="tree-label">
+									<i class="ace-icon fa fa-square fa-2x" style="color:#FEE188"></i> <strong>Class</strong>
+								</span>				
+							</span>		
+							<ul class="tree-branch-children">
+								<li class="tree-branch tree-open" aria-expanded="true">		
+									<span class="tree-item-name">				  			
+										<span class="tree-label">
+											<i class="ace-icon fa fa-square fa-2x blue"></i> <strong>Group</strong>
+										</span>				
+									</span>						
+									<ul class="tree-branch-children">
+										<li class="tree-branch tree-open" aria-expanded="true">				
+											<span class="tree-item-name">				  			
+												<span class="tree-label">
+													<i class="ace-icon fa fa-square fa-2x green"></i> <strong>Head</strong>
+												</span>				
+											</span>			
+										</li>
+										<ul class="tree-branch-children">
+											<li class="tree-branch tree-open" aria-expanded="true">				
+												<span class="tree-item-name">				  			
+													<span class="tree-label">
+														<i class="ace-icon fa fa-square fa-2x info" style="color:#7C9EB2"></i> <strong>Subhead</strong>
+													</span>				
+												</span>			
+											</li>
+										</ul>
+									</ul>
+								</li>
+							</ul>				
+						</li>
+					</ul>
+				</div>
+			</div>
+		</div><!-- PAGE CONTENT ENDS -->
+	</div><!-- /.card-body -->
+</div>
+<div id="modal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+	<div class="modal-dialog">
+		<div class="modal-content">
+		</div>
+	</div>
+</div>
+
+

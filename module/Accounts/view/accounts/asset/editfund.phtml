@@ -1,0 +1,96 @@
+<?php
+/**
+ * 
+ * View -- of Accounts/AssetController/addassetAction
+ * 
+ */
+	$this->headTitle($this->title);
+?>
+<?php 
+    foreach($this->funds as $fund):
+        extract($fund);
+    endforeach;
+?>
+<form id="form" method="post" action="<?php echo $this->url('asset', array('action' => 'editfund', 'id' => $id)); ?>" enctype="multipart/form-data" >
+	<div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+        <h4 class="modal-title"><i class="fa fa-pencil-square-o"></i> Edit Fund</h4>
+    </div><!-- /modal-header -->
+    <div class="modal-body">
+		<div class="panel panel-default">
+			<div class="panel-body">    
+				<div class="form-group">
+					<label for="code" class="control-label">Code</label>
+					<input type="text" class="form-control" name="code" id="code" value="<?php echo $code;?>" required>
+				</div>
+				<div class="form-group">
+					<label for="description" class="control-label">Description</label>
+					<input type="text" class="form-control" name="description" id="description" value="<?php echo $description;?>" required>
+				</div>				
+				<div class="form-group >
+					<label for="fund_date" class="control-label">Fund Date</label>
+					<div class="date input-group" id="fund_date" data-date="<?php echo date('Y-m-d', strtotime($fund_date));?>" data-date-format="yyyy-mm-dd" data-date-viewmode="years">
+						<input class="form-control span2" name="fund_date" id="fund_date" type="text" value="<?php echo $fund_date;?>"placeholder="Fund Date" readonly required>
+						<span class="input-group-addon add-on"><i class="fa fa-calendar"></i></span>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+	<div class="modal-footer">
+		<button type="submit" class="btn btn-success"><i class="fa fa-check"></i> Save </button>
+		<button type="button" class="btn btn-warning" data-dismiss="modal" ><i class="fa fa-times"></i> Cancel </button> 
+	</div><!-- /modal-footer -->
+</form>
+		
+<script>
+	$('#fund_date').datepicker();
+	$('document').ready(function(){
+		const fv = FormValidation.formValidation(document.getElementById('#form'), {
+			fields: {
+				code: {
+						validators: {
+							notEmpty: {
+								message: 'Please provide code.'
+							}
+						}
+					},
+					description: {
+						validators: {
+							notEmpty: {
+								message: 'Please provide description.'
+							}
+						}
+					},
+					fund_date: {
+						validators: {
+							notEmpty: {
+								message: 'Please provide fund date.'
+							}
+						}
+					},
+			},
+			plugins: {
+				trigger: new FormValidation.plugins.Trigger(),
+				bootstrap3: new FormValidation.plugins.Bootstrap3(),
+				submitButton: new FormValidation.plugins.SubmitButton(),
+				defaultSubmit: new FormValidation.plugins.DefaultSubmit(),
+			},
+		}).on('core.element.validated', function (e) {
+			if (e.valid) {
+				$('div#'+ e.field.replace('[]','') +'_chosen').removeClass('is-invalid');
+				$('div#'+ e.field.replace('[]','') +'_chosen').addClass('is-valid');
+			} else {
+				$('div#'+ e.field.replace('[]','') +'_chosen').removeClass('is-valid');
+				$('div#'+ e.field.replace('[]','') +'_chosen').addClass('is-invalid');
+			}
+		});
+		$('form select').chosen().change(function () {
+			fv.revalidateField($(this).attr('name'));
+	});
+		$('#fund_date').on('changeDate', function(){
+			$('form').formValidation('revalidateField','fund_date');
+		});
+	});
+</script>
+	

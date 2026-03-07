@@ -1,0 +1,402 @@
+<?php
+//echo $location_details; exit;
+/**
+ * View -- of Report/AccountsreportController/ledgerAction
+ */
+	$this->headTitle($this->title);
+	//echo $this->partial('accounts/report/partial.phtml', array('active' => 'ledger'));
+	//echo '<pre>';print_r($data);exit;
+?>
+<?php echo $this->tabs_helper(array(3151,3152,3153,3154)); ?>
+<div class="card">
+	<div class="card-header">
+		<div class="row">
+			<div class="col-lg-12">
+				<form id="#form" method="post" action="<?php echo $this->url('paccrep', array('action' => 'ledger')); ?>"  enctype="multipart/form-data" >    
+					<div class="row">
+						<div class="form-group col-lg-2">
+							<label class="control-label" for="location">Location</label>
+							<select class="form-control" name="location" id="location" data-placeholder="select" >
+								<option value="-1">All</option>
+								<?php foreach($regions as $region):?>
+									<optgroup label="<?php echo $region['region'];?>">
+									<?php  
+										$locations = $locationObj->getwithLT(array('l.region'=>$region['id']));
+										foreach ($locations as $location):
+											$selected_loc = ($location['id']==$data['location'])?"selected":"";
+									?>
+										<option value="<?php echo $location['id']; ?>" <?php echo $selected_loc;?>>
+											<?php echo $location['location']; ?>
+										</option>
+									<?php endforeach;?>
+									</optgroup>
+								<?php endforeach;  ?>									
+							</select>
+						</div>
+						<div class="form-group col-lg-2">
+							<label class="control-label" for="head">Head</label>
+							<select class="form-control" name="head" id="head" data-placeholder="select" onchange='this.form.submit()'>
+								<option value=""></option>
+								<?php 
+									$heads = $this->headObj->getAll();
+									foreach($heads as $head):
+										$selected_head = ($head['id']==$data['head'])?'selected':'';
+								?>
+								
+									<option value="<?php echo $head['id'];?>" <?php echo $selected_head;?>>
+										<?php echo $head['code'];?>
+									</option>
+								<?php endforeach;?>
+							</select>
+						</div>
+						<div class="form-group col-lg-2">
+							<label class="control-label" for="sub_head">Sub-Head</label>
+							<select class="form-control" name="sub_head" id="sub_head" data-placeholder="select" >
+								<option value="-1">All</option>
+								<?php
+									$sub_heads = $this->subheadObj->get(array('head'=>$data['head']));
+									foreach($sub_heads as $subhead):
+										$selected_subhead = ($subhead['id']==$data['sub_head'])?'selected':'';
+								?>
+									<option value="<?php echo $subhead['id']?>" <?php echo $selected_subhead;?>>
+										<?php echo $subhead['code'].'-'.$subhead['name'];?>
+									</option>
+								<?php endforeach;?>
+							</select>
+						</div>
+						<div class="form-group col-lg-2">
+							<label class="control-label" for="start_date">Start Date</label>
+							<div class="date input-group" id="start_date" data-date="<?php echo $data['start_date'];?>" data-date-format="yyyy-mm-dd" >
+								<input class="form-control span2" name="start_date" id="start_date" type="text" placeholder="Start Date" value="<?php echo $data['start_date'];?>" readonly required>
+								<span class="input-group-addon add-on"><i class="fa fa-calendar"></i></span>
+							</div>
+						</div>
+						<div class="form-group col-lg-2">
+							<label class="control-label" for="end_date">End Date</label>
+							<div class="date input-group" id="end_date" data-date="<?php echo $data['end_date'];?>" data-date-format="yyyy-mm-dd" >
+								<input class="form-control span2" name="end_date" id="end_date" type="text" placeholder="End Date" value="<?php echo $data['end_date'];?>" readonly required>
+								<span class="input-group-addon add-on"><i class="fa fa-calendar"></i></span>
+							</div>
+						</div>
+					</div>
+					<div class ="row">
+						<div class="col-lg-2">
+							<div class="form-group">
+								<label>
+									<?php $checked = ($location_details == '1')?'checked':'';?>
+									<input name="location_details" id="location_details" type="checkbox" value="1" class="ace" <?php echo $checked;?>/>
+									<span class="lbl"> Location Details</span>
+								</label>
+							</div>
+						</div>
+						<div class="col-lg-2">
+							<button type="submit" class="btn btn-sm btn-success pull-right"><i class="fa fa-gear"></i> Generate </button>
+						</div>
+					</div>	
+				</form>
+				<div class="hr hr-dotted"></div>
+				<div class="space-6"></div>
+				<div class="row col-lg-12">
+					<div class="clearfix">
+						<label><i class="blue fa fa-cube"></i> <strong>Ledger : </strong></label><span><?php echo (!isset($data['head']))?'-select-':$this->headObj->getColumn($data['head'],'code');?></span>.&nbsp;&nbsp;
+						<label><i class="orange fa fa-cubes"></i> <strong>Sub-Ledger: </strong></label><span><?php echo ($data['sub_head']== -1 || !isset($data['sub_head']))?'All Sub-heads':$this->subheadObj->getColumn($data['sub_head'],'code');?></span>.&nbsp;&nbsp;
+						<label><i class="red fa fa-map-marker"></i> <strong>Location: </strong></label><span><?php echo ($data["location"] == -1 || !isset($data['location']))? "All Locations": $this->locationObj->getColumn($data["location"], 'location');?></span>.&nbsp;&nbsp;
+						<label><i class="green fa fa-calendar"></i> <strong>Date: </strong></label><span><?php echo (!isset($data['start_date']))?'-select-':$data['start_date'].' to '.$data['end_date'];?></span>
+					</div>
+				</div>
+				<div class="row col-lg-12">
+					<div class="clearfix">
+					<input type="hidden" name="heads" id="heads" value="<?php echo (!isset($data['head']))?'-select-':$this->headObj->getColumn($data['head'],'code');?>">
+					<input type="hidden" name="sub_heads" id="sub_heads" value="<?php echo ($data['sub_head']== -1 || !isset($data['sub_head']))?'All Sub-heads':$this->subheadObj->getColumn($data['sub_head'],'code');?>">
+					<input type="hidden" name="act" id="act" value="<?php //echo ($data["activity"] == -1 || !isset($data['activity']))? "All Activities": $this->activityObj->getColumn($data["activity"], 'activity');?>">
+					<input type ="hidden" id = "loc" name = "loc" value = "<?php echo ($data["location"] == -1 || !isset($data['location']))? "All Locations": $this->locationObj->getColumn($data["location"], 'location');?>">
+					<input type="hidden" name="st_date" id="st_date" value="<?php echo $data['start_date']?>">
+					<input type="hidden" name="ed_date" id="ed_date" value="<?php echo $data['end_date'];?>">
+					</div>
+				</div>
+				<div class ="row">
+					<div class="col-lg-12">
+						<div>
+							<table class="table table-striped table-condensed table-bordered table-hover" id="dataTables">	
+								<thead>
+									<tr>
+										<th>Sl.No.</th>
+										<?php if(!empty($location_details)):?>
+										<th>Location</th>
+										<?php endif; ?>
+										<th>Voucher Date</th>
+										<th>Voucher No.</th>
+										<th>Debit(Dr)</th>
+										<th>Credit(Cr)</th>
+										<th>Closing Balance</th>
+									</tr>
+								</thead>
+								<tbody>	
+									<?php 
+							    $opening_balance=0;//Initialized
+								if(!empty($location_details)):?>
+								<?php 						
+									if($data['head'] > 0 && $data['sub_head'] > 0):
+										
+											if($class == '1' || $class == '2'): /* (==) Asset & Expense(Debit-Credit) AND (!=) Income & Liabilities(Credit-Debit) */
+												foreach($this->subheadObj->getTransactionSubheadforLedger($data['location'],$data['activity'],$data['start_date'],$data['end_date'], array('id'=>$data['sub_head'])) as $subheadrow):// subhead
+												    $opening_balance = $this->transactiondetailObj->getOpeningBalanceforSHLedgerALoc($data['start_date'],$subheadrow['id']);
+											    endforeach;
+											endif;?>
+										<tr>
+											<td></td>
+											<td></td>
+											<td><?php echo $data['start_date']; ?></td>
+											<td style="text-align:center" >Opening Balance</td>
+											<td style="text-align:right" class = "green"></td>
+											<td style="text-align:right" class = "green"></td>
+											<td style="text-align:right" class = "red"><?php echo number_format((float)$opening_balance, 2, '.', ',');?></td>
+										</tr>
+										<?php
+										$i = 1;
+										$grand_debit =0;$grand_credit=0;
+										$closing_balance =  $opening_balance;
+										foreach($this->transactiondetailObj->getTransactionDtlIDLforLedger($data['location'],$data['activity'],$data['start_date'],$data['end_date'],array('sub_head'=> $subheadrow['id'])) as $transaction):
+												
+												$total_debit = $this->transactiondetailObj->getSumbyTransactionDIDforLedger($data['location'],$data['activity'],$data['start_date'],$data['end_date'], 'debit', array('id' => $transaction['id'],'sub_head'=>$data['sub_head']));
+												$total_credit = $this->transactiondetailObj->getSumbyTransactionDIDforLedger($data['location'],$data['activity'],$data['start_date'],$data['end_date'], 'credit', array('id' => $transaction['id'],'sub_head'=>$data['sub_head']));
+												$closing_balance = ($closing_balance + $total_debit) - $total_credit;
+												if($closing_balance<0){
+													$closing_balance= -$closing_balance;
+												}
+												$location_details = $this->transactiondetailObj->getLocation(array('td.id' => $transaction['id'],'sub_head'=>$data['sub_head']));
+												foreach($location_details as $location_detail);
+										?>
+										<tr>
+											<td><?php echo $i++;?></td>
+											<td><?php echo $location_detail['location'];?></td>
+											<td><?php echo $this->transactionObj->getColumn($transaction['transaction'],'voucher_date');?></td>
+											<td><a target="_blank" href="<?php echo $this->url('transaction', array('action'=>'viewdetails', 'id'=>$transaction['transaction']));?>"><?php echo $this->transactionObj->getColumn($transaction['transaction'],'voucher_no')."-".$transaction['remark']; ?></a></td>
+											<td style="text-align:right" class = "green"><?php echo number_format((float)$total_debit, 2, '.', ','); ?></td>
+											<td style="text-align:right" class = "green"><?php echo number_format((float)$total_credit, 2, '.', ','); ?></td>
+											<td style="text-align:right" class = "red"><?php echo number_format((float)$closing_balance, 2, '.', ',');?></td>
+										</tr>
+										<?php
+										$grand_debit += $total_debit; $grand_credit += $total_credit;					
+										$opening_balance_next = $grand_debit + $closing_balance - $grand_credit;							
+										endforeach;							
+										?>
+									<?php
+									else:
+										foreach($this->headObj->getTransactionheadforLedger($data['location'],$data['activity'],$data['start_date'],$data['end_date'], array('id'=>$data['head'])) as $headrow):// subhead
+											if($class == '1' || $class == '2'): /* (==) Asset & Expense(Debit-Credit) AND (!=) Income & Liabilities(Credit-Debit) */
+												$opening_balance = $this->transactiondetailObj->getOpeningBalanceforSHLedgerALoc($data['location'],$data['start_date'],$headrow['id']);
+											endif;
+										endforeach;?>
+										<tr>
+											<td></td>
+											<td></td>
+											<td><?php echo $data['start_date']; ?></td>
+											<td style="text-align:center" >Opening Balance</td>
+											<td style="text-align:right" class = "green"></td>
+											<td style="text-align:right" class = "green"></td>
+											<td style="text-align:right" class = "red"><?php echo number_format((float)$opening_balance, 2, '.', ',');?></td>
+										</tr>
+										<?php
+										$i = 1;
+										$grand_debit =0;$grand_credit=0;
+										$closing_balance =  $opening_balance;
+										foreach($this->transactiondetailObj->getTransactionDtlIDLforLedger($data['location'],$data['activity'],$data['start_date'],$data['end_date'],array('head'=>$data['head'])) as $transaction):
+												$total_debit = $this->transactiondetailObj->getSumbyTransactionDIDforLedger($data['location'],$data['activity'],$data['start_date'],$data['end_date'], 'debit', array('id' => $transaction['id'],'head'=>$data['head']));
+												$total_credit = $this->transactiondetailObj->getSumbyTransactionDIDforLedger($data['location'],$data['activity'],$data['start_date'],$data['end_date'], 'credit', array('id' => $transaction['id'],'head'=>$data['head']));
+												$closing_balance = ($closing_balance + $total_debit) - $total_credit;
+												$location_details = $this->transactiondetailObj->getLocation(array('td.id' => $transaction['id'],'head'=>$data['head']));
+												foreach($location_details as $location_detail);
+												
+										?>
+										<tr>
+											<td><?php echo $i++;?></td>
+											<td><?php echo $location_detail['location'];?></td>
+											<td><?php echo $this->transactionObj->getColumn($transaction['transaction'],'voucher_date');?></td>
+											<td><a target="_blank" href="<?php echo $this->url('transaction', array('action'=>'viewdetails', 'id'=>$transaction['transaction']));?>"><?php echo $this->transactionObj->getColumn($transaction['transaction'],'voucher_no')."-".$this->transactionObj->getColumn($transaction['transaction'],'remark'); ?></a></td>
+											<td style="text-align:right" class = "green"><?php echo number_format((float)$total_debit, 2, '.', ','); ?></td>
+											<td style="text-align:right" class = "green"><?php echo number_format((float)$total_credit, 2, '.', ','); ?></td>
+											<td style="text-align:right" class = "red"><?php echo number_format((float)$closing_balance, 2, '.', ',');?></td>
+										</tr>
+										<?php
+										$grand_debit += $total_debit; $grand_credit += $total_credit;					
+										$opening_balance_next = $grand_debit + $closing_balance - $grand_credit;							
+										endforeach;
+									endif;?>
+								
+								<?php else:?>
+								
+								<?php $opening_balance=0; 
+								if($data['head'] > 0 && $data['sub_head'] > 0):
+									foreach($this->subheadObj->getTransactionSubheadforLedger($data['location'],$data['activity'],$data['start_date'],$data['end_date'], array('id'=>$data['sub_head'])) as $subheadrow):// subhead
+										if($class == '1' || $class == '2'): /* (==) Asset & Expense(Debit-Credit) AND (!=) Income & Liabilities(Credit-Debit) */
+											$opening_balance = $this->transactiondetailObj->getOpeningBalanceforSHLedger($data['start_date'],$subheadrow['id']);
+										endif;
+									endforeach;?>
+									<tr>
+										<td></td>
+										<td><?php echo $data['start_date']; ?></td>
+										<td style="text-align:center" >Opening Balance</td>
+										<td style="text-align:right" class = "green"></td>
+										<td style="text-align:right" class = "green"></td>
+										<td style="text-align:right" class = "red"><?php echo number_format((float)$opening_balance, 2, '.', ',');?></td>
+									</tr>
+									<?php
+									$i = 1;
+									$grand_debit =0;$grand_credit=0;
+									$closing_balance =  $opening_balance;
+									foreach($this->transactionObj->getTransactionIDforLedger($data['location'],$data['activity'],$data['start_date'],$data['end_date'],array('sub_head'=> $subheadrow['id'])) as $transaction):
+											
+										$total_debit = $this->transactiondetailObj->getSumbyTransactionIDforLedger($data['location'],$data['activity'],$data['start_date'],$data['end_date'], 'debit', array('transaction' => $transaction['id'],'sub_head'=>$data['sub_head']));
+										$total_credit = $this->transactiondetailObj->getSumbyTransactionIDforLedger($data['location'],$data['activity'],$data['start_date'],$data['end_date'], 'credit', array('transaction' => $transaction['id'],'sub_head'=>$data['sub_head']));
+										$closing_balance = ($closing_balance + $total_debit) - $total_credit;
+											
+									?>
+									<tr>
+										<td><?php echo $i++;?></td>
+										<td><?php echo $transaction['voucher_date'];?></td>
+										<td><a target="_blank" href="<?php echo $this->url('ptransaction', array('action'=>'viewtransaction', 'id'=>$transaction['id']));?>"><?php echo $transaction['voucher_no']."-".$transaction['remark']; ?></a></td>
+										<td style="text-align:right" class = "green"><?php echo number_format((float)$total_debit, 2, '.', ','); ?></td>
+										<td style="text-align:right" class = "green"><?php echo number_format((float)$total_credit, 2, '.', ','); ?></td>
+										<td style="text-align:right" class = "red"><?php echo number_format((float)$closing_balance, 2, '.', ',');?></td>
+									</tr>
+									<?php
+									$grand_debit += $total_debit; $grand_credit += $total_credit;					
+									$opening_balance_next = $grand_debit + $closing_balance - $grand_credit;							
+									endforeach;							
+									?>
+								<?php
+								else:
+									$opening_balance=0;
+										if($class == '1' || $class == '2'): /* (==) Asset & Expense(Debit-Credit) AND (!=) Income & Liabilities(Credit-Debit) */
+											foreach($this->headObj->getTransactionheadforLedger($data['location'],$data['activity'],$data['start_date'],$data['end_date'], array('id'=>$data['head'])) as $headrow);// subhead
+											if(!empty($headrow)){
+												$opening_balance = $this->transactiondetailObj->getOpeningBalanceforHLedger($data['start_date'],$headrow['id']);
+											}
+										endif;?>
+									<tr>
+										<td></td>
+										<td><?php echo $data['start_date']; ?></td>
+										<td style="text-align:center" >Opening Balance</td>
+										<td style="text-align:right" class = "green"></td>
+										<td style="text-align:right" class = "green"></td>
+										<td style="text-align:right" class = "red"><?php echo number_format((float)$opening_balance, 2, '.', ',');?></td>
+									</tr>
+									<?php
+									$i = 1;
+									$grand_debit =0;$grand_credit=0;
+									$closing_balance =  $opening_balance;
+									//echo '<pre>';print_r($headrow);exit;
+									if(!empty($headrow['id'])){
+									foreach($this->transactionObj->getTransactionIDforLedger($data['location'],$data['activity'],$data['start_date'],$data['end_date'],array('head'=> $headrow['id'])) as $transaction):
+										$total_debit = $this->transactiondetailObj->getSumbyTransactionIDforLedger($data['location'],$data['activity'],$data['start_date'],$data['end_date'], 'debit', array('transaction' => $transaction['id'],'head'=>$data['head']));
+										$total_credit = $this->transactiondetailObj->getSumbyTransactionIDforLedger($data['location'],$data['activity'],$data['start_date'],$data['end_date'], 'credit', array('transaction' => $transaction['id'],'head'=>$data['head']));
+										$closing_balance = ($closing_balance + $total_debit) - $total_credit;
+										?>
+									<tr>
+										<td><?php echo $i++;?></td>
+										<td><?php echo $transaction['voucher_date'];?></td>
+										<td><a target="_blank" href="<?php echo $this->url('ptransaction', array('action'=>'viewtransaction', 'id'=>$transaction['id']));?>"><?php echo $transaction['voucher_no']."-".$transaction['remark']; ?></a></td>
+										<td style="text-align:right" class = "green"><?php echo number_format((float)$total_debit, 2, '.', ','); ?></td>
+										<td style="text-align:right" class = "green"><?php echo number_format((float)$total_credit, 2, '.', ','); ?></td>
+										<td style="text-align:right" class = "red"><?php echo number_format((float)$closing_balance, 2, '.', ',');?></td>
+									</tr>
+									<?php
+									$grand_debit += $total_debit; $grand_credit += $total_credit;					
+									$opening_balance_next = $grand_debit + $closing_balance - $grand_credit;							
+									endforeach;}
+								endif;?>
+								<?php endif;?>
+								</tbody>
+									<tr>
+										<td></td>
+										<?php if(!empty($location_details)):?>
+										<td></td>
+										<?php endif;?>
+										<td></td>
+										<td style="text-align:center"><strong>Grand Total</strong></td>
+										<td style="text-align:right" class = "green" ><strong><?php echo number_format((float)$grand_debit, 2, '.', ','); ?></strong></td>
+										<td style="text-align:right" class = "green"><strong><?php echo number_format((float)$grand_credit, 2, '.', ','); ?></strong></td>
+										<td></td>
+									</tr>
+							</table>
+						</div>
+					</div>
+				</div>
+		    </div>
+		</div>
+	</div>
+</div>	
+<script type="text/javascript">
+$(function(){	
+	$('#start_date').datepicker();
+	$('#end_date').datepicker();
+	$('#start_date').on('changeDate',function(){
+		$('form').formValidation('revalidateField', $(this).attr('id'));
+	});
+	$('#end_date').on('changeDate',function(){
+		$('form').formValidation('revalidateField', $(this).attr('id'));
+	});
+	$('#head').on('change', function(){
+		$.post(
+			"<?php echo $this->url("report", array("action" => "getsubhead"));?>",
+			{
+				head: $(this).val(),
+			},
+			function(data){
+				//console.log(data);
+				$('#sub_head').html(data.subhead);
+				$('#sub_head').trigger('chosen:updated');
+			},
+			'json'
+		);
+	});
+	const fv = FormValidation.formValidation(document.getElementById('#form'), {
+		fields: {
+			'start_date': {
+				validators: {
+					notEmpty: {
+						message: 'Please select start date'
+					}
+				}
+			},
+			'end_date': {
+				validators: {
+					notEmpty: {
+						message: 'Please select end date'
+					}
+				}
+			},
+			'head' : {
+				validators: {
+					notEmpty: {
+						message: 'Please select head'
+					}
+				}
+			},
+		},
+		plugins: {
+			trigger: new FormValidation.plugins.Trigger(),
+			bootstrap3: new FormValidation.plugins.Bootstrap3(),
+			submitButton: new FormValidation.plugins.SubmitButton(),
+			defaultSubmit: new FormValidation.plugins.DefaultSubmit(),
+		},
+	}).on('core.element.validated', function (e) {
+		if (e.valid) {
+			$('div#'+ e.field.replace('[]','') +'_chosen').removeClass('is-invalid');
+			$('div#'+ e.field.replace('[]','') +'_chosen').addClass('is-valid');
+		} else {
+			$('div#'+ e.field.replace('[]','') +'_chosen').removeClass('is-valid');
+			$('div#'+ e.field.replace('[]','') +'_chosen').addClass('is-invalid');
+		}
+	});
+	$('form select').chosen().change(function () {
+		fv.revalidateField($(this).attr('name'));
+	});
+	var title_table = $('#loc').val()+', '+$('#act').val()+', '+$('#heads').val()+' and '+$('#sub_heads').val()+' from '+$('input#st_date').val()+' to '+$('input#ed_date').val();
+	$('#dataTables').DataTable({
+		"paging":   true,
+	});
+});
+</script>
+

@@ -1,0 +1,52 @@
+/**
+ * Chat Css
+ * Chophel - chophel@athang.com
+**/
+.chat_box,.msg_box{
+	font-family:sans-serif;
+	position:fixed;
+	bottom:0px;
+	right:25px;
+	background:#f5f5f5;
+	width:250px;
+	border-radius:5px 5px 0px 0px;
+}
+.chat_head,.msg_head{
+	background:#f39c12;
+	padding:15px;
+	color:white;
+	border-radius:5px 5px 0px 0px;
+}
+.chat_body{
+	height:400px;
+}
+.msg_head{
+	background:#3498db;
+}
+.msg_body{
+	height:300px;
+}
+.msg_box{
+	background:#f5f5f5;
+	width:250px;
+}
+.close{
+	float:right;
+}
+.user{
+	padding:15px 25px;
+	position:Relative;
+}
+.user:hover{
+	background:#f8f8f8;
+}
+.user:before{
+	content:"";
+	position:absolute;
+	background:#2ecc71;  
+	width:10px;
+	height:10px;
+	left:8px;
+	top:21px;
+	border-radius:5px;
+}

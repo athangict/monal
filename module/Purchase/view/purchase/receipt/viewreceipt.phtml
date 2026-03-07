@@ -1,0 +1,180 @@
+<?php
+/**
+ * 
+ * View -- of Purchase/PurchaseController/viewporder
+ * 
+ */
+ $this->headTitle($this->title);
+?>
+<?php 
+	foreach($this->purchase_receipt as $p_receipt):
+		extract($p_receipt); 
+	    $pr_id = $id; 
+	    $pr_status = $status;
+	endforeach;
+?>
+<style>
+	.mytable tr th,.mytable tr td {
+		padding:5px;
+	}
+</style>
+<div class="row">
+	<div class="col-lg-12">
+		<div class="widget widget-box">
+			<form id="#form" method="post" action="<?php echo $this->url('supplier', array('action' => 'addsupplierinv')); ?>" >
+				<div class="widget-header">
+					<h5 class="widget-title lighter smaller">
+						# Purchase Receipt Detail:<strong> &nbsp;&nbsp;<?php echo $prn_no; ?> | <?php echo $supplier; ?></strong>&nbsp;
+						<?php $this->status($pr_status);?>
+					</h5>
+					<input type="hidden" name="preceipt" id="preceipt" value="<?php echo $pr_id;?>" />
+					<!--<input type="hidden" name="supplier" id="supplier" value="<?php echo $supplier_id;?>" />
+					<div class="widget-toolbar hidden-xs">
+						<?php if($pr_status == 3 && $invoiced != 1):?>
+							<button type="submit" class="btn btn-white btn-info btn-bold btn-xs"><i class="fa fa-credit-card"></i> Supplier Invoice </button>
+						<?php endif;?>
+						<?php if($pr_status == 3): ?>
+							<a class="btn btn-white btn-danger btn-bold btn-xs" title="Rectify Purchase Receipt"
+								href="<?php echo $this->url('receipt', array('action'=>'rectifyprn', 'id'=>$pr_id)); ?>">
+							&nbsp;<i class="fa fa-pencil"></i>&nbsp;</a>
+						<?php endif;?>
+					</div>-->
+					<div class="widget-toolbar hidden-xs">
+						<div class="btn-group">
+							<a class="btn btn-xs btn-danger" data-toggle="modal" data-target="#modal" href="<?php echo $this->url('acl', array('action' => 'activitylog', 'id' => "2-".$pr_id)); ?>" title="View Activity Logs">
+								<i class="ace-icon fa fa-plus bigger-120" ></i>  
+							</a> 
+							<a class="btn btn-xs" id="print" title="Print">
+								<i class="ace-icon fa fa-file-pdf-o bigger-120"></i>
+							</a>
+						</div>
+					</div>	
+				</div>
+			</form>
+			<div class="widget-body">
+				<div class="widget-main padding-12">
+					<div id="report-print">
+						<div class="row" id="convert-tb0">
+							<div class="col-lg-8" id="convert-tb1">
+								<ul class="list-unstyled spaced">
+									<li>
+										<i class="ace-icon fa fa-caret-right blue"></i>
+										Purchase Receipt No <b class="red"><?php echo $prn_no; ?> </b>
+									</li>
+									<li>
+										<i class="ace-icon fa fa-caret-right blue"></i>
+										Purchase Order No : <b class="red"><a target="_blank" href="<?php echo $this->url('purorder', array('action'=>'viewporder', 'id'=>$purchase_order));?>"><?php echo $this->purchase_orderObj->getColumn($purchase_order, 'po_no'); ?></a></b>
+									</li>
+									<li>
+										<i class="ace-icon fa fa-caret-right blue"></i>
+										Location : <b class="red"><?php echo $this->locationObj->getColumn($location,'location'); ?></b>
+									</li>
+								</ul>
+							</div>
+							<div class="col-lg-4" id="convert-tb2">
+								<ul class="list-unstyled spaced">
+									<li>
+										<i class="ace-icon fa fa-caret-right blue"></i>
+										Purchase Receipt Date: <b class="red"><?php echo $this->dateformat($prn_date); ?> </b>	
+									</li>
+									<li>
+										<i class="ace-icon fa fa-caret-right blue"></i>
+										Supplier : <b class="red"><?php echo $this->party->getColumn($supplier,'name'); ?> </b>
+									</li>
+								</ul>
+							</div>
+						</div>
+						<div class="row">
+							<div class="col-lg-12">
+								<ul class="list-unstyled spaced">
+									<li>
+										<i class="ace-icon fa fa-caret-right blue"></i>Note: <b class="red"><?php echo $note;?> </b>
+									</li>
+								</ul>
+							</div>
+						</div>
+						<div class="row">
+						<div class="col-lg-5" style="text-align: right"></div>
+						<div class="col-lg-7" style="text-align: right">
+							<?php if($status!=4):?>	
+						<?php echo $this->button(2,$id);?>
+							<?php endif;?>
+							
+						</div>
+					</div>
+						<div class="space-6"></div>
+						<div class="row">
+							<div class="col-lg-12">
+								<table class="table" style="border-top:2px solid #ddd;">
+									<thead>
+										<tr>
+											<th>#</th>
+											<th>Item</th>
+											<th>PO Qty</th>
+											<th>Rate</th>
+											<th>Damaged Qty</th>
+											<th>Accepted Qty</th>
+											<th>Amount</th>
+										</tr>
+									</thead>
+									<tbody>
+										<?php 
+											$sl = 1;
+											$pr_details = $this->PRDetailsObj->get(array('purchase_receipt' => $pr_id));
+											$podetails= $this->po_detailsObj->get(array('purchase_order'=>$purchase_order));
+											foreach($podetails as $podetails);
+											foreach($pr_details as $tdrow):
+											//echo "<pre>";print_r($tdrow);
+										?>
+											<tr>
+												<td><?php echo $sl++;?></td>
+												<td><?php echo ($podetails['item_class']==33)?$tdrow['item']:$this->itemObj->getColumn($tdrow['item'],'name');?></td>
+												<td><?php echo $tdrow['po_quantity'];?></td>
+												<td><?php echo $tdrow['rate'];?></td>
+												<td><?php echo $tdrow['damage_qty'];?></td>
+												<td><?php echo $tdrow['accept_qty'];?></td>
+												<td><?php echo $tdrow['accept_qty']*$tdrow['rate'];?></td>
+											</tr>
+										<?php endforeach;?>								
+									</tbody>
+								</table>
+							</div>
+						</div>
+						<div class="row">
+							<div class="col-lg-9">
+							</div>
+							<div class="col-lg-2">
+								<div class="form-group">
+									<label for="total">Total Amount</label>
+									<input type="text" class="form-control tr_total" name="total" id="total" value="<?php echo $total;?>" readonly />
+								</div>
+							</div> 
+						</div>
+					</div>
+					<div class="row">
+						<div class="col-lg-9">
+						</div>
+						<div class="col-lg-3" style="text-align: right">
+							<?php if($pr_status == '2'):?>
+								<a href="<?php echo $this->url('receipt', array('action'=>'editreceiptdtl', 'id'=>$pr_id));?>" class="btn btn-info"> <i class="fa fa-pencil"></i> Edit </a>
+								<a href="<?php echo $this->url('receipt', array('action'=>'commitreceipt', 'id'=>$pr_id));?>" class="btn btn-success"> <i class="fa fa-check-square-o"></i>Commit</a>
+							<?php endif;?>
+						</div>
+					</div>
+                    <!-- Upload and Download file attachments -->			
+					<?php   
+					   echo $this->partial('partial/attachment.phtml', array('process' => '702', 'process_id'=> $pr_id , 'status' => $pr_status));
+					?>					
+				    <!-- End of attachment -->
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+<script type="text/javascript">
+	$('#print').genpdfinvoice({
+		content: '#report-print',
+		src:"<?php echo $this->url('pdfxls', array('action' => 'pdf'));?>",
+		orentation:"L",//L =landscape, P = potrait
+	});
+</script>

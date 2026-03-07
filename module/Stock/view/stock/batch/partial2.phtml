@@ -1,0 +1,27 @@
+<?php // partial.phtml 
+	
+	$marginadjust = ($this->active == "marginadjust")?"active":"";
+	$locationsp = ($this->active == "locationsp")?"active":"";
+	$index = ($this->active == "index")?"active":"";
+?>
+<br/>
+<ul class="nav nav-tabs padding-18 nav-fixed-top" id="myTab">
+	<li class="<?php echo $index; ?>">
+		<a href="<?php echo $this->url('batch', array('action' => 'index')); ?>" title="Batching of Items">
+			<i class="red ace-icon fa fa-list bigger-120"></i>
+			<span class="hidden-xs">Batching of Items</span>
+		</a>
+	</li>
+	<li class="<?php echo $marginadjust; ?>">
+		<a href="<?php echo $this->url('batch', array('action' => 'marginadjust')); ?>" title="Selling Price Adjustment From Margin">
+			<i class="red ace-icon fa fa-location-arrow bigger-120"></i>
+			<span class="hidden-xs">Selling Price Adjustment From Margin</span>
+		</a>
+	</li>
+	<li class="<?php echo $locationsp; ?>">
+		<a href="<?php echo $this->url('batch', array('action' => 'locationsp')); ?>" title="Selling Price For New Location">
+			<i class="green ace-icon fa fa-map-marker bigger-120"></i>
+			<span class="hidden-xs">Selling Price For New Location</span>
+		</a>
+	</li>
+</ul>

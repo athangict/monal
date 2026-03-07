@@ -1,0 +1,22 @@
+<?php
+/**
+ * 
+ * View --
+ * 
+ */
+foreach($postage as $postages);
+?>
+<form id="#form" method="post" action="<?php echo $this->url('postage', array('action' => 'cancelservicesales')); ?>"  enctype="multipart/form-data" >
+    <div class="modal-body">
+		<input type="hidden" name="post_id" id="post_id" value="<?php echo $postages['id']?>">
+		<div class="panel panel-default">                       
+			<div class="panel-body">   
+				<h5 class="modal-title"> <i class="fa fa-trash red fa-2x"></i> &nbsp Are you sure to cancel the sales?</h5>
+			</div>
+		</div>
+    </div> <!-- /modal-body -->
+    <div class="modal-footer">
+        <button type="submit" class="btn btn-danger"><i class="fa fa-trash"></i> Cancel </button>
+        <button type="button" class="btn btn-warning" data-dismiss="modal" ><i class="fa fa-times"></i> Leave </button> 
+    </div>  
+</form>

@@ -1,0 +1,316 @@
+<?php
+	/**
+	 * Stock/SamController/addstockopening	
+	 * Edit Stock Opening
+	**/
+?>
+<?php
+	foreach($opening_stock as $op_stock):
+		//echo "<pre>"; print_r($op_stock);
+		extract($op_stock);
+		$opening_id = $id;
+		$source_loc = $location;
+	endforeach;
+?>
+<div class="row">
+	<div class="col-lg-12">
+		<div class="widget widget-box">
+			<div class="widget-header">
+				<h5 class="widget-title lighter smaller">
+					<i class="fa fa-pencil"></i>&nbsp;Edit Stock Opening &nbsp;&nbsp;
+				</h5>
+			</div><!-- end of widget-header -->
+			<div class="widget-body">
+				<div class="widget-main">
+					<form id="#form" method="post" action="<?php echo $this->url('sam', array('action' => 'editstockopening')); ?>"  enctype="multipart/form-data" >    
+						<div class="row">
+							<div class="col-lg-3 form-group">
+								<label for="batch_date" class="control-label">Date</label>
+								<input type="hidden" value="<?php echo $opening_id;?>" name="opening_id" id="opening_id" />
+								<div class="date input-group" id="batch_date" data-date="<?php echo date('Y-m-d');?>" data-date-format="yyyy-mm-dd" >
+									<input class="form-control span2" value="<?php echo $opening_date;?>" name="batch_date" id="batch_date" type="text" placeholder="Batch Date" readonly required>
+									<span class="input-group-addon add-on"><i class="fa fa-calendar"></i></span>
+								</div>
+							</div>
+							<div class="form-group col-lg-3">
+								<label for="location" class="control-label">Location</label>
+								<select id="location" name="source_location" class="form-control" data-placeholder="Select" required>
+									<option value=""></option>
+									<?php foreach ($regions as $region): ?>
+									<optgroup label="<?php echo $region['region'];?>">
+									<?php
+										$locations = $locationObj->get(array('l.region'=>$region['id']));
+										foreach ($locations as $location):
+										if($location['id'] == $source_loc){ $selected = "selected"; }else{ $selected = "";}
+									?>
+										<option value="<?php echo $location['id']; ?>" <?php echo $selected; ?>>
+											<?php echo $location['location']; ?>
+										</option>
+									<?php endforeach;?>
+									</optgroup>
+									<?php endforeach;?>									
+								</select> 
+							</div> 
+							<div class="col-lg-3 form-group">
+								<?php $op_activity = $this->itemObj->getColumn($item,'activity');?>
+								<label for="activity" class="control-label">Activity</label>
+								<select class="form-control" name="activity" id="activity" data-placeholder="Select" required>
+									<option value=""></option>
+									<?php 
+										$activities = $this->activityObj->getAll();
+										foreach($activities as $activity): 
+											$select_act = ($op_activity == $activity['id'])?'selected':'';
+										?>
+										<option value="<?php echo $activity['id'];?>" <?php echo $select_act; ?>>
+											<?php echo $activity['activity'];?>
+										</option>
+									<?php endforeach; ?>
+								</select> 
+							</div>
+							<div class="col-lg-3 form-group">
+								<label for="item" class="control-label">Item</label>
+								<select class="form-control" name="item" id="item" data-placeholder="Select" required>
+									<option value=""></option>
+									<?php $items = $this->itemObj->get(array('i.activity' => $op_activity));
+									foreach($items as $itm):
+										$selected_itm = ($itm['id'] == $item)?'selected':'';
+									?>
+										<option value="<?php echo $itm['id'];?>" <?php echo $selected_itm;?> >
+											<?php echo $itm['name'];?>
+										</option>
+									<?php endforeach;?>
+								</select> 
+							</div>
+						</div>				
+						<div class="row">
+							<div class="col-lg-3 form-group">
+								<label for="batch" class="control-label">Batch No.</label>
+								<input type="text" class="form-control" name="batch" id="batch" value="<?php echo $batch;?>" required>
+							</div>
+							<div class="col-lg-3 form-group">
+								<label for="uom" class="control-label">Basic UOM</label>
+								<select class="form-control" name="basic_uom" id="basic_uom" data-placeholder="Select" required>
+									<option value=""></option>	
+									<?php $basic_uom = $this->itemObj->getColumn($item,'uom');
+									$basic_uom_code = $this->uomObj->getColumn($basic_uom,'code');
+									?>
+									<option value="<?php echo $basic_uom;?>" selected >
+										<?php echo $basic_uom_code;?>
+									</option>
+								</select>
+							</div>
+							<div class="col-lg-3 form-group">
+								<label for="uom" class="control-label">Standard Costing UOM</label>
+								<select class="form-control" name="st_uom" id="st_uom" data-placeholder="Select" required>
+									<option value=""></option>
+									<?php $costing_uom = $this->itemuomObj->getColumn(array('item' => $item, 'costing_uom'=>'1'),'uom');
+									$costing_uom_code = $this->uomObj->getColumn($costing_uom,'code');
+									?>	
+									<option value="<?php echo $costing_uom;?>" selected >
+										<?php echo $costing_uom_code;?>
+									</option>			
+								</select>
+							</div> 
+							<div class="col-lg-3 form-group">
+								<label for="uom" class="control-label">ELC/Basic UOM</label>
+								<?php 
+									$unit_uom = $this->itemuomObj->getcolumn(array('item'=>$item, 'costing_uom'=>'1'),'conversion');
+									$basic_elc = $landed_cost / $unit_uom; 		  
+								?>
+								<input type="text" class="form-control" name="basic_elc" id="basic_elc" value="<?php echo number_format($basic_elc,'3','.',','); ?>" >
+							</div>
+						</div>
+						<div class="space-12"></div>
+						<div class="row">
+							<div class="col-lg-12">
+								<table class="table" id="trdetails_table" style="border-top:2px solid #ddd;">
+									<thead>
+										<tr>
+											<th>#</th>
+											<th>Location</th>	
+											<th>Quantity in Basic UOM</th>
+											<th>ELC/Basic UOM<?php echo $this->currency_code();?>)</th>
+											<th>SP/Basic UOM(<?php echo $this->currency_code();?>)</th>
+										</tr>
+									</thead>
+									<tbody>
+									<?php
+									$i = 1;
+									$included_loc = array();
+									foreach($opening_details as $opening_dtl): 
+										array_push($included_loc,$opening_dtl['location']);
+									?>
+									<tr> 
+										<td><?php echo $i++; ?> 
+											<input type="hidden" value="<?php echo $opening_dtl['id']?>" name="detail_id[]" />
+											<input type="hidden" value="<?php echo $opening_dtl['location'];?>" name="location[]">
+										</td>
+										<td>
+											<?php echo $this->locationObj->getColumn($opening_dtl['location'],'location'); ?>  &nbsp;&nbsp;
+											<span class="label label-info"> 
+												<?php 
+												$location_type = $this->locationObj->getColumn($opening_dtl['location'],'location_type');
+												echo $location_type_code = $this->locationtypeObj->getColumn($location_type ,'location_type');
+												?>
+											</span>
+										</td> 
+										<td><div class="form-group"> <input type="text" name="quantity[]" id="quantity" class="form-control" value="<?php echo $opening_dtl['quantity'];?>" required></div></td>
+										<td><div class="form-group"><input type="text" name="elc_basic_uom[]" id="elc_basic_uom" class="form-control" value="<?php echo number_format($opening_dtl['landed_cost']/$unit_uom,'3','.',',');?>" required></div></td>
+										<td><div class="form-group"><input type="text" name="selling_price[]" id="selling_price" class="form-control" value="<?php echo $opening_dtl['selling_price'];?>" required> </div></td>
+									</tr>
+									<?php endforeach;?>
+									</tbody>
+								</table>
+							</div>
+						</div>
+						<div class="space-12"></div>
+						<div class="row">
+							<div class="col-lg-12">
+							   <button type="submit" class="btn btn-success" onClick="return confirm('Are you sure')"><i class="fa fa-save"></i> &nbsp; Save Opening Details</button>
+							</div>
+						</div>	
+					</form>    
+				</div> 
+			</div>   
+      	</div>
+    </div>   
+</div>	
+					
+<script type="text/javascript">                                                          
+$(function() {
+	var i = 0;
+    $('tbody tr').each(function(){
+   	    $(this).attr('id', ++i); 
+		var old1 = $(this).find('input#quantity').attr('id');
+		$(this).find('input#quantity').attr('id', old1 + '-' + i);
+		
+		var old2 = $(this).find('input#elc_basic_uom').attr('id');
+		$(this).find('input#elc_basic_uom').attr('id', old2 + '-' + i);
+		
+	    var old3 = $(this).find('input#selling_price').attr('id');
+		$(this).find('input#selling_price').attr('id', old3 + '-' + i);		   
+    }); 
+	
+	$('#batch_date').datepicker(); 	
+	$('#batch_date').on('changeDate',function(){
+		$('form').formValidation('revalidateField', $(this).attr('id'));
+	});	
+	$("#activity").change(function() {	
+		$("#item").load('<?php echo $this->url("sam", array("action" => "getitembyactivity")); ?>/'+ $("#activity").val(), function() {
+			$("#item").trigger("chosen:updated");
+		});
+	});
+	var tpt;
+	$('#item').on('change',function(){
+		alert($(this).val());
+		$.post(
+			"<?php echo $this->url('sam', array('action' => 'getuoms'));?>",
+			{
+				item: $(this).val(),
+				batch_date: $('input#batch_date').val(),
+			},
+			function(data){
+				//console.log(data);
+				tpt = data.transportation_charge;		
+				$('select#basic_uom').html(data.basic_uom);
+				$('select#basic_uom').trigger('chosen:updated');
+				$('select#st_uom').html(data.costingUom);
+				$('select#st_uom').trigger('chosen:updated');$('#batch').val(data.batch_code);
+				$('form').formValidation('revalidateField',$('select#basic_uom'));
+				$('form').formValidation('revalidateField',$('select#st_uom'));
+				$('form').formValidation('revalidateField',$('select#batch'));
+			},
+			'json'
+		);	
+	});
+	$("#basic_elc").change(function() {	
+		if(tpt == '0'){
+			var value = $(this).val();	
+			var tr_id =0;
+			var parentObj = $('#trdetails_table');	
+			parentObj.find("tbody tr").each(function(){
+				$(this).attr('id',++tr_id);
+				var id = $(this).attr('id');
+				$('#elc_basic_uom-'+id).val(value);                        
+			});
+		}
+	});
+
+	$('form').formValidation({
+		const fv = FormValidation.formValidation(document.getElementById('#form'), {
+		fields: {
+			'item': {
+				validators: {
+					notEmpty: {
+						message: 'Please select an item.'
+					}
+				}
+			},
+			'basic_uom':{
+				validators: {
+					notEmpty: {
+						message: 'Please select an item.'
+					}
+				}
+			},
+			'activity': {
+				validators: {
+					notEmpty: {
+						message: 'Please select an activity.'
+					}
+				}
+			},
+			'batch': {
+				validators: {
+					notEmpty: {
+						message: 'Please define a batch no'
+					}
+				}
+			},
+			'basic_elc' :{
+				validators: {
+					notEmpty: {
+						message: 'Please provide the elc cost.'
+					}
+				}
+			},							
+			'elc_basic_uom[]': {
+				validators: {
+					notEmpty: {
+						message: 'Please provide the elc cost.'
+					}
+				}
+			},
+			
+			'quantity[]':{
+				validators: {
+					notEmpty: {
+						message: 'Please provide Opening qty.'
+					}
+				}
+			}, 
+			'selling_price[]':{
+				validators: {
+					notEmpty: {
+						message: 'Please enter selling price.'
+					}
+				}
+			}, 
+		},
+		plugins: {
+			trigger: new FormValidation.plugins.Trigger(),
+			bootstrap3: new FormValidation.plugins.Bootstrap3(),
+			submitButton: new FormValidation.plugins.SubmitButton(),
+			defaultSubmit: new FormValidation.plugins.DefaultSubmit(),
+		},
+	}).on('core.element.validated', function (e) {
+		if (e.valid) {
+			$('div#'+ e.field.replace('[]','') +'_chosen').removeClass('is-invalid');
+			$('div#'+ e.field.replace('[]','') +'_chosen').addClass('is-valid');
+		} else {
+			$('div#'+ e.field.replace('[]','') +'_chosen').removeClass('is-valid');
+			$('div#'+ e.field.replace('[]','') +'_chosen').addClass('is-invalid');
+		}
+	});
+}); 
+</script>

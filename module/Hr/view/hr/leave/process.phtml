@@ -1,0 +1,122 @@
+<?php
+/**
+ * View -- of Protection/ProtectionController/processAction
+ * chophel@athang.com
+ */ 
+	$variables = explode('-', $this->flow_id);
+	$leave_id = $variables['0'];
+	$action_id = $variables['1'];
+	$flow_id = $variables['2'];
+	$leave = $this->leaveObj->get($leave_id); 
+	foreach ($leave as $leaves);
+//print_r($flow_id);exit;
+	$buttons = $this->flowactionObj->get($action_id);
+	foreach($buttons as $button); 
+
+?>
+<div class="modal-header">
+	<h4 class="modal-title"><i class="<?php echo $button['icon']; ?>"></i> <b><?php echo $button['action']; ?></b>- Action towards Applicant : <b><?php echo $this->employeeObj->getColumn($leaves['employee'],'full_name'); ?></b></h4>
+	<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+</div>  <!-- /modal-header -->
+<?php
+$flag = 1;     
+/*switch($button['condition']):
+	case 1: /** Check Protection Work Details */;
+		/*$activity_count = $this->protectionObj->getCount(array('id'=>$protection_id));
+		if($activity_count < 1):
+			$flag = 0;
+			$message = "There is no record of protection application. Please add proposed protection work to proceed.";
+		endif;
+		break;
+	default: /** No Condition */
+	/*	$flag = 1;
+	break;
+endswitch;*/
+if($flag != "1"){ ?>
+	<div class="modal-body">
+		<div class="alert alert-warning">
+			<?php echo $message; ?>
+		</div>
+	</div>
+	<div class="modal-footer">
+        <button type="button" class="btn btn-warning" data-bs-dismiss="modal"><i class="icon ti ti-x"></i>Cancel</button> 
+    </div>
+	<?php }else{ ?>
+	<form id="#form" method="post" action="<?php echo $this->url("leave", array('action'=>'process')); ?>" enctype="multipart/form-data">					
+		<div class="modal-body">
+			<input type="hidden" value="<?php echo $flow_id; ?>" name="flow">
+			<input type="hidden" value="<?php echo $action_id; ?>" name="action">
+			<input type="hidden" value="<?php echo $leave_id; ?>" name="leave">
+			<?php if($button['id']==3 || $button['id']==4 || $button['id']==5)://chief?>
+			<div class="form-group mb-3">
+                <label class="form-label" for="focal">Assign Focal</label>
+                <select id="focal"  name="focal" class="form-control" data-placeholder="Select" required>
+                    <option value=""></option>	
+                    <?php foreach ($focalsObj->get(array('employee'=>$leaves['employee'])) as $focal): ?>
+                        <option value="<?php echo $focal['id'];?>"><?php
+						$department=$this->employeeObj->getColumn($focal['employee'],'activity');
+                             echo $focal['name'].'-'.$this->employeeObj->getColumn($focal['employee'],'designation').'-'.$this->departmentObj->getColumn($department,'activity'); ?>
+                        </option>
+                    <?php endforeach; ?>								
+                </select> 
+            </div>
+			<?php else:?>
+			<div class="form-group mb-3">
+                <label class="form-label" for="focal">Assign Focal</label>
+                <select id="focal"  name="focal" class="form-control" data-placeholder="Select" required>
+                    <option value=""></option>	
+                    <?php foreach ($focals as $focal): ?>
+                        <option value="<?php echo $focal['id'];?>"><?php
+						$department=$this->employeeObj->getColumn($focal['employee'],'activity');
+                             echo $focal['name'].'-'.$this->employeeObj->getColumn($focal['employee'],'designation').'-'.$this->departmentObj->getColumn($department,'activity'); ?>
+                        </option>
+                    <?php endforeach; ?>								
+                </select> 
+            </div>
+			<?php endif;?>
+			<div class="form-group mb-3">
+				<label class="form-label" for="remarks">Remarks</label>
+				<textarea class="form-control" name="remarks" rows="2" placeholder="Remarks..." required></textarea>
+			</div>
+			<div class="alert alert-primary"> 
+				<b><?php echo ($action_id==5)?'WARNING':'NOTE'?> :</b> <i> <?php echo $button['description']; ?> </i>
+			</div>
+		</div>
+		<div class="modal-footer">
+			<button type="submit" class="btn <?php echo $button['class'];?>"><i class="icon <?php echo $button['icon']; ?>"></i> <?php echo $button['action'];?></button>
+			<button type="button" class="btn btn-warning" data-dismiss="modal" ><i class="fa fa-times"></i> Cancel </button> 
+		</div>
+	</form>
+<?php } /* End to check for conditions */?>
+<script>
+$(function(){
+	const fv = FormValidation.formValidation(document.getElementById('#form'), {
+		fields: {
+			 remarks: {
+                validators: {
+                    notEmpty: {
+                        message: 'Please provide remarks for the action performed for better activity log.'
+                    }
+                }
+            },
+		},
+		plugins: {
+			trigger: new FormValidation.plugins.Trigger(),
+			bootstrap3: new FormValidation.plugins.Bootstrap3(),
+			submitButton: new FormValidation.plugins.SubmitButton(),
+			defaultSubmit: new FormValidation.plugins.DefaultSubmit(),
+		},
+	}).on('core.element.validated', function (e) {
+		if (e.valid) {
+			$('div#'+ e.field.replace('[]','') +'_chosen').removeClass('is-invalid');
+			$('div#'+ e.field.replace('[]','') +'_chosen').addClass('is-valid');
+		} else {
+			$('div#'+ e.field.replace('[]','') +'_chosen').removeClass('is-valid');
+			$('div#'+ e.field.replace('[]','') +'_chosen').addClass('is-invalid');
+		}
+	});
+	$('form select').chosen().change(function () {
+		fv.revalidateField($(this).attr('name'));
+	});
+});
+</script>

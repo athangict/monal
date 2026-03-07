@@ -1,0 +1,134 @@
+<?php
+/**
+ * 
+ * View -- of Sales/MuseumController/editfeecollectionAction
+ * 
+ */
+foreach($collection as $row);
+?>
+<form id="#form" method="post" action="<?php echo $this->url('museum', array('action' => 'editfeecollection','id'=>$row['id'])); ?>"  enctype="multipart/form-data" >
+    <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+        <h4 class="modal-title"> <i class="fa fa-edit"></i>Edit </h4>
+    </div>  <!-- /modal-header -->
+    <div class="modal-body">
+		<div class="panel panel-default">                       
+			<div class="panel-body">   
+                <div class="form-group">
+                    <label for="category" class="control-label">Categories</label>
+					<select class="form-control" name="category" id="category" data-placeholder="Select" required > 
+						<option value="-1">None</option>	
+						<?php foreach($category as $category): ?>
+                            <option value="<?php echo $category['id'];?>"<?php echo ($row['category']==$category['id'])?'selected':'';?>>
+								<?php echo $category['category'];?>
+							</option>
+						<?php
+						endforeach;
+						?>
+					</select>
+				</div>
+                <div class="form-group">
+                    <label for="fees" class="control-label">Fees</label>
+					<input type="text" class="form-control" name="fees" id="fees" value="<?php echo $row['fees']?>" readonly required > 
+				</div>
+                <div class="form-group">
+					<label for="heads" class="control-label">No. of heads</label>
+					<input type="text" class="form-control" name="heads" id="heads" value="<?php echo $row['heads']?>" placeholder="No of Heads" required>
+				</div>
+                <div class="form-group">
+					<label for="total" class="control-label">Total Amount</label>
+					<input type="text" class="form-control" name="total" id="total" value="<?php echo $row['total']?>" readonly required>
+				</div>
+                <div class="form-group">
+					<label for="payment_mode" class="control-label">Payment Mode</label>
+					<select class="form-control" name="payment_mode" id="payment_mode" data-placeholder="Select">	
+						
+						<option value="0" <?php echo ($row['payment_mode']=='0')?'selected':'';?>>Cash</option>
+						<option value="1"<?php echo ($row['payment_mode']=='1')?'selected':'';?>>Bank</option>
+					</select>
+				</div>
+				<div class="form-group" id="jrnl">
+					<label for="jrnl_no" class="control-label">Journal No</label>
+					<input type="text" class="form-control" name="jrnl_no" id="jrnl_no" value="<?php echo $row['jrnl_no'];?>"placeholder="Journal No">	
+				</div>
+				<div class="form-group" id="phone">
+					<label for="mobile" class="control-label">Mobile No</label>
+					<input type="text" class="form-control" name="mobile" id="mobile" value="<?php echo $row['mobile'];?>"placeholder="Mobile No">	
+				</div>
+		</div>
+    </div> <!-- /modal-body -->
+    <div class="modal-footer">
+        <button type="submit" class="btn btn-success"><i class="fa fa-check"></i> Save </button>
+        <button type="button" class="btn btn-warning" data-dismiss="modal" ><i class="fa fa-times"></i> Cancel </button> 
+    </div>  
+</form>
+<script>
+$('document').ready(function(){
+    $('#category').on('change', function(){
+		$.post(
+			"<?php echo $this->url('museum', array('action' => 'getfees')); ?>",
+			{
+				category:$(this).val(),
+
+			},
+			function(data){
+				console.log(data);
+				$("#fees").val(data.fees);	
+			},
+			'json'
+		);	
+    });
+	$('#payment_mode').trigger('change');
+	$('#payment_mode').change(function(){
+		if($('#payment_mode').val()==1){
+			$('#jrnl').show();
+			$('#phone').show();
+		}else{
+			$('#jrnl').hide();
+			$('#phone').hide();
+		}
+	});
+    var feeInput = $('#fees');
+	var headInput = $('#heads');
+  // Add an event listener for changes in the fees and head inputs
+  feeInput.on('input', calculateTotal);
+  headInput.on('input', calculateTotal);
+
+  // Function to calculate the total and update the total input field
+	function calculateTotal() {
+		var fees = parseFloat(feeInput.val());
+		var head = parseFloat(headInput.val());	
+		var total = fees*head;
+    // Check if the total is a valid number
+    if (!isNaN(total)) {
+      $('#total').val(total.toFixed(2)); // Display the total with 2 decimal places
+        }
+    }
+	const fv = FormValidation.formValidation(document.getElementById('#form'), {
+		fields: {
+            category: {
+                    validators: {
+                        notEmpty: {
+                            message: 'Please provide category.'
+                        }
+                    }
+                },
+
+            },
+		plugins: {
+			trigger: new FormValidation.plugins.Trigger(),
+			bootstrap3: new FormValidation.plugins.Bootstrap3(),
+			submitButton: new FormValidation.plugins.SubmitButton(),
+			defaultSubmit: new FormValidation.plugins.DefaultSubmit(),
+		},
+	}).on('core.element.validated', function (e) {
+		if (e.valid) {
+			$('div#'+ e.field.replace('[]','') +'_chosen').removeClass('is-invalid');
+			$('div#'+ e.field.replace('[]','') +'_chosen').addClass('is-valid');
+		} else {
+			$('div#'+ e.field.replace('[]','') +'_chosen').removeClass('is-valid');
+			$('div#'+ e.field.replace('[]','') +'_chosen').addClass('is-invalid');
+		}
+	});
+});
+</script>

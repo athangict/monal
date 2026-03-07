@@ -1,0 +1,14 @@
+<?php
+/**
+ * 
+ * View -- of Sales/ClaimController/getshbysupplier 
+ * ajax resonse
+ * 
+ */
+?>
+<option value=""></option>
+<?php foreach ($this->subheads as $subhead): ?>
+   	<option value="<?php echo $subhead['id']; ?>">
+   		<?php echo $subhead['code'];?>
+   	</option>
+<?php endforeach; ?>

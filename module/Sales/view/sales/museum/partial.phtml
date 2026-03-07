@@ -1,0 +1,26 @@
+<?php // partial.phtml 
+	$collection = ($this->active == "feecollection")?"active":"";
+	$category = ($this->active == "category")?"active":"";
+	$fees = ($this->active == "fees")?"active":"";
+?>
+<br/>
+<ul class="nav nav-tabs padding-18" id="myTab">
+<li class="<?php echo $collection; ?>">
+		<a href="<?php echo $this->url('museum', array('action' => 'feecollection')); ?>">
+			<i class="blue  ace-icon fa fa-money bigger-120"> </i>
+			<span class="hidden-xs">Fee Collection</span>
+		</a>
+	</li>
+<li class="<?php echo $category; ?>">
+		<a href="<?php echo $this->url('museum', array('action' => 'category')); ?>">
+			<i class="blue  ace-icon fa fa-address-card-o bigger-120"> </i>
+			<span class="hidden-xs">Category</span>
+		</a>
+	</li>
+	<li class="<?php echo $fees; ?>">
+		<a href="<?php echo $this->url('museum', array('action' => 'fees')); ?>">
+			<i class="green  ace-icon fa fa-money bigger-120"> </i>
+			<span class="hidden-xs">Fees</span>
+		</a>
+	</li>
+</ul>

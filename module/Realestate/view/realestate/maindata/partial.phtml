@@ -1,0 +1,21 @@
+<?php // view partial.phtml 
+  $building = ($this->active == "building")?"active":"";
+  $floor = ($this->active == "floor")?"active":"";
+?>
+<br/>
+<ul class="nav nav-tabs padding-18" id="myTab" >
+	<li class="<?php echo $building; ?>">
+		<a href="<?php echo $this->url('rsdata', array('action' => 'index')); ?>">
+			<i class="blue ace-icon fa fa-building bigger-120"> </i>
+			<span class="hidden-xs" >Building Master</span>
+		</a>
+	</li>
+	
+	<li class="<?php echo $floor; ?>">
+		<a href="<?php echo $this->url('rsdata', array('action' => 'floor')); ?>">
+			<i class="blue ace-icon fa fa-location-arrow bigger-120"> </i>
+			<span class="hidden-xs" >Floor</span>
+		</a>
+	</li>
+</ul>
+

@@ -1,0 +1,82 @@
+<?php
+/**
+ * View -- of Stock/CostingController/rectifycostingAction
+ */
+?>
+<?php
+	foreach($costingitems as $costingitem);
+	$costingsheets = $this->costingsheetObj->get($costingitem['costing_sheet']);
+	foreach($costingsheets as $costingsheet);
+?>
+<form id="#form" method="post" action="<?php echo $this->url('cost', array('action' => 'rectifycosting')); ?>"  enctype="multipart/form-data" >
+    <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+        <h4 class="modal-title"> <i class="fa fa-asterisk"></i> Rectify Costing : <?php echo $costingsheet['costing_no']?>
+		<?php echo $this->status($costingsheet['status']);?>
+		</h4>
+	</div>  <!-- /modal-header -->
+    <div class="modal-body">
+		<div class="panel panel-default">                       
+			<div class="panel-body">  
+				<input type="hidden" value="<?php echo $costingitem['id'];?>" name="costingitem_id" id="costingitem_id"/>
+				<?php 
+					if($costingitem['status']!=1 && $costingitem['batch']>0):
+						$batches = $this->batchObj->get($costingitem['batch']);
+						foreach($batches as $batch);?>
+					<b>Item Name : </b> <?php echo $this->itemObj->getColumn($batch['item'],'name');?><br>
+					<b>Item Valuation : </b><?php echo ($this->itemObj->getColumn($batch['item'],'valuation')==1)?'Weighted Moving Average Method':'First In First Out Method';?><br>
+					<b>Landed Cost</b> = <?php echo $batch['landed_cost']/$batch['unit_uom'];?>[per <?php echo $this->uomObj->getColumn($batch['uom'],'code');?>]<br>
+				<?php 	if($costingitem['top_up'] == 1):?>	
+							The Costing Item Quantity has been top up to Batch no. <b><?php echo $batch['batch'];?></b> <?php echo $this->status($batch['status']);?><br>
+							If you Rectify, It will subtact the top up Quantity from the batch.
+				<?php 	else:?>
+							A New Batch has been created, batch no. <b><?php echo $batch['batch'];?></b> <?php echo $this->status($batch['status']);?> <br>
+							If you Rectify, It will remove the batch from the system.
+				<?php	endif;?>
+				<div class="space-12"></div>
+				<div class="form-group">
+					<label for="remarks" class="control-label">Remarks</label>
+					<textarea class="form-control" rows="3" name="remarks" required> </textarea>
+				</div>
+				<?php else:?>
+					<div class="alert alert-block alert-warning">
+						The Costing Item Does not Require Rectification, Please use Redo Costing instead if changes are really required.
+					</div>
+				<?php endif;?>
+			</div>
+		</div>
+    </div> <!-- /modal-body -->
+    <div class="modal-footer">
+        <button type="submit" class="btn btn-success btn-sm"><i class="fa fa-check"></i> Save </button>
+        <button type="button" class="btn btn-warning btn-sm" data-dismiss="modal" ><i class="fa fa-times"></i> Cancel </button> 
+    </div>  
+</form>
+<script>
+$('document').ready(function(){
+	const fv = FormValidation.formValidation(document.getElementById('#form'), {
+		fields: {
+			remarks: {
+				validators: {
+					notEmpty: {
+						message: 'Please provide remarks.'
+					}
+				}
+			},
+		},
+		plugins: {
+			trigger: new FormValidation.plugins.Trigger(),
+			bootstrap3: new FormValidation.plugins.Bootstrap3(),
+			submitButton: new FormValidation.plugins.SubmitButton(),
+			defaultSubmit: new FormValidation.plugins.DefaultSubmit(),
+		},
+	}).on('core.element.validated', function (e) {
+		if (e.valid) {
+			$('div#'+ e.field.replace('[]','') +'_chosen').removeClass('is-invalid');
+			$('div#'+ e.field.replace('[]','') +'_chosen').addClass('is-valid');
+		} else {
+			$('div#'+ e.field.replace('[]','') +'_chosen').removeClass('is-valid');
+			$('div#'+ e.field.replace('[]','') +'_chosen').addClass('is-invalid');
+		}
+	});
+});
+</script>

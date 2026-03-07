@@ -1,0 +1,173 @@
+<?php
+/**
+ * View -- of Sales/SaleController/indexAction
+ */
+	$this->headTitle($this->title);	
+?>
+<div class="card">
+	<div class="card-header">
+		<div class="row">
+			<form id="#form" method="post" action="<?php echo $this->url('pos',array('action'=>'index')); ?>"  enctype="multipart/form-data" >
+				<div class="form-group col-lg-2">
+					<label class="control-label" for="year">Year</label>
+					<select class="form-control" id="year" name="year" data-placeholder="Select" >
+						<option value=""></option>
+						<?php 
+							for($year=date('Y');$year>=$data['minYear'];$year--):
+								$selected = ($year == $data['year'])?"selected":"";
+						?>
+							<option value="<?php echo $year;?>" <?php echo $selected;?> >
+								<?php echo $year;?> 
+							</option>
+						<?php endfor; ?>
+					</select>
+				</div>
+				<div class="form-group col-lg-2">
+					<label class="control-label" for="month">Month</label>
+					<select class="form-control" id="month" name="month" data-placeholder="Select" >
+						<option value="-1" <?php echo ($data['month'] == '-1')?'selected':'';?>>All</option>
+						<?php for($month=1; $month<=12; $month++):?>
+							<?php $selected = ($month == $data['month'])?'selected':'';?>
+							<option value="<?php echo $month;?>" <?php echo $selected; ?>>
+								<?php echo DateTime::createFromFormat('!m', $month)->format('F');?>
+							</option> 
+						<?php endfor;?>
+					</select>
+				</div>
+				<div class="form-group col-lg-2">
+					<label for="location" class="control-label">Location </label>
+					<select class="form-control" name="location" id="location" data-placeholder="Select" required >
+						<option value="-1" <?php echo ($data['location'] == '-1')?'selected':'';?>>All</option>
+						<?php foreach($this->locationObj->getAll() as $locations):
+							$selected = ($data['location'] == $locations['id'])?'selected':'';?>
+							<option value="<?php echo $locations['id'];?>" <?php echo $selected;?>>
+								<?php echo $locations['location'];?>
+							</option>
+						<?php endforeach; ?>
+					</select>
+				</div>
+				<div class="col-lg-6">
+					<div class="space-12"></div>
+					<button type="submit" class="btn btn-sm btn-primary "><i class="fa fa-refresh"></i> Refresh </button>
+					<a href="<?php echo $this->url('pos', array('action'=>'addsales'));?>" class="btn btn-sm btn-primary pull-right"> <i class="fa fa-plus"></i> Add Sales</a>
+				</div>
+
+				<div class="col-lg-2">
+					<div class="clearfix">
+						<div class="pull-right tableTools-container"></div>
+					</div>
+				</div>
+			</form>
+		</div>
+		
+		<div>
+			<table class="table table-bordered table-striped table-hover" id="dataTables">
+				<thead>
+					<tr>
+						<th>#</th>
+						<th>Sales No</th>
+						<th>Sales Date</th>
+						<th>Credit/Advance</th>
+						<th>customer</th>
+						<th>Due Date</th>
+						<th>Payment Type</th>
+						<th>Account no</th>
+						<th style="text-align:right" >Payment Amount</th>
+						<th>Status</th>
+                        <th>Action</th>
+					</tr>
+				</thead>
+				<tbody>
+				<?php $i=1; foreach($salesrecord as $sale):?>
+					<tr data-href="<?php echo $this->url('pos', array('action'=>'viewsales', 'id'=>$sale['sales_no']));?>" >
+						<td><?php echo $i++; ?></td>
+						<td><?php echo $sale['sales_no']; ?></td>
+						<td><?php echo $sale['sales_date']; ?></td>
+						<td><?php if($sale['credit'] == "n"){
+						echo "NO";}
+								 else if($sale['credit'] == "y"){ echo "Credit"; }
+								 else{echo "Advance";}?>
+							</td>
+						<td>
+							<?php 
+							if($sale['customer']==0):
+								echo "NA";
+							else:
+									echo $this->customerObj->getColumn($sale['customer'],'name'); 
+								
+							endif;?>
+						</td>
+						<td>
+							<?php 
+							if($sale['credit'] == "n" || $sale['credit'] == "1"){
+									echo "NA";
+								}else{
+									echo $sale['due_date']; 
+								}
+							?>
+						</td>
+						<td>
+							<?php 
+								if($sale['payment_type']==1 && $sale['credit']=="n"){echo "Cash";}
+								else if($sale['payment_type'] == 2 && $sale['credit']=="n"){echo "Bank";}
+								else{echo "NA";}
+							?>
+						</td>
+						<td>
+							<?php 
+								if($sale['payment_type'] == 2 && $sale['credit']=="n"){
+									echo $this->account->getColumn($sale['account_no'],'code');
+								}else if($sale['payment_type'] == 1 && $sale['credit']=="n"){
+									echo $this->cash->getColumn($sale['account_no'],'cash_account_name');
+								}
+								else{echo "NA";}
+							?>
+						</td>
+						<td style="text-align:right"><?php echo number_format($sale['payment_amount'], 2, '.', ',');?></td>
+						<!-- <td><?php echo ($sale['transaction']==0)?"<i class='red'>NO</i>":"<i class='green'>YES</i>";?></td> -->
+						<td>
+							<?php $this->status($sale['status']);?>
+						</td>
+                                                 <td class="action">
+							<div class="btn-group">
+								<a class="btn btn-xs btn-primary"href="<?php echo $this->url('pos', array('action' => 'viewsales', 'id' =>$sale['sales_no'])); ?>" title="View Activity Logs">
+									<i class="ace-icon fa fa-eye bigger-120" ></i>  
+								</a>
+								<?php if($sale['status']!=4):?>
+								<a class="btn btn-xs btn-primary"href="<?php echo $this->url('pos', array('action' => 'editsales', 'id' =>$sale['id'])); ?>" title="Edit Sales">
+									<i class="ace-icon fa fa-edit" ></i>  
+								</a>
+								<?php endif;?>
+								<?php if($admin_role==99||$admin_role==100):?>
+									<?php echo $this->button(1,$sale['id']);?>
+								<?php endif;?>
+							</div>
+						</td>
+					</tr>
+					<?php endforeach; ?>
+				</tbody>	
+			</table>
+		</div>
+	</div>
+</div>
+<div id="modal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+	<div class="modal-dialog">
+		<div class="modal-content">
+		</div>
+	</div>
+</div>
+<script>	
+$('document').ready(function(){
+	$('#dataTables').DataTable({
+		"paging":   true,
+	});
+	$("tr[data-href]").each(function(){
+		$(this).find('td').not('td.action').each(function(){
+			$(this).css('cursor','pointer');
+			$(this).bind('click',function() {
+				window.document.location = $(this).closest('tr').attr("data-href");
+			});
+		});
+	});
+});
+</script>

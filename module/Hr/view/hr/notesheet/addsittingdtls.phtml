@@ -1,0 +1,164 @@
+<?php
+/**
+ * 
+ *  Hr/MasterController/addpayslabAction
+ * 
+ */
+?>
+<?php foreach($sitting as $row);?>
+<form id="#form" role="form" action="<?php echo $this->url('notesheet', array('action' => 'addsittingdtls')); ?>" enctype="multipart/form-data" method="post" >
+    <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+        <h4 class="modal-title"> <i class="fa fa-plus"></i> Add Sitting Fee</h4>
+    </div>  <!-- /modal-header -->
+    <div class="modal-body">
+    	<div class="panel panel-default">
+    		<div class="panel-body">
+			<div class="widget-main padding-5"> 
+						<div class="row">  
+						   <input type="hidden" name="sitting_id" id="sitting_id"  value="<?php echo $row['id'];?>">
+						   <input type="hidden" name="date" id="date"  value="<?php echo $row['date'];?>">
+						   <div class="form-group col-lg-12">
+								<label for="applicant" class="control-label">Applicant</label>
+								<select class="form-control" id="applicant" name="applicant" data-placeholder="-Select-" required >
+									<option value=""></option>									
+									<?php 
+									  $employees = $this->employeeObj->get(array('e.status'=>array(1,4,5)));
+									  foreach ($employees as $employee):
+									   ?>
+										 <option value="<?php echo $employee['id'];?>"><?php echo $employee['full_name'];?> (Emp No. : <?php echo $employee['emp_id'];?>)</option>
+									   <?php
+									  endforeach;?>
+								</select>
+							</div>
+						</div>
+						<div class="row">  
+						   <div class="form-group col-lg-10" id="empdtl"></div>						   
+						</div>	
+						 <div class="row"> &nbsp; </div>
+						 <div class="row">
+						   <div class="col-lg-12 alert alert-success fade in">							
+								<div class="form-group col-lg-4">
+									<label for="amount" class="control-label">Amount(<?php //echo $this->currency_code(); ?>)</label>
+									<input type="text" class="form-control" name="amount" id="amount" size="30"  required> 
+								</div>	
+								<div class="form-group col-lg-4">
+									<label for="Deduction" class="control-label">TDS Deduction(<?php //echo $this->currency_code(); ?>)</label>
+									<input type="text" class="form-control" name="deduction" id="deduction" size="30" readonly required> 
+								</div>
+								<div class="form-group col-lg-4">
+									<label for="payment_amount" class="control-label">Payment Amount(<?php //echo $this->currency_code(); ?>)</label>
+									<input type="text" class="form-control" name="payment_amount" id="payment_amount" size="30" required readonly> 
+								</div>
+							</div>
+						</div>
+						<div class="row">
+							<div class="form-group col-lg-12">
+								<label for="subs_contact" class="control-label">Remarks</label>
+								<textarea class="form-control" name="remarks" rows="4" col="60"> </textarea>
+							</div>			
+						</div>
+					</div>
+				</div>
+			
+			</div><!-- panel-body -->
+		</div><!-- panel panel-default -->
+    </div> <!-- /modal-body -->
+    <div class="modal-footer">
+        <button type="submit" class="btn btn-success"><i class="fa fa-check"></i> Save </button>
+        <button type="reset" class="btn btn-warning" data-dismiss="modal"><i class="fa fa-times"></i> Cancel </button>        
+    </div>  
+</form>
+<script>
+$('document').ready(function(){
+	$('#start_date').datepicker();
+	$('#end_date').datepicker();
+		/**calculation of total amount based on the given variables**/
+
+		var amount = $('#amount');
+		var payment_amount = $('#payment_amount');
+		// Add an event listener for changes in the rate and quantity inputs
+		amount.on('input', calculateTotal);
+		payment_amount.on('input', calculateTotal);
+		// Trigger the calculateTotal function initially when the page loads
+		calculateTotal();
+		// Function to calculate the total and update the total input field
+		function calculateTotal() {
+			var amount_val = parseFloat(amount.val().replace(',', '')) || 0;
+			var payment_amount_val = parseFloat(payment_amount.val().replace(',', '')) || 0;
+			
+			if (isNaN(amount_val)) {
+				amount_val = 0;
+			}
+			//console.log("Postage Rate:", postage_rate_val);
+			var deduction = .02 * amount_val;
+			var pamount =  amount_val-deduction;
+			// Check if the total is a valid number
+			if (!isNaN(deduction)) {
+				$('#deduction').val(deduction.toFixed(2)); // Display the total with 2 decimal places
+			}
+			if (!isNaN(pamount)) {
+				$('#payment_amount').val(pamount.toFixed(2)); // Display the total with 2 decimal places
+			}
+			
+		}
+	const fv = FormValidation.formValidation(document.getElementById('#form'), {
+		
+		fields: {
+			start_date: {
+					validators: {
+						notEmpty: {
+							message: 'Please select the start_date.'
+						}
+					}
+				},	
+						
+				applicant: {
+					validators: {
+						notEmpty: {
+							message: 'Please select the applicant.'
+						}
+					}
+				},					
+				amount: {
+					validators: {
+						notEmpty: {
+							message: 'Provide amount.'
+						}
+					}
+				},
+				deduction:{
+					validators: {
+						notEmpty: {
+							message: 'Please Provide PIT Deduction.'
+						}
+					}
+				},		
+				payment_amount:{
+					validators: {
+						notEmpty: {
+							message: 'Please provide payment amount.'
+						}
+					}
+				},			
+		},
+		plugins: {
+			trigger: new FormValidation.plugins.Trigger(),
+			bootstrap3: new FormValidation.plugins.Bootstrap3(),
+			submitButton: new FormValidation.plugins.SubmitButton(),
+			defaultSubmit: new FormValidation.plugins.DefaultSubmit(),
+		},
+	}).on('core.element.validated', function (e) {
+		if (e.valid) {
+			$('div#'+ e.field.replace('[]','') +'_chosen').removeClass('is-invalid');
+			$('div#'+ e.field.replace('[]','') +'_chosen').addClass('is-valid');
+		} else {
+			$('div#'+ e.field.replace('[]','') +'_chosen').removeClass('is-valid');
+			$('div#'+ e.field.replace('[]','') +'_chosen').addClass('is-invalid');
+		}
+	});
+	$('form select').chosen().change(function () {
+		fv.revalidateField($(this).attr('name'));
+	});
+});
+</script>

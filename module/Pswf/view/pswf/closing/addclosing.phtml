@@ -1,0 +1,61 @@
+<?php
+	/**
+	 * Add Closing Balance
+	**/
+?>
+<div class="row">
+	<div class="col-lg-12">
+		<div class="widget widget-box">
+			<div class="widget-header">
+				<h5 class="widget-title lighter smaller">
+					<i class="fa fa-plus"></i>&nbsp;Add Opening Balance &nbsp;&nbsp;
+				</h5>
+			</div><!-- end of widget-header -->
+			<div class="widget-body">
+				<div class="widget-main">
+					<form method="post" action="<?php echo $this->url('pclosing', array('action' => 'addclosing')); ?>"  enctype="multipart/form-data" >    
+						<div class="row">
+							<div class="col-lg-3 form-group">
+								<label for="Year" class="control-label">Year</label>
+								<select id="year" name="year" class="form-control" data-placeholder="Select" required>
+									<option value=""></option>
+									<?php for($i=2023; $i < 2024; $i++):  ?>
+									    <option value="<?php echo $i; ?>"><?php echo $i; ?></option>
+									<?php endfor; ?>
+								</select> 
+							</div>
+							<div class="form-group col-lg-3">
+								<label for="Head" class="control-label">Ledger | Head</label>
+								<select id="head" name="head" class="form-control" data-placeholder="Select" required>
+									<option value=""></option>	
+									<?php foreach($this->headObj->getAll() as $headRow): ?>
+									  <option value="<?php echo $headRow['id'];?>"><?php echo $headRow['name']; ?></option>	
+									<?php endforeach;  	?>
+								</select> 
+							</div> 							
+						</div>					
+						<div class="space-12"></div>
+						<div id="row">
+					         <div id="subheadlist"></div>	
+					    </div>
+						<div class="space-12"></div>
+						<div class="row">
+							<div class="col-lg-12">
+							   <button type="submit" class="btn btn-success" onClick="return confirm('Are you sure')"><i class="fa fa-save"></i> &nbsp; Save Opening</button>
+							</div>
+						</div>	
+					</form>    
+				</div> 
+			</div>   
+      	</div>
+    </div>   
+</div>	
+<script type="text/javascript">  		
+	$("#head").change(function() {  
+	    var param = $("#year").val() + "-" + $("#head").val(); 	     
+		$('#subheadlist').load("<?php echo $this->url('pclosing', array('action' => 'sheadlist')); ?>/"+ param, function() {
+		   $("#subheadlist").trigger('chosen:updated');    		 
+		}); 
+    });		 
+
+</script>

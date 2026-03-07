@@ -1,0 +1,309 @@
+<?php
+/**
+ * 
+ * View -- of Hr/EmployeeController/addemployeeAction
+ * 
+ */
+    $this->headTitle($this->title);
+?>
+<div class="space-12"></div>
+<form id="#form" method="post" action="<?php echo $this->url('notesheet', array('action' => 'addsitting')); ?>" enctype="multipart/form-data">
+	<div class="row">
+		<div class="col-lg-12"> 
+			<div class="widget-box transparent">
+				<div class="widget-header widget-header-smaller">
+					<h4 class="widget-title blue bolder smaller">Add Sitting Fee</h4>
+				</div>
+				<div class="widget-body">
+					<div class="widget-main padding-24"> 
+						<div class="row">  
+							<div class="form-group col-lg-3">
+								<label for="date" class="control-label">Date</label>
+								<div class="date input-group" id="date" data-date="" data-date-format="yyyy-mm-dd" >
+									<input class="form-control span2" name="date" id="date" type="text" value=""  required>
+									<span class="input-group-addon add-on"><i class="fa fa-calendar"></i></span>
+								</div>
+						   </div>
+						 
+						</div>
+						<div class="row">
+						   <div class="col-lg-12"> 
+							  <h4>Service Details</h4>
+								<div>
+									<table id="tableField" class="table small-padding">
+										<thead>
+											<tr>
+												<th>Applicant</th>
+												<th>Amount</th>
+												<th>Deduction</th>
+												<th>Payment Amount</th>
+												<th>&nbsp;</th>
+											</tr>
+										</thead>
+										<tbody>
+											<tr>
+												<td class="col-lg-3 input-cell">
+													<div class="form-group">
+														<select class="form-control tr_applicant" id="applicant" name="applicant[]" data-placeholder="-Select-" required >
+															<option value=""></option>									
+															<?php 
+															$employees = $this->employeeObj->get(array('e.status'=>array(1,4,5)));
+															foreach ($employees as $employee):
+															?>
+																<option value="<?php echo $employee['id'];?>"><?php echo $employee['full_name'];?> (Emp No. : <?php echo $employee['emp_id'];?>)</option>
+															<?php
+															endforeach;?>
+														</select>
+													</div>
+												</td>
+												<td class="col-lg-3 input-cell">
+													<div class="form-group">
+														<input type="text" class="form-control tr_amount" name="amount[]" id="amount" size="30"  required> 
+													</div>	
+												</td>
+												<td class="col-lg-2 input-cell">
+													<div class="form-group">
+														<input type="text" class="form-control tr_deduction" name="deduction[]" id="deduction" size="30" readonly required> 
+													</div>       
+												</td>
+												<td class="col-lg-2 input-cell">
+													<div class="form-group">
+														<input type="text" class="form-control tr_pamount" name="payment_amount[]" id="payment_amount" size="30" required readonly> 
+													</div>     
+												</td>
+												<td>
+													<br>
+													<button class="btn btn-sm btn-success" type="button"  onclick="addrows();"> <span class="fa fa-plus-square" aria-hidden="true"></span> </button>
+												</td>
+										</tbody>
+									</table>	
+									<div class="clear"></div>
+									<div class="row"> 
+										<div class="col-lg-3">
+											<div class="form-group">
+												<label for="total_amount">Total Amount</label>
+												<input type="text" class="form-control" name="total_amount" id="total_amount" readonly>
+											</div>
+										</div>
+										<div class="col-lg-3">
+											<div class="form-group">
+												<label for="total_deduction">Total Deduction</label>
+												<input type="text" class="form-control" name="total_deduction" id="total_deduction" readonly>
+											</div>
+										</div>
+										<div class="col-lg-3">
+											<div class="form-group">
+												<label for="total_pamount">Total Pay amount</label>
+												<input type="text" class="form-control" name="total_pamount" id="total_pamount" readonly>
+											</div>
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>	
+						<div class="row">
+						<div class="form-group col-lg-12">
+								<label for="purpose" class="control-label">Purpose</label>
+								<textarea type="text" class="form-control" name="purpose" id="purpose" > </textarea>
+							</div>
+						</div>
+						<div class="row">
+							<button type="submit" class="btn btn-success"><i class="fa fa-check"></i> Save </button>
+							<button type="button" class="btn btn-warning" onclick="javascript:history.back();"><i class="fa fa-times"></i> Cancel </button>    
+						</div>
+					</div>
+				</div>
+			</div> 
+		</div>
+	</div> 
+	
+</form>
+<script type="text/javascript">	
+$('#date').datepicker();
+var room = 1;
+ function addrows() {
+    room++;
+    var objTo = document.getElementById('tableField');
+    var divtest = document.createElement('tr');
+    divtest.setAttribute('class', 'form-group removeclass' + room);
+    divtest.innerHTML = 
+'<tr>' +
+    '<td class="col-lg-3 input-cell">' +
+        '<div class="form-group">' +
+            '<select class="form-control tr_applicant" id="applicant" name="applicant[]" data-placeholder="-Select-" required>' +
+                '<option value=""></option>' +
+                '<?php $employees = $this->employeeObj->get(array("e.status"=>array(1,4,5))); foreach ($employees as $emm): ?>' +
+                '<option value="<?php echo $emm["id"]; ?>"><?php echo $emm["full_name"]."-".$emm["cid"];?></option>' +
+                '<?php endforeach; ?>' +
+            '</select>' +
+        '</div>' +
+    '</td>' +
+    '<td class="col-lg-3 input-cell">' +
+        '<div class="form-group">' +
+            '<input type="text" class="form-control tr_amount" name="amount[]" id="amount" size="30" required>' +
+        '</div>' +
+    '</td>' +
+    '<td class="col-lg-2 input-cell">' +
+        '<div class="form-group">' +
+            '<input type="text" class="form-control tr_deduction" name="deduction[]" id="deduction" size="30" readonly required>' +
+        '</div>' +
+    '</td>' +
+    '<td class="col-lg-2 input-cell">' +
+        '<div class="form-group">' +
+            '<input type="text" class="form-control tr_pamount" name="payment_amount[]" id="payment_amount" size="30" required readonly>' +
+        '</div>' +
+    '</td>' +
+    '<td class="col-lg-1 input-cell">' +
+        '<div class="input-group-btn">' +
+            '<button class="btn btn-sm btn-danger" type="button" onclick="remove_addrows(' + room + ');">' +
+                '<span class="glyphicon-minus" aria-hidden="true"></span>' +
+            '</button>' +
+        '</div>' +
+    '</td>' +
+'</tr>';
+    objTo.appendChild(divtest);
+	calculateTotalAmount();
+    //console.log('education_fields executed');
+   
+}
+function remove_addrows(rid) {
+	$('.removeclass' + rid).remove();
+	calculateTotalAmount();
+}
+$(document).on('input', '.tr_amount,.tr_deduction,.tr_pamount', function () {
+	calculateTotal($(this));
+});
+function calculateTotal(element) {
+	var row = element.closest('tr');  // Get the closest table row
+
+	var amountInput = row.find('.tr_amount');  // Adjusted these to use class selectors and scope within the row
+	var deductionInput = row.find('.tr_deduction');
+	var pamountInput = row.find('.tr_pamount'); // Assuming there's a field for the total amount with the class "tr_amount"
+	//var totalInput = row.find('.tr_total'); 
+	//var otherInput = row.find('.tr_other'); 
+
+	var amount = parseFloat(amountInput.val()) || 0;
+	var deduction = parseFloat(deductionInput.val()) || 0;
+	var pamount = parseFloat(pamountInput.val()) || 0;
+	//var other = parseFloat(otherInput.val()) || 0;
+	var totalDeduction=(2/100)*amount;
+	var totalPamount=amount-totalDeduction;
+
+	deductionInput.val(totalDeduction.toFixed(2));  // Assuming you want to show up to two decimal places
+	calculateTotalAmount();
+	pamountInput.val(totalPamount.toFixed(2));  // Assuming you want to show up to two decimal places
+	calculateTotalAmount();
+
+}
+function calculateTotalAmount() {
+	//console.log("calculateTotal amount");
+	var total_amt = 0.0;
+	var totl_ded=0.0;
+	var totl_pamount=0.0;
+	// tot_hotel=0.0;
+	//var tot_other=0.0;
+	// Iterate over each amount input field in the table
+	$('.tr_amount').each(function() {
+		var amount = parseFloat($(this).val());
+		if (!isNaN(amount)) { // Make sure it's a valid number
+			total_amt += amount;
+		}
+	});
+	$('#total_amount').val(total_amt.toFixed(2));
+	$('.tr_deduction').each(function() {
+		var amount2 = parseFloat($(this).val());
+		if (!isNaN(amount2)) { // Make sure it's a valid number
+			totl_ded += amount2;
+		}
+	});
+	$('#total_deduction').val(totl_ded.toFixed(2));
+	$('.tr_pamount').each(function() {
+		var amount3 = parseFloat($(this).val());
+		if (!isNaN(amount3)) { // Make sure it's a valid number
+			totl_pamount += amount3;
+		}
+	});
+	$('#total_pamount').val(totl_pamount.toFixed(2));
+}
+$(document).ready(function()  {	
+	/*** Form Validation ***/
+	const fv = FormValidation.formValidation(document.getElementById('#form'), {
+		fields: {
+			'date': {
+				validators: {
+					notEmpty: {
+						message: 'Please select date'
+					}
+				}
+			},
+			'supplier': {
+				validators: {
+					notEmpty: {
+						message: 'Please select supplier'
+					}
+				}
+			},
+			'activity': {
+				validators: {
+					notEmpty: {
+						message: 'Please select activity'
+					}
+				}
+			},
+			'location': {
+				validators: {
+					notEmpty: {
+						message: 'Please select location'
+					}
+				}
+			}, 
+			'quantity[]': {
+				validators: {
+					notEmpty: {
+						message: 'Please provide quantity'
+					}
+				}
+			},
+			'rate[]': {
+				validators: {
+					notEmpty: {
+						message: 'Please provide rate'
+					}
+				}
+			},
+			'amount[]':{
+				validators:{
+					notEmpty:{
+						message:'Please provide amount'
+					},
+				},
+			},
+			// 'po_amount':{
+			// 	validators:{
+			// 		notEmpty:{
+			// 			message:'Please provide Net PO Amount',
+			// 		},
+			// 	},
+			// },
+		},
+		plugins: {
+			trigger: new FormValidation.plugins.Trigger(),
+			bootstrap3: new FormValidation.plugins.Bootstrap3(),
+			submitButton: new FormValidation.plugins.SubmitButton(),
+			defaultSubmit: new FormValidation.plugins.DefaultSubmit(),
+		},
+	}).on('core.element.validated', function (e) {
+		if (e.valid) {
+			$('div#'+ e.field.replace('[]','') +'_chosen').removeClass('is-invalid');
+			$('div#'+ e.field.replace('[]','') +'_chosen').addClass('is-valid');
+		} else {
+			$('div#'+ e.field.replace('[]','') +'_chosen').removeClass('is-valid');
+			$('div#'+ e.field.replace('[]','') +'_chosen').addClass('is-invalid');
+		}
+	});
+	//$('#po_date').on('changeDate',function(){
+	//	$('form').formValidation('revalidateField', $(this).attr('id'));
+	//});
+});      
+	
+</script>

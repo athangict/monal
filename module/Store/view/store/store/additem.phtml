@@ -1,0 +1,270 @@
+<?php 
+/**
+ * add item action
+ */
+$this->headTitle($this->title);
+?>
+<form id="#form" method="post" action="<?php echo $this->url('store', array('action' => 'additem')); ?>" enctype="multipart/form-data">
+	<div class="row">
+		<div class="col-lg-12">
+			<div class="widget widget-box">
+				<div class="widget-header">
+					<h5 class="widget-title lighter smaller">
+						<i class="fa fa-asterisk"></i>&nbsp;&nbsp;New Item
+					</h5>
+				</div><!-- end of widget-header -->
+				<div class="widget-body">
+					<div class="widget-main">
+					    <h4>1. Name and Description</h4>
+						<input type="hidden" name="id" id="id" value="<?php echo $id; ?>">
+						<div class="row">
+							<div class="form-group col-lg-4">
+								<label class="control-label" for="item_code">Item Code</label>
+								<input class="form-control" type="text" name="item_code" id="item_code" placeholder="Item Code" /> 
+							</div>
+							<div class="form-group col-lg-4">
+								<label class="control-label" for="item_name">Item Name</label>
+								<input class="form-control" type="text" name="item_name" id="item_name" placeholder="Item Name" />
+							</div>
+							<div class="form-group col-lg-4">
+								<label for="item_group" class="control-label">Item Group</label>
+								<select class="form-control" id="item_group" name="item_group" data-placeholder="Select" required >
+									<option value=""></option>
+									<?php 
+									foreach ($this->groupObj->getAll() as $group):
+									?>
+										<option value="<?php echo $group['id'];?>">
+											<?php echo $group['name'];?>
+										</option>
+									<?php
+									endforeach;
+									?>
+								</select>
+							</div>
+						</div>
+						<div class="row">
+							<div class="form-group col-lg-4">
+								<label for="item_subgroup" class="control-label">Item Sub Group</label>
+								<select class="form-control chosen-widget" id="item_subgroup" name="item_subgroup" data-placeholder="Select" required >
+									<option value=""></option>
+								</select>
+							</div>
+							<div class="form-group col-lg-4">
+							<label class="control-label" for="scalar_uom">UOM</label>
+							<select class="form-control" name="uom" id="uom" data-placeholder="Select" required>
+								<option value=""></option>
+								<?php  
+									 // retrive locations under the above region ID
+									 $uoms = $this->uomObj->get(array('id' =>array(141003,141004,15001,26001,141005,141006,141012,141013,141014,141018,141019,141015,141020),'uom_type'=>array(2,1)));
+									 foreach ($uoms as $uom):
+								?>
+								 <option value="<?php echo $uom['id']; ?>">
+									<?php echo $uom['code']; ?>
+								 </option>
+								 <?php endforeach;?>
+							</select>
+				        </div>
+						</div>
+						<h4>2. Item Type and Specfication Code </h4>
+						<div class="row">
+							<div class="form-group col-lg-3">
+								<label class="control-label" for="item_type_code">Item Type Code</label>
+								<input class="form-control" type="text" name="item_type_code" id="item_type_code" placeholder="Item Type Code" />
+							</div>
+							<div class="form-group col-lg-3">
+								<label for="item_Specfication_code" class="control-label">Item Spefication Code</label>
+								<input class="form-control" type="text" name="item_Specfication_code" id="item_Specfication_code" placeholder="Item Specfication Code" />
+							</div>
+						</div>
+						<h4>3. Inventory and Valuation Details</h4>
+						<div class="row">
+							<div class="form-group col-lg-3">
+								<label class="control-label" for="expiry_period">Expiry Period (in Months)</label>
+								<input class="form-control" type="text" name="expiry_period" id="expiry_period" placeholder="Expiry Period" />
+							</div>
+							<div class="form-group col-lg-3">
+								<label class="control-label" for="barcode">Barcode</label>
+								<input class="form-control" type="text" name="barcode" id="barcode" placeholder="Barcode" />
+							</div>
+							<div class="form-group col-lg-3">
+								<label for="valuation" class="control-label">Item Valuation</label>
+								<div class="radio">
+									<label> 
+										<input class="ace" type="radio" name="valuation" id="valuation" value="1" />
+										<span class="lbl"> Simple Average </span>
+									</label> 
+								</div>
+							</div>
+						</div>
+					</div><!-- end of widget-main -->	
+				</div><!-- end of widget-body -->
+			</div><!-- end of widget widget-box -->
+			<div class="row">
+				<div class="col-lg-12">
+					<button type="submit" class="btn btn-success"><i class="fa fa-check"></i> Save</button>
+					<button type="button" class="btn btn-warning" onclick="window.location.href='<?php echo $this->url('store');?>'" ><i class="fa fa-times"></i> Cancel </button>
+				</div>
+			</div> 
+		</div><!-- end of col-lg-12 -->
+	</div><!-- end of row -->
+</form>
+
+<script type="text/javascript">
+$(function(){
+	$('#item_group').on('change', function(){
+		$.post(
+			"<?php echo $this->url('store', array('action' => 'getitemsubgroup')); ?>",
+			{
+				item_group: $(this).val(),
+			},
+			function(data){
+			$('select#item_subgroup').html(data.itemp);
+			$('select#item_subgroup').trigger('chosen:updated');
+			if(data.item_group == '2'){
+				$('#item_type_code').attr("readonly", true);
+				$('#item_Specfication_code').attr("readonly", true);
+				$('#item_type_code').trigger('chosen:updated');
+				$('#item_Specfication_code').trigger('chosen:updated');
+			}else{
+				$('#item_type_code').attr("readonly", false);
+				$('#item_Specfication_code').attr("readonly", false);
+				$('#item_type_code').trigger('chosen:updated');
+				$('#item_Specfication_code').trigger('chosen:updated');
+			}
+			$('form').formValidation('revalidateField',$('#item_type_code'));
+			$('form').formValidation('revalidateField',$('#item_Specfication_code'));
+		},
+		'json'
+		);	
+	});
+});
+/******** formValidation *************/
+const fv = FormValidation.formValidation(document.getElementById('#form'), {
+		fields: {
+			item_code: {
+				validators: {
+					notEmpty: {
+						message: 'Please provide item code.'
+					},
+					remote: {
+						message: 'The item code is not available',
+						url: '<?php echo $this->url('store', array('action' => 'checkavailability'));?>',
+						data: {
+								type: 'item_code'
+						},
+						type: 'POST'
+					}
+				}
+			},
+			item_name: {
+				validators: {
+					notEmpty: {
+						message: 'Please provide item name.'
+					},
+					remote: {
+						message: 'The item name is not available',
+						url: '<?php echo $this->url('store', array('action' => 'checkavailability'));?>',
+						data: {
+								type: 'item_name'
+						},
+						type: 'POST'
+					}
+				}
+			},
+			item_group: {
+				validators: {
+					notEmpty: {
+						message: 'Please select item group.'
+					}
+				}
+			},
+			unit: {
+				validators: {
+					notEmpty: {
+						message: 'Please select uom.'
+					}
+				}
+			},
+			scalar_uom: {
+				validators: {
+					notEmpty: {
+						message: 'Please select scalar uom.'
+					}
+				}
+			},
+			net_weight: {
+				validators: {
+					notEmpty: {
+						message: 'Please provide net weight.'
+					},
+					numeric: {
+						message: 'Please provide numeric value.'
+					}
+				}
+			},
+			activity: {
+				validators: {
+					notEmpty: {
+						message: 'Please select activity.'
+					}
+				}
+			},
+			elc_formula: {
+				validators: {
+					notEmpty: {
+						message: 'Please select elc formula.'
+					}
+				}
+			},
+			location_formula: {
+				validators: {
+					notEmpty: {
+						message: 'Please select location formula.'
+					}
+				}
+			},
+			/*supplier: {
+				validators: {
+					notEmpty: {
+						message: 'Please select supplier.'
+					}
+				}
+			}, */
+			valuation: {
+				validators: {
+					notEmpty: {
+						message: 'Please select item valuation.'
+					}
+				}
+			},  
+			transportation_charge: {
+				validators: {
+					notEmpty: {
+						message: 'Please provide transportation charge.'
+					}
+				}
+			},                  
+			st_uom: {
+				validators: {
+					notEmpty: {
+						message: 'Please select standard uom.'
+					}
+				}
+			},
+		},
+		plugins: {
+			trigger: new FormValidation.plugins.Trigger(),
+			bootstrap3: new FormValidation.plugins.Bootstrap3(),
+			submitButton: new FormValidation.plugins.SubmitButton(),
+			defaultSubmit: new FormValidation.plugins.DefaultSubmit(),
+		},
+	}).on('core.element.validated', function (e) {
+		if (e.valid) {
+			$('div#'+ e.field.replace('[]','') +'_chosen').removeClass('is-invalid');
+			$('div#'+ e.field.replace('[]','') +'_chosen').addClass('is-valid');
+		} else {
+			$('div#'+ e.field.replace('[]','') +'_chosen').removeClass('is-valid');
+			$('div#'+ e.field.replace('[]','') +'_chosen').addClass('is-invalid');
+		}
+	});
+</script>

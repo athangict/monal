@@ -1,0 +1,305 @@
+<?php
+/**
+ * 
+ * View -- of Stock/StockController/viewgoodsrequest
+ * 
+ */
+?>
+<?php echo $this->partial('stock/dispatch/partial.phtml', array('active' => 'dispatch')); ?> <br/>
+<?php 
+	foreach($dispatchs as $dispatch):
+		extract($dispatch);
+	//	echo "<pre>"; print_r($dispatch);
+		$dispatch_id = $id;
+		$dispatch_status = $status;
+	endforeach; 
+	
+	$admin_location = $this->usersObj->getColumn($userID,'admin_location');
+	$role = $this->usersObj->getColumn($userID,'role');
+	$user_role=explode(',', $role);
+	$adm_loc = explode(',', $admin_location);
+	$subRoles=null;
+	for($i=0;$i<sizeof($user_role);$i++){
+		if($user_role[$i]==2){
+			$subRoles = 2; 
+		}
+		break;
+	}
+	//$subRoles = $this->userRoleObj->get(array('id'=>$this->userID,'role'=>2)); 
+	//$depoyManager = $this->userRoleObj->get(array('id'=>$this->userID,'role'=>2)); 
+	if($subRoles == 2 && in_array($from_location, $adm_loc) || in_array($to_location, $adm_loc) || $role==100){
+		/* checks whether the user is admin, CEO, FECD Manager || user belongs to source or Destination Location or depoy Manager */
+		$flag = true; 
+	}	
+	else{ 
+	   $flag = false; 
+	}
+?>
+<style>
+	.mytable tr th,.mytable tr td {
+		padding:5px;
+	}
+</style>
+<?php if($flag): ?>
+<div class="row">
+	<div class="col-lg-12">
+		<div class="widget widget-box">
+			<div class="widget-header">
+				<h5 class="widget-title lighter smaller">
+					# Goods Dispatch Details:
+					<strong>&nbsp;&nbsp;<?php echo $challan_no; ?> | 
+					<?php echo $this->activityObj->getColumn($activity,'activity');?></strong>&nbsp;
+					<?php $this->status($status); ?>
+				</h5>
+				<div class="widget-toolbar hidden-xs">
+				 <!--div class="btn-group">
+					<a class="btn btn-xs btn-danger" data-toggle="modal" data-target="#modal" href="<?php //echo $this->url('acl', array('action' => 'activitylog', 'id' => "11-".$dispatch_id)); ?>" title="View Activity Logs">
+						<i class="ace-icon fa fa-plus bigger-120" ></i>  
+					</a> &nbsp;|
+				</div-->
+					<a style='cursor:pointer' id="print">
+						<i class="ace-icon fa fa-file-pdf-o red"></i>
+					</a>
+				</div>	
+			</div>
+			<div class="widget-body">
+				<div class="widget-main padding-12">
+					<div id="report-print">
+						<div class="row" id="convert-tb0">
+							<div class="col-lg-8" id="convert-tb1">
+								<ul class="list-unstyled spaced">
+									<li>
+										<i class="ace-icon fa fa-caret-right blue"></i>
+										<b>Dispatch No. : </b> <?php echo $challan_no;?>
+									</li>
+									<li>
+										<i class="ace-icon fa fa-caret-right blue"></i>
+										<b>Source Location : </b><?php echo $from=$this->locationObj->getColumn($from_location,'location'); ?>
+									</li>
+								
+									<li>
+										<i class="ace-icon fa fa-caret-right blue"></i>
+										<b>Good Request Number : </b><?php echo $goodrequest_no;?> 
+									</li>
+									<?php if($dispatch_status == 4 || $dispatch_status == 5 || $dispatch_status == 11):?>
+									<li>
+										<i class="ace-icon fa fa-caret-right blue"></i>
+							 			 <b>Received By : </b><?php echo $this->userRoleObj->getColumn($received_by,'name');?>
+							 		</li>
+									<?php endif;?>
+								</ul>
+							</div>
+							<div class="col-lg-4" id="convert-tb2">
+								<ul class="list-unstyled spaced">
+									<li>
+										<i class="ace-icon fa fa-caret-right blue"></i>
+										 <b>Dispatch Date : </b> <?php echo $dispatch_date; ?>
+									</li>
+									<li>
+										<i class="ace-icon fa fa-caret-right blue"></i>
+										<b> Destination Location : </b> <?php echo $to=$this->locationObj->getColumn($to_location,'location');?>
+									</li>
+									<li>
+										<i class="ace-icon fa fa-caret-right blue"></i>
+										<b>Tracking Number  :</b> <?php echo $tracking_no ?>
+									</li>
+									<?php if($dispatch_status == 4 || $dispatch_status == 5 || $dispatch_status == 11):?>
+									<li>
+										<i class="ace-icon fa fa-caret-right blue"></i>
+							 			<b>Received On : </b><?php echo $received_on;?>
+							 		</li>
+									<?php endif;?>
+								</ul>
+							</div>
+						</div>
+						<div class="row">
+							<div class="col-lg-12">
+								<ul class="list-unstyled spaced">
+									<li>
+										<i class="ace-icon fa fa-caret-right blue"></i><b>Note: </b><?php echo $note;?> 
+									</li>
+								</ul>
+							</div>
+						</div>
+						<div class="space-6"></div>
+						<div class="row">
+							<div class="col-lg-12" style="text-align: right">		
+							<?php //if($dispatch_status != 3 AND $dispatch_status != 4):
+									//echo $this->button(2,$dispatch_id);
+								//endif;?>
+							</div>
+						</div><?php $dispatchId = $this->dispatchObj->getColumn(array('goodrequest_no'=>$goodrequest_no),'id'); 
+											foreach($this->dispatch_detailsObj->get(array('dispatch'=>$dispatchId)) as $dispatchdtls); ?>
+						<div class="row">
+							<div class="col-lg-12" >
+								<table class="table" style="border-top:2px solid #ddd;">
+									<thead>
+										<tr>
+											<th>Item</th>
+											<th>UOM</th>
+											<th>Dispatched Qty</th>
+											<?php if(!empty($dispatchdtls)): if($dispatch_status == 4 || $dispatch_status == 5 || $dispatch_status == 11):?>
+												<th>Damaged Qty</th>
+												<th>Shortage Qty</th>
+												<th>Accepted Qty</th>
+												<th>Sound Qty</th>
+											<?php endif; endif;?>
+											<th>Rate</th>
+											<th>Amount</th>
+											<th>Action</th>
+										</tr>
+									</thead><?php	
+								if(empty($dispatchdtls)):?>
+								<form id="#form" method="post" action="<?php echo $this->url('dispatch', array('action'=>'adddispatchdtls')); ?>"  enctype="multipart/form-data" >    
+									
+								<tbody>
+									<?php
+									//echo $goodrequest_no; 
+									 $total=0;$totalqty=0;
+										$goodrequest = $this->requestObj->getColumn(array('gr_no'=>$goodrequest_no),'id'); 
+										//$dispatch_details = $this->dispatch_detailsObj->getAll(); 
+					 						//echo "<pre>"; print_r($goodrequest);
+											foreach($this->request_detailsObj->get(array('gr'=>$goodrequest)) as $row):?>
+												<input type="hidden" name="dispatch_id" value=<?php echo $dispatch_id;?>>
+												<input type="hidden" name="from_location" value=<?php echo $from_location;?>>
+												<input type="hidden" name="to_location" value=<?php echo $to_location;?>>
+												<input type="hidden" name="goodrequest_no" value=<?php echo $goodrequest_no;?>>
+											<?php	$rate = $this->stopeningObj->getColumn(array('item'=>$row['item_id']),'selling_price'); ?>
+											<tr>
+												<td><input type="hidden" name="item" value="<?php echo $row['item_id'];?>"><?php echo $row['name'];?></td>
+												<td><input type="hidden" name="uom" value="<?php echo $row['uom_id'];?>"><?php echo $row['uom'];?></td>
+												<td><input type="hidden" name="quantity" value="<?php echo $row['requested_qty'];?>"><?php echo $row['requested_qty'];?></td>
+												<td><?php echo $rate;?></td>
+												<td><?php echo $rate * $row['requested_qty'];
+												$total += ($rate * $row['requested_qty']);
+												$totalqty += $row['requested_qty'];?></td>
+											</tr>
+											
+										<?php 	
+											endforeach;?>
+											<tr> 
+												<td></td>
+												<td><b>Total</b></td>
+												<td><b><?php echo $totalqty;?></b></td>
+												<td><b><?php echo $total;?></b></td>
+											</tr>
+										</tbody><td>
+											<button type="submit" class="btn btn-success"><i class="fa fa-check"></i> Save </button>
+											<button type="button" class="btn btn-warning" data-dismiss="modal" ><i class="fa fa-times"></i> Cancel </button> 
+										</td> 
+										</form>
+										
+										<?php else:?>
+									<tbody>
+									<?php $total=0;$totalqty=0;
+									$dispatch_details = $this->dispatch_detailsObj->get(array('dispatch'=>$dispatch_id)); 
+											foreach($dispatch_details as $tdrow):
+											$rate = $this->stopeningObj->getColumn(array('item'=>$tdrow['item']),'selling_price'); ?>
+											<tr>
+												<td><?php echo $this->itemObj->getColumn($tdrow['item'],'name');?></td>
+												<td><?php echo $this->uomObj->getColumn($tdrow['uom'],'code');?></td>
+												<td><?php echo $tdrow['quantity'];?></td>
+												<?php if($dispatch_status == 4 || $dispatch_status == 5 || $dispatch_status == 11):?>
+													<td><?php echo $tdrow['damage_qty'];?></td>
+													<td><?php echo $tdrow['shortage_qty'];?></td>
+													<td><?php echo $tdrow['accepted_qty'];?></td>
+													<td><?php echo $tdrow['sound_qty']; ?></td>
+												<?php endif;?>
+												<td><?php echo $rate * $tdrow['quantity'];
+												$total += ($rate * $tdrow['quantity']);
+												$totalqty += $tdrow['quantity'];?></td>
+												<td><?php echo $tdrow['remarks'];?></td>
+												<td><?php if($dispatch_status != 3 and $dispatch_status != 4):echo $this->button(1,$tdrow['id']);endif;?></td>
+											</tr>
+										<?php 	
+											endforeach;
+										?>
+										<tr> 
+											<td></td>
+											<?php if($dispatch_status == 4 || $dispatch_status == 5 || $dispatch_status == 11):?>
+													<td></td>
+													<td></td>
+													<td></td>
+													<td></td>
+											<?php endif;?>
+											<td><b>Total</b></td>
+											<td><b><?php echo $totalqty;?></b></td>
+											<td><b><?php echo $total;?></b></td>
+											<td></td>
+											<td></td>
+										</tr>
+									</tbody><?php endif;?>
+								</table>
+							</div>
+						</div>
+                        <div class="space-32"></div>
+					</div><?php	if(!empty($dispatchdtls)):?>
+					<div class="row">
+						<div class="col-lg-12" style="text-align: right">
+							<?php if($dispatch_status == '2' && in_array($from_location, $adm_loc)/* && sizeof($depoyManager)>0*/):?>
+								<a href="<?php echo $this->url('dispatch', array('action'=>'editdispatch', 'id'=>$dispatch_id));?>" class="btn btn-info"> <i class="fa fa-pencil"></i> Edit </a>
+								<a href="<?php echo $this->url('dispatch',array('action'=>'pendingdispatch','id'=>$dispatch_id));?>" class="btn btn-success"><i class="fa fa-check-square-o"> Dispatch </i></a>
+							<?php elseif(($dispatch_status == '2'|| $dispatch_status == '11' || $dispatch_status == '3')/* && sizeof($depoyManager)>0*/):?>
+								<?php if(in_array($from_location, $adm_loc) && $dispatch_status != '11'): ?>
+									<!--a class="btn btn-primary" data-tooltip="tooltip" data-toggle="modal" data-target="#modal" data-placement="top" title="Revice" href="<?php //echo $this->url('dispatch', array('action'=>'revicedispatch', 'id'=>$dispatch_id));?>" >
+										<i class="fa fa-pencil-square-o"></i> Revise </a>
+									</a-->
+								<?php endif;?>
+								<?php 
+									$admin_locs = $this->usersObj->getColumn($userID,'admin_location');
+									$admin_loc_array = explode(',',$admin_locs);
+									//print_r($admin_loc_array);exit;
+									if(in_array($to_location, $admin_loc_array) && $dispatch_status ==3):?>
+									<a href="<?php echo $this->url('dispatch',array('action'=>'receivedispatch','id'=>$dispatch_id));?>" class="btn btn-danger"><i class="fa fa-arrow-circle-o-down"> Receive </i></a>							
+								<?php endif; ?>
+								<?php if(in_array($to_location, $admin_loc_array) && $dispatch_status == '11' ):?>
+								   <a href="<?php echo $this->url('dispatch',array('action'=>'confirmreceive','id'=>$dispatch_id));?>" class="btn btn-success">
+									<i class="fa fa-check-square-o"> Confirm </i></a>
+								<?php endif; ?>
+							<?php endif;?>
+                            <?php 
+							$Admin = $this->userRoleObj->get(array('id'=>$this->userID));							
+							//if($dispatch_status == '3' && sizeof($Admin) > 0):?>
+							    <!--a href="<?php //echo $this->url('dispatch', array('action'=>'rectifydispatch', 'id'=>$dispatch_id));?>"  class="btn btn-warning"> <i class="fa fa-plane"></i> Rectify Dispatch </a>
+							<?php //endif; ?>
+							<?php //if($dispatch_status == '11' && sizeof($Admin) > 0):?>
+								<a href="<?php //echo $this->url('dispatch', array('action'=>'rectifydispatch', 'id'=>$dispatch_id));?>" class="btn btn-warning" > <i class="fa fa-plane"></i>Rectify Dispatch </a>
+							<?php //endif; ?>
+							<?php //if($dispatch_status == '4' && sizeof($Admin) > 0):?>
+								<a href="<?php// echo $this->url('dispatch', array('action'=>'pendingrectifydispatch', 'id'=>$dispatch_id));?>" class="btn btn-warning" data-toggle="modal" data-target="#modal"> <i class="fa fa-plane"></i>Rectify Dispatch </a-->
+							<?php //endif; ?>
+						</div>
+					</div>
+					<!-- Upload and Download file attachments -->			
+					<?php endif;  
+					  // echo $this->partial('partial/attachment.phtml', array('process' => '11', 'process_id'=> $dispatch_id , 'status' => $dispatch_status));
+					?>					
+				    <!-- End of attachment -->
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+<?php 
+else: ?> 
+    <div class="alert alert-success fade in"> 
+	    You don't have privilege to view the details of this dispatch. 
+	</div>
+<?php endif; ?>
+<!-- for modal -->
+<div id="modal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+	<div class="modal-dialog">
+		<div class="modal-content">
+		</div>
+	</div>
+</div>
+<script type="text/javascript">
+	$('#tc_btn').on('click',function(){
+		window.document.location = "<?php echo $this->url('transporter', array('action' => 'viewtranspcharge','id' => $tc_id));?>";
+	});
+	$('#print').genpdfinvoice({
+		content: '#report-print',
+		src:"<?php echo $this->url('pdfxls', array('action' => 'pdf'));?>",
+		orentation:"L",//L =landscape, P = potrait
+	});
+</script>

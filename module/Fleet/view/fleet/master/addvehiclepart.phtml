@@ -1,0 +1,99 @@
+<?php
+/**
+ * 
+ * View -- of Stock/MasterController/addvehiclepartAction
+ * 
+ */
+ //print_r($this->vehiclegroupObj->getAll()); exit;
+?>
+<form id="#form" method="post" action="<?php echo $this->url('ftmaster', array('action' => 'addvehiclepart')); ?>"  enctype="multipart/form-data" >
+    <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+        <h4 class="modal-title"> <i class="fa fa-plus"></i>&nbsp;&nbsp;&nbsp;Add New Vehicle Parts</h4>
+    </div>  <!-- /modal-header -->
+    <div class="modal-body">
+		<div class="panel panel-default">                       
+			<div class="panel-body row">   
+				<div class="form-group col-lg-6">
+					<label for="group" class="control-label">Group</label>
+					<select id="group" name="group" class="form-control" data-placeholder="Select" required >
+						<option value=""></option>
+						<?php 
+						foreach($this->vehiclegroupObj->getAll() as $vehiclegroup):
+						?>
+							<option value="<?php echo $vehiclegroup['id'];?>">
+									<?php echo $vehiclegroup['group'];?>
+							</option>
+						<?php 
+						endforeach;
+						?>
+					</select>
+					
+				</div>
+				<div class="form-group col-lg-6">
+					<label for="code" class="control-label">Code</label>
+					<input type="text" class="form-control" name="code" id="code" size="30" placeholder="code" required> 
+				</div>
+				<div class="form-group col-lg-6">
+					<label class="control-label" for="scalar_uom">UOM</label>
+					<select class="form-control" name="uom" id="uom" data-placeholder="Select" required>
+						<option value=""></option>
+						<?php  
+							 // retrive locations under the above region ID
+							 $uoms = $uomObj->get(array('id' =>141004,'uom_type'=>2));
+							 foreach ($uoms as $uom):
+						?>
+						 <option value="<?php echo $uom['id']; ?>">
+							<?php echo $uom['code']; ?>
+						 </option>
+						 <?php endforeach;?>
+					</select>
+				</div>
+				<div class="form-group col-lg-6">
+					<label for="description" class="control-label">Description</label>
+					<input type="text" class="form-control" name="description" id="description" size="30" placeholder="Description" required> 
+				</div>
+			</div>
+		</div>
+    </div> <!-- /modal-body -->
+    <div class="modal-footer">
+        <button type="submit" class="btn btn-success"><i class="fa fa-check"></i> Save </button>
+        <button type="button" class="btn btn-warning" data-dismiss="modal" ><i class="fa fa-times"></i> Cancel </button> 
+    </div>  
+</form>
+<script>
+$('document').ready(function(){
+	const fv = FormValidation.formValidation(document.getElementById('#form'), {
+		fields: {
+			code: {
+				validators: {
+					notEmpty: {
+						message: 'Eneter Fuel'
+					},
+				}
+			},
+			description: {
+				validators: {
+					notEmpty: {
+						message: 'Enter the description'
+					},
+				}
+			},
+		},
+		plugins: {
+			trigger: new FormValidation.plugins.Trigger(),
+			bootstrap3: new FormValidation.plugins.Bootstrap3(),
+			submitButton: new FormValidation.plugins.SubmitButton(),
+			defaultSubmit: new FormValidation.plugins.DefaultSubmit(),
+		},
+	}).on('core.element.validated', function (e) {
+		if (e.valid) {
+			$('div#'+ e.field.replace('[]','') +'_chosen').removeClass('is-invalid');
+			$('div#'+ e.field.replace('[]','') +'_chosen').addClass('is-valid');
+		} else {
+			$('div#'+ e.field.replace('[]','') +'_chosen').removeClass('is-valid');
+			$('div#'+ e.field.replace('[]','') +'_chosen').addClass('is-invalid');
+		}
+	});
+});
+</script>

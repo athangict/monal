@@ -1,0 +1,295 @@
+<?php
+/**
+ * 
+ * View -- of Humanresource/EmployeeController/viewvehicleAction
+ * 
+ */
+    $this->headTitle($this->title);
+?>
+
+<?php 
+    foreach($this->transports as $row):
+            extract($row);
+    endforeach; 
+?>
+<?php echo $this->partial('fleet/vehicle/partial.phtml', array('active' => 'viewvehicle', 'id' => $id)); ?>
+<div class="space-12"></div>
+<div class="col-lg-12">
+	<div class="widget widget-box">
+		<div class="widget-header">
+			<h4 class="widget-title lighter smaller">
+			<i class="ace-icon fa fa-car bigger-70"></i> &nbsp;&nbsp;  Transport Detials And History
+			</h4>
+			<div class="widget-toolbar hidden-xs">
+				<button type="button" id="vr_btn" class="btn btn-white btn-warning btn-bold btn-xs"><i class="fa fa-pencil"></i> <a href="<?php echo $this->url('vehicle', array('action'=>'editvehiclerecord','id'=>$id));?>">Edit Transport Record</a></button>
+			</div>
+		</div>
+		<div class="widget-body">
+			<div class="widget-main">
+				<div class="widget-box transparent">
+					<div class="widget-header widget-header-small">
+						<h4 class="widget-title smaller"> 
+							General
+						</h4>
+					</div>
+					<div class="space-12"></div>
+					<div class="table-responsive">
+						<table class="table-striped table-bordered table-condensed col-lg-12 table-responsive">
+							<thead>
+								<tr>
+									<th>License Plate</th>
+									<th>Transport Location</th>
+									<th>Class</th>
+									<th>Vehicle Code</th>
+									<th>Registered Date</th>
+									<th>Acquisition Date</th>
+									<th>Make </th>
+									<th>Model </th>
+								</tr>
+							</thead>
+							<tbody> 
+								<tr>
+									<td><?php echo $license_plate; ?></td>
+									<td><?php echo $this->locationObj->getColumn($location_id,'location'); ?></td>
+									<td><?php echo $class; ?></td>
+									<td><?php echo $this->assetObj->getColumn($vehicle_code,'code'); ?></td>
+									<td><?php echo $registered_date; ?></td>
+									<td><?php echo $acquisition_date; ?></td>
+									<td><?php echo $this->makeObj->getColumn($make_id,'make');?></td>
+									<td><?php echo $model;?></td>
+								</tr>
+							</tbody>
+						</table>
+					</div>
+				</div>
+			</div>
+		</div>
+		<div class="widget-body">
+			<div class="widget-main">
+				<div class="widget-box transparent">
+					<div class="widget-header widget-header-small">
+						<h4 class="widget-title smaller"> 
+							Transport Details
+						</h4>
+					</div>
+					<div class="space-12"></div>
+					<div class="table-responsive">
+						<table class="table-striped table-bordered table-condensed col-lg-12 table-responsive">
+							<thead>
+								<tr>
+									<th>Engine no</th>
+									<th>Chasis no</th>
+									<th>Odometer Value</th>
+									<th>Fuel Type </th>
+									<th>Tank Capacity</th>
+									<th>Color</th>
+									<th>No of Wheels</th>
+									<th>Rim Size</th>
+								</tr>
+							</thead>
+							<tbody> 
+								<tr>
+									<td><?php echo $engine_no ; ?></td>
+									<td><?php echo $chasis_no; ?></td>
+									<td><?php echo $odometer_value; ?></td>
+									<td><?php echo $this->fuelObj->getColumn($fuel_id,'fuel'); ?></td>
+									<td><?php echo $tank_capacity; ?></td>
+									<td><?php echo $color; ?></td>
+									<td><?php echo $no_of_wheels; ?></td>
+									<td><?php echo $rim_size;?></td>
+								</tr>
+							</tbody>
+						</table>
+					</div>
+				</div>
+		    </div>
+		</div>
+		<div class="widget-body">
+			<div class="widget-main">
+				<div class="widget-box transparent">
+					<div class="widget-header widget-header-small">
+						<h4 class="widget-title smaller"> 
+							Source of Funding
+						</h4>
+					</div>
+					<div class="space-12"></div>
+					<div class="table-responsive">
+						<table class="table-striped table-bordered table-condensed col-lg-12 table-responsive">
+							<thead>
+								<tr>
+									<th>Source of Fund</th>
+									<th>Naked Vehicle Value</th>
+									<th>Final Vehicle Value</th>
+								</tr>
+							</thead>
+							<tbody> 
+								<tr>
+									<td><?php echo $source_of_fund; ?></td>
+									<td><?php echo $naked_vehicle_value; ?></td>
+									<td><?php echo $final_vehicle_value; ?></td>
+								</tr>
+							</tbody>
+						</table>
+					</div>
+				</div>
+			</div>
+		</div>
+		<div class="widget-body">
+			<div class="widget-main">
+				<div class="widget-box transparent">
+					<div class="widget-header widget-header-small">
+						<h4 class="widget-title smaller"> 
+							Insurance Details
+						</h4>
+					</div>
+					<div class="space-12"></div>
+					<div class="table-responsive">
+						<table class="table-striped table-bordered table-condensed col-lg-12 table-responsive">
+							<thead>
+								<tr>
+									<th>Insurance Company</th>
+									<th>Policy no</th>
+									<th>Sum Assured</th>
+								</tr>
+							</thead>
+							<tbody> 
+								<tr>
+									<td><?php echo $insurance_company; ?></td>
+									<td><?php echo $policy_no; ?></td>
+									<td><?php echo $sum_assured; ?></td>
+								</tr>
+							</tbody>
+						</table>
+					</div>
+				</div>
+			</div>
+		</div>
+		<div class="widget-body">
+			<div class="widget-main">
+				<div class="widget-box transparent">
+					<div class="widget-header widget-header-small">
+						<h4 class="widget-title smaller"> 
+							 Refuelling Details
+						</h4>
+					</div>
+					<div class="space-12"></div>
+					<div class="table-responsive">
+						<table class="table-striped table-bordered table-condensed col-lg-12 table-responsive">
+							<thead>
+								<tr>
+									<th>Fuel supplier</th>
+									<th>Supplier Book No.</th>
+									<th>Advance Ceiling</th>
+								</tr>
+							</thead>
+							<tbody> 
+								<tr>
+									<td><?php echo $fuel_supplier; ?></td>
+									<td><?php echo $supplier_book_no; ?></td>
+									<td><?php echo $advance_ceiling; ?></td>
+								</tr>
+							</tbody>
+						</table>
+					</div>
+				</div>
+			</div>
+		</div>
+		<div class="widget-body">
+			<div class="widget-main">
+				<div class="widget-box transparent">
+					<div class="widget-header widget-header-small">
+						<h4 class="widget-title smaller"> 
+							Transport Details
+						</h4>
+					</div>
+					<div class="space-12"></div>
+					<div class="table-responsive">
+						<table class="table-striped table-bordered table-condensed col-lg-12 table-responsive">
+							<thead>
+								<tr>
+									<th>#</th>
+									<th>Date of handling</th>
+									<th>Pool/Designation </th>
+									<th>Employee </th>
+									<th>Driver </th>
+									<th>Remarks </th>
+								</tr>
+							</thead>
+							<tbody> 
+								<tr>
+								<?php 
+								$i = 1;
+								foreach($this->transports_dtls as $row):?>
+									<td><?php echo $i; ?></td>
+									<td><?php echo $row['date_of_handing']; ?></td>
+									<td><?php echo $this->pooldtnObj->getColumn($row['pool_designated_id'],'code'); ?></td>
+									<td><?php echo $this->employeeObj->getColumn($row['employee_id'],'full_name'); ?></td>
+									<td><?php echo $this->employeeObj->getColumn($row['driver_id'],'full_name'); ?></td>
+									<td><?php echo $row['remarks']; ?></td>
+								</tr>
+								<?php endforeach; $i++;?>
+							</tbody>
+						</table>
+					</div>
+				</div>
+			</div>
+		</div>
+		<div class="widget-body">
+			<div class="widget-main">
+				<div class="widget-box transparent">
+					<div class="widget-header widget-header-small">
+						<h4 class="widget-title smaller"> 
+							Transport History
+						</h4>
+					</div>
+					<div class="space-12"></div>
+					<div class="table-responsive">
+						<table class="table-striped table-bordered table-condensed col-lg-12 table-responsive">
+							<thead>
+								<tr>
+									<th>#</th>
+									<th>Recording Date</th>
+									<th>Type </th>
+									<th>Start Date </th>
+									<th>End Date </th>
+									<th>Amount</th>
+								</tr>
+							</thead>
+							<tbody>
+								<?php 
+								$i = 1; 
+								foreach($this->trans_histories as $hrow):?>
+								<tr>
+									<td><?php echo $i; ?> </td>
+									<td><?php  echo $hrow['recording_date'];?></td>
+									<td><?php  echo $this->typeObj->getColumn($hrow['type_id'],'code');?></td>
+									<td><?php  echo $hrow['start_date'];?></td>
+									<td><?php  echo $hrow['end_date'];?></td>
+									<td><?php  echo $hrow['amount'];?></td>
+								</tr>
+							   <?php $i++;endforeach;?>
+							</tbody>
+						</table>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+<!--for modal -->
+<div id="modal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content"> </div>
+    </div>
+</div>
+<script type="text/javascript">
+    $('#vr_btn').on('click',function(){
+		window.document.location = "<?php echo $this->url('vehicle', array('action' => 'editvehiclerecord','id'=>$id));?>";
+	});
+	$('#print').genpdfprofile({
+		content: '#report-print',
+		src:"<?php echo $this->url('pdfxls', array('action' => 'pdf'));?>",
+		orentation:"P",//L =landscape, P = potrait
+	});
+</script>   
+

@@ -1,0 +1,166 @@
+<?php
+/**
+ * 
+ * View -- of Hr/PayrollController/salaryAction
+ * 
+ */
+	$this->headTitle($this->title);
+	//print_r($pepf);exit;
+	
+?>
+<div class="row">	
+	<form>				
+		<div class="col-lg-2">
+			<label for="month" class="control-label">Month </label>
+			<select class="form-control" name="month" id="month" data-placeholder="Select" required >
+				<option value=""></option>
+				<?php 
+					for($m=1;$m<=12;$m++):
+						$selected = ($month == $m)?'selected':'';
+				?>
+					<option value="<?php echo $m;?>" <?php echo $selected;?>>
+						<?php echo date("F", strtotime(date("d-$m-y"))); ?>
+					</option>
+				<?php endfor; ?>
+			</select>
+		</div>
+		<div class="col-lg-2">
+			<label for="year" class="control-label">Year </label>
+			<select class="form-control" name="year" id="year" data-placeholder="Select" required >
+				<option value=""></option>
+				<?php for($y=date('Y');$y >2005;$y--):
+					$selected = ($year == $y)?'selected':'';?>
+					<option value="<?php echo $y;?>" <?php echo $selected;?>>
+						<?php echo $y; ?>
+					</option>
+				<?php endfor; ?>
+			</select>
+		</div>
+		<!-- <div class="col-lg-2">
+			<label for="loc" class="control-label">Location </label>
+			<select class="form-control" name="loc" id="loc" data-placeholder="Select" required >
+				<option value="-1">All</option>
+				<?php foreach($locationlist as $locationlists):?>
+					<option value="<?php echo $locationlists['id'];?>" <?php echo($locationlists['id'] == $location)?'selected':'';?>>
+						<?php echo $locationlists['location']; ?>
+					</option>
+				<?php endforeach; ?>
+			</select>
+		</div> -->
+		<div class="form-group col-lg-1">
+			<label class="control-label"> </label>
+			<button type="button" class="btn btn-sm btn-info" onclick="refresh()" ><i class="fa fa-refresh"></i> Generate</button>
+		</div>
+		<div class="form-group col-lg-3"></div>
+		<div class="form-group col-lg-4"><br />
+			<div><?php echo $this->button(2);?></div>
+			<div class="pull-right tableTools-container"></div>
+		</div>
+	</form>
+</div>
+<div class="hr dotted"></div>
+<div class="widget widget-box transparent">
+	<div class="widget-header">
+		<h4 class="widget-title"> 	
+			PE PF for the month of <strong><?php echo date('F, Y', strtotime('1-'.$this->month.'-'.$this->year));?></strong>
+		</h4>
+		<div class="widget-toolbar">
+			
+		</div>
+	</div>
+	<div class="widget-body">
+		<div class="widget-main">
+			<div class="row"> 
+				<table class="table card-table text-nowrap" id="dataTables">
+					<thead>
+						<tr>
+							<th>#</th>
+							<th>Employee</th>
+							<th>Location</th>
+							<th>Basic</th>
+							<th>PE PF</th>
+							
+							<th>Action</th>
+						</tr>
+					</thead>
+					<tbody>
+						<?php
+						$i = 1; 
+						$total =0;
+						foreach ($pepf as $row):
+						?> 
+							<tr data-href="<?php echo $this->button(4, $row['id']); ?>" >
+								<td><?php echo $i; ?> </td>
+								<td><strong><?php echo $row['full_name']; ?></strong></td>
+								<td><?php echo $this->locationObj->getColumn($row['location'],'location');?></td>
+								<td><?php echo $row['basic_salary']; ?></td>
+                                <td><?php echo $row['pe_pf']; ?></td>
+								 
+								<td><?php if($row['pf_status']!=4): ?>
+							<a class="btn btn-xs btn-danger" href="<?php echo $this->url('payroll', array('action'=>'deletepe', 'id'=>$row['pf_id']));?>"> <i class="fa fa-trash"></i></a>
+								<?php else: echo "";endif;?>
+								</td>   
+							</tr>
+						<?php 
+						$i++;
+						$total=$total+$row['pe_pf'];
+						endforeach;  
+						?>
+					</tbody>
+				</table>
+			</div>			
+		</div>
+		<div class="row">
+			<div class="col-lg-12">
+				<h3 class="widget-title"> Sumarray: </h3>
+				<div class="hr dotted"></div>
+				<div class="col-md-3">
+					<label> Total Employee: </label> <strong><?php echo $i-1;?></strong>
+				</div>
+				<div class="col-md-3">
+					<label> Total PE PF: </label> <strong><?php echo number_format((float)$total, 2, '.', ',');?></strong>
+				</div>
+			</div>
+		</div>
+		<div class="hr dotted"></div>
+		<div class="space-12"></div>
+		<div class="row">
+			<div class="col-lg-12">
+				<div class="alert alert-warning"> 
+				<?php foreach($pepf as $pepfs);
+				if(sizeof($pepf)>0):
+					if($pepfs['pf_status']!=4):?>
+						<strong>Warning!</strong> Once you submit this PEPF you cannot alter any data, So check it and make sure before submitting.
+						<?php else:?>
+					PEPF has been Submitted.
+						<?php endif;?>
+					</div>
+					<center>
+						<?php if($pepfs['pf_status']!=4):?>
+						<a href="<?php echo $this->url('payroll', array('action'=>'submitpepf','id'=>$this->year.'-'.$this->month));?>"  class="btn btn-success" onclick="confirmSubmit(this);" >
+							Submit PE PF for the month of <?php echo date('F, Y', strtotime('1-'.$this->month.'-'.$this->year));?>
+						</a>
+						<?php endif;
+					endif;?>
+				</center>
+			</div>
+		</div>
+	</div>
+</div>
+<!--for modal -->
+<div id="modal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content"> </div>
+    </div>
+</div>
+<script>
+	//fuction to refresh 
+	function refresh(){
+		var id = $('#year').val()+'-'+$('#month').val();
+		location.href="<?php echo $this->url('payroll', array('action'=>'viewpepf'));?>/"+id;
+	}
+	
+	$('document').ready(function(){
+		$('#dataTables').DataTable({"paging":   true,});
+	});
+</script>

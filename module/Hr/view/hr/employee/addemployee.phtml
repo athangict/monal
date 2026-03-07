@@ -1,0 +1,784 @@
+<?php
+/**
+ * 
+ * View -- of Hr/EmployeeController/addemployeeAction
+ * 
+ */
+    $this->headTitle($this->title);
+?>
+<?php echo $this->partial('hr/employee/partial.phtml', array('active' => 'employee')); ?>
+<div class="space-12"></div>
+<form id="#form" method="post" action="<?php echo $this->url('employee', array('action' => 'addemployee')); ?>" enctype="multipart/form-data">
+	<div class="row">
+		<div class="col-lg-12"> 
+			<div class="widget-box transparent">
+				<div class="widget-header widget-header-smaller">
+					<h4 class="widget-title blue bolder smaller"> General </h4>
+				</div>
+				<div class="widget-body">
+					<div class="widget-main padding-24"> 
+						<div class="row">  
+							<div class="form-group col-lg-4">
+								<label for="cid" class="control-label">CID No</label>
+								<input type="text" name="cid" id="cid" class="form-control" placeholder="CID" required />
+							</div> 
+							<div class="form-group col-lg-4">
+								<label for="full_name" class="control-label">Full Name</label>
+								<input type="text" class="form-control" name="full_name" id="full_name" style="text-transform:uppercase" required placeholder="Enter the Employee Name">
+							</div>
+							<div class="form-group col-lg-4">
+								<label for="gender" class="control-label">Gender</label>
+								<div class="radio">
+									<label>
+										<input class="ace"type="radio" name="gender" id="gender" value="male" checked />
+										<span class="lbl"> Male </span>
+									</label>
+									<label>
+										<input class="ace" type="radio" name="gender" id="gender" value="female" />
+										<span class="lbl"> Female </span>
+									</label>
+								</div>
+							</div>
+						</div>
+						<div class="row"> 
+							<div class="form-group col-lg-4">
+								<label>Date of Birth:</label>
+								<div class="date input-group" id="dob" data-date-format="yyyy-mm-dd">
+									<input class="form-control" name="dob" id="dob" type="text" placeholder="Date of Birth" >
+									<span class="input-group-addon add-on"><i class="fa fa-calendar"></i></span>
+								</div>
+							</div> 						
+							<div class="form-group col-lg-4">
+								<label for="nationality" class="control-label">Nationality</label>
+								<select class="form-control" id="nationality" name="nationality" data-placeholder="Select" required >
+									<option value=""></option>
+									<?php 
+									foreach ($nationality as $nationalitys):
+									?>
+										<option value="<?php echo $nationalitys['nationality'];?>">
+											<?php echo $nationalitys['nationality'];?>
+										</option>
+									<?php
+									endforeach;
+									?>
+								</select>
+							</div> 
+							<div class="form-group col-lg-4">
+								<label for="religion" class="control-label">Religion</label>
+								<select class="form-control" id="religion" name="religion" data-placeholder="Select" required >
+									<option value=""></option>
+									<?php 
+									foreach ($religion as $religions):
+									?>
+										<option value="<?php echo $religions['religion'];?>">
+											<?php echo $religions['religion'];?>
+										</option>
+									<?php
+									endforeach;
+									?>
+								</select>
+							</div>
+						</div>
+						<div class="row">
+							<div class="form-group col-lg-4">
+								<label for="height" class="control-label">Height(CM):</label>
+								<input type="text" name="height" id="height" class="form-control" placeholder="height" />
+							</div>
+							<div class="form-group col-lg-4">
+								<label for="blood_group" class="control-label">Blood Group</label>
+								<select name="blood_group" id="blood_group" class="form-control" data-placeholder="Select">
+									<option value=""> </option>
+									<option value="A+"> A+ </option>
+									<option value="A-"> A- </option>
+									<option value="B+"> B+ </option>
+									<option value="B-"> B- </option>
+									<option value="AB+"> AB+ </option>
+									<option value="AB-"> AB- </option>
+									<option value="O+"> O+ </option>
+									<option value="O-"> O- </option>
+								</select>
+							</div>
+							<!--div class="form-group col-lg-4">
+								<label for="uploadimage" class="control-label">Profile Picture</label>
+								<input type="file" id="uploadimage" name="imageupload"/>
+							</div-->
+						</div>	
+						<div class="row">
+							<h4 class="header smaller lighter orange"> Contact </h4>
+						</div>
+						<div class="row">
+							<div class="form-group col-lg-4">
+								<label for="mobile" class="control-label">Mobile</label>
+								<input type="text" name="mobile" id="mobile" class="form-control" placeholder="mobile" />
+							</div>
+							 <div class="form-group col-lg-4">
+								<label for="email" class="control-label">Email</label>
+								<input type="email" name="email" id="email" class="form-control" placeholder="email" />
+							</div>
+						</div>
+						<div class="row"> 
+							<h4 class="header smaller lighter orange"> Permanent Address</h4>
+						</div>
+						<div class="row">
+							<div class="form-group col-lg-4">
+								<label for="dzongkhag" class="control-label">Dzonkhag</label>
+								<select class="form-control" id="dzongkhag" name="dzongkhag" data-placeholder="Select" required >
+									<option value=""></option>
+									<?php 
+									foreach ($dzongkhags as $dzongkhag):
+									?>
+										<option value="<?php echo $dzongkhag['id'];?>">
+											<?php echo $dzongkhag['district'];?>
+										</option>
+									<?php
+									endforeach;
+									?>
+								</select>
+							</div>        
+							<div class="form-group col-lg-4">
+								<label for="gewog" class="control-label">Gewog</label>
+								<select class="form-control chosen-widget" id="gewog" name="gewog" data-placeholder="Select" required >
+									<option value=""></option>
+								</select>
+							</div>
+							<div class="form-group col-lg-4">
+								<label for="village" class="control-label">Village</label>
+								<select class="form-control chosen-widget" id="village" name="village" data-placeholder="Select"  required >
+									<option value=""></option>
+								</select>
+							</div>
+						</div>	
+						<div class="row">
+							<div class="form-group col-lg-4">
+								<label for="house_no" class="control-label">House No.</label>
+								<input type="text" class="form-control" name="house_no" id="house_no" size="30" > 
+							</div>
+							<div class="form-group col-lg-4">
+								<label for="thram_no" class="control-label">Thram No.</label>
+								<input type="text" class="form-control" name="thram_no" id="thram_no" size="30" > 
+							</div>
+						</div>				 
+						 <div class="row"> 
+							<h4 class="header smaller lighter orange">Bank Details</h5>
+						 </div>
+						 <div class="row">        
+							 <div class="form-group col-lg-4">
+								 <label for="bank_account_no" class="control-label">Bank Account No</label>
+								 <input type="text" class="form-control" name="bank_account_no" id="bank_account_no" size="30" > 
+							 </div>
+							 <div class="form-group col-lg-4">
+								 <label for="bank_address" class="control-label">Bank Address</label>
+								 <select class="form-control" id="bank_address" name="bank_address" data-placeholder="Select" required >
+									<option value=""></option>
+									<?php 
+									foreach ($bank as $banks):
+									?>
+										<option value="<?php echo $banks['id'];?>">
+											<?php echo $banks['bank'];?>
+										</option>
+									<?php
+									endforeach;
+									?>
+								</select>
+							 </div>
+							 
+							 <div class="form-group col-lg-4">
+								<label for="cash"> Taking Cash will disable the Bank Details</label>
+								<label class="block">
+									<input name="cash" id="cash" type="checkbox" class="ace input-lg" value="1" />
+									<span class="lbl bigger-120"> Take Cash</span>
+								</label>
+							 </div>
+						  </div>
+					 </div>
+				 </div>
+			</div>
+		</div>
+	</div>
+	<div class="row">
+		<div class="col-lg-12"> 
+			<div class="widget-box transparent">
+				<div class="widget-header widget-header-smaller">
+					<h4 class="widget-title blue bolder smaller">
+						Job Profile
+					</h4>
+				</div>
+				<div class="widget-body">
+					<div class="widget-main padding-24"> 
+						<div class="row">
+							        		
+							<div class="form-group col-lg-4">
+								<label for="department" class="control-label">Department</label>
+								<select class="form-control" data-placeholder="Select" name="department" id="department" required >
+									<option value=""></option>
+										<?php
+										foreach ($this->departments as $department):
+										?>
+											<option value="<?php echo $department['id'];?>">
+												<?php echo $department['department']; ?>
+											</option>
+										<?php 
+											endforeach;
+										?>
+								</select>
+							</div> 
+							<!--<div class="form-group col-lg-4">
+								<label for="activity" class="control-label">Division</label>
+								<select class="form-control" data-placeholder="Select" name="activity" id="activity" required >
+									<option value=""></option>
+								</select>
+							</div>   
+							<div class="form-group col-lg-4">
+								<label for="section" class="control-label">Section</label>
+								<select class="form-control" data-placeholder="Select" name="section" id="section" required >
+									<option value=""></option>
+								</select>
+							</div>   -->                    		
+						</div>
+						<div class="row">		
+						<div class="form-group col-lg-4">
+								<label for="region" class="control-label">Region</label>
+								<select class="form-control" id="region" name="region" data-placeholder="Select"  required >
+									<option value=""></option>
+									<?php foreach($region as $region):?>
+										<option value="<?php echo $region['id'];?>"><?php echo $region['region'];?>
+									<?php endforeach;?>
+								</select>
+							</div> 					       
+							<div class="form-group col-lg-4">
+								<label for="location" class="control-label">Location</label>
+								<select class="form-control" id="location" name="location" data-placeholder="Select" required >
+									<option value=""></option>
+								</select>
+							</div>
+							<div class="form-group col-lg-4">
+								<label for="position_level" class="control-label">Position Level</label>
+								<select class="form-control" name="position_level" id="position_level" data-placeholder="Select">
+									<option value=""></option>
+									<?php foreach($this->postlevels as $plrow):?>
+										<option value="<?php echo $plrow['id'];?>"><?php echo $plrow['position_level']." (".$plrow['code'].")";?> </option>
+									<?php endforeach;?>
+								</select>
+							</div>
+						</div>
+						<div class="row">
+						   <div class="form-group col-lg-4">
+								<label for="position_title" class="control-label">Position Title</label>
+								<select class="form-control" name="position_title" id="position_title" data-placeholder="Select" >
+									<option value=""></option>
+								</select>
+							</div>
+							<div class="form-group col-lg-4">
+								<label for="designation" class="control-label">Designation</label>
+								<input type="text" class="form-control" name="designation" id="designation" style="text-transform:uppercase" required placeholder="Enter the Designation">
+							</div>
+							<div class="form-group col-lg-4">
+								<label for="appointment" class="control-label">Appointment</label>
+								<select class="form-control" id="appointment" name="appointment" data-placeholder="Select" required >
+									<option value=""></option>
+									<?php 
+									foreach ($this->appoint as $appointrow):
+									?>
+										<option value="<?php echo $appointrow['id'];?>">
+											<?php echo $appointrow['type_of_appointment'];?>
+										</option>
+									<?php
+									endforeach;
+									?>
+								</select>
+							</div>
+						</div>
+						<div class="row">
+							<div class="form-group col-lg-4">
+								<label for="start_date" class="control-label">Appointment Date</label>
+								<div class="date input-group" id="start_date" data-date-format="yyyy-mm-dd" >
+									<input class="form-control span2" name="start_date" id="start_date" type="text" placeholder="Start Date" >
+									<span class="input-group-addon add-on"><i class="fa fa-calendar"></i></span>
+								</div>
+							</div>		
+							<div class="form-group col-lg-4">
+								<label for="employee" class="control-label">Office Order No</label>
+								<input type="text" class="form-control" name="office_order_no" id="office_order_no" size="30"> 
+							</div>
+							<div class="form-group col-lg-4">
+								<label for="employee" class="control-label">Office Order Date</label>
+								<div class="date input-group" id="office_order_date" data-date-format="yyyy-mm-dd" >
+									<input class="form-control span2" name="office_order_date" id="office_order_date" type="text" placeholder="Office Order Date" >
+									<span class="input-group-addon add-on"><i class="fa fa-calendar"></i></span>
+								</div>
+							</div>
+							
+						</div>
+						<div class="row">
+							<div class="form-group col-lg-4">
+								<label for="supervisor" class="control-label">Supervisor</label>
+								<select class="form-control" id="supervisor" name="supervisor" data-placeholder="Select"  >
+									<option value=""></option>
+									<?php 
+									foreach ($this->employees as $employee):
+									?>
+										<option value="<?php echo $employee['id'];?>">
+											<?php echo $employee['full_name'];?>(<?php echo $employee['emp_id'];?>)
+										</option>
+									<?php
+									endforeach;
+									?>
+								</select>
+							</div>	
+							<div class="form-group col-lg-4">
+								<label for="type" class="control-label">Category</label>
+								<select class="form-control" id="type" name="type" data-placeholder="Select" required >
+									<option value=""></option>
+									<?php 
+									foreach ($this->emptypes as $emptype):
+									?>
+										<option value="<?php echo $emptype['id'];?>">
+											<?php echo $emptype['emp_type'];?>(<?php echo $emptype['code'];?>)
+										</option>
+									<?php
+									endforeach;
+									?>
+								</select>
+							</div>	
+							<div class="form-group col-lg-4">
+								<label for="pay_scale" class="control-label">Pay Scale</label>								
+								<input class="form-control" type="text" id="pay_scale" name="pay_scale" placeholder="Pay scale" readonly />
+							</div>
+							<div class="form-group col-lg-4">
+								<label for="increment_type" class="control-label">Increment Type</label>
+								<select class="form-control" id="increment_type" name="increment_type" data-placeholder="Select" >
+									<option value=""></option>
+									<?php 
+									foreach ($this->increment_types as $incrementype):
+									?>
+										<option value="<?php echo $incrementype['id'];?>" >
+											<?php echo $incrementype['increment_type'];?>
+										</option>
+									<?php
+									endforeach;
+									?>
+								</select>
+							</div>
+						</div>                           
+						<div class="row">
+							<button type="submit" class="btn btn-success"><i class="fa fa-check"></i> Save </button>
+							<button type="button" class="btn btn-warning" onclick="javascript:history.back();"><i class="fa fa-times"></i> Cancel </button>    
+						</div>
+					</div>
+				</div>
+			</div> 
+		</div>
+	</div> 
+	
+</form>
+<script>
+$('document').ready(function(){
+	if($('#cash').prop('checked') == true){
+			$('#bank_account_no').prop('disabled',true);
+			$('#bank_address').prop('disabled',true);
+		}else{
+			$('#bank_account_no').prop('disabled',false);
+			$('#bank_address').prop('disabled',false);
+		}
+		$('#cash').on('change',function(){
+			if($(this).prop('checked') == true){
+				$('#bank_account_no').val('');
+				$('#bank_account_no').prop('disabled',true);
+				$('#bank_address').val('');
+				$('#bank_address').prop('disabled',true);
+			}else{
+				$('#bank_account_no').val('');
+				$('#bank_account_no').prop('disabled',false);
+				$('#bank_address').val('');
+				$('#bank_address').prop('disabled',false);
+			}
+		});
+		$('select#position_level').on('change', function(){
+			$.post(
+				"<?php echo $this->url('employee', array('action' => 'getptitlepscale')); ?>",
+				{
+					payscale_id: $(this).val(),
+				},
+				function(data){
+					//console.log(data);
+					$("#pay_scale").val(data.pay_scale);	
+					$("#position_title").html(data.pt);
+					$("#position_title").trigger('chosen:updated');
+				},
+				'json'
+			);	
+		}); 
+        $('#dob').datepicker();
+        $('#start_date').datepicker();
+        $('#office_order_date').datepicker();        
+		$('select#dzongkhag').on('change',function(){
+			$.post(
+				"<?php echo $this->url('employee', array('action' => 'getgewog'));?>",
+				{
+					dzoId: $(this).val(),
+				},
+				function(data){
+					$('select#gewog').html(data.gewog);
+					$('select#gewog').trigger('chosen:updated');
+				},
+				'json'
+			);
+		});
+		$('select#gewog').on('change',function(){
+			$.post(
+				"<?php echo $this->url('employee', array('action' => 'getvillage'));?>",
+				{
+					gewogId: $(this).val(),
+				},
+				function(data){
+					$('select#village').html(data.village);
+					$('select#village').trigger('chosen:updated');
+				},
+				'json'
+			);
+		});
+		$('select#region').on('change',function(){
+			$.post(
+				"<?php echo $this->url('employee', array('action' => 'getlocation'));?>",
+				{
+					regionId: $(this).val(),
+				},
+				function(data){
+					$('select#location').html(data.location);
+					$('select#location').trigger('chosen:updated');
+				},
+				'json'
+			);
+		});
+		$('select#department').on('change',function(){
+			$.post(
+				"<?php echo $this->url('employee', array('action' => 'getactivity'));?>",
+				{
+					deptId: $(this).val(),
+				},
+				function(data){
+					$('select#activity').html(data.activity);
+					$('select#activity').trigger('chosen:updated');
+				},
+				'json'
+			);
+		});
+        $('select#activity').on('change',function(){
+			$.post(
+				"<?php echo $this->url('employee', array('action' => 'getsection'));?>",
+				{
+					actId: $(this).val(),
+				},
+				function(data){
+					$('select#section').html(data.section);
+					$('select#section').trigger('chosen:updated');
+				},
+				'json'
+			);
+		});
+		$('select#activity').on('change',function(){
+			$.post(
+				"<?php echo $this->url('employee', array('action' => 'getregion'));?>",
+				{
+					divisionId: $(this).val(),
+				},
+				function(data){
+					$('select#region').html(data.region);
+					$('select#region').trigger('chosen:updated');
+				},
+				'json'
+			);
+		});
+   /* $("#dzongkhag").change(function() { 			
+		$("#gewog").load('<?php// echo $this->url("ajresponse", array("action" => "getgewog")); ?>/'+ $("#dzongkhag").val(), function() {
+			$("#gewog").trigger("chosen:updated");
+			$("#village option").remove();
+			$("#village").trigger("chosen:updated");
+			$('form').formValidation('revalidateField','village');
+			$('form').formValidation('revalidateField','gewog');
+		});
+    });
+
+    $("#gewog").change(function() { 			
+    	$("#village").load('<?php// echo $this->url("ajresponse", array("action" => "getvillage")); ?>/'+ $("#gewog").val(), function() {
+    		$("#village").trigger("chosen:updated");
+    		$('form').formValidation('revalidateField','village');
+    	});
+    });
+
+	$("#region").change(function() { 
+		$('#location').load("<?php //echo $this->url('ajresponse', array('action' => 'getlocation')); ?>/"+ $("#region").val(), function() {
+			$("#location").trigger('chosen:updated');
+			$('form').formValidation('revalidateField','location');
+		});
+    });
+    */
+	const fv = FormValidation.formValidation(document.getElementById('#form'), {
+		fields: {
+			cid: {
+				validators: {
+					notEmpty: {
+						message: 'Please provide CID no.'
+					},
+					integer: {
+						message: 'The CID no. must be an integer'
+					},
+					remote: {
+						message: 'This CID no. is already used.',
+						url: '<?php echo $this->url('employee', array('action' => 'getcheckavailability'));?>',
+						type: 'POST'
+					},
+					stringLength: {
+						min: 11,
+						max: 11,
+						message: 'The CID no. must be 11 characters'
+					},
+				}
+			},
+			full_name: {
+				validators: {
+					notEmpty: {
+						message: 'Please provide full name.'
+					},
+					/*regexp: {
+						regexp: /^[a-z\s]+$/i,
+						message: 'The full name can consist of alphabetical characters and spaces only'
+					},*/
+				}
+			},
+			dob: {
+				validators: {
+					notEmpty: {
+						message: 'Please select date of birth.'
+					}
+				}
+			},
+			gender: {
+				validators: {
+					notEmpty: {
+						message: 'Please select gender.'
+					}
+				}
+			},
+			/*nationality: {
+				validators: {
+					notEmpty: {
+						message: 'Please provide nationality.'
+					}
+				}
+			},
+			religion: {
+				validators: {
+					notEmpty: {
+						message: 'Please provide religion.'
+					}
+				}
+			},
+			blood_group: {
+				validators: {
+					notEmpty: {
+						message: 'Please provide blood group.'
+					}
+				}
+			},
+			mobile: {
+				validators: {
+					notEmpty: {
+						message: 'Please provide contact number.'
+					},
+					digits: {
+						message: 'Please provide valid contact number.'
+					}
+				}
+			},
+			email: {
+				validators: {
+					notEmpty: {
+						message: 'Please provide email adddress'
+					},
+					emailAddress: {
+						message: 'Please provide valid email address'
+					}
+				}
+			},*/
+			dzongkhag: {
+				validators: {
+					notEmpty: {
+						message: 'Please select dzongkhag.'
+					}
+				}
+			},
+			gewog: {
+				validators: {
+					notEmpty: {
+						message: 'Please select gewog.'
+					}
+				}
+			},
+			village: {
+				validators: {
+					notEmpty: {
+						message: 'Please select village.'
+					}
+				}
+			},
+			/* house_no: {
+				validators: {
+					notEmpty: {
+						message: 'Please provide House No.'
+					}
+				}
+			},
+			thram_no: {
+				validators: {
+					notEmpty: {
+						message: 'Please provide Thram No.'
+					}
+				}
+			},
+			bank_account_no: {
+				validators: {
+					notEmpty: {
+						message: 'Please provide bank account no.'
+					},
+					integer: {
+						message: 'The bank account no. must be an integer'
+					},
+				}
+			},
+			bank_address: {
+				validators: {
+					notEmpty: {
+						message: 'Please provide bank address.'
+					}
+				}
+			},*/
+			activity: {
+				validators: {
+					notEmpty: {
+						message: 'Please select Activity.'
+					}
+				}
+			},
+			department: {
+				validators: {
+					notEmpty: {
+						message: 'Please select department.'
+					}
+				}
+			},
+			region: {
+				validators: {
+					notEmpty: {
+						message: 'Please select region.'
+					}
+				}
+			},
+			location: {
+				validators: {
+					notEmpty: {
+						message: 'Please select location.'
+					}
+				}
+			},/*
+			supervisor: {
+				validators: {
+					notEmpty: {
+						message: 'Please provide supervisor.'
+					}
+				}
+			},
+			designation: {
+				validators: {
+					notEmpty: {
+						message: 'Please provide designation.'
+					}
+				}
+			},*/
+			position_level: {
+				validators: {
+					notEmpty: {
+						message: 'Please select position level.'
+					}
+				}
+			},
+			position_title: {
+				validators: {
+					notEmpty: {
+						message: 'Please select positon title.'
+					}
+				}
+			},
+			type: {
+				validators: {
+					notEmpty: {
+						message: 'Please select Employee category.'
+					}
+				}
+			},
+			appointment: {
+				validators: {
+					notEmpty: {
+						message: 'Please select appointment type.'
+					}
+				}
+			},/*
+			office_order_no: {
+				validators: {
+					notEmpty: {
+						message: 'Please provide office order no.'
+					}
+				}
+			},
+			office_order_date:{
+				validators: {
+					notEmpty: {
+						message: 'Please select office order date.'
+					}
+				}
+			},
+			pay_scale: {
+				validators: {
+					notEmpty: {
+						message: 'Please select pay scale.'
+					}
+				}
+			},
+			basic_pay: {
+				validators: {
+					notEmpty: {
+						message: 'Please provide basic pay.'
+					},
+					digits: {
+						message: 'Please provide valid basic pay.'
+					}
+				}
+			},
+			start_date: {
+				validators: {
+					notEmpty: {
+						message: 'Please select start date.'
+					}
+				}
+			},*/
+		},
+		plugins: {
+			trigger: new FormValidation.plugins.Trigger(),
+			bootstrap3: new FormValidation.plugins.Bootstrap3(),
+			submitButton: new FormValidation.plugins.SubmitButton(),
+			defaultSubmit: new FormValidation.plugins.DefaultSubmit(),
+		},
+	}).on('core.element.validated', function (e) {
+		if (e.valid) {
+			$('div#'+ e.field.replace('[]','') +'_chosen').removeClass('is-invalid');
+			$('div#'+ e.field.replace('[]','') +'_chosen').addClass('is-valid');
+		} else {
+			$('div#'+ e.field.replace('[]','') +'_chosen').removeClass('is-valid');
+			$('div#'+ e.field.replace('[]','') +'_chosen').addClass('is-invalid');
+		}
+	});
+	$('#dob').on('changeDate',function(){
+		$('form').formValidation('revalidateField','dob');
+	});
+});
+</script>

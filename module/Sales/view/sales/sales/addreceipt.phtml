@@ -1,0 +1,230 @@
+<?php
+/**
+ * Add Receipt -- of Sales/SalesController/addreceiptAction
+ */
+	$this->headTitle($this->title);	
+?>
+<div class="row">
+	<div class="col-lg-12">
+		<div class="widget widget-box">
+			<div class="widget-header">
+				<h5 class="widget-title lighter smaller"> 
+					<i class="fa fa-taxi"></i> Credit Receipt
+				</h5>
+			</div>
+			<div class="widget-body">
+				<div class="widget-main">
+				    <form id="#form" method="post" action="<?php echo $this->url('sales', array('action' => 'addreceipt')); ?>" enctype="multipart/form-data">
+						<div class="row">
+						   <div class="col-lg-3">
+								<div class="form-group">
+								  <label for="location" class="control-label">Location</label>
+									<select id="location" name="location" class="form-control" data-placeholder="Select" required>
+										<option value=""></option>
+										<?php foreach ($locations as $location):?>
+										<?php $selected = ($location['id'] == $this->location_id)?"selected":"";?>
+											<option value="<?php echo $location['id'];?>" <?php echo $selected; ?>>
+												<?php echo $location['location'];?>
+											</option>
+										<?php endforeach;?>
+									</select>		
+								</div>	
+							</div>		
+							 <div class="col-lg-3">
+						       <div class="form-group">
+									<label for="received_date" class="control-label">Receipt Date </label>
+									<div class="date input-group" id="receipt_date" data-date="<?php echo date('Y-m-d');?>" data-date-format="yyyy-mm-dd" >
+										<input class="form-control span2" name="received_date" id="received_date" type="text" value="<?php echo date('Y-m-d');?>" required>
+										<span class="input-group-addon add-on"><i class="fa fa-calendar"></i></span>
+									</div>
+								</div>
+						    </div>			           						 
+							<div class="col-lg-3"> 
+							   <div class="form-group">
+								  <label for="customer" class="control-label">Customer</label>
+									<select id="customer" name="customer" class="form-control" data-placeholder="Select" required>
+										<option value=""></option>
+										<?php foreach ($this->customerObj->get(array('location'=>$admin_loc_array,'p.role'=>'8')) as $customer):?>
+											<option value="<?php echo $customer['id'];?>">
+												<?php echo $customer['code'];?>
+											</option>
+										<?php endforeach;?>
+									</select>		
+								</div>	
+							</div>  
+							<div class="col-lg-3"> 
+							   <div class="form-group">
+								  <label for="customer" class="control-label">Late Payment Penalty Applicable</label>
+								  <input type="checkbox" class="form-control" name="penalty_applicable" id="penalty_applicable" value="1">
+								</div>	
+							</div> 
+					    </div>
+					    <div class="row">
+					      <div class="col-lg-3"> 
+							 <div class="form-group">
+								  <label for="bankreftype" class="control-label">Bank Ref Type</label>
+									<select id="bankreftype" name="bankreftype" class="form-control" data-placeholder="Select" required>
+										<option value=""></option>
+										<?php foreach ($this->bankRefTypes as $bankreftype): ?>
+											<option value="<?php echo $bankreftype['id'];?>">
+												<?php echo $bankreftype['bank_ref_type']; ?>
+											</option>
+										<?php endforeach;?>
+									</select>		
+								</div>	
+							</div> 
+							
+							 <div class="col-lg-3"> 
+    							 <div class="form-group">
+    								  <label for="cheque_no" class="control-label">Cheque No.</label>
+    									<input type="text" id="cheque_no" name="cheque_no" class="form-control">
+    								</div>	
+    						</div>
+    						<div class="col-lg-3"> 
+							   <div class="form-group">
+								  <label for="sub_head" class="control-label">Account</label>								   
+									<select id="sub_head" name="sub_head" class="form-control" data-placeholder="Select" required>
+										<option value=""></option>										
+									</select>		
+								</div>	
+							</div> 
+                            <div class="col-lg-3"> 
+							   <div class="form-group">
+								  <label for="customer" class="control-label">Tax deduction at Source Applicable</label>
+								  <input type="checkbox" class="form-control" name="tds_applicable" id="tds_applicable" value="2">
+								</div>	
+							</div>							
+                        </div>							
+					    <div class="row">
+					        <div class="col-lg-12">
+					            <div id="credit_dtl"></div>
+					        </div>
+					    </div>	
+					     <div class="space-12"></div>
+					    <div class="row">
+							<div class="col-lg-3"> &nbsp; 
+							</div>
+                            <div class="col-lg-3">
+								<div class="form-group">
+								  <label for="tdsamount" class="control-label">Total TDS Amount</label>								   
+								  <input type="text" class="form-control" id="total_tds" name="total_tds" value="0.00" readonly >	
+								</div>	
+							</div>							
+                            <div class="col-lg-3">
+								<div class="form-group">
+								  <label for="amount" class="control-label">Total Penalty</label>								   
+								  <input type="text" class="form-control" id="total_penalty" name="total_penalty" value="0.00" readonly>	
+								</div>	
+							</div>							
+							<div class="col-lg-3 selections">
+								<div class="form-group">
+								  <label for="amount" class="control-label">Total Payable Amount</label>								   
+								  <input type="text" class="form-control" id="total_payable" name="total_payable" value="0.00" readonly>	
+								</div>	
+							</div>
+						</div>
+					    <div class="row">
+							<div class="col-lg-12">
+								<div class="form-group">
+									<label for="remarks">Note (Narration)</label>
+									<textarea class="form-control" name="note" id="note" ></textarea>  
+								</div>
+							</div>
+						</div>					   
+					    <div class="space-12"></div>
+						<div class="row"> 	
+							<div class="col-lg-9"> 
+								<button type="submit" class="btn btn-success"><i class="fa fa-check"></i> Save </button>
+								<button type="button" class="btn btn-warning" onclick="window.location.href='<?php echo $this->url('sales', array('action'=>receipt));?>'" ><i class="fa fa-times"></i> Cancel </button> 					
+							</div>
+						</div>	
+						 <div class="space-12"></div>
+			  		<div class="row"> 	
+			  		<div class="col-lg-9">
+    				 </div>				
+					</div>	
+			       </form>			       									
+				</div> 
+				
+			</div>
+		</div>
+	</div>
+</div>
+<script type="text/javascript">
+  $(function() {
+	$('#receipt_date').datepicker();
+	$('form select').chosen({ allow_single_deselect: true });		
+	$("#bankreftype").change(function() { 
+		var subHeadType;					
+		if( parseInt($("#bankreftype").val()) == 4  ){	subHeadType = 6 +"-"+ $("#location").val(); }else{ subHeadType = 3+"-"+ $("#location").val(); }	
+		$("#sub_head").load('<?php echo $this->url("sales", array("action" => "getsubheadbytype")); ?>/'+ subHeadType, function() {
+			$("#sub_head").trigger("chosen:updated");
+			$('form').formValidation('revalidateField','head');
+		});
+	}); 		
+	$("#customer").change(function() { 
+		$("#credit_dtl").load('<?php echo $this->url("sales", array("action" => "getsalesmemo")); ?>/'+ $("#customer").val(), function() {
+			$("#credit_dtl").trigger("chosen:updated");
+		});					
+		$("#total_re_amount").val("0.00");
+	});	 
+	$('#received_date').on('changeDate',function(){
+		$('form').formValidation('revalidateField', $(this).attr('id'));
+	});	
+      
+	//formValidation
+	const fv = FormValidation.formValidation(document.getElementById('#form'), {
+		fields: {
+			'received_date': {
+				validators: {
+					notEmpty: {
+						message: 'Please provide the date for EOS'
+					}
+				}
+			},
+			'location': {
+				validators: {
+					notEmpty: {
+						message: 'Please Select a location'
+					}
+				}
+			},
+			'customer':{
+					validators: {
+							notEmpty: {
+								message: 'Please select customer'
+							}
+						}
+					},
+			'bankreftype':{
+				validators: {
+						notEmpty: {
+							message: 'Please select bank Ref Type'
+						}
+					}
+				},
+			'sub_head':{
+				validators: {
+						notEmpty: {
+							message: 'Please select an Account to book receipt'
+						}
+					}
+				},			       
+			},
+			plugins: {
+			trigger: new FormValidation.plugins.Trigger(),
+			bootstrap3: new FormValidation.plugins.Bootstrap3(),
+			submitButton: new FormValidation.plugins.SubmitButton(),
+			defaultSubmit: new FormValidation.plugins.DefaultSubmit(),
+		},
+	}).on('core.element.validated', function (e) {
+		if (e.valid) {
+			$('div#'+ e.field.replace('[]','') +'_chosen').removeClass('is-invalid');
+			$('div#'+ e.field.replace('[]','') +'_chosen').addClass('is-valid');
+		} else {
+			$('div#'+ e.field.replace('[]','') +'_chosen').removeClass('is-valid');
+			$('div#'+ e.field.replace('[]','') +'_chosen').addClass('is-invalid');
+		}
+	});
+});
+</script>

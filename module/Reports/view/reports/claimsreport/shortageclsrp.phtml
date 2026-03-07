@@ -1,0 +1,221 @@
+<?php
+/**
+ * 
+ * View -- of Stock/ClaimsreportController/shortageclsrpAction
+ * 
+ */
+	$this->headTitle($this->title);
+?>
+<?php echo $this->partial('reports/claimsreport/partial.phtml', array('active' => 'shortageclsrp')); ?>
+<br/>
+<div class="pull-right tableTools-container"></div>
+<div class="row">
+	<div class="col-lg-12">
+		<form method="post" action="<?php echo $this->url('claimsreport', array('action' => 'shortageclsrp')); ?>"  enctype="multipart/form-data" >    
+			<div class="row">
+				<div class="form-group col-lg-3">
+					<label class="control-label" for="supplier">Suppliers</label>
+					<select class="form-control" name="supplier" id="supplier" data-placeholder="Select Supplier" >
+						<option value=""></option>
+						<?php  
+							$supplierss = $this->supplierObj->get(array('p.role'=>1));
+							foreach ($supplierss as $suppliers):
+								$selected_sup = ($suppliers['id']==$supplier)?"selected":"";
+						?>
+							<option value="<?php echo $suppliers['id']; ?>" <?php echo $selected_sup;?>>
+								<?php echo $suppliers['code']; ?>
+							</option>
+						<?php endforeach;?>
+					</select>
+				</div>
+				<div class="form-group col-lg-3">
+					<label class="control-label" for="location">Location</label>
+					<select class="form-control" name="location" id="location" data-placeholder="select" >									
+						<option value="-1">All</option>
+						<?php foreach($regions as $region):?>
+							<optgroup label="<?php echo $region['region'];?>">
+							<?php  
+								$locationss = $locationObj->get(array('l.region'=>$region['id']));
+								foreach ($locationss as $locations):
+									$selected_loc = ($locations['id']==$location)?"selected":"";
+							?>
+								<option value="<?php echo $locations['id']; ?>" <?php echo $selected_loc;?>>
+									<?php echo $locations['location']; ?>
+								</option>
+							<?php endforeach;?>
+							</optgroup>
+						<?php endforeach;  ?>									
+					</select>
+				</div>
+				<div class="col-lg-2">
+					<div class="form-group">
+						<label for="start_date" class="control-label">Start Date</label>
+						<div class="date input-group" id="start_date" data-date-format="yyyy-mm-dd" >
+							<input class="form-control span2" name="start_date" id="start_date" value="<?php echo $start_date;?>" type="text" placeholder="Start Date" readonly required>
+							<span class="input-group-addon add-on"><i class="fa fa-calendar"></i></span>
+						</div>
+					</div>
+				</div>
+				<div class="col-lg-2">
+					<div class="form-group">
+						<label for="end_date" class="control-label">End Date</label>
+						<div class="date input-group" id="end_date" data-date-format="yyyy-mm-dd" >
+							<input class="form-control span2" name="end_date" id="end_date" value="<?php echo $end_date;?>" type="text" placeholder="End Date" readonly required>
+							<span class="input-group-addon add-on"><i class="fa fa-calendar"></i></span>
+						</div>
+					</div>
+				</div>
+				<div class="col-lg-1"></div>
+				<div class="col-lg-1">
+					<div class="space-8"></div>
+					<button type="submit" class="btn btn-primary pull-right"><i class="fa fa-refresh"></i>Refresh</button>
+				</div>
+			</div>
+		</form>
+		<div class="space-6"></div>
+		<?php if($supplier != NULL):?>
+		<div class="table-header">
+			Shortage Claims Report for <?php echo $this->supplierObj->getColumn($supplier, 'code');?> from <?php echo $start_date." to ".$end_date;?>
+		</div>
+		<table class="table table-hover" id="dataTables">
+			<thead>
+				<tr>
+					<th>#</th>
+					<th>From Location</th>
+					<th>PRN Date</th>
+					<th>Challan NO</th>
+					<th>Item</th>
+					<th>Uom</th>
+					<th>Quantity</th>
+					<th>ELC</th>
+					<th>Amount</th>
+				</tr>
+			</thead>
+			<tbody>					
+			<?php if(sizeof($prnDtls) > 0):
+			$i = 1; 
+				foreach($prnDtls as $prnDtl):
+				$prConversion = 0;
+				if($prnDtl['shortage_qty'] > 0):
+				?>
+				<tr>
+					<td><?php echo $i++;?>
+					<td><?php echo $this->locationObj->getColumn($prnDtl['location'], 'location');?></td>
+					<td><?php echo $prnDtl['prn_date'];?></td>
+					<td><?php echo $prnDtl['challan_no'];?></td>
+					<td><?php echo $this->itemObj->getColumn($prnDtl['item'], 'code');?></td>
+					<td><?php echo $this->uomObj->getColumn($prnDtl['uom'], 'code');?></td>
+					<td><?php echo $prnDtl['shortage_qty'];?></td>
+					<td><?php $PO_dtls = $this->podtlsObj->get(array('purchase_order'=>$prnDtl['purchase_order'], 'item'=>$prnDtl['item']));
+						foreach($PO_dtls as $PO_dtl):
+							$poUom = $PO_dtl['uom_id'];
+							$poUnituom = $PO_dtl['unit_uom'];
+							$poRate = $PO_dtl['rate'];
+						endforeach;
+						if($poUnituom == 1):
+							$poitemuoms = $this->unititemObj->get(array('ui.item'=>$prnDtl['item'], 'ui.uom'=>$poUom));
+							foreach($poitemuoms as $poitemuom):
+								$conversion = $poitemuom['conversion'];
+							endforeach;
+						else:
+							 $conversion = $poUnituom;
+						endif;									
+						$baseRate = $poRate / $conversion;
+						//for PR uom conversion
+						$pritemuoms = $this->unititemObj->get(array('ui.item'=>$prnDtl['item'], 'ui.uom'=>$prnDtl['uom']));	
+						foreach($pritemuoms as $pritemuom):
+							 $prConversion = $pritemuom['conversion'];
+						endforeach;
+						if($prConversion < 1):
+							$prConversion = 1;
+						endif;
+						$damageRate = $prConversion * $baseRate;
+						echo sprintf('%0.2f', $damageRate);?>
+					</td>
+					<td><?php $amount = $damageRate * $prnDtl['shortage_qty'];
+						 echo sprintf('%0.2f', $amount);
+						 $sum += $amount;?>
+					</td>
+				</tr>
+			<?php endif; 
+				endforeach;?>
+				<tr>
+					<td colspan="8" style="text-align:right"><strong>Total Claim Amount</strong></td>
+					<td><?php echo "<strong>".$this->currency($sum)."</strong>";?></td>
+				</tr><?php
+			else:?>
+				<tr>
+					<td colspan="9"><?php
+						echo "No Data found in this table, please select required Supplier, location and dates!";?>
+					</td>
+				</tr><?php
+			endif;?>
+			</tbody>
+		</table>
+	</div>
+	<?php else:?>
+		<div class="alert alert-block alert-success">
+			<i class="ace-icon fa fa-check green"></i>
+			Please select the required Supplier, Location , Date and then click the Refresh button to generate 
+			report.
+		</div>
+		<div class="space-12"></div>
+	<?php endif;?>
+</div>
+<script type="text/javascript">
+		$('#dataTables').genpdftable({
+			src:"<?php echo $this->url('pdfxls', array('action' => 'pdf'));?>",
+			orentation:"P",//L =landscape, P = potrait
+		});
+		$(function() {
+			$('#start_date').datepicker();
+			$('#start_date').on('changeDate', function(){
+				$('form').formValidation('revalidateField', $(this).attr('id'));
+			});
+			$('#end_date').datepicker();
+			$('#end_date').on('changeDate', function(){
+				$('form').formValidation('revalidateField', $(this).attr('id'));
+		});
+		/*** Form Validation ***/
+		$('form').formValidation({
+				framework: 'bootstrap',
+				excluded: ':disabled',
+				message: 'This value is not valid',
+				fields: {
+					'supplier': {
+						validators: {
+							notEmpty: {
+								message: 'Please select supplier'
+							}
+						}
+					},
+					'location': {
+					 	validators: {
+							notEmpty: {
+								message: 'Please select location'
+						  	}
+					  	}
+				  	},
+					'start_date': {
+						validators: {
+							notEmpty: {
+								message: 'Please select start date'
+							}
+						}
+					},
+					'end_date': {
+						validators: {
+							notEmpty: {
+								message: 'Please select end date'
+							}
+						}
+					},
+				}
+			}).on('success.field.fv', function(e, data) {
+				if (data.fv.getInvalidFields().length > 0) {    // There is invalid field
+					data.fv.disableSubmitButtons(true);
+			}
+		});
+	});
+</script>
+

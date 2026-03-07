@@ -1,0 +1,220 @@
+<?php
+/**
+ * 
+ * View -- of Realestate/GodownsizeController/addestatedtlsAction
+ * 
+ */
+    $this->headTitle($this->title);
+?>
+<form id="#form" method="post" action="<?php echo $this->url('building', array('action' => 'addland')); ?>"  enctype="multipart/form-data" >
+    <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+        <h4 class="modal-title"> <i class="fa fa-asterisk"></i> Details of land</h4>
+    </div>  <!-- /modal-header -->
+    <div class="modal-body">
+        <div class="panel panel-default">                       
+            <div class="panel-body">   
+            <div class="form-group col-lg-4">
+								<label for="region" class="control-label">Region</label>
+								<select class="form-control" id="region" name="region" data-placeholder="Select" required >
+									<option value=""></option>
+									<?php 
+									foreach ($region as $regions):
+									?>
+										<option value="<?php echo $regions['id'];?>">
+											<?php echo $regions['region'];?>
+										</option>
+									<?php
+									endforeach;
+									?>
+								</select>
+							</div>        
+							<div class="form-group col-lg-4">
+								<label for="location" class="control-label">location</label>
+								<select class="form-control chosen-widget" id="location" name="location" data-placeholder="Select" required >
+									<option value=""></option>
+								</select>
+							</div>
+                <div class="form-group col-lg-4">
+                    <label for="land_type" class="control-label">Land Type</label>
+                    <select  class="form-control"  select name="land_type" id="block" required >
+                    <option value=""> 	</option>
+                    <option value="URC">URC </option>
+                    <option value="Lagtram">Lagtram </option>
+                                
+                    </select>
+                </div>
+
+
+                <div class="form-group col-lg-4">
+                    <label for="exact_location" class="control-label"> Exact location </label>
+                    <input type="text" class="form-control" name="exact_location" id="exact_location" style="text-transform: capitalize;" placeholder="Exact location" />
+                </div>
+            
+                <div class="form-group col-lg-4">
+                    <label for="area_in_acres" class="control-label"> Area in acres </label>
+                    <input type="text" class="form-control" name="area_in_acres" id="area_in_acres" style="text-transform: capitalize;" placeholder="area in acres" />
+                </div>
+            
+            
+                    <div class="form-group col-lg-4">
+                        <label for="area_in_sqaureft" class="control-label"> Area in sq  </label>
+                        <input class="form-control" name="area_in_sqaureft" id="area_in_sqaureft" placeholder="sq. ft"/>
+                    </div>
+                <div class="form-group col-lg-4">
+                    <label for="plot_number" class="control-label">Plot number</label>
+                    <input type="text" class="form-control" name="plot_number" id="plot_number" placeholder="Plot number"/>
+                </div>
+        
+            <div class="form-group col-lg-4">
+                    <label for="thram_no" class="control-label">Thram no</label>
+                    <input type="number" class="form-control" name="thram_no" id="thram_no" placeholder="Thram number"/>
+                </div>
+            
+            <div class="form-group col-lg-4">
+                    <label for="land" class="control-label">Land</label>
+                    <input type="text" class="form-control" name="land" id="land" placeholder="land"  />
+                </div>
+            
+            <div class="form-group col-lg-4">
+                <label for="land_tax" class="control-label">Land tax</label>
+                <input type="text" class="form-control" name="land_tax" id="land_tax" placeholder="land tax" />
+            </div>
+            <div class="form-group col-lg-4">
+                <label for="land_income" class="control-label">Land Income</label>
+                <input type="text" class="form-control" name="land_income" id="land_income" placeholder="land income" />
+            </div>
+            <div class="form-group col-lg-4">
+                <label for="pp" class="control-label">Purchase price</label>
+                <input type="text" class="form-control" name="pp" id="pp" placeholder="purchase price" />
+            </div>
+        </div>
+    </div>
+</div>
+<div class="modal-footer">
+    <button type="submit" class="btn btn-success"><i class="fa fa-check"></i> Save </button>
+    <button type="button" class="btn btn-warning" data-dismiss="modal" ><i class="fa fa-times"></i> Cancel </button> 
+</div>  
+</form>
+<script type="text/javascript">     
+    $(function() {
+        $('#location').on('change', function(){
+            $location_id = $(this).val(),
+            //alert($location_id);
+            $.post(
+                "<?php echo $this->url('realestate', array('action' => 'land')); ?>",
+                {
+                    location_id: $location_id,
+                },
+                function(data){
+                    console.log(data);
+                    $('#storage_type').html(data.leaseditem);
+                    $('#storage_type').trigger('chosen:updated');
+                    $('form').formValidation('revalidateField','storage_type');
+                },
+                'json'
+            );
+        });
+
+        $('select#region').on('change',function(){
+			$.post(
+				"<?php echo $this->url('building', array('action' => 'getlocation'));?>",
+				{
+					regId: $(this).val(),
+				},
+				function(data){
+					$('select#location').html(data.location);
+					$('select#location').trigger('chosen:updated');
+				},
+				'json'
+			);
+		});
+
+        
+    }); 
+    $('form select').chosen();
+    $('document').ready(function(){
+        const fv = FormValidation.formValidation(document.getElementById('#form'), {
+            fields: {
+                
+                exact_location: {
+                    validators: {
+                        notEmpty: {
+                            message: 'Please provide exact location.'
+                        },
+                    
+                    }
+                },
+                area_in_acres: {
+                    validators: {
+                        notEmpty: {
+                            message: 'Please provide area in acres'
+                        }
+                    }
+                },
+                area_in_sqaureft: {
+                    validators: {
+                        notEmpty: {
+                            message: 'Please provide area in sqaureft .'
+                        },
+                        numeric:{
+                            message: 'Enter a Figure Value'
+                        }
+                    }
+                },
+                plot_number: {
+                    validators: {
+                        notEmpty: {
+                            message: 'Please provide plot number.'
+                        },
+                        numeric:{
+                            message: 'Enter a Figure Value'
+                        }
+                    }
+                },
+                thram_no: {
+                    validators: {
+                        notEmpty: {
+                            message: 'Please provide Lessee Name.'
+                        },
+                        numeric:{
+                            message: 'Enter a Figure Value'
+                        }
+                    }
+                },
+                land: {
+                    validators: {
+                        notEmpty: {
+                            message: 'Please provide Land.'
+                        },
+                        
+                    }
+                },
+                land_tax: {
+                    validators: {
+                        notEmpty: {
+                            message: 'Please provide Land tax.'
+                        },
+                        numeric:{
+                            message: 'Enter a Figure Value'
+                        }
+                    }
+                },
+            },
+            plugins: {
+                trigger: new FormValidation.plugins.Trigger(),
+                bootstrap3: new FormValidation.plugins.Bootstrap3(),
+                submitButton: new FormValidation.plugins.SubmitButton(),
+                defaultSubmit: new FormValidation.plugins.DefaultSubmit(),
+            },
+        }).on('core.element.validated', function (e) {
+            if (e.valid) {
+                $('div#'+ e.field.replace('[]','') +'_chosen').removeClass('is-invalid');
+                $('div#'+ e.field.replace('[]','') +'_chosen').addClass('is-valid');
+            } else {
+                $('div#'+ e.field.replace('[]','') +'_chosen').removeClass('is-valid');
+                $('div#'+ e.field.replace('[]','') +'_chosen').addClass('is-invalid');
+            }
+        });
+    });
+</script>

@@ -1,0 +1,60 @@
+<?php
+/**
+ * 
+ * View -- of Stock/MsaterController/uomAction
+ * 
+ */
+	$this->headTitle($this->title);
+?>
+<?php echo $this->partial('stock/master/partial.phtml', array('active' => 'chargetax')); ?>
+<div class="card">
+	<div class="card-header">
+		<div class="btn-group pull-right">
+			<?php echo $this->button(2);?>
+		</div>
+	</div>
+	<table class="table table-bordered table-striped table-hover" id="dataTables">
+		<thead>
+			<tr>
+				<th>#</th>
+				<th>Charge Tax</th>
+				<th>Description</th>
+				<th>Percentage</th>
+				<th>Value</th>
+				<th class="no-sort">Action</th>
+			</tr>
+		</thead>
+		<tbody>
+			<?php
+				$i = 1; 
+				foreach ($this->chargeTaxs as $charge):
+			?>
+					<tr>
+						<td><?php echo $i++; ?> </td> 
+						<td><?php echo $charge['charge_tax']; ?></td> 
+						<td><?php echo $charge['description']; ?></td>  
+						<td><?php echo ($charge['percentage'] == 0)?"No":"Yes"; ?></td> 
+						<td><?php echo $charge['value']; ?></td>                               
+						<td>
+							<a class="btn btn-xs btn-info" data-toggle="modal" href="<?php echo $this->url('stmaster', array('action'=>'editchargetax', 'id' => $charge['id']));?>" data-target="#modal">
+								<i class="ace-icon fa fa-pencil bigger-120"></i>
+							</a>                                                                    
+						</td>
+					</tr>
+			<?php endforeach;?>
+		</tbody>
+	</table>
+</div>
+<!--for modal -->
+<div id="modal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content"> </div>
+    </div>
+</div>
+<script type="text/javascript">
+$('document').ready(function(){
+	$('#dataTables').DataTable({
+		"paging":   true,
+	});
+});
+</script>

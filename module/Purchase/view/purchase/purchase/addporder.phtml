@@ -1,0 +1,390 @@
+<?php
+/**
+ * View -- of Purchase/PurchaseController/addporderAction
+ */
+  $this->headTitle($this->title);
+?>
+<div class="row">
+	<div class="col-lg-12">
+		<div class="widget widget-box">
+			<div class="widget-header">
+				<h5 class="widget-title lighter smaller">
+					<i class="fa fa-asterisk"></i>&nbsp;&nbsp;New Purchase Order
+				</h5>
+			</div><!-- end of widget-header -->
+			<div class="widget-body">
+				<div class="widget-main">
+					<form id="#form" method="post" action="<?php echo $this->url('purorder', array('action' => 'addporder')); ?>"  enctype="multipart/form-data" >    
+						<div class="row">	
+							<div class="col-lg-3">    
+								<div class="form-group">
+									<label for="po_date" class="control-label">PO Date</label>
+									<div class="date input-group" id="po_date" data-date="<?php echo date('Y-m-d');?>" data-date-format="yyyy-mm-dd" >
+										<input class="form-control span2" name="po_date" id="po_date" type="text" placeholder="PO Date" value="<?php echo date('Y-m-d');?>" readonly required>
+										<span class="input-group-addon add-on"><i class="fa fa-calendar"></i></span>
+									</div>
+								</div>
+							</div>
+							<div class="col-lg-3"> 
+								<div class="form-group">
+									<label for="supplier" class="control-label">Supplier</label>
+									<select id="supplier" name="supplier" class="form-control" data-placeholder="Select" required>
+										<option value=""></option>	
+										<?php foreach ($this->suppliers as $supplier): ?>
+											<option value="<?php echo $supplier['id'];?>">
+												<?php echo $supplier['name']; ?>
+											</option>
+										<?php endforeach; ?>								
+									</select> 
+								</div>
+							</div>
+							<div class="col-lg-3">
+								<div class="form-group">
+									<label for="destination" class="control-label">Destination</label>
+									<select id="destination" name="destination" class="form-control" data-placeholder="Select" required>
+										<option value=""></option>
+										<?php foreach($this->locationObj->get(array('id'=>$source_locs)) as $location):?>
+										<option value="<?php echo $location['id'];?>" <?php echo ($source_locs == $location['id'])?'selected':'';?>>
+											<?php echo $location['location'];?>
+										</option>
+									<?php endforeach; ?>	
+									</select>  
+								</div> 
+							</div>
+							<div class="col-lg-3">
+								<div class="form-group">
+									<label for="order_no" class="control-label">Order No.</label>
+									<input type="text" class="form-control" name="order_no" id="order_no" placeholder="Order No."/> 
+								</div>
+							</div> 
+						</div>
+						<div class="row">
+							<div class="col-lg-12"> 
+								<h4>Purchase Order Details</h4>
+								<div>
+								<table id="purchase_field" class="table small-padding">
+								<tbody>
+									<tr>
+									<td class="col-lg-2 input-cell">
+											<div class="form-group">
+											<label for="item_class" class="control-label">Item Class</label>
+												<select class="form-control tr_item_class" name="item_class[]" id="item_class" data-placeholder="Select">
+													<option value=""></option>
+													<?php foreach($itemcls as $itemclass):?>
+													<option value="<?php echo $itemclass['id'];?>"><?php echo $itemclass['item_class'];?>
+													</option>
+													<?php endforeach;?>
+												</select> 
+											</div>
+										</td>
+										<td class="col-lg-2 input-cell">
+											<div class="form-group" id="item_container">
+											<label for="item" class="control-label">Item</label>
+												<select class="form-control tr_item" name="item[]" id="item" data-placeholder="Select">
+													<option value="0"></option>
+													<!-- <?php foreach($item as $items):?>
+													<option value="<?php echo $items['id'];?>"><?php echo $items['name'];?>
+													</option>
+													<?php endforeach;?> -->
+												</select> 
+											</div>
+											<div class="form-group" id="asst_container" style="display:none;">
+											<label for="item_name" class="control-label">Item</label>
+												<input class="form-control tr_item_name" name="item_name[]" id="item_name" data-placeholder="Select" value="null">
+											</div>
+										</td>
+										<td class="col-lg-2 input-cell">
+											<div class="form-group">
+											<label for="subhead" class="control-label">Subhead</label>
+												<select id="subhead" name="subhead[]" class="form-control tr_subhead" data-placeholder="Select">
+													<option value=""></option>
+												</select>
+											</div>
+										</td>
+										<td class="col-lg-2 input-cell">
+											<div class="form-group">
+											<label for="basic_uom" class="control-label">Unit of Measurement</label>
+												<select id="uom" name="uom[]" class="form-control tr_uom" data-placeholder="Select" >
+													<option value="1"></option>
+												</select>
+											</div>
+										</td>
+										<td class="col-lg-1 input-cell">
+											<div class="form-group">
+											<label for="quantity" class="control-label">Quantity</label>
+												<input type="text" class="form-control tr_quantity" name="quantity[]" id="quantity"  required/>
+											</div>
+										</td>
+										<td class="col-lg-1 input-cell">
+											<div class="form-group">
+											<label for="rate" class="control-label">Rate</label>
+												<input type="text" class="form-control tr_rate" name="rate[]" id="rate"  required/>
+											</div>         
+										</td>
+										<td class="col-lg-1 input-cell">
+											<div class="form-group">
+											<label for="amount" class="control-label">Amount</label>
+												<input type="text" class="form-control tr_amount" name="amount[]" id="amount" value="0.00" readonly/>
+											</div>         
+										</td>
+										<td class="col-lg-2 input-cell">
+											<div class="form-group">
+											<label for="remarks" class="control-label">Remarks</label>
+												<input type="text" class="form-control tr_remarks" placeholder="Remarks" name="remarks[]" id="remarks"/>
+											</div>
+										</td>
+										<!-- <td>
+										    <br>
+											<button class="btn btn-sm btn-success" type="button"  onclick="purchase_field();"> <span class="fa fa-plus-square" aria-hidden="true"></span> </button>
+										</td> -->
+									</tr> 
+								</tbody>
+								<table>
+								<div class="row"> 
+									<div class="col-lg-11"></div>
+									<button class="btn btn-xs btn-success" type="button"  onclick="purchase_field();"> <span class="fa fa-plus-square" aria-hidden="true"> Add Row</span> </button>
+								</div>
+									<div class="clear"></div>
+								</div>
+							</div>
+						</div>
+						<div class="row"> 
+							<div class="col-lg-9"></div>
+							<div class="col-lg-3">
+								<div class="form-group">
+									<label for="po_amount">Net Amount(<?php //echo $this->currency_code();?>)</label>
+									<input type="text" class="form-control tr_po_amount" name="po_amount" id="po_amount" value="0.00" readonly />
+								</div>
+							</div> 
+						</div>	
+						<div class="row">
+							<div class="col-lg-12">
+								<label class="control-label" for="note">Note: </label>
+								<textarea class="form-control" name="note" id="note"></textarea>
+							</div>
+						</div>
+						<div class="space-12"></div>
+						<div class="row"> 	
+							<div class="col-lg-9"> 
+								<button type="submit" class="btn btn-success"><i class="fa fa-check"></i> Save </button>
+								<button type="button" class="btn btn-warning" onclick="javascript:history.back();" ><i class="fa fa-times"></i> Cancel </button> 					
+							</div>
+						</div>
+					</form>	
+				</div><!-- widget widget-main -->
+			</div>  <!-- widget widget-body -->   
+		</div> <!-- widget widget-box --> 
+	</div><!-- col-lg-12 -->
+</div><!-- row -->
+
+<script type="text/javascript">	 
+var room = 1;
+	function purchase_field() {
+    room++;
+    var objTo = document.getElementById('purchase_field');
+    var divtest = document.createElement('tr');
+    divtest.setAttribute('class', 'form-group removeclass' + room);
+    
+    divtest.innerHTML = 
+    '<tr><td class="col-lg-2"><div class="form-group"><select name="item_class[]" class="form-control tr_item_class" data-placeholder="Select" required><option value="-1">Select</option><?php foreach($itemcls as $item): ?><option value="<?php echo $item['id']; ?>"><?php echo $item['item_class']; ?></option><?php endforeach; ?></select></div></td><td class="col-lg-2 input-cell"><div class="form-group" id="item_container"><select id="item" name="item[]" class="form-control tr_item" data-placeholder="Select" required><option value="0">Select</option></select></div><div class="form-group" id="asst_container" style="display:none;"><input class="form-control tr_item_name" name="item_name[]" id="item_name" data-placeholder="Select"></div></td><td class="col-lg-2 input-cell"><div class="form-group"><select id="subhead" name="subhead[]" class="form-control tr_subhead" data-placeholder="Select" required><option value=""></option></select></div></td><td class="col-lg-2 input-cell"><div class="form-group"><select id="uom" name="uom[]" class="form-control tr_uom" data-placeholder="Select" required><option value=1></option></select></div></td><td class="col-lg-1"><div class="form-group"><input type="text" class="form-control tr_quantity" id="quantity" name="quantity[]" value=""></div></td><td class="col-lg-1"><div class="form-group"><input type="text" class="form-control tr_rate" id="rate" name="rate[]" placeholder="rate"></div></td><td class="col-lg-1"><div class="form-group"><input type="text" class="form-control tr_amount" id="amount" name="amount[]" value="" readonly></div></td><td class="col-lg-2"><div class="form-group"><input type="text" class="form-control tr_remarks" id="remarks" placeholder="remarks" name="remarks[]"></div></td><td class="col-lg-1 input-cell"><div class="input-group-btn"><button class="btn btn-sm btn-danger" type="button" onclick="remove_purchase_field(' + room + ');"><span class="glyphicon-minus" aria-hidden="true"></span></button></div></td></tr>';
+	objTo.appendChild(divtest);
+		calculateTotalAmount()
+		$(divtest).find("#item").select2();
+    
+	}
+	function remove_purchase_field(rid) {
+	$('.removeclass' + rid).remove();
+	calculateTotalAmount()
+	
+	}
+	$(document).ready(function() {
+    // Initialize select2 on all current "item" dropdowns
+	var relatedItemElement = $(this).closest('tr').find('.tr_item');
+	relatedItemElement.select2({
+        placeholder: "Select an item",
+        allowClear: true
+    });
+});
+	$(document).on('change', '.tr_item', function() {
+		var selectedItem = $(this).val(); // get the value of the changed .tr_item
+		var relatedItemElement = $(this).closest('tr').find('.tr_uom'); // find the related .tr_uom in the same row
+		
+		// Assuming you want to do an AJAX call similar to what you've shown in your initial code:
+		$.post(
+			"<?php echo $this->url('purorder', array('action' => 'getuom')); ?>",
+			{
+				itemId: selectedItem,
+			},
+			function(data) {
+				relatedItemElement.html(data.uom); // updating the related .tr_uom
+				relatedItemElement.trigger('chosen:updated'); // if you're using chosen plugin
+				
+			},
+			'json'
+		);  
+	});
+
+	$(document).on('change', '.tr_item_class', function() {
+		var selectedClass = $(this).val(); // get the value of the changed .tr_item
+		var relatedItemElement = $(this).closest('tr').find('.tr_item'); // find the related .tr_item in the same row
+		var subheadElement = $(this).closest('tr').find('.tr_subhead');
+		var asst = $(this).closest('tr').find('#asst_container'); // find the related .tr_uom in the same row
+		var items = $(this).closest('tr').find('#item_container'); // find the related .tr_uom in the same row
+		$.post(
+			"<?php echo $this->url('purorder', array('action' => 'getsubhead')); ?>",
+			{
+				itemclassId: selectedClass,
+			},
+			function(data) {
+				console.log(data);
+				subheadElement.html(data.subheadlist); // updating the related .tr_uom
+				subheadElement.trigger('chosen:updated'); // if you're using chosen plugin
+				
+			},
+			'json'
+		);
+		if(selectedClass==33){
+			asst.show();
+			items.hide();
+		}
+		else{
+			asst.hide();
+			items.show();
+
+		// Assuming you want to do an AJAX call similar to what you've shown in your initial code:
+		$.post(
+			"<?php echo $this->url('purorder', array('action' => 'getitem')); ?>",
+			{
+				itemclassId: selectedClass,
+			},
+			function(data) {
+				console.log(data);
+				relatedItemElement.html(data.item); // updating the related .tr_uom
+				relatedItemElement.trigger('chosen:updated'); // if you're using chosen plugin
+				
+			},
+			'json'
+		);
+	}  
+	});
+	$(document).on('input', '.tr_amount,.tr_quantity', function () {
+		calculateTotalAmount();
+		});
+	$(document).on('input', '.tr_rate, .tr_quantity', function() {
+		calculateTotal($(this));
+	});
+	
+	function calculateTotal(element) {
+		console.log("calculateTotal ");
+		var row = element.closest('tr');  // Get the closest table row
+
+		var rateInput = row.find('.tr_rate');  // Adjusted these to use class selectors and scope within the row
+		var quantityInput = row.find('.tr_quantity');
+		var totalInput = row.find('.tr_amount'); // Assuming there's a field for the total amount with the class "tr_amount"
+
+		var rate = parseFloat(rateInput.val()) || 0;
+		var quantity = parseFloat(quantityInput.val()) || 0;
+		var total = rate * quantity;
+
+		totalInput.val(total.toFixed(2));  // Assuming you want to show up to two decimal places
+		calculateTotalAmount();
+	}
+	
+	function calculateTotalAmount() {
+		console.log("calculateTotal amount");
+		var total = 0.0;
+
+		// Iterate over each amount input field in the table
+		$('.tr_amount').each(function() {
+			var amount = parseFloat($(this).val());
+			if (!isNaN(amount)) { // Make sure it's a valid number
+				total += amount;
+			}
+		});
+
+		// Update the #total field with the new sum
+		$('#po_amount').val(total.toFixed(2));
+	}	
+$(function() {
+	$('#po_date').datepicker();
+	$('#quotation_date').datepicker();
+	/*** Form Validation of PO ***/
+	const fv = FormValidation.formValidation(document.getElementById('#form'), {
+		fields: {
+			'po_date': {
+				validators: {
+					notEmpty: {
+						message: 'Please select PO date'
+					}
+				}
+			},
+			'supplier': {
+				validators: {
+					notEmpty: {
+						message: 'Please select supplier'
+					}
+				}
+			},
+			'activity': {
+				validators: {
+					notEmpty: {
+						message: 'Please select activity'
+					}
+				}
+			},
+			'location': {
+				validators: {
+					notEmpty: {
+						message: 'Please select location'
+					}
+				}
+			}, 
+			'quantity[]': {
+				validators: {
+					notEmpty: {
+						message: 'Please provide quantity'
+					}
+				}
+			},
+			'rate[]': {
+				validators: {
+					notEmpty: {
+						message: 'Please provide rate'
+					}
+				}
+			},
+			'amount[]':{
+				validators:{
+					notEmpty:{
+						message:'Please provide amount'
+					},
+				},
+			},
+			'po_amount':{
+				validators:{
+					notEmpty:{
+						message:'Please provide Net PO Amount',
+					},
+				},
+			},
+		},
+		plugins: {
+			trigger: new FormValidation.plugins.Trigger(),
+			bootstrap3: new FormValidation.plugins.Bootstrap3(),
+			submitButton: new FormValidation.plugins.SubmitButton(),
+			defaultSubmit: new FormValidation.plugins.DefaultSubmit(),
+		},
+	}).on('core.element.validated', function (e) {
+		if (e.valid) {
+			$('div#'+ e.field.replace('[]','') +'_chosen').removeClass('is-invalid');
+			$('div#'+ e.field.replace('[]','') +'_chosen').addClass('is-valid');
+		} else {
+			$('div#'+ e.field.replace('[]','') +'_chosen').removeClass('is-valid');
+			$('div#'+ e.field.replace('[]','') +'_chosen').addClass('is-invalid');
+		}
+	});
+	//$('#po_date').on('changeDate',function(){
+	//	$('form').formValidation('revalidateField', $(this).attr('id'));
+	//});
+});      
+</script>

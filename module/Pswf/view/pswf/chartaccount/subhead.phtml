@@ -1,0 +1,161 @@
+<?php 
+/**
+ * View -- of Accounts/ChartaccountController/subheadAction
+ * chophel@athang.com -- 2022
+ */
+	$this->headTitle($this->title);
+?>
+<?php echo $this->tabs_helper(array(3101,3102,3108,3105,3111)); ?>
+<div class="card">
+    <div class="card-header">
+		<div class="row">
+			<div class="col-lg-9">
+				<form method="post"> 
+					<div class="row">
+						<div class="form-group col-lg-3">
+							<label for="class" class="label-control">Class</label>
+							<select class="form-control" data-placeholder="Select" name="class" id="class" >
+								<option value="" ></option>
+								<option value="-1" <?php echo ($data['class'] == '-1')?"selected":"";?>>All</option>
+								<?php 
+									$classes = $this->classObj->getAll();
+									foreach($classes as $class):
+										$selected_class = ($class['id'] == $data['class'])?"selected":"";
+								?>
+									<option value="<?php echo $class['id'];?>" <?php echo $selected_class;?>>
+										<?php echo $class['code'];?>
+									</option>
+								<?php endforeach;?>
+							</select>
+						</div>
+						<div class="form-group col-lg-3">
+							<label for="group" class="label-control">Group</label>
+							<select class="form-control" data-placeholder="Select" name="group" id="group" >
+								<option value=""></option>
+								<option value="-1" <?php echo ($data['group'] == '-1')?"selected":""; ?>>All</option>
+								<?php 
+									$groups = $this->groupObj->get(array('class'=>$data['class']));
+									foreach($groups as $group):
+									$selected_group = ($group['id']==$data['group'])?"selected":"";
+								?>
+									<option value="<?php echo $group['id'];?>" <?php echo $selected_group;?>>
+										<?php echo $group['code'];?>
+									</option>
+								<?php endforeach;?>				
+							</select>		
+						</div> 
+						<div class="form-group col-lg-3">
+							<label for="head" class="label-control">Head</label>
+							<select class="form-control" data-placeholder="Select" name="head" id="head" >
+								<option value=""></option>
+								<option value="-1" <?php echo ($data['head'] == '-1')?"selected":""; ?>>All</option>
+								<?php 
+									$heads = $this->headObj->get(array('g.id'=>$data['group']));
+									foreach($heads as $head):
+									$selected_head = ($head['id']==$data['head'])?"selected":"";
+								?>
+									<option value="<?php echo $head['id'];?>" <?php echo $selected_head;?>>
+										<?php echo $head['code'];?>
+									</option>
+								<?php endforeach;?>				
+							</select>		
+						</div>
+						<div class="col-lg-3">
+							<div class="space-12"></div>
+							<button type="submit" class="btn btn-sm btn-primary pull-left"><i class="fa fa-refresh"></i> Refresh </button>
+						</div>
+					</div>
+				</form>	
+				<i class='red'>* Please note that if the Group is not selected or selected as All, only 100 Subheads will be dispalyed.</i>
+				
+			</div>
+			<div class="col-lg-3">
+				<div class="space"></div>
+				<div class="btn-group pull-right">
+					<?php echo $this->button(2,$page);?>
+				</div>
+			</div>
+		</div>
+	</div>
+	
+	<div class="table-responsive">
+		<table class="table card-table table-vcenter text-nowrap datatable" id="dataTables">
+			<thead>
+				<tr>
+					<th>#</th>
+					<th>Name</th>
+					<th>Head</th>
+					<th>Type</th>
+					<th>Ref Type</th>
+					<th>Code</th>
+					
+					<?php if($this->button(1)!=""):?>
+						<th class="no-sort no-printpdf">Action</th>
+					<?php endif;?>	
+				</tr>
+			</thead>
+			<tbody>
+			<?php $i=1+(($page-1)*20); foreach ($paginator as $row):
+				//echo'<pre>';print_r($paginator);exit;?>
+				<tr>
+					<td><?php  echo $i++; ?></td>	
+                    <td><?php echo $row['name']; ?></td>					
+					<td><?php echo $row['head']; ?></td>
+					<td><?php echo $row['type']; ?></td>
+					<td><?php //echo $row['ref_id']; ?></td>
+					<td><?php echo $row['code']; ?></td>
+					<?php if($this->button(1)!=""):?>
+						<td><?php echo $this->button(1, $row['id'].'_'.$page);?></td>
+					<?php endif;?>
+				</tr>
+			<?php endforeach; ?>
+			</tbody>
+		</table>
+	</div>
+</div>
+<div class="modal fade" id="modal" tabindex="-1" role="dialog" aria-hidden="true">
+	<div class="modal-dialog modal-lg" role="document">
+		<div class="modal-content">
+		</div><!-- /.modal-content -->
+	</div><!-- /.modal-dialog -->
+</div><!-- /.modal -->
+<script>
+$('document').ready(function(){
+	$('#dataTables').DataTable({
+		"paging":   true,
+	});
+	$('#class').on('change',function(){
+		$.post(
+			'<?php echo $this->url('chartaccount',array('action'=>'getgroup'));?>',
+			{
+				'class' : $(this).val(),
+			},
+			function(data){
+				//console.log(data);
+				$('#group').html(data.group);
+				$('#group option:selected').removeAttr('selected');
+				$('#group').trigger('chosen:updated');
+				$('#head').html(data.head);
+				$('#head option:selected').removeAttr('selected');
+				$('#head').trigger('chosen:updated');
+			},
+			'json'
+		);
+	});
+	$('#group').on('change',function(){
+		$.post(
+			'<?php echo $this->url('chartaccount',array('action'=>'gethead'));?>',
+			{
+				'group' : $(this).val(),
+			},
+			function(data){
+				//console.log(data);
+				$('#head').html(data.head);
+				$('#head option:selected').removeAttr('selected');
+				$('#head').trigger('chosen:updated');
+			},
+			'json'
+		);
+	});
+});
+</script>

@@ -1,0 +1,157 @@
+<?php
+/**
+ * 
+ * View -- of Hr/EmployeeController/addemployeeAction
+ * 
+ */
+ $this->headTitle($this->title);
+	
+?>
+<div class="row">
+	<div class="col-lg-12"> 
+		<div class="widget widget-box">
+			<div class="widget-header">
+				<h5 class="widget-title smaller"><i class="ace-icon fa fa-gift"></i><?php echo $this->title;?></h5>
+			</div>
+			<div class="widget-body">
+				<form id="#form" method="post" action="<?php echo $this->url('benefit', array('action' => 'apply')); ?>" enctype="multipart/form-data">
+					<div class="widget-main"> 
+						<div class="row">  
+							<div class="form-group col-lg-2">
+								<label>Application Date</label>
+								<div class="date input-group" id="date" data-date-format="yyyy-mm-dd">
+									<input class="form-control" name="date" id="date" type="text" value="<?php echo date('Y-m-d');?>" readonly>
+									<span class="input-group-addon add-on"><i class="fa fa-calendar"></i></span>
+								</div>
+							</div> 	
+							<div class="form-group col-lg-2">
+								<label for="category" class="control-label">Application Category</label>
+								<select name="category" id="category" class="form-control" data-placeholder="Select">
+									<option value=""> </option>
+									<?php foreach($category as $cat):?>
+										<option value="<?php echo $cat['id'];?>"><?php echo $cat['name'];?> </option>
+										<?php endforeach;?>
+								</select>
+							</div>
+							<div class="form-group col-lg-2">
+								<label for="subhead" class="control-label">Sub Head(COA)</label>
+								<select  class="form-control" id="subhead" name="subhead" data-placeholder="Select"required >
+									<option value=""></option>
+								</select>
+							</div>
+							<div class="form-group col-lg-2">
+								<label for="requested_amt" class="control-label">Requested Amount</label>
+								<input type="text" class="form-control" name="requested_amt" id="requested_amt">
+							</div>
+							<div id='employee' class="form-group col-lg-2">
+								<label for="employee" class="control-label">Beneficiary/Employee </label>
+								<select name="employee" id="employee" class="form-control" data-placeholder="Select">
+									<option value=""> </option>
+									<?php foreach($employee as $emp):?>
+										<option value="<?php echo $emp['id'];?>"><?php echo $emp['full_name'].' ('.$emp['emp_id'].')';?> </option>
+										<?php endforeach;?>
+								</select>
+							</div>
+							<div id="relationship" class="form-group col-lg-2">
+								<label for="relationship" class="control-label">Relationship </label>
+								<select name="relationship" id="relationship" class="form-control" data-placeholder="Select">
+									<option value=""> </option>
+									<?php foreach($relationships as $re):?>
+										<option value="<?php echo $re['id'];?>"><?php echo $re['name'];?> </option>
+										<?php endforeach;?>
+								</select>
+							</div>
+						</div>
+						<div class="row">
+							<div class="form-group col-lg-10">
+								<label for="subject" class="control-label">Subject</label>
+								<input type="text" class="form-control" name="subject" id="subject"  placeholder="Subject">
+							</div>
+							<div class="mb-6 col-lg-12">
+								<label for="description" class="control-label">Description</label>
+								<textarea type="text" class="form-control" name="description" id="description" placeholder=""></textarea>
+							</div>
+						 </div>
+					</div>
+					<div class="widget-toolbox padding-6 clearfix align-right">
+						<button type="submit" class="btn btn-success"><i class="fa fa-check"></i> Save Application</button>
+						<button type="button" class="btn btn-warning" onclick="javascript:history.back();" ><i class="fa fa-times"></i> Cancel Application</button>    
+					</div>
+				</form>
+			</div>
+		</div>
+	</div>
+</div>
+
+<script type="text/javascript">
+$(function() {
+	$('#date').datepicker();
+    $('select#category').on('change', function() {
+		var categoryId = $(this).val(); // Get the selected categoryId
+		$.post(
+			"<?php echo $this->url('benefit', ['action'=>'fetchsubheads']); ?>",
+			{
+				categoryId: $(this).val()
+			},
+			function(data){
+				$('select#subhead').html(data.subheads);
+				$('select#subhead').trigger('chosen:updated');
+			},'json'
+		);
+	});
+	$('select#category').on('change', function() {
+		var categoryId = $(this).val(); // Get the selected categoryId
+		if (categoryId == '1') {
+            $('#relationship').closest('.form-group').show();
+        }else if(categoryId == '5'){
+			$('#employee').closest('.form-group').show();
+			 $('#relationship').closest('.form-group').hide();
+		}else {
+            $('#relationship').closest('.form-group').hide();
+        }
+	});
+	
+	const fv = FormValidation.formValidation(document.getElementById('#form'), {
+		fields: {
+			category: {
+				validators: {
+					notEmpty: {
+						message: 'Please select Application Category.'
+					}
+				}
+			},
+			subhead: {
+				validators: {
+					notEmpty: {
+						message: 'Please select Sub Head.'
+					}
+				}
+			},
+			requested_amt: {
+				validators: {
+					notEmpty: {
+						message: 'Please Requested Amount'
+					},
+					digits: {
+						message: 'Please enter numeric value'
+					},
+				}
+			},
+		},
+		plugins: {
+			trigger: new FormValidation.plugins.Trigger(),
+			bootstrap3: new FormValidation.plugins.Bootstrap3(),
+			submitButton: new FormValidation.plugins.SubmitButton(),
+			defaultSubmit: new FormValidation.plugins.DefaultSubmit(),
+		},
+	}).on('core.element.validated', function (e) {
+		if (e.valid) {
+			$('div#'+ e.field.replace('[]','') +'_chosen').removeClass('is-invalid');
+			$('div#'+ e.field.replace('[]','') +'_chosen').addClass('is-valid');
+		} else {
+			$('div#'+ e.field.replace('[]','') +'_chosen').removeClass('is-valid');
+			$('div#'+ e.field.replace('[]','') +'_chosen').addClass('is-invalid');
+		}
+	});
+});
+</script>

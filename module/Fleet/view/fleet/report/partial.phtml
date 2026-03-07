@@ -1,0 +1,37 @@
+<?php 
+/** 
+ * fleet/report/partial.phtml 
+**/
+	$vehiclelogreport = ($this->active == "vehiclelogreport")?"active":"";
+	$transportreport = ($this->active == "transportreport")?"active":"";
+	$rmreport = ($this->active == "rmreport")?"active":"";
+	$vrreport = ($this->active == "vrreport")?"active":"";
+?>
+<br/>
+<ul class="nav nav-tabs padding-18 nav-fixed-top" id="myTab">
+	<!--li class="<?php //echo $vehiclelogreport; ?>">
+		<a href="<?php //echo $this->url('ftreport', array('action' => 'vehiclelogreport')); ?>" title="Vehicle Log Report">
+			<i class="green ace-icon fa fa-car bigger-120"></i>
+			<span class="hidden-xs">Vehicle Log</span-->
+		</a>
+	</li>
+	<li class="<?php echo $rmreport; ?>">
+		<a href="<?php echo $this->url('ftreport', array('action' => 'rmreport')); ?>" title="RM Report">
+			<i class="green ace-icon fa fa-car bigger-120"></i>
+			<span class="hidden-xs">Vehicle Service Report</span>
+		</a>
+	</li>
+	<li class="<?php echo $vrreport; ?>">
+		<a href="<?php echo $this->url('ftreport', array('action' => 'vrreport')); ?>" title="VR Report">
+			<i class="green ace-icon fa fa-car bigger-120"></i>
+			<span class="hidden-xs">Pol Report</span>
+		</a>
+	</li>
+	<!--li class="<?php //echo $transportreport; ?>">
+		<a href="<?php //echo $this->url('ftreport', array('action' => 'transportreport')); ?>" title="Vehicle Log Report">
+			<i class="green ace-icon fa fa-car bigger-120"></i>
+			<span class="hidden-xs">Transport Report</span>
+		</a>
+	</li-->
+</ul>
+

@@ -1,0 +1,149 @@
+<?php
+/**
+ * 
+ * View -- of Accounts/TransactionController/receiptprintAction
+ * 
+ */
+?>
+<?php 
+	foreach($this->transactionrow as $row ):
+		extract($row);
+		$bank_ref_type_id = $row['bank_ref_type'];
+	endforeach;
+	foreach($this->transactiondetails as $tdrowonce);
+	$transdtlstypewise = $this->transactiondetailsObj->getTypeWise(array('transaction'=>$tdrowonce['transaction']),$tdrowonce['type']);
+	foreach($transdtlstypewise as $tdrow):
+		extract($tdrow);
+	endforeach;
+?>
+<div class="row">
+<div class="col-lg-12" id="report-print">
+	<div class="widget-box transparent">
+	    <div class="widget-header widget-header-large">
+			<div class="widget-toolbar hidden-xs">
+				<a style='cursor:pointer' id="print">
+					<i class="ace-icon fa fa-file-pdf-o red"></i>
+				</a>
+			</div>
+		</div>
+		<div class="widget-header-large">
+			<h3 class="grey center">
+				Money Receipt
+			</h3>
+		</div>
+		<div class="widget-body">
+			<div class="widget-main padding-24">
+					<div class="row" id="convert-tb0">
+						<div class="col-lg-9" id="convert-tb1">
+							<ul class="list-unstyled spaced">
+								<li>
+									<i class="ace-icon fa fa-caret-right blue"></i><b>No: </b><?php echo $voucher_no; ?> 
+								</li>
+								<li>
+									<i class="ace-icon fa fa-caret-right blue"></i><b>Date: </b><?php echo $voucher_date; ?> 
+								</li>
+							</ul>
+						</div>
+						<div class="col-lg-3" id="convert-tb2">
+							<ul class="list-unstyled spaced">
+								<li>
+									<i class="ace-icon fa fa-caret-right blue"></i><b> From Location: </b><?php echo $location; ?> 
+								</li>
+
+								<li>
+									<i class="ace-icon fa fa-caret-right blue"></i> <b> From Activity: </b><?php echo $activity; ?> 
+								</li>
+								
+							</ul>
+						</div>
+					</div>
+				<div class="hr"></div>
+				<div class="row">
+					<div class="col-lg-12">
+						<ul class="list-unstyled spaced">
+							<li>
+								<i class="ace-icon fa fa-caret-right blue"></i><b>Particulars: </b> <?php echo $remark;?> 
+							</li>
+						</ul>
+					</div>
+				</div>
+					<table class="table table-bordered">	
+						<thead>
+							<tr>
+								<th rowspan="3">SL No.</th>
+								<th rowspan="3">Account Heads</th>
+								<th rowspan="3">Cheque/DD No</th>
+								<th>Amount</th>
+								<th>Amount</th>
+							</tr>
+							<tr>
+								<th>Cheque/Draft</th>
+								<th>Cash</th>
+							</tr>
+							<tr>
+								<th>Nu.&nbsp;&nbsp;&nbsp;Ch.</th>
+								<th>Nu.&nbsp;&nbsp;&nbsp;Ch.</th>
+							</tr>
+						</thead>
+						<tbody>
+							<?php $total=0;?>
+							<?php $i=1; foreach($this->transactiondetails as $tdrowonce);
+									$transdtlstypewise = $this->transactiondetailsObj->getTypeWise(array('transaction'=>$tdrowonce['transaction']),$tdrowonce['type']);
+									foreach($transdtlstypewise as $tdrow):
+							?>
+								<tr>
+									<td><?php echo $i++;?></td>
+									<td><?php echo $tdrow['head'];?></td>
+									<td><?php if($tdrow['head_id'] == '212'){echo "TT";}?></td> <!-- if bank_acc -->
+									<td style="text-align:right"><?php if($tdrow['head_id'] == '212'){
+										if($tdrow['debit'] > 0){echo number_format((float)$tdrow['debit'], 2, '.', ',');}elseif($tdrow['credit'] > 0){echo number_format((float)$tdrow['credit'], 2, '.', ',');}else{echo "0.00";}
+									}elseif($tdrow['head_id'] != '212'){echo "0.00";}?></td>
+									<td style="text-align:right" ><?php if($tdrow['head_id'] != '212'){
+										if($tdrow['debit'] > 0){echo number_format((float)$tdrow['debit'], 2, '.', ',');}elseif($tdrow['credit'] > 0){echo number_format((float)$tdrow['credit'], 2, '.', ',');}else{echo "0.00";}
+									}elseif($tdrow['head_id'] == '212'){echo "0.00";}?></td>
+								</tr>
+								<?php 
+									$total = $tdrow['credit'] + $tdrow['debit'] + $total;
+								?>
+							<?php endforeach;?>
+							<tr style="border-top:2px solid #ddd;border-bottom:2px solid #ddd;">
+								<th colspan="2" ><?php echo $this->numtoWords($total);?></th>
+								<th >TOTAL:</th>
+								<th colspan="2" style="text-align:right" ><?php echo $this->currency($total);?></th>
+							</tr>
+						</tbody>
+					</table>
+				<br/>
+				<div class="row">
+					<div class="col-lg-12">
+						<ul class="list-unstyled spaced">
+							<li>Money Receipt shall be raised for a Location/party</li>
+							<li>For multiple draft received from one Location/Depot, single Money Receipt shall be raised</li>
+							<li>Cheque/Draft are subject to realisation.</li>
+						</ul>
+					</div>
+				</div>
+				<div class="row">
+					<div class="row" id="convert-tb0">
+						<div class="col-lg-9" id="convert-tb1"></div>
+						<div class="col-lg-3" id="convert-tb2">
+							<ul class="list-unstyled spaced">
+								<li>
+									<b>For Food Corporation Of Bhutan</b>
+								</li>
+							</ul>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+</div>
+<script type="text/javascript">
+	$('#print').genpdfinvoice({
+		content: '#report-print',
+		src:"<?php echo $this->url('pdfxls', array('action' => 'pdf'));?>",
+		orentation:"L",//L =landscape, P = potrait
+	});
+</script>

@@ -1,0 +1,173 @@
+<?php 
+/**
+ * View -- of Administration/AssetController/assetAction
+ * chophel@athang.com -- 2022
+ */
+	$this->headTitle($this->title);
+?>
+<?php echo $this->tabs_helper(array(3020)); ?>
+<?php $currentYear = (int)date('Y', strtotime($data['current_date']));//$currentYear = (int)date('Y');?>
+<div class="card">
+	<div class="card-header">
+	    <div class="">
+		    <h4>TANGIBLE ASSET SCHEDULE</h4>
+		</div>
+		<form method="post" class="form-group" action="<?php echo $this->url('schedule', array('action' => 'schedule')); ?>">
+			<div class="row">
+				<div class="form-group col-lg-2">
+					<label class="control-label" for="start_date">Start Date</label>
+					<div class="date input-group" id="start_date" data-date="<?php echo $data['start_date'];?>" data-date-format="yyyy-mm-dd" >
+						<input class="form-control span2" name="start_date" id="start_date" type="text" placeholder="Start Date" value="<?php echo $data['start_date'];?>" readonly required>
+						<span class="input-group-addon add-on"><i class="fa fa-calendar"></i></span>
+					</div>
+				</div>
+				<div class="form-group col-lg-2">
+					<label class="control-label" for="end_date">End Date</label>
+					<div class="date input-group" id="end_date" data-date="<?php echo $data['current_date'];?>" data-date-format="yyyy-mm-dd" >
+						<input class="form-control span2" name="end_date" id="end_date" type="text" placeholder="End Date" value="<?php echo $data['current_date'];?>" readonly required>
+						<span class="input-group-addon add-on"><i class="fa fa-calendar"></i></span>
+					</div>
+				</div>
+				<div class="form-group col-lg-2"><br>
+					<div class="col-lg-12">
+						<button type="submit" class="btn btn-sm btn-success pull-right"><i class="fa fa-gear"></i> Generate </button>
+					</div>
+				</div>
+			</div>
+		</form>
+	</div>
+	<div class="table-responsive">
+		<table class="table table-striped table-bordered table-hover" id="dataTables">
+			<thead>
+			<tr>
+					<th colspan=5 style="text-align:center;">Gross Block Value {(O+ADD+)-ADJ}</th>
+					<th colspan=4 style="text-align:center;">Depreciation/Amortization  {(O+DEP)-ADJ}</th>
+					<th colspan=2>Net Block Value</th>
+				</tr>
+				<tr>
+					<th>Particulars</th>
+					<th>Opening </th>
+					<th>Additional</th>
+					<th>Adjustment</th>
+					<th>Closing</th>
+					<th>Opening</th>
+					<th>Depreciation</th>
+					<th>Adjustment</th>
+					<th>Closing</th>
+					<th><?php echo $currentYear.'-12-31'?></th>
+					<th><?php echo ($currentYear-1).'-12-31'?></th>
+				</tr>
+			</thead>
+			<tbody>
+			<?php 
+			$total1=0;$total2=0;$total3=0;$total4=0;$total5=0;$total6=0;$total7=0;$total8=0;$total9=0;$total10=0;  
+				foreach($this->assettypeObj->getAssets() as $atype):
+					if($atype['id']!=16):
+					
+					/* reformat the date to end of previous date[]*/
+					$endDate = new \DateTime($data['current_date']);
+					$endDate->modify('-1 year');
+					$endDate->modify('last day of December');
+					$previousYearEndDate = $endDate->format('Y-m-d');
+					/*GET ACTIVE ASSET OPENING*/
+					$asset_opening = $this->assetObj->getassetopening($atype['id'],$previousYearEndDate,'asset_value');
+					foreach($asset_opening as $astop);
+					/*GET DISPOSE ASSET*/
+					$asset_dispose = $this->assetObj->getdispose($atype['id'],$currentYear,'asset_value ');
+					foreach($asset_dispose as $dispose);
+					$disposed_asset = $dispose['sumdispose'];
+					/* reformat the date to first jan of current year[]*/
+					$originalDate = new DateTime($data['current_date']); 
+					$originalYear = $originalDate->format('Y');
+					$beginningOfYear = new DateTime("$originalYear-01-01");
+					$beginningOfYearFormatted = $beginningOfYear->format('Y-m-d'); 
+
+					$additions = $this->assetObj->getadditions($atype['id'],$beginningOfYearFormatted,$data['current_date'],'asset_value');
+					$previous_dep =$this->assetObj->getPreDep($atype['id'],'previous_depreciated_amount');
+
+					$previous_year_dep=$this->depreciationObj->getPreDep($atype['id'],$currentYear-1,'dep_amount');
+					foreach($additions as $add);
+					$closing1 = $astop['totalasset'] + $add['totaladditionsum']-$disposed_asset;
+					$assets = $this->assetObj->getasset(array('asset_type'=>$atype['id']));
+					foreach($previous_dep as $pre);
+					$total_useful_days=0;
+					$daysCompletedtilltoday=0;
+					
+					foreach($previous_year_dep as $preyeardep);
+					if($currentYear<=2024){
+						$opening=$pre['totalpredepsum'];//PREVIOUS Depreciation AMOUNT
+					}
+					else{
+						$opening=$pre['totalpredepsum']+$preyeardep['totalpredepsum'];
+					}
+					//echo '<pre>';print_r($pre['totalpredepsum'].'-'.$preyeardep['totalpredepsum']);
+					$net_asset=0;
+					$net_value=0;
+					/*CALCULATE THE DAYS IN THE PREVIOUS MONTH*/
+					$firstDayOfCurrentMonth = new \DateTime($endDate->format('Y-m-01'));
+					$firstDayOfPreviousMonth = $firstDayOfCurrentMonth->modify('-1 month');
+					$lastDayOfPreviousMonth = $firstDayOfCurrentMonth->modify('-1 day');
+					$daysInPreviousMonth = (int)$lastDayOfPreviousMonth->format('d');
+					$current_dep=$this->depreciationObj->getCurrentDep($atype['id'],$currentYear,'dep_amount');
+					//
+					if(!empty($assets)){
+						$current_dep=$this->depreciationObj->getCurrentDep($atype['id'],$currentYear,'dep_amount');
+						foreach($current_dep as $current);
+						$acc_dep_current=$current['totalcurrentsum'];//SUM OF Depreciation
+						$accdep=$this->depreciationObj->getAccdep($atype['id']);
+						$opening_dep_disposed=$this->assetObj->getdisposedDep($atype['id'],'previous_depreciated_amount');
+						foreach($accdep as $acd);
+						//echo '<pre>';print_r($current['totalcurrentsum']);
+						foreach($opening_dep_disposed as $opening_dep_disposed);
+						$acc_depreciation=$opening_dep_disposed['totaldisposal']+$acd['totalaccdep'];
+						$asset_dispose_dep = $this->assetObj->getdispose($atype['id'],$currentYear,'acc_depreciation');
+					foreach($asset_dispose_dep as $dispose);
+					$disposed_asset_dep = $dispose['sumdispose'];//// ACCUMULATED
+						$closing2 = $opening+$acc_dep_current - $disposed_asset_dep;
+						$netcurrent=$closing1-$closing2;
+						$netprevious=$astop['totalasset']-$opening;
+
+					}?>
+					<tr class="info">
+						<td class="">&nbsp;&nbsp;&nbsp;<?php echo $atype['name'];?></td>
+						<td style="text-align:right"><?php echo $this->decimal($astop['totalasset']);?></td>
+						<td style="text-align:right"><?php echo $this->decimal($add['totaladditionsum']);?></td>
+						<td style="text-align:right"><?php echo number_format((float)$disposed_asset, 2, '.', ',');?></td>
+						<td style="text-align:right"><?php echo number_format((float)$closing1, 2, '.', ',');?></td>
+						<td style="text-align:right"><?php echo number_format((float)$opening, 2, '.', ',');?></td>
+						<td style="text-align:right"><?php echo number_format((float)$acc_dep_current, 2, '.', ',');?></td>
+						<td style="text-align:right"><?php echo number_format((float)$disposed_asset_dep, 2, '.', ',');?></td>
+						<td style="text-align:right;"><?php echo number_format((float)$closing2, 2, '.', ',');?></td>
+						<td style="text-align:right;"><?php echo number_format((float)$netcurrent, 2, '.', ',');?></td>
+						<td style="text-align:right;"><?php echo number_format((float)$netprevious, 2, '.', ',');?></td>
+					</tr>
+					<?php $total1 +=$astop['totalasset'];$total2+=$add['totaladditionsum'];$total3+=$disposed_asset;
+					$total4+=$closing1;$total5+=$opening;$total6+=$acc_dep_current;
+					$total7+=$disposed_asset_dep;$total8+=$closing2;$total9+=$netcurrent;$total10+=$netprevious;
+				endif;endforeach;//exit; ?>
+				<tr>
+					<td style="text-align:right"><b>Grand Total</b></td>
+					<td style="text-align:right"><b><?php echo $this->decimal($total1);?></b></td>
+					<td style="text-align:right"><b><?php echo $this->decimal($total2);?></b></td>
+					<td style="text-align:right"><b><?php echo number_format((float)$total3, 2, '.', ',');?></b></td>
+					<td style="text-align:right"><b><?php echo number_format((float)$total4, 2, '.', ',');?></b></td>
+					<td style="text-align:right"><b><?php echo number_format((float)$total5, 2, '.', ',');?></b></td>
+					<td style="text-align:right"><b><?php echo number_format((float)$total6, 2, '.', ',');?></b></td>
+					<td style="text-align:right"><b><?php echo number_format((float)$total7, 2, '.', ',');?></b></td>
+					<td style="text-align:right;"><b><?php echo number_format((float)$total8, 2, '.', ',');?></b></td>
+					<td style="text-align:right;"><b><?php echo number_format((float)$total9, 2, '.', ',');?></b></td>
+					<td style="text-align:right;"><b><?php echo number_format((float)$total10, 2, '.', ',');?></b></td>
+				</tr>
+			</tbody>
+		</table>
+	</div>
+</div>
+<script>
+$('document').ready(function(){
+	$('#start_date').datepicker();
+    $('#end_date').datepicker();
+	$('#dataTables').DataTable({
+		"paging":   false,
+	});
+});
+</script>

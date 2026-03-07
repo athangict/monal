@@ -1,0 +1,66 @@
+<?php
+/**
+ * View -- of Stock/MsaterController/tripAction
+ */
+$this->headTitle($this->title);
+?>
+<?php echo $this->partial('stock/master/partial.phtml', array('active' => 'trip')); ?>
+<div class="space-12"></div>
+<div class="row">
+	<div class="col-lg-12">
+		<div class="clearfix">
+			<div class="pull-right tableTools-container"></div>
+			<a class="red pull-right DTTT_button btn btn-white btn-info btn-bold"  data-tooltip="tooltip" data-placement="top" title="Add New Trip" href="<?php echo $this->url('stmaster', array('action' => 'addtrip'));?>" >
+				<span class="red"><i class="fa fa-plus"></i> 
+				<span class="hidden-sm hidden-xs">&nbsp;Add New Trip</span></span>
+			</a>
+		</div>
+		<div>
+			<table class="table table-bordered table-striped table-hover" id="dataTables">
+				<thead>
+					<tr>
+						<th>#</th>
+						<th>Trip No.</th>
+						<th>Trip Date</th>
+						<th>Effect Date</th>
+						<th>Status</th>
+						<th class="no-sort">Action</th>
+					</tr>
+				</thead>
+				<tbody>
+					<?php $sl = 1;
+						foreach($trips as $trip):
+					?>
+					<tr>
+						<td><?php echo $sl++;?></td>
+						<td><strong><?php echo $trip['trip_no'];?></strong></td>
+						<td><?php echo $trip['trip_date'];?></td>
+						<td><?php echo ($trip['effect_date']==NULL)?'No Effect Date':$trip['effect_date'];?></td>
+						<td><?php if($trip['status']==1):?>
+							<span class="label label-success">Active</span>
+							<?php else:?>
+							<span class="label label-warning">InActive</span>
+							<?php endif;?>
+						</td>
+						<td>
+							<div class="btn-group">
+								<a class="btn btn-xs btn-info" href="<?php echo $this->url('stmaster', array('action'=>'edittrip', 'id' => $trip['id']));?>" title="Manage Trip <?php echo $trip['trip_no'];?>">
+									<i class="ace-icon fa fa-pencil bigger-120"></i></a>
+								<a class="btn btn-xs btn-success" href="<?php echo $this->url('stmaster', array('action'=>'activatetrip', 'id' => $trip['id']));?>" title="Activate Trip <?php echo $trip['trip_no'];?>">
+									<i class="ace-icon fa fa-users bigger-120"></i></a>
+							</div>
+						</td>
+					</tr>
+					<?php endforeach;?>
+				</tbody>
+			</table> 		 
+		</div>	   
+	</div>	
+</div>
+<script>
+$('document').ready(function(){
+	$('#dataTables').DataTable({
+		"paging":   true,
+	});
+});
+</script>

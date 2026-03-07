@@ -1,0 +1,250 @@
+<?php
+/**
+ * 
+ * View -- of Purchase/PurchaseController/viewporder
+ * 
+ */
+ $this->headTitle($this->title);
+?>
+<?php foreach($supplier_invoice as $sup_inv):
+	extract($sup_inv);
+	$sup_inv_id = $id;
+	$sup_inv_status = $status;
+endforeach;?>
+<style>
+	.mytable tr th,.mytable tr td {
+		padding:5px;
+	}
+</style>
+<div class="row">
+	<div class="col-lg-12">
+		<div class="widget widget-box">
+			<div class="widget-header">
+				<h5 class="widget-title lighter smaller">
+					# Supplier Invoice Detail:<strong> &nbsp;&nbsp;<?php echo $invoice_no; ?> | <?php echo $supplier; ?> | <?php echo $activity ?></strong>&nbsp;
+					<?php $this->status($status);?>
+				</h5>
+				<div class="widget-toolbar hidden-xs">
+					<?php if($status == 3 && $paid_amount == 0):?> <!-- if supplier invoice committed -->
+						<button type="button" id="payment_btn" class="btn btn-white btn-warning btn-bold btn-xs"><i class="fa fa-money"></i> Payment After Delivery </button>
+						<?php if($costing == 0): ?>
+							<button type="button" id="elc_btn" class="btn btn-white btn-success btn-bold btn-xs"><i class="fa fa-modx"></i> ELC Costing </button>
+					<?php endif;
+					endif;?>
+                        <?php if($status == 3 && $paid_amount == 0): ?>
+						<a class="btn btn-white btn-danger btn-bold btn-xs" title="Rectify Supplier Invoice"
+							href="<?php echo $this->url('supplier', array('action'=>'rectifysinv', 'id'=>$sup_inv_id)); ?>">
+						&nbsp;<i class="fa fa-pencil"></i>&nbsp;</a>
+					<?php endif;?>
+				</div>
+				<div class="widget-toolbar hidden-xs">
+					<div class="btn-group">
+						<a class="btn btn-xs btn-danger" data-toggle="modal" data-target="#modal" href="<?php echo $this->url('acl', array('action' => 'activitylog', 'id' => "3-".$sup_inv_id)); ?>" title="View Activity Logs">
+							<i class="ace-icon fa fa-plus bigger-120" ></i>  
+						</a> 
+						<a class="btn btn-xs" id="print" title="Print">
+							<i class="ace-icon fa fa-file-pdf-o bigger-120"></i>
+						</a>
+					</div>
+				</div>	
+			</div>
+			<div class="widget-body">
+				<div class="widget-main padding-12">
+					<div id="report-print">
+						<div class="row" id="convert-tb0">
+							<div class="col-lg-8" id="convert-tb1">
+								<ul class="list-unstyled spaced">
+									<li>
+										<i class="ace-icon fa fa-caret-right blue"></i>
+										Supplier Invoice No : <b class="red"><?php echo $invoice_no; ?> </b>
+									</li>
+									<li>
+										<i class="ace-icon fa fa-caret-right blue"></i>
+										Location : <b class="red"><?php echo $location; ?></b>
+									</li>
+									<li>
+										<i class="ace-icon fa fa-caret-right blue"></i>
+										Supplier: <b class="red"><?php echo $supplier_name; ?></b>
+									</li>
+									<!--<li>
+										<i class="ace-icon fa fa-caret-right blue"></i>
+										Due Date : <b class="red"><?php //echo $this->dateformat($inv_due_date); ?> </b>
+									</li>-->
+									<li>
+										<i class="ace-icon fa fa-caret-right blue"></i>
+										Invoice Defination: <b class="red"><?php echo ($inv_defn == '-1')?'NA':$this->inv_defObj->getColumn($inv_defn,'defination'); ?></b>
+									</li>
+									<li>
+										<i class="ace-icon fa fa-caret-right blue"></i>
+										Paid Amount: <b class="blue"><?php echo $paid_amount; ?></b>
+									</li>
+									<li>
+										<i class="ace-icon fa fa-caret-right blue"></i>
+										Status : <b class="blue"><?php echo $this->status($status);?></b>
+									</li>
+								</ul>
+							</div>
+							<div class="col-lg-4" id="convert-tb2">
+								<ul class="list-unstyled spaced">
+									<li>
+										<i class="ace-icon fa fa-caret-right blue"></i>
+										Invoice Date : <b class="red"> <?php echo $this->dateformat($inv_date); ?></b>
+									</li>
+									<li>
+										<i class="ace-icon fa fa-caret-right blue"></i>
+										Activity : <b class="red"> <?php echo $activity; ?></b>
+									</li>
+									<li>
+										<i class="ace-icon fa fa-caret-right blue"></i>
+										Purchase Receipt: <b class="red"><a target="_blank" href="<?php echo $this->url('receipt', array('action'=>'viewreceipt', 'id'=>$purchase_receipt));?>"><?php echo $this->prnObj->getColumn($purchase_receipt,'prn_no'); ?></a></b>
+									</li>
+									<li>
+										<i class="ace-icon fa fa-caret-right blue"></i>
+										Recording Date : <b class="red"><?php echo $this->dateformat($inv_record_date); ?></b>
+									</li>
+									<li>
+										<i class="ace-icon fa fa-caret-right blue"></i>
+										Costing : <b class="blue"><?php echo ($costing==1)?"YES":"NO"; ?></b>
+									</li>
+								</ul>
+							</div>
+						</div>
+						<div class="row">
+							<div class="col-lg-12">
+								<ul class="list-unstyled spaced">
+									<li>
+										<i class="ace-icon fa fa-caret-right blue"></i>Note: <b class="red"><?php echo $note;?> </b>
+									</li>
+								</ul>
+							</div>
+						</div>
+						<div class="space-6"></div>
+						<div class="row">
+							<div class="col-lg-12" >
+								<table class="table" style="border-top:2px solid #ddd;">
+									<thead>
+										<tr>
+											<th>#</th>
+											<th>Item</th>
+											<th>UOM</th>
+											<th>Quantity</th>
+											<th>Rate(<?php echo $this->currency_code();?>)</th>
+											<th>Amount(<?php echo $this->currency_code();?>)</th>
+											<th>MRP(<?php echo $this->currency_code();?>)</th>
+											<th>Shortage Qty</th>
+											<?php 
+												$inv_def_details = $this->inv_def_detailsObj->get(array('inv_def' => $inv_defn));
+												foreach($inv_def_details as $fields):
+											?>
+												<th><?php echo $fields['def_field']; ?></th>
+											<?php endforeach;?>
+										</tr>
+									</thead>
+									<tbody>
+									<?php 
+									$sup_inv_details = $this->sup_inv_detailsObj->get(array('supplier_invoice' => $sup_inv_id));
+									$i = 1;
+									$sum_shortage_amount = 0;
+									foreach($sup_inv_details as $inv_details):?>
+										<tr>
+											<td><?php echo $i++;?></td>
+											<td><?php echo $inv_details['item'];?></td>
+											<td><?php echo $inv_details['uom'];?></td>
+											<td><?php echo $inv_details['quantity'];?></td>
+											<td><?php echo $inv_details['rate'];?></td>
+											<td><?php echo $amount=$inv_details['quantity']*$inv_details['rate'];?></td>
+											<td><?php echo $inv_details['mrp'];?></td>
+											<td><?php
+												$prn_details_id = ($inv_details['prn_details_id'] > 0)?$inv_details['prn_details_id']:$this->prn_detailsObj->getColumn(array('purchase_receipt' => $purchase_receipt, 'item' => $inv_details['item_id']),'id');
+												$shorage_qty = $this->prn_detailsObj->getColumn($prn_details_id,'shortage_qty');
+												$prn_uom = $this->prn_detailsObj->getColumn($prn_details_id,'uom');
+												
+												$basic_uom = $this->itemObj->getColumn($inv_details['item_id'],'uom');
+												$prn_uom_conversion = $this->itemuomObj->getColumn(array('item'=>$inv_details['item_id'], 'uom'=>$prn_uom),'conversion');
+												$sup_uom_conversion = $this->itemuomObj->getColumn(array('item'=>$inv_details['item_id'], 'uom'=>$inv_details['uom_id']),'conversion');
+														
+												$shorage_basic_qty = ($basic_uom == $prn_uom)?$shorage_qty: $shorage_qty * $prn_uom_conversion;
+												echo $short_qty = ($basic_uom == $inv_details['uom_id'])?$shorage_basic_qty: $shorage_basic_qty / $sup_uom_conversion;
+												$shortage_amount = $short_qty * $inv_details['rate'];
+												$sum_shortage_amount += $shortage_amount;
+											?></td>
+											<?php
+												$sup_inv_def_data = $this->sup_inv_def_dataObj->get(array('sinv_details' => $inv_details['id'])); 
+												foreach($sup_inv_def_data as $data):?>
+													<td><?php echo $data[data]; ?></td>
+											<?php endforeach;?>
+										</tr>
+										<?php $net_amount += $amount;
+										 endforeach; ?>	
+										<tr style="border-top:2px solid #ddd;border-bottom:2px solid #ddd;">
+											<th colspan="5"><?php echo $this->numtoWords($net_amount);?></th>
+											<th colspan="3">Net Amount : 
+											<?php echo $this->currency($net_amount);?></th>
+										</tr>	
+									</tbody>
+								</table>
+							</div>
+						</div>
+						<div class="row" id="convert-tb0">
+							<div class="col-lg-3" id="convert-tb1">
+								<ul class="list-unstyled spaced">
+									<li>
+										<i class="ace-icon fa fa-caret-right blue"></i>
+										Freight Charges : <b class="red"><?php echo $this->currency($freight_charge);?> </b>
+									</li>
+									<li>
+										<i class="ace-icon fa fa-caret-right blue"></i>
+										Deduction : <b class="red"><?php echo $this->currency($deduction_amount);?>  </b>
+									</li>
+									<li>
+										<i class="ace-icon fa fa-caret-right blue"></i>
+										Shortage Amount : <b class="red"><?php echo $this->currency($sum_shortage_amount);?>  </b>
+									</li>
+								</ul>
+							</div>
+							<div class="col-lg-3" id="convert-tb2">
+								<ul class="list-unstyled spaced">
+									<li>
+										<i class="ace-icon fa fa-caret-right blue"></i>
+										Invoice Amount : <b class="red"><?php echo $this->currency($net_inv_amount+$sum_shortage_amount);?> </b>
+									</li>
+									<li>
+										<i class="ace-icon fa fa-caret-right blue"></i>
+										Payable Amount : <b class="red"><?php echo $this->currency($payable_amount);?> </b>
+									</li>
+								</ul>
+							</div>
+							<div class="col-lg-3"></div>
+							<div class="col-lg-3">
+								<div class="space-6"></div>
+								<?php if($sup_inv_status == '1'):?>
+									<a href="<?php echo $this->url('supplier', array('action'=>'editsupplierinv', 'id'=>$sup_inv_id));?>" class="btn btn-info"> <i class="fa fa-pencil"></i> Edit </a>
+									<a href="<?php echo $this->url('supplier', array('action'=>'commitsupplierinv', 'id'=>$sup_inv_id));?>" class="btn btn-success"> <i class="fa fa-check-square-o"></i>Commit</a>
+									<a href="<?php echo $this->url('supplier', array('action'=>'cancelsupplierinv', 'id'=>$sup_inv_id));?>" class="btn btn-danger"> <i class="fa fa-trash-o"></i>Cancel Invoice</a>
+								<?php endif;?>
+							</div>
+						</div>
+					</div>
+					<!-- Upload and Download file attachments -->			
+					<?php   
+					   echo $this->partial('partial/attachment.phtml', array('process' => '3', 'process_id'=> $sup_inv_id , 'status' => $sup_inv_status));
+					?>					
+				    <!-- End of attachment -->
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+<script type="text/javascript">
+	$('#payment_btn').on('click',function(){
+		window.document.location = "<?php echo $this->url('payment', array('action' => 'addpayment','id' => "2-".$sup_inv_id));?>";
+	});
+	$('#elc_btn').on('click',function(){
+		window.document.location = "<?php echo $this->url('cost', array('action' => 'elccosting'));?>";
+	});
+	$('#print').genpdfinvoice({
+		content: '#report-print',
+		src:"<?php echo $this->url('pdfxls', array('action' => 'pdf'));?>",
+		orentation:"L",//L =landscape, P = potrait
+	});
+</script>

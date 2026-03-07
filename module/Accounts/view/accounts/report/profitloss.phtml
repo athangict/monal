@@ -1,0 +1,384 @@
+<?php
+/**
+ * View -- of Report/AccountsreportController/plsAction
+ */
+	$this->headTitle($this->title);
+	
+?>
+<?php echo $this->tabs_helper(array(684,691,685,686,687,688,689,690,699)); ?>
+<div class="card">
+	<div class="card-header">
+		<div class="row">
+			<div class="col-lg-12">
+				<form data-toggle="validator" id="#form" method="post" action="<?php echo $this->url('report', array('action' => 'profitloss')); ?>"  enctype="multipart/form-data" >    
+					<div class="row">    
+						<div class="form-group col-lg-2">
+							<label for="tier" class="control-label">Tier</label>
+							<select name="tier" id="tier" class="form-control" data-paceholder="Select">
+								<option value=""></option>
+								<?php 
+									$st1 = ($data["tier"]==1)? 'selected':'';
+									$st2 = ($data["tier"]==2)? 'selected':'';
+									$st3 = ($data["tier"]==3)? 'selected':'';
+									$st4 = ($data["tier"]==4)? 'selected':'';
+									$grand_pres_total_income=0;
+									$grand_pres_totalC=0;
+									$grand_prev_totalC=0;
+									$grand_pres_totaltax=0;
+									$grand_prev_totaltax=0;
+									$grand_pres_profitloss=0;
+									$grand_prev_profitloss=0;
+									$grand_pres_total_expenditure=0;
+									$grand_prev_total_income=0;
+									$grand_prev_total_expenditure=0;
+									$tax1=0;$tax2=0;
+								?>
+								<option value="4" <?php echo $st4; ?>> Class </option>
+								<option value="3" <?php echo $st3; ?>> Group </option>
+								<option value="2" <?php echo $st2; ?>> Head </option>
+								<option value="1" <?php echo $st1; ?>> Sub Head </option>
+							</select>
+						</div> 
+						<div class="form-group col-lg-2">
+							<label class="control-label" for="start_date">Start Date</label>
+							<div class="date input-group" id="start_date" data-date="<?php echo $data['start_date'];?>" data-date-format="yyyy-mm-dd" >
+								<input class="form-control span2" name="start_date" id="start_date" type="text" placeholder="Start Date" value="<?php echo $data['start_date'];?>" reqired>
+								<span class="input-group-addon add-on"><i class="fa fa-calendar"></i></span>
+							</div>
+						</div>
+						<div class="form-group col-lg-2">
+							<label class="control-label" for="end_date">End Date</label>
+							<div class="date input-group" id="end_date" data-date="<?php echo $data['end_date'];?>" data-date-format="yyyy-mm-dd" >
+								<input class="form-control span2" name="end_date" id="end_date" type="text" placeholder="End Date" value="<?php echo $data['end_date'];?>" required>
+								<span class="input-group-addon add-on"><i class="fa fa-calendar"></i></span>
+							</div>
+						</div> 
+						<div class="form-group col-lg-2">
+							<label for="region" class="control-label">Region</label>
+							<select class="form-control" name="region" id="region" data-paceholder="Select">
+								<option value="-1">All</option>
+								<?php foreach ($region as $reg):?>
+								<?php $selected_reg = ($data["region"]==$reg['id'])? 'selected':'';?>
+									<option value="<?php echo $reg['id'];?>" <?php echo $selected_reg;?>>
+										<?php echo $reg['region']; ?>
+									</option>
+								<?php endforeach;?>									
+							</select>
+						</div>
+						<div class="form-group col-lg-2">
+							<label for="location" class="contol-label">Location</label>
+							<select class="form-control" name="location" id="location" data-placeholder="Select" >
+								<option value="-1">All</option>
+								<?php if($data["region"]>0):
+									foreach($this->locationObj->get(array('region'=> $data["region"])) as $locations):
+								?>
+									<?php $selected_loc = ($data["location"]==$locations['id'])? 'selected':'';?>
+									<option value="<?php echo $locations['id'];?>" <?php echo $selected_loc;?> ><?php echo $locations['location'];?></option>
+								<?php endforeach;
+								endif;?>							
+							</select>
+						</div> 
+					</div> 
+					<div class="row">
+						<div class="col-lg-12">
+							<button type="submit" class="btn btn-sm btn-success pull-right"><i class="fa fa-gear"></i> Generate </button>
+						</div>
+					</div>			
+				</form>
+			</div>
+		</div>
+	</div>
+</div>
+<div class="row">
+	<div class="col-lg-12">	
+		<div class="clearfix">
+			<label> <i class="red fa fa-tags"></i> Activity: </label>  <span><?php echo $act = ($data["activity"] == -1)? "All Activities": $this->activityObj->getColumn($data["activity"], 'activity');?></span>
+			<label>  <i class="blue fa fa-globe"></i> Region: </label> <span><?php echo $loc = ($data["region"] == -1)? "All Regions": $this->regionObj->getColumn($data["region"], 'region');?></span>
+			<label>  <i class="orange fa fa-map-marker"></i> Location: </label> <span><?php echo $loc = ($data["location"] == -1)? "All Locations": $this->locationObj->getColumn($data["location"], 'location');?></span>
+		</div>
+		<div>
+			<table class="table table-condensed table-bordered" id = "dataTables">
+				<thead>
+					<tr>
+						<th rowspan="2">Particulars</th>
+						<th> Present Year</th>
+						<th> Previous Year </th>
+					</tr>
+					<?php 
+					if($data['tier'] > 0):?>
+						<tr>
+							<th> <?php echo "From".$data['start_date']."to".$data['end_date'];?> </th>
+							<th> <?php $prevoius_start_year = date('y', strtotime($data['start_date'])) - 1;
+							$prevoius_start_month = date('m', strtotime($data['start_date']));
+							$prevoius_start_day = date('d', strtotime($data['start_date']));
+							$pre_end_year = date('y', strtotime($data['end_date'])) - 1;
+							$pre_end_month = date('m', strtotime($data['end_date']));
+							$pre_end_day = date('d', strtotime($data['end_date']));
+							$pre_starting_date = date('Y-m-d', strtotime($prevoius_start_year.'-'.$prevoius_start_month.'-'.$prevoius_start_day));
+							$pre_ending_date = date('Y-m-d', strtotime($pre_end_year.'-'.$pre_end_month.'-'.$pre_end_day));
+							echo "From".$pre_starting_date."to".$pre_ending_date;?> </th>
+						</tr>
+					<?php 
+				    else: ?>
+						<tr>
+							<th> <?php echo "No Peroid Found";?></th>
+							<th> <?php echo "No Peroid Found";?></th>
+						</tr>
+					<?php 
+				    endif; ?>
+				</thead>
+				<tbody id="trial_balance">
+					<?php 
+					if($data['tier'] <= 4):
+						foreach($this->classObj->getProfitlossClass($data['activity'],$data['region'],$data['location'],$data['start_date'],$data['end_date']) as $classrow): //class 
+							$total_pres_expenditure = array();
+							$total_prev_expenditure = array();
+							$total_pres_income = array();
+							$total_prev_income = array();
+							$total_pres_incomeC = array();
+							$total_prev_incomeC = array();
+							$total_pres_tax = array();
+							$total_prev_tax = array();
+							$total_pres_pl = array();
+							$total_prev_pl = array();?>
+							<?php 
+							if($data['tier'] <= 4):?>
+							<tr class="warning">
+								<td class=""><?php echo $classrow['name'];?> </td>
+							<?php 
+						    endif;?>
+								<?php 
+									$pres_closing_balance = $this->transactiondetailObj->getClosingBalanceforPresPLS($data['activity'],$data['region'],$data['location'],$data['start_date'],$data['end_date'], $classrow['id'], 4);	
+									$prev_closing_balance = $this->transactiondetailObj->getClosingBalanceforPrevPLS($data['activity'],$data['region'],$data['location'],$pre_starting_date,$pre_ending_date, $classrow['id'], 4);	
+									$pres_closing_balance = ($pres_closing_balance < 0)? -$pres_closing_balance:$pres_closing_balance;
+									$prev_closing_balance = ($prev_closing_balance < 0.1)? -$prev_closing_balance:$prev_closing_balance;
+									
+									//$pres_closing_balance_cincome = $this->transactiondetailObj->getClosingBalanceforPresPLSC($data['activity'],$data['region'],$data['location'],$data['start_date'],$data['end_date'], $classrow['id'], 4);
+									if($classrow['id'] == 5):
+									    $total_pres_incomeC[] = $pres_closing_balance;
+										$total_prev_incomeC[] = $prev_closing_balance;
+									endif;
+									if($classrow['id'] == 9):
+									    $total_pres_tax[] = $pres_closing_balance;
+										$total_prev_tax[] = $prev_closing_balance;
+									endif;
+									if($classrow['id'] == 10):
+									    $total_pres_pl[] = $pres_closing_balance;
+										$total_prev_pl[] = $prev_closing_balance;
+									endif;
+									if($classrow['id'] == 3):
+									    $total_pres_income[] = $pres_closing_balance;
+										$total_prev_income[] = $prev_closing_balance;
+									elseif($classrow['id'] == 4):
+										$total_pres_expenditure[] = $pres_closing_balance;
+										$total_prev_expenditure[] = $prev_closing_balance; 
+									endif;
+								?>
+                                <td ></td>							
+                                <td></td>									
+							<?php if($data['tier'] <= 4):?>
+							</tr>
+							<?php endif;?> 
+							<?php 
+							if($data['tier'] <= 3):  
+								foreach($this->groupObj->getTransactionGroup($data['activity'],$data['region'],$data['location'],$data['start_date'],$data['end_date'], array('class'=>$classrow['id'])) as $grouprow): 
+								/*Finding Class(implement the asset liabilities formulae)*/
+								#$head_id = $this->subheadObj->getColumn($subheadrow['id'],'head');
+								#$group_id = $this->headObj->getColumn($headrow['id'],'group');
+								$class_id =$this->groupObj->getColumn($grouprow['id'],'class');?>													
+									<tr class="info">
+										<td class="text-danger">&nbsp;<?php echo $grouprow['name'];?></td>
+										<?php 
+											$pres_closing_balance = $this->transactiondetailObj->getClosingBalanceforPresPLSCLASS($data['activity'],$data['region'],$data['location'],$data['start_date'],$data['end_date'], $grouprow['id'],$class_id, 3);	
+											$prev_closing_balance = $this->transactiondetailObj->getClosingBalanceforPrevPLS($data['activity'],$data['region'],$data['location'],$pre_starting_date,$pre_ending_date, $grouprow['id'], 3);	
+											//$pres_closing_balance = ($pres_closing_balance < 0)? -$pres_closing_balance:$pres_closing_balance;
+											//$prev_closing_balance = ($prev_closing_balance < 0.1)? -$prev_closing_balance:$prev_closing_balance;
+										?>	
+											<td style ="text-align:right"><?php echo number_format($pres_closing_balance,2,'.',',');?></td>
+											<td style ="text-align:right"><?php echo number_format($prev_closing_balance,2,'.',',');?></td>
+									</tr>
+									<?php 
+									if($data['tier'] <= 2):
+										//foreach($this->headformatObj->get(array('group'=>$grouprow['id'])) as $htype):
+										foreach($this->headObj->getTransactionHead($data['activity'],$data['region'],$data['location'],$data['start_date'],$data['end_date'], array('group'=>$grouprow['id'])) as $headrow): 
+										 /*Finding Class(implement the asset liabilities formulae)*/
+											#$head_id = $this->subheadObj->getColumn($subheadrow['id'],'head');
+											$group_id = $this->headObj->getColumn($headrow['id'],'group');
+											$class_id =$this->groupObj->getColumn($group_id,'class');?>													
+											<tr class="success">
+												<td class="text-success">&nbsp;&nbsp;<?php echo $this->headObj->getColumn($headrow['id'],'name');?></td>
+												<?php 
+													$pres_closing_balance = $this->transactiondetailObj->getClosingBalanceforPresPLSCLASS($data['activity'],$data['region'],$data['location'],$data['start_date'],$data['end_date'], $headrow['id'],$class_id, 2);
+													$prev_closing_balance = $this->transactiondetailObj->getClosingBalanceforPrevPLS($data['activity'],$data['region'],$data['location'],$pre_starting_date,$pre_ending_date, $headrow['id'], 2);
+													//$pres_closing_balance = ($pres_closing_balance < 0)? -$pres_closing_balance:$pres_closing_balance;	
+													//$prev_closing_balance = ($prev_closing_balance < 0.1)? -$prev_closing_balance:$prev_closing_balance;	
+												?>	
+													<td style ="text-align:right"><?php echo number_format($pres_closing_balance,2,'.',',');?></td>
+													<td style ="text-align:right"><?php echo number_format($prev_closing_balance,2,'.',',');?></td>
+											</tr>
+											<?php 
+											if($data['tier'] <= 1):
+												foreach($this->subheadObj->getTransactionSubhead($data['activity'],$data['region'],$data['location'],$data['start_date'],$data['end_date'], array('head'=>$headrow['id'])) as $subheadrow): 
+                                			       /*Finding Class(implement the asset liabilities formulae)*/
+													$head_id = $this->subheadObj->getColumn($subheadrow['id'],'head');
+													$group_id = $this->headObj->getColumn($head_id,'group');
+													$class_id =$this->groupObj->getColumn($group_id,'class');?>															
+													<tr class="subheadrow">
+														<td>&nbsp;&nbsp;&nbsp;&nbsp;<?php echo $subheadrow['code'].'-'.$subheadrow['name'];?></td>
+														<?php 
+															$pres_closing_balance = $this->transactiondetailObj->getClosingBalanceforPresPLSCLASS($data['activity'],$data['region'],$data['location'],$data['start_date'],$data['end_date'], $subheadrow['id'],$class_id, 1);	
+															$prev_closing_balance = $this->transactiondetailObj->getClosingBalanceforPrevPLS($data['activity'],$data['region'],$data['location'],$pre_starting_date,$pre_ending_date, $subheadrow['id'], 1);	
+															//$pres_closing_balance = ($pres_closing_balance < 0)? -$pres_closing_balance:$pres_closing_balance;
+															//$prev_closing_balance = ($prev_closing_balance < 0.1)? -$prev_closing_balance:$prev_closing_balance;
+														?>	
+														<td style ="text-align:right"><?php echo number_format($pres_closing_balance,2,'.',',');?></td>
+														<td style ="text-align:right"><?php echo number_format($prev_closing_balance,2,'.',',');?></td>
+													</tr>											
+												<?php 
+												endforeach;
+											endif;
+									    endforeach;
+									endif; 
+								endforeach;
+							endif; ?>
+							<tr class="classrow">
+								<td> Total <?php echo $classrow['name'];$grand_pres_total=0;?>: </td>
+								<?php
+									if($classrow['id'] == 3):
+										$grand_pres_total = $total_pres_income;
+										$grand_prev_total = $total_prev_income;
+										$grand_pres_total_income = $total_pres_income; 
+										$grand_prev_total_income = $total_prev_income;
+									elseif($classrow['id'] == 4):
+										$grand_pres_total = $total_pres_expenditure;
+										$grand_prev_total = $total_prev_expenditure;
+										$grand_pres_total_expenditure = $total_pres_expenditure;
+										$grand_prev_total_expenditure = $total_prev_expenditure;
+									elseif($classrow['id'] == 5):
+										$grand_pres_total = $total_pres_incomeC;
+										$grand_prev_total = $total_prev_incomeC;
+										$grand_pres_totalC = $total_pres_incomeC; 
+										$grand_prev_totalC = $total_prev_incomeC;
+									elseif($classrow['id'] == 9):
+										$grand_pres_total = $total_pres_tax;
+										$grand_prev_total = $total_prev_tax;
+										$grand_pres_totaltax = $total_pres_tax; 
+										$grand_prev_totaltax = $total_prev_tax;
+									elseif($classrow['id'] == 10):
+										$grand_pres_total = $total_pres_pl;
+										$grand_prev_total = $total_prev_pl;
+										$grand_pres_profitloss = $total_pres_pl; 
+										$grand_prev_profitloss = $total_prev_pl;
+									endif;
+								?>
+								<?php 
+								if (is_array($grand_pres_total) || is_object($grand_pres_total)):
+									foreach($grand_pres_total as $total):
+										foreach($grand_prev_total as $total1):?>
+											<td style ="text-align:right"><?php echo number_format($total,2,'.',',');?></td>
+											<td style ="text-align:right"><?php echo number_format($total1,2,'.',',');?></td>
+										<?php 
+										endforeach; 
+									endforeach;
+								endif; ?>
+								<?php 
+								if(is_array($grand_pres_total_income) && $grand_pres_total_income!=null){
+									foreach($grand_pres_total_income as $grand_pres_total_income):
+									endforeach;}?>
+								<?php 
+								if (is_array($grand_pres_total_expenditure) || is_object($grand_pres_total_expenditure)){
+									foreach($grand_pres_total_expenditure as $grand_pres_total_expenditure):
+									endforeach;}?>
+								<?php 
+								if(is_array($grand_prev_total_income) && $grand_prev_total_income!=null){
+									if (is_array($grand_prev_total_income) || is_object($grand_prev_total_income)):
+									foreach($grand_prev_total_income as $grand_prev_total_income):
+									endforeach;endif;}?>
+								<?php 
+								if(is_array($grand_prev_total_expenditure) && $grand_prev_total_expenditure!=null){
+									foreach($grand_prev_total_expenditure as $grand_prev_total_expenditure): 
+									endforeach;}?>
+								<?php 
+								if(is_array($grand_pres_totalC) && $grand_pres_totalC!=null){
+									foreach($grand_pres_totalC as $grand_pres_totalC): 
+									endforeach;}?>
+								<?php 
+								if(is_array($grand_prev_totalC) && $grand_prev_totalC!=null){
+									foreach($grand_prev_totalC as $grand_prev_totalC): 
+									endforeach;}?>
+								<?php 
+								if(is_array($grand_pres_totaltax) && $grand_pres_totalC!=null){
+									foreach($grand_pres_totaltax as $grand_pres_totaltax): 
+									endforeach;}?>
+								<?php 
+								if(is_array($grand_prev_totaltax) && $grand_prev_totaltax!=null){
+									foreach($grand_prev_totaltax as $grand_prev_totaltax): 
+									endforeach;}?>
+									
+							</tr>
+						<?php
+						endforeach;
+					endif;?>
+					<?php 
+					if($data['tier'] > 0):?>
+						<tr class="green classrow">
+							<td> Total Comprehensive Income</td>
+							<td style ="text-align:right" ><?php echo number_format(($grand_pres_total_income - $grand_pres_total_expenditure - $grand_pres_totaltax+$grand_pres_totalC),2,'.',',');?></td>
+							<td style ="text-align:right" ><?php echo number_format(($grand_prev_total_income - $grand_prev_total_expenditure - $grand_prev_totaltax+$grand_prev_totalC),2,'.',',');?></td>
+						</tr>
+					<?php 
+				    endif; ?>
+					
+				</tbody>
+			</table>
+		</div>
+	</div>
+</div>
+<script type="text/javascript">
+$(function(){
+	$('#start_date').datepicker();
+	$('#end_date').datepicker();
+	$('#start_date').on('changeDate',function(){
+		$('form').formValidation('revalidateField', $(this).attr('id'));
+	});
+	$('#end_date').on('changeDate',function(){
+		$('form').formValidation('revalidateField', $(this).attr('id'));
+	});
+        $("#region").change(function() { 
+			$.post( "<?php echo $this->url('ajresponse', array('action' => 'getlocation')); ?>/"+ $("#region").val(), function( data ) {
+				var newdata ="<option value='-1'>All</option>"+data
+				$('#location').html( newdata );
+				$("#location").trigger('chosen:updated');
+			});
+	    });
+	var title_table = 'Profit Loss Statement Report: ' +' from '+$('input#start_date').val()+' to '+$('input#end_date').val();
+	const fv = FormValidation.formValidation(document.getElementById('#form'), {
+		fields: {
+			'tier': {
+				validators: {
+					notEmpty: {
+						message: 'Please select tier'
+					}
+				}
+			},
+		},
+		plugins: {
+			trigger: new FormValidation.plugins.Trigger(),
+			bootstrap3: new FormValidation.plugins.Bootstrap3(),
+			submitButton: new FormValidation.plugins.SubmitButton(),
+			defaultSubmit: new FormValidation.plugins.DefaultSubmit(),
+		},
+	}).on('core.element.validated', function (e) {
+		if (e.valid) {
+			$('div#'+ e.field.replace('[]','') +'_chosen').removeClass('is-invalid');
+			$('div#'+ e.field.replace('[]','') +'_chosen').addClass('is-valid');
+		} else {
+			$('div#'+ e.field.replace('[]','') +'_chosen').removeClass('is-valid');
+			$('div#'+ e.field.replace('[]','') +'_chosen').addClass('is-invalid');
+		}
+	});	
+	$('#dataTables').DataTable({
+		"paging":   false,
+	});
+});
+</script>

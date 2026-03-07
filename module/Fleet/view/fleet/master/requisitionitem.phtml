@@ -1,0 +1,58 @@
+<?php
+/**
+ * 
+ * View -- of Fleet/MsaterController/vehiclepartAction
+ * 
+ */
+$this->headTitle($this->title);
+?>
+<?php echo $this->partial('fleet/master/partial.phtml', array('active' => 'requisitionitem')); ?>
+<div class="card">
+	<div class="card-header">
+		<div class="btn-group pull-right">
+			<?php echo $this->button(2);?>
+		</div>
+	</div>
+	<div class="table-responsive">
+		<table class="table card-table text-nowrap" id="dataTables">
+			<thead>
+				<tr>
+					<th>#</th>
+					<th>Item</th>
+					<th>UOM</th>
+					<th>Description</th>
+					<th class="no-sort">Action</th>
+				</tr>
+			</thead>
+			<tbody>
+				<?php
+					$i = 1; 
+					foreach ($this->requisition_items as $row):
+				?>
+						<tr>
+							<td><?php echo $i++; ?> </td> 
+							<td><b><?php echo $row['item']; ?></b></td> 
+							<td><b><?php echo $this->uomObj->getColumn($row['uom'],'description'); ?></b></td> 
+							<td><?php echo $row['description']; ?></td>                               
+							<td>
+								<a class="btn btn-xs btn-info" data-toggle="modal" href="<?php echo $this->url('ftmaster', array('action'=>'editrequisitionitem', 'id' => $row['id']));?>" data-target="#modal">
+									<i class="ace-icon fa fa-pencil bigger-120"></i>
+								</a>                                                                    
+							</td>
+						</tr>
+				<?php endforeach;?>
+			</tbody>
+		</table>
+	</div>
+</div>
+<!--for modal -->
+<div id="modal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content"> </div>
+    </div>
+</div>
+<script>
+$('document').ready(function(){
+	$('#dataTables').DataTable();
+});
+</script>

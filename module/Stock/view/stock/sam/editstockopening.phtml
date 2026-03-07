@@ -1,0 +1,416 @@
+<?php
+	/**
+	 * Stock/SamController/editstockopening	
+	 * Edit Stock Opening
+	**/
+	$this->headTitle($this->title);
+?>
+<?php foreach($openings as $opening);?>
+<div class="row">
+	<div class="col-lg-12">
+		<div class="widget widget-box">
+			<div class="widget-header">
+				<h5 class="widget-title lighter smaller">
+					<i class="fa fa-pencil"></i>&nbsp;Add Opening Data for Remaining Locations &nbsp;&nbsp;<?php echo $opening['batch'];?>
+				</h5>
+			</div><!-- end of widget-header -->
+			<div class="widget-body">
+				<div class="widget-main">
+					<form id="#form" method="post" action="<?php echo $this->url('sam', array('action' => 'editstockopening')); ?>"  enctype="multipart/form-data" >    
+						<div class="row">
+							<div class="col-lg-3 form-group">
+								<input type="hidden" value="<?php echo $opening['id'];?>" name="opening_id" id="opening_id" />
+								<input type="hidden" value="<?php echo $opening['item'];?>" name="item" id="item" />
+								<label for="batch_date" class="control-label">Opening Date</label>
+								<div class="date input-group" id="batch_date" data-date="<?php echo date('Y-m-d');?>" data-date-format="yyyy-mm-dd" >
+									<input class="form-control span2" value="<?php echo $opening['opening_date'];?>" name="batch_date" id="batch_date" type="text" placeholder="Batch Date" readonly>
+									<span class="input-group-addon add-on"><i class="fa fa-calendar"></i></span>
+								</div>
+							</div>
+							<div class="col-lg-3 form-group">
+								<label for="issue_date" class="control-label">Issue Date</label>
+								<div class="date input-group" id="issue_date" data-date="<?php echo date('Y-m-d');?>" data-date-format="yyyy-mm-dd" >
+									<input class="form-control span2" value="<?php echo $opening['issue_date'];?>" name="issue_date" id="issue_date" type="text" placeholder="Issue Date" readonly>
+									<span class="input-group-addon add-on"><i class="fa fa-calendar"></i></span>
+								</div>
+							</div>
+							<div class="col-lg-3 form-group">
+								<label for="item_subgroup" class="control-label">Item Group</label>
+								<input type="text" class="form-control"  name="item_subgroup" id="item_subgroup" value="<?php echo $this->itemsubgroupsObj->getColumn($opening['item_subgroup'],'item_subgroup'); ?>" readonly>
+							</div>
+							<div class="col-lg-3 form-group">
+								<label for="item" class="control-label">Item</label>
+								<input type="text" class="form-control"  value="<?php echo $this->itemObj->getColumn($opening['item'],'name'); ?>" readonly>
+							</div>
+							
+							<div class="col-lg-3 form-group">
+								<label for="basic_uom" class="control-label">UOM</label>
+								<input type="text" class="form-control"  name="basic_uom" id="basic_uom" value="<?php echo $this->uomObj->getColumn($opening['uom'],'code'); ?>" readonly>
+							</div>
+							<div class="col-lg-3 form-group">
+								<label for="cost_price" class="control-label">Printing Price</label>
+								<input type="text" class="form-control"  name="cost_price" id="cost_price" value="<?php echo$opening['cost_price']; ?>" readonly>
+							</div>
+							<div class="col-lg-3 form-group">
+								<label for="selling_price" class="control-label">Selling Price</label>
+								<input type="text" class="form-control"  name="selling_price" id="selling_price" value="<?php echo$opening['selling_price']; ?>" readonly>
+							</div>
+						</div>				
+						<div class="space-12"></div>
+						<div class="row">
+							<div class="col-lg-12">
+								<table class="table table-striped table-condensed" id="" style="border-top:2px solid #ddd;">
+									<thead>
+										<tr>
+											<th colspan='4' class='center'>Already Entered Opening Data</th>	
+										</tr>
+										<tr>
+											<th>Location</th>	
+											<th>Quantity in Basic UOM</th>
+											<th></th>
+										</tr>
+									</thead>
+									<tbody>
+									<?php $included_loc = array();
+										foreach($openingdtls as $openingdtl):
+											array_push($included_loc,$openingdtl['location']);
+											
+									?>
+										<tr> 
+											<td><?php echo $this->locationObj->getColumn($openingdtl['location'],'location');?></td>
+											<td><?php echo $openingdtl['quantity'];?></td>
+											<td></td>
+										</tr>
+									<?php endforeach;?>
+									</tbody>
+								</table>
+								<table class="table table-striped table-condensed" id="opening_details" style="border-top:2px solid #ddd;">
+									<thead>
+										<tr>
+											<th>Location</th>	
+											<th>Quantity in Basic UOM</th>
+											<th></th>
+										</tr>
+									</thead>
+									<tbody>
+										<tr> 
+											<td>
+												<div class="form-group">
+													<select class="form-control ace" name="location[]" id="location" data-placeholder="Select" required>
+														<option value=""></option><?php 
+															foreach($userid as $userids);
+															$admin_locs = $this->locationObj->getlo(array('opening_stock'=> $opening['id']));
+															foreach($admin_locs as $admin_loc):?>
+															<option value="<?php echo $admin_loc['id'];?>">
+																<?php echo $admin_loc['location'];?>
+															</option>
+														<?php endforeach;?>	
+													</select>
+												</div>
+											</td>
+											<td><div class="form-group"><input type="text" name="quantity[]" id="quantity" class="form-control" value="0.00" required></div></td>
+											<td></td>
+										</tr>
+									</tbody>
+								</table>
+							</div>
+						</div>
+						<div class="space-12"></div>
+						<div class="row">
+							<div class="col-lg-12">
+							   <button type="submit" class="btn btn-success"><i class="fa fa-save"></i> &nbsp; Save Opening Details</button>
+							</div>
+						</div>	
+					</form>    
+				</div> 
+			</div>   
+      	</div>
+    </div>   
+</div>	
+					
+<script type="text/javascript">                                                          
+$(function() {
+	$('#batch_date').datepicker(); 	
+	$('#batch_date').on('changeDate',function(){
+		$('form').formValidation('revalidateField', $(this).attr('id'));
+	});	
+    $("select#item").change(function() {
+		$.post(
+			"<?php echo $this->url('sam', array('action' => 'getuom'));?>",
+			{
+				itemId: $(this).val(),
+			},
+			function(data){
+				console.log(data);	
+				$('select#basic_uom').html(data.uom);
+				$('select#basic_uom').trigger('chosen:updated');
+			//	$('select#st_uom').html(data.st_uom);
+			//	$('select#st_uom').trigger('chosen:updated');
+				//$('form').formValidation('revalidateField',$('select#basic_uom'));
+				//$('form').formValidation('revalidateField',$('select#st_uom'));
+				//$('form').formValidation('revalidateField',$('#batch'));
+				
+			},
+			'json'
+		);	
+	});
+	$('select#item').on('change',function(){
+		$.post(
+			"<?php echo $this->url('sam', array('action' => 'getuoms'));?>",
+			{
+				item: $(this).val(),
+				batch_date: $('input#batch_date').val(),
+			},
+			function(data){
+				$('select#basic_uom').html(data.basic_uom);
+				$('select#basic_uom').trigger('chosen:updated');
+				$('select#st_uom').html(data.costingUom);
+				$('select#st_uom').trigger('chosen:updated');
+				$('#batch').val(data.batch_code);
+				
+			},
+			'json'
+		);	
+	});
+	/** Table **/
+	var tr_id =0;
+	var parentObj = $('#opening_details');
+	parentObj.wrap("<div style='overflow-x:scroll;margin-bottom:5px;'> </div>");
+	parentObj.find("tbody tr").each(function(){
+		$(this).attr('id',++tr_id);			
+		$(this).find('div.chosen-search input').each(function(){
+			$(this).addClass('ch-search');
+		});
+		$(this).find('div.chosen-container .chosen-drop').each(function(){
+			$(this).css({'position':'relative'});
+		});
+		$(this).find(':input').not('input.ch-search').each(function(){
+			var old_id = $(this).attr('id');
+			var new_id=(old_id.lastIndexOf('-') > 0)? old_id.substr(0, old_id.lastIndexOf('-')): old_id;
+			$(this).attr('id',new_id+'-'+tr_id);
+			$(this).addClass('tr-'+new_id);
+			//$('form').formValidation('addField', $(this));
+		});
+		$(this).find('select.tr-location').each(function(){
+			$(this).bind('change', function(){
+				var id = $(this).closest('tr').attr('id');
+				var cur_val = $(this).val();
+				
+				var cur_obj = $('#location-'+id).closest('tr');
+				$(document).find('select.tr-location').not('#location-'+id).each(function(){
+					if(cur_val == $(this).val()){
+						opening_reset(cur_obj);
+					}
+				});
+			});
+		});
+		opening_delbtn(parentObj);
+	});
+	if($('#addRow').length == 0){
+		var addbutton = "<div class='row'><div class='col-lg-12'><a value='Add' id='addRow' class='pull-right btn btn-success btn-xs' ><i class='fa fa-plus'></i> Add Row</a>&nbsp;&nbsp;&nbsp;&nbsp;</div></div>";
+		parentObj.parent().parent().parent().append(addbutton);
+	};		
+	$("#addRow").click(function(){
+		opening_addrow(parentObj);			     
+	});	
+});
+function opening_addrow(obj){
+	var lastRow = obj.find("tbody tr:last").attr('id');
+	var tmplt_row = obj.find("tbody tr:last").clone(true);
+	clone = tmplt_row.clone();
+	clone.find('div.chosen-container').each(function(){
+		$(this).remove();
+	});
+	clone.attr('id',++lastRow);
+	clone.find(':input').each(function(){
+		var old_id = $(this).attr('id');
+		var new_id=(old_id.lastIndexOf('-') > 0)? old_id.substr(0, old_id.lastIndexOf('-')): old_id;
+		$(this).attr('id',new_id+'-'+lastRow);
+		$(this).addClass('tr-'+new_id);
+		//$('form').formValidation('addField', $(this));
+	});
+	$('#'+obj.attr('id')+' tbody').append(clone);
+	opening_reset(clone);	        
+	$('form select').chosen();//{ allow_single_deselect: true }
+	clone.find('div.chosen-container .chosen-drop').each(function(){
+		$(this).css({'position':'relative'});
+	});
+	clone.find('div.chosen-search input').each(function(){
+		$(this).addClass('ch-search');
+	});
+	clone.find('select.tr-location').each(function(){
+		$(this).bind('change', function(){
+			var id = $(this).closest('tr').attr('id');
+			var cur_val = $(this).val();
+			var cur_obj = $('#location-'+id).closest('tr');
+			$(document).find('select.tr-location').not('#location-'+id).each(function(){
+				if(cur_val == $(this).val()){
+					opening_reset(cur_obj);
+				}
+			});
+		});
+	});
+	opening_delbtn(obj);
+};	
+function opening_delbtn(obj){
+	if(obj.find("tbody tr").length > 1){
+		delBtn = "<a value='Delete' class='btn btn-warning btn-xs delRow' style='margin-top:5px;' ><i class='fa fa-times'></i></a>";
+		obj.find("tbody tr").each(function(){
+			$(this).find("td:last").html(delBtn);			
+		});
+		obj.find("td a.delRow").each(function(){
+			$(this).click(function(){opening_delrow($(this).closest('tr'));});	
+		});
+	}else{
+		delBtn = "<a value='Delete' class='btn btn-warning btn-xs resetRow' style='margin-top:5px;' ><i class='fa fa-refresh'></i></a>";
+		obj.find("tbody tr").each(function(){
+			$(this).find("td:last").html(delBtn);
+		});
+		obj.find("td a.resetRow").each(function(){
+			$(this).click(function(){opening_reset($(this).closest('tr'));});	
+		});
+	}		
+};	
+function opening_delrow(obj){
+	obj.find(':input[data-fv-field]').each(function() {
+		//$('form').formValidation('removeField', $(this));
+	});	
+	var tr_length = obj.parent().find('tr').length;
+	var tbody = obj.parent();
+	obj.closest("tr").remove();	
+	if(tr_length == 2){
+		var delBtn = "<a value='Delete' class='btn btn-warning btn-xs resetRow' style='margin-top:5px;' ><i class='fa fa-refresh'></i></a>";
+		tbody.find('tr td:last').html(delBtn);
+		tbody.find('tr td:last a.resetRow').each(function(){
+			$(this).click(function(){opening_reset($(this).closest("tr"));});
+		});
+	}
+}	
+function opening_reset(obj){
+	var id = obj.attr('id');
+	$('#quantity-'+id).val('0.00');
+	$('#selling_price-'+id).val('0.00');
+	$('#location-'+id).val('selectedIndex',0).trigger('chosen:updated');
+	obj.find(':input:hidden').each(function(){$(this).val('');});
+	obj.find(':input[data-fv-field]').each(function() {
+		//$('form').formValidation('resetField',$(this));
+	});
+}
+	
+const fv = FormValidation.formValidation(document.getElementById('#form'), {
+	fields: {
+		'batch_date': {
+			validators: {
+				notEmpty: {
+					message: 'Please select batch date.'
+				}
+			}
+		},
+		'costing_location': {
+			validators: {
+				notEmpty: {
+					message: 'Please select main location.'
+				}
+			}
+		},
+		'activity': {
+			validators: {
+				notEmpty: {
+					message: 'Please select an activity.'
+				}
+			}
+		},
+		'item': {
+			validators: {
+				notEmpty: {
+					message: 'Please select an item.'
+				}
+			}
+		},
+		'batch': {
+			validators: {
+				notEmpty: {
+					message: 'Please define a batch no'
+				}
+			}
+		},
+		'basic_uom':{
+			validators: {
+				notEmpty: {
+					message: 'Please select an item.'
+				}
+			}
+		},
+		'st_uom': {
+			validators: {
+				notEmpty: {
+					message: 'Please select standard uom.'
+				}
+			}
+		},
+	/*	'costing_location_sp' :{
+			validators: {
+				notEmpty: {
+					message: 'Please provide the costing location selling price.'
+				},
+				numeric:{
+					message: 'Please enter numeric value.'
+				},
+				greaterThan: {
+					value: 0.1,
+					message: 'The value must be greater than or equal to 0'
+				},
+			}
+		},*/
+		'location[]': {
+			validators: {
+				notEmpty: {
+					message: 'Please select location.'
+				}
+			}
+		},
+	/*	'quantity[]':{
+			validators: {
+				notEmpty: {
+					message: 'Please provide Opening qty.'
+				},
+				numeric:{
+					message: 'Please enter numeric value.'
+				},
+				greaterThan: {
+					value: 0.1,
+					message: 'The value must be greater than or equal to 0'
+				},
+			}
+		}, 
+		'selling_price[]':{
+			validators: {
+				notEmpty: {
+					message: 'Please enter selling price.'
+				},
+				numeric:{
+					message: 'Please enter numeric value.'
+				},
+				greaterThan: {
+					value: 0.1,
+					message: 'The value must be greater than or equal to 0'
+				},
+			}
+		},*/ 
+	},
+	plugins: {
+		trigger: new FormValidation.plugins.Trigger(),
+		bootstrap3: new FormValidation.plugins.Bootstrap3(),
+		submitButton: new FormValidation.plugins.SubmitButton(),
+		defaultSubmit: new FormValidation.plugins.DefaultSubmit(),
+	},
+}).on('core.element.validated', function (e) {
+	if (e.valid) {
+		$('div#'+ e.field.replace('[]','') +'_chosen').removeClass('is-invalid');
+		$('div#'+ e.field.replace('[]','') +'_chosen').addClass('is-valid');
+	} else {
+		$('div#'+ e.field.replace('[]','') +'_chosen').removeClass('is-valid');
+		$('div#'+ e.field.replace('[]','') +'_chosen').addClass('is-invalid');
+	}
+});
+</script>

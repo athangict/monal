@@ -1,0 +1,222 @@
+<?php
+/**
+ *
+ * View -- of Stock/StockController/viewgoodsrequest
+ *
+ */
+$this->headTitle($this->title);
+?>
+<?php echo $this->partial('stock/sam/partial.phtml', array('active' => 'conversion')); ?><br/>
+<?php
+	foreach($details as $row):
+		extract($row);
+	endforeach;
+	$location_code =  $this->locationObj->getColumn($location, 'location');
+?>
+
+<style>
+	.mytable tr th,.mytable tr td {
+		padding:5px;
+	}
+</style>
+     <div class="widget widget-box">
+			<div class="widget-header">
+				<h5 class="widget-title lighter smaller">
+					# Good Conversion Details:<strong>&nbsp;&nbsp;<?php echo $conversion_no; ?> | <?php echo $location_code; ?></strong>&nbsp;
+					<?php echo $this->status($status);?>
+				</h5>
+				<div class="widget-toolbar hidden-xs">
+					<div class="btn-group">
+						<a class="btn btn-xs btn-danger" data-toggle="modal" data-target="#modal" href="<?php echo $this->url('acl', array('action' => 'activitylog', 'id' => "27-".$id)); ?>" title="View Activity Logs">
+							<i class="ace-icon fa fa-plus bigger-120" ></i>  
+						</a> 
+						<a class="btn btn-xs" id="print" title="Print">
+							<i class="ace-icon fa fa-file-pdf-o bigger-120"></i>
+						</a>
+					</div>
+				</div>
+			</div>
+			<div class="widget-body">
+				<div class="widget-main padding-12">
+					<div id="report-print">
+						<div class="row" id="convert-tb0">
+							<div class="col-lg-8" id="convert-tb1">
+								<ul class="list-unstyled spaced">
+									<li>
+										<i class="ace-icon fa fa-caret-right blue"></i>
+										Conversion No  : <b class="red"><?php echo $conversion_no; ?></b>
+									</li>
+									<li>
+										<i class="ace-icon fa fa-caret-right blue"></i>
+										Date : <b class="red"><?php echo $conversion_date; ?></b>
+									</li>
+									<li>
+										<i class="ace-icon fa fa-caret-right blue"></i>
+										Location : <b class="red"><?php echo $location_code; ?></b>
+									</li>
+								</ul>
+							</div>
+							<div class="col-lg-4" id="convert-tb2">
+
+							</div>
+						</div>
+						<div class="space-12"></div>
+						<div class="row">
+							<div class="col-lg-12" >
+							    <h5>Conversion Item Details</h5>
+								<table class="table" style="border-top:2px solid #ddd;">
+									<thead>
+										<tr>
+										        <th>Item </th>
+												<th>Batch</th>
+												<th>Landed Cost</th>
+												<th>UOM</th>
+												<th>Quantity</th>
+												<th>Basic UOM</th>
+												<th>Basic Quantity</th>
+										</tr>
+									</thead>
+									<tbody>
+											<tr>
+												<td><?php echo $this->itemObj->getColumn($item,'name'); ?></td>
+												<td><?php echo $this->batchObj->getColumn($batch,'batch');?></td>
+												<td><?php echo $landed_cost;?></td>
+												<td><?php echo $this->uomObj->getColumn($uom,'code'); ?></td>
+												<td><?php echo $issued_qty;?></td>
+												<td><?php echo $this->uomObj->getColumn($basic_uom,'code'); ?></td>
+												<td><?php echo $basic_qty;?></td>
+											</tr>
+										<tr style="border-top:2px solid #ddd;border-bottom:2px solid #ddd;"></tr>
+									</tbody>
+								</table>
+							</div>
+						</div>
+					    <div class="row">
+							<div class="col-lg-12" >
+							  <h5>Item Details after conversion</h5>
+								<table class="table" style="border-top:2px solid #ddd;">
+									<thead>
+										<tr>
+										        <th>Item </th>
+												<th>Batch</th>
+												<th>Landed Cost</th>
+												<th>UOM</th>
+												<th>Quantity</th>
+												<th>Basic UOM</th>
+												<th>Basic Quantity</th>
+										</tr>
+									</thead>
+									<tbody>
+											<tr>
+												<td><a target="_blank" href="<?php echo $this->url('stock',array('action'=>'viewitem','id'=>$converted_item));?>"><?php echo $converted_item_name = $this->itemObj->getColumn($converted_item,'name');?></td>
+												<td>
+													<?php
+														if($converted_item_batch > 0){
+															$batch_status = $this->batchObj->getColumn($converted_item_batch, 'status');
+															if($batch_status == "1"){
+																$text ="init"; $link = "costingsp"; $color="text-warning";
+															}elseif($batch_status == "2"){
+																$text ="pend"; $link = "costingsp"; $color="text-danger";
+															}else{
+																$text = "Comt"; $link = "viewbatch"; $color="text-success";
+															}
+															?>
+															<a class="<?php echo $color;?>" href="<?php echo $this->url('batch', array('action'=>$link,'id'=>$converted_item_batch));?>" target="_blank">
+																<?php echo $this->batchObj->getColumn($converted_item_batch, 'batch');?></a>&nbsp;&nbsp;
+															<i class="fa fa-shield <?php echo $color;?>">&nbsp;<?php echo $text; ?></i>
+															
+                                                    <?php }else{ echo "NA"; } ?></td>
+												<td><strong><?php echo $converted_item_elc; ?></strong></td>
+												<td><?php echo $this->uomObj->getColumn($converted_item_uom,'code');?></td>
+												<td><?php echo $converted_qty;?></td>
+												<td><?php echo $this->uomObj->getColumn($converted_basic_uom,'code');?></td>
+												<td><?php echo $converted_basic_qty; ?></td>
+											</tr>
+										<tr style="border-top:2px solid #ddd;border-bottom:2px solid #ddd;"></tr>
+									</tbody>
+								</table>
+							</div>
+						 </div>
+				         <?php
+                         $costingDtls = $this->costingObj->get(array('conversion'=>$id));
+                         if(sizeof($costingDtls)){
+                         ?>
+                         <div class="row">
+							<div class="col-lg-12" >
+							  <h5>Costing Sheet Details of <b><?php echo $converted_item_name; ?></b></h5>
+								<table class="table" style="border-top:2px solid #ddd;">
+                                    <thead>
+                                     <tr>
+                                    <?php
+                                        foreach($costingDtls as $dtl):
+                                    ?>
+                                      <th><?php echo $this->costingHeadObj->getColumn(array('id'=>$dtl['costing_head']),'costing_head'); ?></th>
+         							<?php
+                                        endforeach;
+                                    ?>
+                                      </tr>
+                                    </thead>
+									<tbody>
+									<tr>
+                                      <?php
+                                        foreach($costingDtls as $dtl):
+                                      ?>
+                                      <td><?php if($dtl['elc'] == '1'): echo "<b>".$dtl['value']."&nbsp; (ELC)</b>"; else: echo $dtl['value']; endif;  ?></td>
+         							  <?php
+                                        endforeach;
+                                      ?>
+                                      </tr>
+									  <tr style="border-top:2px solid #ddd;border-bottom:2px solid #ddd;"></tr>
+									</tbody>
+								</table>
+							</div>
+						  </div>
+                         <?php
+                         }
+                        ?>
+                      <div class="row">
+						  <div class="col-lg-10">
+                             <i> *<b>Note:&nbsp; </b><?php echo $note;  ?> </i>
+                          </div>
+                      </div>
+                    </div>
+                    <div class="row">
+						<div class="col-lg-8">
+                              &nbsp;
+						</div>
+						<div class="col-lg-4">
+							<?php if($status == '1' || $status == '2'): ?>
+						    <?php if($converted_item_elc > 0): ?>
+                            	<a href="<?php echo $this->url('sam', array('action'=>'commitconversion', 'id'=>$id));?>" class="btn btn-success"> <i class="fa fa-check"></i>Commit</a>
+                                <a data-toggle="modal" data-target="#modal"  href="<?php echo $this->url('sam', array('action'=>'conversioncosting', 'id'=>$id));?>" class="btn btn-danger"> <i class="fa fa-check-square-o"></i>&nbsp; Recalculate ELC</a>
+                            <?php else: ?>
+                             	<a data-toggle="modal" data-target="#modal"  href="<?php echo $this->url('sam', array('action'=>'conversioncosting', 'id'=>$id));?>" class="btn btn-success"> <i class="fa fa-check-square-o"></i>&nbsp; Calculate ELC</a>
+                            <?php endif; ?>
+                          		<a href="<?php echo $this->url('sam', array('action'=>'editconversion', 'id'=>$id));?>" class="btn btn-info"> <i class="fa fa-pencil"></i> Edit </a>
+                            <?php endif; ?>
+						</div>
+					</div>
+               	<!-- Upload and Download file attachments -->
+			    <?php
+				   echo $this->partial('partial/attachment.phtml', array('process' => '26', 'process_id'=> $id , 'status' => $status));
+				?>
+			    <!-- End of attachment -->
+			    
+			</div>
+		</div>
+	</div>
+</div>
+<div id="modal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+	<div class="modal-dialog">
+		<div class="modal-content">
+		</div>
+	</div>
+</div>
+<script type="text/javascript">
+$('document').ready(function(){
+	$('#dataTables').DataTable({
+		"paging":   true,
+	});
+});
+</script>
+

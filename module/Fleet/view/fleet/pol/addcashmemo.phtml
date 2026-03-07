@@ -1,0 +1,241 @@
+<?php
+/**
+ * View -- of POL/PolController/addpolAction
+ */
+  $this->headTitle($this->title);
+?>
+
+<div class="row">
+	<div class="col-lg-12">
+		<div class="widget widget-box">
+			<div class="widget-header">
+				<h5 class="widget-title lighter smaller">
+					<i class="fa fa-asterisk"></i>&nbsp;&nbsp;Cash Memo Details
+				</h5>
+			</div><!-- end of widget-header -->
+			<div class="widget-body">
+				<div class="widget-main">
+					<form id="#form" method="post" action="<?php echo $this->url('pol', array('action' => 'addcashmemo','id' =>$this->id)); ?>"  enctype="multipart/form-data" >    
+						<div class="space-12"></div>
+						<div class="row">
+						   <div class="col-lg-12"> 
+							  <h5>Cash Memo</h5>
+								 <div>
+									<table id="trdetails_table" class="table small-padding table-condensed table-striped">
+										<thead>
+											<tr>
+												<th>Cash Memo Date</th>
+												<th>Cash Memo No.</th>
+												<th>Fuel Litter</th>
+												<th>Fuel Rate</th>
+												<th>Engine Oil Amount</th>
+												<th>Brake Oil Amount</th>
+												<th>Gear Oil Amount</th>
+												<th>Distilled Water Amount</th>
+												<th>Fuelling Location</th>
+												<th>Total Amount</th>
+												<th></th>
+											</tr>
+										</thead>
+										<tbody>
+										    <?php 
+											if(sizeOf($veh_logs)>0):
+											foreach($veh_logs as $veh_log):?>
+											<tr>
+												<td>
+													<div class="form-group">
+														<input id="cash_memo_id" name="cash_memo_id[]" type="hidden"  value = "<?php echo $veh_log['id'];?>" readonly />
+														<div class="date input-group" id="cash_memo_date" data-date="<?php echo date('Y-m-d');?>" data-date-format="yyyy-mm-dd" >
+															<input class="form-control span2" name="cash_memo_date[]" id="cash_memo_date" type="text" value="<?php echo date('Y-m-d');?>" placeholder="sanction order date" readonly required>
+															<span class="input-group-addon add-on"><i class="fa fa-calendar"></i></span>
+														</div>
+													</div>
+												</td>
+												<td>
+													<div class="form-group">
+														<input type="text" class="form-control" name="cash_memo_no[]" id="cash_memo_no"  value = "<?php echo $veh_log['cash_memo_no']; ?>" readonly />
+													</div>
+												</td>
+												<td>
+													<div class="form-group">
+														<input type="text" class="form-control" name="fuel_litter[]" id="fuel_litter"  value = "<?php echo $veh_log['refuelling']; ?>" readonly />
+													</div>
+												</td>
+												<td>
+													<div class="form-group">
+														<input type="text" class="form-control"  name="fuel_rate[]" id="fuel_rate" value = "0.00" />
+													</div>
+												</td>
+												<td>
+													<div class="form-group">
+														<input type="text" class="form-control" name="engine_oil_amt[]" id="engine_oil_amt" value = "0.00" />
+													</div>
+												</td>
+												<td>
+													<div class="form-group">
+														<input type="text" class="form-control" name="brake_oil_amt[]" id="brake_oil_amt"  value = "0.00"/>
+													</div>
+												</td>
+												<td>
+													<div class="form-group">
+														<input type="text" class="form-control" name="gear_oil_amt[]" id="gear_oil_amt" value = "0.00" />
+													</div>
+												</td>
+												<td>
+													<div class="form-group">
+														<input type="text" class="form-control" name="distilled_water_amt[]" id="distilled_water_amt" value = "0.00" />
+													</div>
+												</td>
+												<td>
+													<div class="form-group">
+														<input type="text" class="form-control" name="fuelling_location[]" id="fuelling_location" />
+													</div>
+												</td>
+												<td>
+													<div class="form-group">
+														<input type="text" class="form-control" name="total_amount[]" id="total_amount" value = "0.00" readonly />
+													</div>
+												</td>
+												<td></td>											
+											</tr>
+											<?php endforeach; endif;?>
+										</tbody>
+									</table>
+								</div>
+							</div>
+                            <div class="row col-lg-12"> 	
+								<div class="col-lg-9"> </div>	
+								<div class="col-lg-3">    
+									<div class="form-group">
+										<label for="total_payment_amount" class="control-label">Total Payment Amount</label>
+										<input type="text" class="form-control" value="0.00" name="total_payment_amount" id="total_payment_amount" readonly />
+									</div>
+								</div>	
+                                <div class="col-lg-1"> </div>								
+							</div>	
+						</div>
+                        <div class ="row">
+                            <div class="col-lg-12">
+								<label class="control-label" for="note">Note: </label>
+								<textarea class="form-control" name="note" id="note"></textarea>
+							</div>				
+						</div>
+						<div class="space-12"></div>
+						<div class="row"> 	
+							<div class="col-lg-9"> 
+								<button type="submit" class="btn btn-success"><i class="fa fa-check"></i> Save </button>
+								<button type="button" class="btn btn-warning" onclick="javascript:history.back();" >
+									<i class="fa fa-times"></i> Cancel 
+								</button> 					
+							</div>
+						</div>
+					</form>	
+				</div><!-- widget widget-main -->
+			</div>  <!-- widget widget-body -->   
+		</div> <!-- widget widget-box --> 
+	</div><!-- col-lg-12 -->
+</div><!-- row -->
+<script>
+$('document').ready(function(){
+	$('.date').datepicker();
+	$('.date').on('changeDate',function(){
+		$('form').formValidation('revalidateField', $(this).attr('id'));
+	});
+    var tr_id = 0;
+    var parentObj = $('#trdetails_table');	
+	parentObj.wrap("<div style='overflow-x:scroll;margin-bottom:5px;'> </div>");
+	parentObj.find("tbody tr").each(function(){
+		$(this).attr('id',++tr_id);				
+		$(this).find(':input').each(function(){
+			var old_id = $(this).attr('id');			
+			var new_id=(old_id.lastIndexOf('-') > 0)? old_id.substr(0, old_id.lastIndexOf('-')): old_id;
+			$(this).attr('id',new_id+'-'+tr_id);
+			$(this).addClass('tr-'+new_id);
+		});	
+		var id = $(this).attr('id');
+		cm_calculation(parentObj);
+	});		
+	function cm_calculation(obj){
+	obj.find('tbody tr').each(function(){
+		var id = $(this).attr('id');
+			$('#fuel_rate-'+id).on('change',function(){cm_calamt($(this).closest("tr"));});			
+			$('#engine_oil_amt-'+id).on('change',function(){cm_calamt($(this).closest("tr"));});			
+			$('#brake_oil_amt-'+id).on('change',function(){cm_calamt($(this).closest("tr"));});			
+			$('#gear_oil_amt-'+id).on('change',function(){cm_calamt($(this).closest("tr"));});			
+			$('#distilled_water_amt-'+id).on('change',function(){cm_calamt($(this).closest("tr"));});			
+		});
+		var netqty = 0;
+		obj.find('tbody tr').each(function(){
+			var id = $(this).attr('id');
+			netqty += parseFloat($('#total_amount-'+id).val());
+		});
+		var value = parseFloat(netqty).toFixed(2);
+		$('#total_payment_amount').val(($.isNumeric(value))? value:'0.00');
+	};
+	function cm_calamt(obj){
+		var id = obj.closest("tr").attr('id');
+		var fuel_litter = parseFloat($('#fuel_litter-'+id).val()).toFixed(2);
+		var fuel_rate = parseFloat($('#fuel_rate-'+id).val()).toFixed(2);
+		var engine_oil_amt = parseFloat($('#engine_oil_amt-'+id).val());
+		var brake_oil_amt = parseFloat($('#brake_oil_amt-'+id).val());
+		var gear_oil_amt = parseFloat($('#gear_oil_amt-'+id).val());
+		var distilled_water_amt = parseFloat($('#distilled_water_amt-'+id).val());
+		
+		fuel_litter = ($.isNumeric(fuel_litter))?fuel_litter:'';
+		fuel_rate = ($.isNumeric(fuel_rate))?fuel_rate:'0.00';
+	
+		var amt = (fuel_litter * fuel_rate) + engine_oil_amt + brake_oil_amt + gear_oil_amt + distilled_water_amt;
+		
+		$('#total_amount-'+id).val(parseFloat(amt).toFixed(2));
+		
+		var netqty = 0;
+		obj.parent().find('tr').each(function(){
+			var id = $(this).attr('id');
+			netqty += parseFloat($('#total_amount-'+id).val());
+		});
+		var value = parseFloat(netqty).toFixed(2);
+		
+		$('#total_payment_amount').val(($.isNumeric(value))? value:'0.00');
+	}
+/*	const fv = FormValidation.formValidation(document.getElementById('#form'), {
+		fields: {
+			district: {
+				validators: {
+					notEmpty: {
+						message: 'Please provide District Name En.'
+					}
+				}
+			},
+			districtDz: {
+				validators: {
+					notEmpty: {
+						message: 'Please provide District Name Dz.'
+					}
+				}
+			},
+			status: {
+				validators: {
+					notEmpty: {
+						message: 'Please select status.'
+					}
+				}
+			},
+		},
+		plugins: {
+			trigger: new FormValidation.plugins.Trigger(),
+			bootstrap3: new FormValidation.plugins.Bootstrap3(),
+			submitButton: new FormValidation.plugins.SubmitButton(),
+			defaultSubmit: new FormValidation.plugins.DefaultSubmit(),
+		},
+	}).on('core.element.validated', function (e) {
+		if (e.valid) {
+			$('div#'+ e.field.replace('[]','') +'_chosen').removeClass('is-invalid');
+			$('div#'+ e.field.replace('[]','') +'_chosen').addClass('is-valid');
+		} else {
+			$('div#'+ e.field.replace('[]','') +'_chosen').removeClass('is-valid');
+			$('div#'+ e.field.replace('[]','') +'_chosen').addClass('is-invalid');
+		}
+	});*/
+});
+</script>
+

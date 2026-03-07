@@ -1,0 +1,623 @@
+<?php
+/**
+ * View -- of Purchase/PurchaseController/addporderAction
+ */
+  $this->headTitle($this->title);
+  foreach($claims as $claim);
+?>
+<div class="row">
+	<div class="col-lg-12">
+		<div class="widget widget-box">
+			<div class="widget-header">
+				<h5 class="widget-title lighter smaller">
+					<i class="fa fa-edit"></i>&nbsp;&nbsp;Edit Travel Claim 
+				</h5>
+			</div><!-- end of widget-header -->
+			<div class="widget-body">
+				<div class="widget-main">
+					<form id="#form" method="post" action="<?php echo $this->url('travel', array('action' => 'editclaim','id'=>$claim['id'])); ?>"  enctype="multipart/form-data" >    
+						<div class="row">	
+                            <div class="col-lg-3">    
+								<div class="form-group">
+									<label for="ta_no" class="control-label">Aganist Travel Authorization</label>
+										<select class="form-control" name="ta_no" id="ta_no" >
+											<option value="">Select</option>
+											<?php foreach($ta as $tas):?>
+												<option value="<?php echo $tas['id'];?>" <?php echo ($tas['id']==$claim['ta'])?'selected':'';?>><?php echo $tas['ta_no'].'-'.'Dt'.$tas['date'];?>
+											<?php endforeach;?>
+										</select>
+								</div>
+							</div>
+							<div class="col-lg-3">    
+								<div class="form-group">
+									<label for="claim_date" class="control-label">Date</label>
+									<div class="date input-group" id="claim_date" data-date="<?php echo date('Y-m-d');?>" data-date-format="yyyy-mm-dd" >
+										<input class="form-control span2" name="claim_date" id="claim_date" type="text" placeholder="claim Date" value="<?php echo $claim['date'];?>" readonly required>
+										<span class="input-group-addon add-on"><i class="fa fa-calendar"></i></span>
+									</div>
+								</div>
+							</div>
+                        </div>
+						<div class="row">
+							<div class="col-lg-12"> 
+								<h4>TA Calim Details</h4>
+								<div>
+								<table id="ta_field" class="table small-padding">
+                                    <thead style="border:2px solid #D5D8DC;">
+                                        <tr>
+                                            <th rowspan=2  style="border-right:2px solid #D5D8DC;">Date</th>
+                                            <th colspan=2 style="border-right:2px solid #D5D8DC;">Place</th>
+                                            <th colspan=2 style="border-right:2px solid #D5D8DC;">Time</th>
+                                            <th colspan=6>Claim Details</th>
+                                        </tr>
+                                        <tr>
+                                            <th style="border-right:2px solid #D5D8DC;">From</th>
+											<th style="border-right:2px solid #D5D8DC;">To</th>
+                                            <th style="border-right:2px solid #D5D8DC;">Departure</th>
+                                            <th style="border-right:2px solid #D5D8DC;">Arrival</th>
+                                            <th style="border-right:2px solid #D5D8DC;">Daily Allowance</th>
+                                            <th style="border-right:2px solid #D5D8DC;">Millage Nu.</th>
+                                            <th style="border-right:2px solid #D5D8DC;">Hotel</th>
+											<th style="border-right:2px solid #D5D8DC;">Other</th>
+                                            <th style="border-right:2px solid #D5D8DC;">Total</th>
+                                            <th style="border-right:2px solid #D5D8DC;">Remarks</th>
+											
+                                        </tr>
+                                    </thead>
+									<tbody>
+									<?php foreach($this->claim_details->get(array('claim'=>$claim['id'])) as $row):?>
+									<input type="hidden" class="form-control" name="id[]" id="id" value="<?php echo $row['id'];?>"/>
+										<tr>
+											<td class="col-lg-1 input-cell">
+												<div class="form-group" id="item_container">
+													<div class="date input-group" id="date" data-date="<?php echo date('Y-m-d');?>" data-date-format="yyyy-mm-dd" >
+													<?php $date= explode('-', $row['date']);?>
+														<input class="form-control span2 tr_date" name="date[]" id="date" type="text" value="<?php echo $date[1]."/".$date[2]."/".$date[0];?>" placeholder="TA Claim Date"  >
+														
+													</div>
+												</div>
+											</td>
+											<td class="col-lg-1 input-cell">
+												<div class="form-group">
+													<input class="form-control tr_from" name="from[]" id="from" value="<?php echo $row['from'];?>" placeholder="Enter From">
+												</div>
+											</td>
+											<td class="col-lg-1 input-cell">
+												<div class="form-group">
+													<input class="form-control tr_to" name="to[]" id="to" value="<?php echo $row['to'];?>" placeholder="Enter TO" >
+												</div>
+											</td>
+											<td class="col-lg-1 input-cell">
+												<div class="form-group">
+														<input class="form-control  tr_departure" name="departure[]" id="departure" value="<?php echo $row['departure'];?>"type="text" >
+													</div>
+												</div>
+											</td>
+											<td class="col-lg-1 input-cell">
+												<div class="form-group">
+													<input type="text" class="form-control tr_arrival" name="arrival[]" id="arrival" value="<?php echo $row['arrival'];?>"/>
+												</div>
+											</td>
+											<td class="col-lg- input-cell">
+												<div class="form-group">
+													<input type="number" class="form-control tr_da" value="<?php echo $row['da'];?>" name="da[]" id="da"  />
+												</div>         
+											</td>
+											<td class="col-lg-1 input-cell">
+												<div class="form-group">
+													<input type="number" class="form-control tr_mileage" name="mileage[]" id="mileage" value="<?php echo $row['mileage'];?>" />
+												</div>         
+											</td>
+											<td class="col-lg-1 input-cell">
+												<div class="form-group">
+													<input type="number" class="form-control tr_hotel" name="hotel[]" id="hotel"  value="<?php echo $row['hotel'];?>"/>
+												</div>         
+											</td>
+											<td class="col-lg-1 input-cell">
+												<div class="form-group">
+													<input type="number" class="form-control tr_other" name="other[]" id="other"  value="<?php echo $row['other'];?>"/>
+												</div>         
+											</td>
+											<td class="col-lg-1 input-cell">
+												<div class="form-group">
+													<input type="number" class="form-control tr_total" name="total[]" id="total"value="<?php echo $row['total'];?>"  />
+												</div>         
+											</td>
+											<td class="col-lg-2 input-cell">
+												<div class="form-group">
+													<input type="text" class="form-control tr_remarks" value="<?php echo $row['remarks'];?>"name="remarks[]" id="remarks"  />
+												</div>         
+											</td>
+											<td >
+										    <br>
+											<a class="btn btn-sm btn-danger" href="<?php echo $this->url('travel', array('action'=>'deleteclaim', 'id'=>$row['id']));?>">
+													<i class="glyphicon-minus"></i>
+												</a>	
+										</td>
+											<?php endforeach;?>
+											<!-- <td>
+												<br>
+												<button class="btn btn-sm btn-success" type="button"  onclick="ta_field();"> <span class="fa fa-plus-square" aria-hidden="true"></span> </button>
+											</td> -->
+										</tr> 
+									</tbody>
+								</table>
+								<div class="row"> 
+									<div class="col-lg-11"></div>
+									<button class="btn btn-xs btn-success" type="button"  onclick="ta_field();"> <span class="fa fa-plus-square" aria-hidden="true"> Add Row</span> </button>
+								</div>
+								<div class="row col-lg-12"> 
+									<div class="col-lg-4 input-cell">
+									</div>
+									<div class="col-lg-1 input-cell">
+										<div class="form-group">
+											<label for="amount">Total</label>
+										</div>
+									</div>
+									<div class="col-lg-1 input-cell">
+										<div class="form-group">
+										<input type="text" class="form-control" name="da_amount" id="da_amount" value="<?php echo $claim['tot_da'];?>" readonly>
+										</div>
+									</div>
+									<div class="col-lg-1 input-cell">
+										<div class="form-group">
+										<input type="text" class="form-control" name="mileage_amount" id="mileage_amount" value="<?php echo $claim['tot_mileage'];?>"readonly>
+										</div>
+									</div>
+									<div class="col-lg-1 input-cell">
+										<div class="form-group">
+										<input type="text" class="form-control" name="hotel_amount" id="hotel_amount" value="<?php echo $claim['tot_hotel'];?>"readonly>
+										</div>
+									</div>
+									<div class="col-lg-1 input-cell">
+										<div class="form-group">
+										<input type="text" class="form-control" name="other_amount" id="other_amount" value="<?php echo $claim['tot_other'];?>"readonly>
+										</div>
+									</div>
+									<div class="col-lg-1 input-cell">
+										<div class="form-group">
+										<input type="text" class="form-control" name="amount" id="amount" value="<?php echo $claim['actual_expense'];?>"readonly>
+										</div>
+									</div>
+								</div>
+									<div class="clear"></div>
+								</div>
+							</div>
+						</div>
+						<div class="row"> 
+							<div class="col-lg-3">
+								<div class="form-group">
+									<label for="estimated_expense">Estimated Expanse</label>
+									<input type="text" class="form-control" name="estimated_expense" id="estimated_expense" value="<?php echo $claim['estimated_expense'];?>">
+								</div>
+							</div>
+						</div>
+						<div class="row"> 
+							<div class="col-lg-3">
+								<div class="form-group">
+									<label for="actual_expense">Actual Expense (A)</label>
+									<input type="text" class="form-control" name="actual_expense" id="actual_expense"value="<?php echo $claim['actual_expense'];?>" >
+								</div>
+							</div>
+						</div>
+						<div class="row"> 
+							<div class="col-lg-3">
+								<div class="form-group">
+									<label for="advance">Advance Taken (B)</label>
+									<input type="text" class="form-control" name="advance" id="advance" value="<?php echo $claim['advance'];?>">
+								</div>
+							</div>
+						</div>
+						<div class="row"> 
+							<div class="col-lg-3">
+								<div class="form-group">
+									<label for="amount_claim">Amount Claim (A-B)</label>
+									<input type="text" class="form-control" name="amount_claim" id="amount_claim" value="<?php echo $claim['amount_claim'];?>">
+								</div>
+							</div>
+						</div>
+						<br>
+						<div class="row">
+							<div class="col-lg-12"> 
+								<h4></h4>
+								<div>
+								<table id="sh_field" class="table small-padding">
+								<tbody>
+								<?php foreach($this->subObj->get(array('claim'=>$claim['id'])) as $subs):?>
+									<input type="hidden" id="subid" name="subid[]" value="<?php echo $subs['id'];?>">
+									<tr>
+										<td class="col-lg-2 input-cell">
+											<div class="form-group">
+											<label for="head" class="control-label"><b>Head </b></label>
+												<select class="form-control tr_head" name="head[]" id="head" data-placeholder="Select">
+													<option value="">Select</option>
+												<?php foreach($heads as $head):?>
+														<option value="<?php echo $head['id']?>" <?php echo ($subs['head']==$head['id'])?'selected':'';?>><?php echo $head['name'];?></option>
+														<?php endforeach;?>
+												</select>
+											</div>
+										</td>
+										<td class="col-lg-2 input-cell">
+											<div class="form-group">
+											<label for="subhead" class="control-label"><b> Subhead</b></label>
+												<select class="form-control tr_subhead" name="subhead[]" id="subhead" data-placeholder="Select" >
+													<option value="">Select</option>
+													<?php foreach($subhead as $shead):?>
+														<option value="<?php echo $shead['id']?>" <?php echo ($subs['subhead']==$shead['id'])?'selected':'';?>><?php echo $shead['name'];?></option>
+														<?php endforeach;?>
+											</div>
+										</td>
+										<td class="col-lg-1 input-cell">
+											<div class="form-group">
+												<label for="debit" class="control-label"><b>Debit</b></label>
+												<input type="number" class="form-control tr_debit" name="debit[]" id="debit"  value="<?php echo $subs['debit'];?>" required/>
+											</div>
+										</td>
+										<td class="col-lg-1 input-cell">
+											<div class="form-group">
+												<label for="credit" class="control-label"><b>Credit</b></label>
+												<input type="number" class="form-control tr_credit" name="credit[]" id="credit" value="<?php echo $subs['credit'];?>" required/>
+											</div>
+										</td>
+										<td class="col-lg-2 input-cell">
+											<div class="form-group">
+												<label for="ref_no" class="control-label"><b>Reference.</b></label>
+												<input type="text" class="form-control tr_ref_no" name="ref_no[]" id="ref_no"  value="<?php echo $subs['ref_no'];?>" required/>
+											</div>         
+										</td>
+										<?php endforeach;?>
+										<!-- <td>
+										    <br>
+											<button class="btn btn-sm btn-success" type="button"  onclick="sh_field();"> <span class="fa fa-plus-square" aria-hidden="true"></span> </button>
+										</td> -->
+									</tr> 
+								</tbody>
+								<table>
+								<div class="row"> 
+									<div class="col-lg-11"></div>
+									<button class="btn btn-xs btn-success" type="button"  onclick="sh_field();"> <span class="fa fa-plus-square" aria-hidden="true"> Add Row</span> </button>
+								</div>
+								<div class="row"> 
+								<div class="col-lg-5"></div>
+									<div class="col-lg-2">
+										<div class="form-group">
+											<label for="tot_debit"><b>Total Debit</b></label>
+											<input type="text" class="form-control" name="tot_debit" id="tot_debit" readonly>
+										</div>
+									</div>
+									<div class="col-lg-2">
+										<div class="form-group">
+											<label for="tot_credit"><b>Total Credit</b></label>
+											<input type="text" class="form-control" name="tot_credit" id="tot_credit" readonly>
+										</div>
+									</div>
+								</div>
+									<div class="clear"></div>
+								</div>
+							</div>
+						</div>
+						<div class="space-12"></div>
+						<div class="row"> 	
+							<div class="col-lg-9"> 
+								<button type="submit" class="btn btn-success"><i class="fa fa-check"></i> Save </button>
+								<button type="button" class="btn btn-warning" onclick="javascript:history.back();" ><i class="fa fa-times"></i> Cancel </button> 					
+							</div>
+						</div>
+					</form>	
+				</div><!-- widget widget-main -->
+			</div>  <!-- widget widget-body -->   
+		</div> <!-- widget widget-box --> 
+	</div><!-- col-lg-12 -->
+</div><!-- row -->
+
+<script type="text/javascript">	 
+var room = 1;
+	function ta_field() {
+    room++;
+    var objTo = document.getElementById('ta_field');
+    var divtest = document.createElement('tr');
+    divtest.setAttribute('class', 'form-group removeclass' + room);
+    
+    divtest.innerHTML = 
+    '<tr><td class="col-lg-1 input-cell"><div class="form-group"><div class="date input-group" data-date="<?php echo date('Y-m-d');?>" data-date-format="yyyy-mm-dd" ><input class="form-control tr_date" name="date[]" id="date" type="text" placeholder="TA Claim Date"  required></div></div></td><td class="col-lg-1 input-cell"><div class="form-group"><input class="form-control tr_from_" name="from[]" id="from" placeholder="Enter From"></div></td><td class="col-lg-1 input-cell"><div class="form-group"><input class="form-control tr_to" name="to[]" id="to" placeholder="Enter TO" ></div></td><td class="col-lg-1 input-cell"><div class="form-group"><input class="form-control  tr_departure" name="departure[]" id="departure" type="text" ></div></div></td><td class="col-lg-1 input-cell"><div class="form-group"><input type="text" class="form-control tr_arrival" name="arrival[]" id="arrival"/></div></td><td class="col-lg- input-cell"><div class="form-group"><input type="number" class="form-control tr_da" name="da[]" id="da" value="0.00" /></div></td><td class="col-lg-1 input-cell"><div class="form-group"><input type="number" class="form-control tr_mileage" name="mileage[]" id="mileage" value="0.00" /></div></td><td class="col-lg-1 input-cell"><div class="form-group"><input type="number" class="form-control tr_hotel" name="hotel[]" id="hotel"  value="0.00"/></div></td><td class="col-lg-1 input-cell"><div class="form-group"><input type="number" class="form-control tr_other" name="other[]" id="other"  value="0.00"/></div></td><td class="col-lg-1 input-cell"><div class="form-group"><input type="number" class="form-control tr_total" name="total[]" id="total" value="0.00" readonly /></div></td><td class="col-lg-2 input-cell"><div class="form-group"><input type="text" class="form-control tr_remarks" name="remarks[]" id="remarks"  /></div></td><td class="col-lg-1 input-cell"><div class="input-group-btn"><button class="btn btn-sm btn-danger" type="button" onclick="remove_ta_field(' + room + ');"><span class="glyphicon-minus" aria-hidden="true"></span></button></div></td></tr>';
+	objTo.appendChild(divtest);
+	// Reinitialize datepicker for the newly added row
+    $('.tr_date').datepicker();
+	calculateTotalAmount();
+    
+	}
+	function remove_ta_field(rid) {
+	$('.removeclass' + rid).remove();
+	calculateTotalAmount();
+	}
+
+$(document).on('input', '.tr_da,.tr_mileage,.tr_other,.tr_hotel', function () {
+		calculateTotal($(this));
+		});
+		
+		function calculateTotal(element) {
+		var row = element.closest('tr');  // Get the closest table row
+
+		var daInput = row.find('.tr_da');  // Adjusted these to use class selectors and scope within the row
+		var mileageInput = row.find('.tr_mileage');
+		var hotelInput = row.find('.tr_hotel'); // Assuming there's a field for the total amount with the class "tr_amount"
+		var totalInput = row.find('.tr_total'); 
+		var otherInput = row.find('.tr_other'); 
+
+		var da = parseFloat(daInput.val()) || 0;
+		var mileage = parseFloat(mileageInput.val()) || 0;
+		var hotel = parseFloat(hotelInput.val()) || 0;
+		var other = parseFloat(otherInput.val()) || 0;
+		var total=da+mileage+hotel+other;
+
+		totalInput.val(total.toFixed(2));  // Assuming you want to show up to two decimal places
+		calculateTotalAmount();
+	}
+	
+	function calculateTotalAmount() {
+		//console.log("calculateTotal amount");
+		var total = 0.0;
+		var tot_da=0.0;
+		var tot_mileage=0.0;
+		var tot_hotel=0.0;
+		var tot_other=0.0;
+		// Iterate over each amount input field in the table
+		$('.tr_total').each(function() {
+			var amount = parseFloat($(this).val());
+			if (!isNaN(amount)) { // Make sure it's a valid number
+				total += amount;
+			}
+		});
+// Update the #total field with the new sum
+		$('#actual_expense').val(total.toFixed(2));
+		$('#amount').val(total.toFixed(2));
+		
+		// Iterate over each amount input field in the table
+		$('.tr_da').each(function() {
+			var amount1 = parseFloat($(this).val());
+			if (!isNaN(amount1)) { // Make sure it's a valid number
+				tot_da += amount1;
+			}
+		});
+		$('#da_amount').val(tot_da.toFixed(2));
+		
+		// Iterate over each amount input field in the table
+		$('.tr_mileage').each(function() {
+			var amount2 = parseFloat($(this).val());
+			if (!isNaN(amount2)) { // Make sure it's a valid number
+				tot_mileage += amount2;
+			}
+		});
+		$('#mileage_amount').val(tot_mileage.toFixed(2));
+		// Iterate over each amount input field in the table
+		$('.tr_hotel').each(function() {
+			var amount4 = parseFloat($(this).val());
+			if (!isNaN(amount4)) { // Make sure it's a valid number
+				tot_hotel += amount4;
+			}
+		});
+		$('#hotel_amount').val(tot_hotel.toFixed(2));
+		
+		// Iterate over each amount input field in the table
+		$('.tr_other').each(function() {
+			var amount3 = parseFloat($(this).val());
+			if (!isNaN(amount3)) { // Make sure it's a valid number
+				tot_other += amount3;
+			}
+		});
+		$('#other_amount').val(tot_other.toFixed(2));
+		
+		calculateClaim();
+	}
+	function calculateClaim(){
+		
+		var expense=parseFloat($('#actual_expense').val()) || 0;
+		var advance=parseFloat($('#advance').val()) || 0;
+		var claim=expense-advance;
+		$('#amount_claim').val(claim.toFixed(2));
+	}
+
+
+		//add row for subheads
+		var room1=1;
+		function sh_field() {
+			room1++;
+    var objTo = document.getElementById('sh_field');
+    var divtest = document.createElement('tr');
+    divtest.setAttribute('class', 'form-group removeclass' + room1);
+    
+    divtest.innerHTML = 
+    '<tr><td class="col-lg-2 input-cell"><div class="form-group"><select class="form-control tr_head" name="head[]" id="head" data-placeholder="Select"><option value="">Select</option><?php foreach($heads as $head):?><option value="<?php echo $head['id']?>"><?php echo $head['name']?></option><?php endforeach;?></select></div></td><td class="col-lg-2 input-cell"><div class="form-group"><select class="form-control tr_subhead" name="subhead[]" id="subhead" data-placeholder="Select" ><option value="">Select</option></div></td><td class="col-lg-1 input-cell"><div class="form-group"><input type="number" class="form-control tr_debit" name="debit[]" id="debit"  required/></div></td><td class="col-lg-1 input-cell"><div class="form-group"><input type="number" class="form-control tr_credit" name="credit[]" id="credit"  required/></div></td><td class="col-lg-2 input-cell"><div class="form-group"><input type="text" class="form-control tr_ref_no" name="ref_no[]" id="ref_no"  required/></div></td><td class="col-lg-1 input-cell"><div class="input-group-btn"><button class="btn btn-sm btn-danger" type="button" onclick="remove_ta_field(' + room1 + ');"><span class="glyphicon-minus" aria-hidden="true"></span></button></div></td></tr>';
+	objTo.appendChild(divtest);
+
+    
+	}
+	function remove_sh_field(rid) {
+	$('.removeclass' + rid).remove();
+	}
+	$(document).on('change', '.tr_head', function () {
+		var selectedhead = $(this).val(); // get the value of the changed .tr_head
+		var relatedItemElement = $(this).closest('tr').find('.tr_subhead'); // find the related .tr_subhead in the same row
+		$.post(
+			"<?php echo $this->url('travel', array('action' => 'getsubhead')); ?>",
+			{
+				headId: selectedhead,
+			},
+			function(data){
+				console.log(data.subheads);
+				relatedItemElement.html(data.subheads); // updating the related .tr_subhead
+				relatedItemElement.trigger('chosen:updated'); // if you're using chosen plugin
+			},
+			'json'
+			);
+		});
+		$(document).on('input', '.tr_credit', function () {
+		var $row = $(this).closest('tr');
+		var $debit = $row.find('.tr_debit');
+		if ($debit.val() !== '0') {
+			$debit.val('0');
+		}
+		calculateTotalCD();
+	});
+
+	$(document).on('input', '.tr_debit', function () {
+		var $row = $(this).closest('tr');
+		var $credit = $row.find('.tr_credit');
+		if ($credit.val() !== '0') {
+			$credit.val('0');
+		}
+		calculateTotalCD();
+	});
+	function calculateTotalCD() {
+		//console.log("calculateTotal amount");
+		var credit = 0.0;
+		var debit=0.0;
+		// Iterate over each amount input field in the table
+		$('.tr_credit').each(function() {
+			var amount = parseFloat($(this).val());
+			if (!isNaN(amount)) { // Make sure it's a valid number
+				credit += amount;
+			}
+		});
+		// Update the #total field with the new sum
+		$('#tot_credit').val(credit.toFixed(2));
+		
+		// Iterate over each amount input field in the table
+		$('.tr_debit').each(function() {
+			var amount1 = parseFloat($(this).val());
+			if (!isNaN(amount1)) { // Make sure it's a valid number
+				debit += amount1;
+			}
+		});
+		$('#tot_debit').val(debit.toFixed(2));
+		
+	}
+	$(document).on('change','#payment',function(){
+			
+		$.post(
+			"<?php echo $this->url('travel', array('action' => 'getAccount')); ?>",
+			{
+				accId: $(this).val(),
+				
+			},
+			function(data){
+				console.log(data.subheads);	
+				$("#subhead").html(data.subheads); 
+				$("#subhead").trigger('chosen:updated'); 
+				if(data.accid ==2){
+					$('#refund').show();
+					
+				}
+				else{
+					$('#refund').hide();
+				}
+			},
+			'json'
+			);
+		});
+		
+$(document).ready(function()  {
+	calculateTotalCD();
+	$('#claim_date').datepicker();
+	$('.tr_date').datepicker();
+	$('#ta_no').on('change',function(){
+		$.post(
+			"<?php echo $this->url('travel', array('action' => 'getexpense')); ?>",
+			{
+				taId: $(this).val(),
+			},
+			function(data){
+				console.log(data.advance);
+				$("#advance").val(data.advance);	
+				$("#estimated_expense").val(data.estimated_expense);	
+				$("#debit").html(data.subheadlist); // updating the related .tr_uom
+				$("#debit").trigger('chosen:updated'); // if you're using chosen plugin
+				if(data.advance >0.00){
+					$('#advance_credit').show();
+					
+				}
+				else{
+					$('#advance_credit').hide();
+				}
+			},
+			'json'
+			);
+		});
+		
+		
+		
+	/*** Form Validation ***/
+// Initialize form validation
+const fv = FormValidation.formValidation(document.getElementById('#form'), {
+	fields: {
+		'ta_no': {
+			validators: {
+				notEmpty: {
+					message: 'Please select TA No date'
+				}
+			}
+		},
+		'head[]': {
+			validators: {
+				notEmpty: {
+					message: 'Please select head'
+				}
+			}
+		},
+		'credit': {
+			validators: {
+				notEmpty: {
+					message: 'Please enter credit'
+				}
+			}
+		},
+		'location': {
+			validators: {
+				notEmpty: {
+					message: 'Please select location'
+				}
+			}
+		}, 
+		'tot_debit': {
+            validators: {
+                notEmpty: {
+                    message: 'Total debit is required'
+                },
+                identical: {
+                    compare: function() {
+                        return document.getElementById('tot_credit').value;
+                    },
+                    message: 'Total credit must be equal to total debit'
+                }
+            }
+        },
+        'tot_credit': {
+            validators: {
+                notEmpty: {
+                    message: 'Total credit is required'
+                },
+                identical: {
+                    compare: function() {
+                        return document.getElementById('tot_debit').value;
+                    },
+                    message: 'Total debit must be equal to total credit'
+                }
+            }
+        }
+	},
+	plugins: {
+		trigger: new FormValidation.plugins.Trigger(),
+		bootstrap3: new FormValidation.plugins.Bootstrap3(),
+		submitButton: new FormValidation.plugins.SubmitButton(),
+		defaultSubmit: new FormValidation.plugins.DefaultSubmit(),
+	}
+	}).on('core.element.validated', function (e) {
+		if (e.valid) {
+			$('div#' + e.field.replace('[]','') + '_chosen').removeClass('is-invalid').addClass('is-valid');
+		} else {
+			$('div#' + e.field.replace('[]','') + '_chosen').removeClass('is-valid').addClass('is-invalid');
+		}
+	});
+
+});      
+</script>

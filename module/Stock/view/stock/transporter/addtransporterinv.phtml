@@ -1,0 +1,247 @@
+<?php
+/**
+ * View -- of Stock/TransportController/addtransinvAction
+ */
+	$this->headTitle($this->title);
+?>
+<?php echo $this->partial('stock/transporter/partial.phtml', array('active' => 'invoice')); ?> <br/>
+<style>
+	.checkbox{
+		margin-top:3px;
+		margin-bottom:3px;"
+	}
+</style>
+<?php ?>
+<div class="row">
+	<div class="col-lg-12">
+		<div class="widget widget-box">
+			<div class="widget-header">
+				<h5 class="widget-title lighter smaller">
+					<i class="fa fa-asterisk"></i>&nbsp;&nbsp;New Transporter Invoice
+				</h5>
+			</div><!-- end of widget-header -->
+			<div class="widget-body">
+				<div class="widget-main">
+					<form id="#form"  method="post" action="<?php echo $this->url('transporter', array('action' => 'addtransporterinv'));?>" enctype="multipart/form-data">
+						<div class="row">
+							<div class="col-lg-3">
+								<div class="form-group">
+									<label for="transport_inv_no" class="control-label">Transport Invoice No:</label>
+									<input type="text" class="form-control" name="transport_inv_no" id="transport_inv_no"  placeholder="Transporter Invoice No." required/>
+								</div>
+							</div>
+							<div class="col-lg-3">
+								<div class="form-group">
+									<label for="transport_inv_date" class="control-label">Transporter Invoice Date</label>
+									<div class="date input-group" id="transport_inv_date" data-date="<?php echo date('Y-m-d');?>" data-date-format="yyyy-mm-dd" >
+										<input class="form-control span2" name="transport_inv_date" id="transport_inv_date" type="text" value="<?php echo date('Y-m-d');?>" placeholder="Transport Invoice Date" readonly required>
+										<span class="input-group-addon add-on"><i class="fa fa-calendar"></i></span>
+									</div>
+								</div>
+							</div>
+							<div class="col-lg-3">
+								<div class="form-group">
+									<label for="location" class="control-label">Location</label>
+									<select id="location" name="location" class="form-control" data-placeholder="Select" required>
+										<option value=""></option>	
+										<?php
+											foreach ($this->locationObj->getAll() as $locations):
+												//$selected = ($locations['id']==22)?"selected":""; 
+										?>
+											<option value="<?php echo $locations['id'];?>" <?php //echo $selected;?>>
+												<?php echo $locations['location']; ?>
+											</option>
+										<?php endforeach; ?>							
+									</select> 
+								</div>
+							</div>
+							<div class="col-lg-3">
+								<div class="form-group">
+									<label for="transporter" class="control-label">Transporter</label>
+									<select id="transporter" name="transporter" class="from-control" data-placeholder="Select" required>
+										<option value=""> </option>
+										<?php foreach($transporters as $transporter):?>
+										<option value="<?php echo $transporter['id'];?>">
+											<?php echo $transporter['code'];?>
+										</option>
+									    <?php endforeach;?>
+									</select>
+								</div>
+							</div>
+						</div>
+						<div class="row">
+							<div class="col-lg-3">
+								<div class="form-group">
+									<label for="from_date" class="control-label">Start Date</label>
+									<div class="date input-group" id="from_date" data-date="<?php echo date('Y-m-d');?>" data-date-format="yyyy-mm-dd" >
+										<input class="form-control span2" name="from_date" id="from_date" type="text" placeholder="Start Date" readonly required>
+										<span class="input-group-addon add-on"><i class="fa fa-calendar"></i></span>
+									</div>
+								</div>
+							</div>
+							<div class="col-lg-3">
+								<div class="form-group">
+									<label for="to_date" class="control-label">End Date</label>
+									<div class="date input-group" id="to_date" data-date="<?php echo date('Y-m-d');?>" data-date-format="yyyy-mm-dd" >
+										<input class="form-control span2" name="to_date" id="to_date" value="<?php echo date('Y-m-d');?>" type="text" placeholder="End Date" readonly required >
+										<span class="input-group-addon add-on"><i class="fa fa-calendar"></i></span>
+									</div>
+								</div>
+							</div>
+						</div>
+						<div class="row">
+							<div class="col-lg-12">
+							<div class="space-12"></div>
+								<div class="page-header">
+									<h1>
+										<div class="col-lg-9">
+											Transporter Invoice Details
+											<small>
+												<i class="ace-icon fa fa-angle-double-right"></i>
+												From Transport Charge
+											</small>
+										</div>
+										<div class="col-lg-3">
+											<button type="button" id="refresh_btn" class="btn btn-info pull-right"><i class="fa fa-refresh"></i> Refresh </button>
+										</div>
+									</h1>
+									<div class="space-12"></div>
+									<div class="space-12"></div>
+								</div>
+							</div>
+						</div>
+						<div class="row">
+							<div class="col-lg-12">
+								<div class="alert alert-block alert-info message_box">
+									<button class="close" data-dismiss="alert" type="button">
+										<i class="ace-icon fa fa-times"></i>
+									</button>
+									<i class="ace-icon fa fa-check blue"></i>
+									Please Fill in the details to view <strong class="blue">Transportation Charge</strong>. 
+								</div>
+								<div class="transp_inv_details">
+									<?php /** The Table Data Comes in Here **/?>
+								</div>
+							</div>
+						</div>
+						<div class="space-12"></div>
+						<div class="row"> 	
+							<div class="col-lg-12"> 
+								<button type="submit" class="btn btn-success"><i class="fa fa-check"></i> Save </button>
+								<a class="btn btn-warning" onclick="javascript:history.back();"><i class="fa fa-times"></i> Cancel </a>   		
+							</div>
+						</div>
+					</form>
+				</div>	
+			</div>
+		</div>		
+	</div>
+</div>
+<script type="text/javascript">
+$(function() {
+	$('#transport_inv_date').datepicker();
+	$('#from_date').datepicker();
+	$('#to_date').datepicker();
+	$('#transport_inv_date').on('changeDate',function(){
+		$('form').formValidation('revalidateField', $(this).attr('id'));
+	});
+	$('#from_date').on('changeDate', function(){
+		$('form').formValidation('revalidateField', $(this).attr('id'));
+	});
+	$('#to_date').on('changeDate', function(){
+		$('form').formValidation('revalidateField', $(this).attr('id'));
+	});
+
+	$('#refresh_btn').click(function(){
+		//$('form').formValidation('revalidateField',$('input#from_date'));
+		//$('form').formValidation('revalidateField',$('input#to_date'));
+		//$('form').formValidation('revalidateField',$('#location'));
+		//$('form').formValidation('revalidateField',$('#activity'));
+		//$('form').formValidation('revalidateField',$('#transporter'));
+		var validation = $('form small[data-fv-result = "INVALID"]').length;
+		if(validation <= 0){
+			$.post( 
+				"<?php echo $this->url('transporter', array('action' => 'gettransinvdetails'));?>",
+				{	
+					'from_date': $('input#from_date').val(),
+					'to_date': $('input#to_date').val(),
+					'location': $('#location').val(), 
+					//'activity': $('#activity').val(),
+					'transporter':$('#transporter').val(),
+				}, 
+				function(data) {
+					$('div.transp_inv_details').html( data ); 
+			});	
+			$('div.message_box').hide();
+		}
+	});
+});
+//formValidation
+const fv = FormValidation.formValidation(document.getElementById('#form'), {
+	fields: {
+		'transport_inv_no': {
+			validators: {
+				notEmpty: {
+					message: 'Please enter transport invoice number'
+				}
+			}
+		},
+		'transport_inv_date': {
+			validators: {
+				notEmpty: {
+					message: 'Please select transport invoice date'
+				}
+			}
+		},
+		'location': {
+			validators: {
+				notEmpty: {
+					message: 'Please select location'
+				}
+			}
+		},
+		/*'activity': {
+			validators: {
+				notEmpty: {
+					message: 'Please select activity'
+				}
+			}
+		},*/
+		'from_date': {
+			validators: {
+				notEmpty: {
+					message: 'Please select transport invoice start date'
+				}
+			}
+		},
+		'to_date': {
+			validators: {
+				notEmpty: {
+					message: 'Please select transport invoice end date'
+				}
+			}
+		},
+		'transporter': {
+			validators: {
+				notEmpty: {
+					message: 'Please select transporter'
+				}
+			}
+		},
+	},
+	plugins: {
+		trigger: new FormValidation.plugins.Trigger(),
+		bootstrap3: new FormValidation.plugins.Bootstrap3(),
+		submitButton: new FormValidation.plugins.SubmitButton(),
+		defaultSubmit: new FormValidation.plugins.DefaultSubmit(),
+	},
+}).on('core.element.validated', function (e) {
+	if (e.valid) {
+		$('div#'+ e.field.replace('[]','') +'_chosen').removeClass('is-invalid');
+		$('div#'+ e.field.replace('[]','') +'_chosen').addClass('is-valid');
+	} else {
+		$('div#'+ e.field.replace('[]','') +'_chosen').removeClass('is-valid');
+		$('div#'+ e.field.replace('[]','') +'_chosen').addClass('is-invalid');
+	}
+});
+</script>	

@@ -1,0 +1,133 @@
+<?php
+/**
+ * Layout of the system/application
+ */
+?>
+<?php echo $this->doctype(); ?>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <?php echo $this->headTitle('ERP '. $this->translate('Bhutanpost-ERP'))->setSeparator(' - ')->setAutoEscape(false) ?>
+        <?php echo $this->headMeta()->appendName('viewport', 'width=device-width, initial-scale=1.0') ?>
+        
+        <?php /* if ($user = $this->Identity()) {  
+           $time = $this->config()['timeout']; 
+           echo $this->headMeta()->appendHttpEquiv('refresh', '' .$time + 5 . ';url=' . $this->url('auth', array('action' => 'login', 'id' => 'NoKeepAlive'))); 
+        }  */ ?>  
+        <!-- Le styles -->
+        <?php echo $this->headLink(array('rel' => 'shortcut icon', 'type' => 'image/vnd.microsoft.icon', 'href' => $this->basePath() . '/img/favicon.png'))
+        				->prependStylesheet($this->basePath() . '/css/ie/fcb_style-ie2.min.css', 'screen', 'IE')
+        				->prependStylesheet($this->basePath() . '/css/ie/fcb_style-ie.min.css', 'screen', 'IE')
+						->prependStylesheet($this->basePath() . '/rpt_css_js/report_css.css')
+        				->prependStylesheet($this->basePath() . '/fcb_css.css');
+        ?> 
+                  
+       <!-- Scripts -->
+        <?php echo $this->headScript()->prependFile($this->basePath() . '/js/respond.min.js', 'text/javascript', array('conditional' => 'IE'))
+									->prependFile($this->basePath() . '/js/html5shiv.min.js', 'text/javascript', array('conditional' => 'IE'))
+									->prependFile($this->basePath() . '/js/jquery.browser.js')
+									->prependFile($this->basePath() . '/js/ch_genpdf.js')
+									->prependFile($this->basePath() . '/js/ch_addrow.js')
+									->prependFile($this->basePath() . '/js/jquery.mousewheel.js')
+									->prependFile($this->basePath() . '/js/jquery.jscrollpane.custom.min.js')
+									->prependFile($this->basePath() . '/js/bootstrap-datepicker.min.js')
+									->prependFile($this->basePath() . '/js/jquery-ui.custom.min.js')
+									->prependFile($this->basePath() . '/js/jquery.ui.touch-punch.min.js')
+									->prependFile($this->basePath() . '/js/formValidator.bootstrap.js')
+									->prependFile($this->basePath() . '/js/formValidator.min.js')
+									->prependFile($this->basePath() . '/js/dataTables.tableTools.js')
+									
+									->prependFile($this->basePath() . '/rpt_css_js/js/dataTables.select.min.js')
+									->prependFile($this->basePath() . '/rpt_css_js/js/buttons.colVis.min.js')
+                                    ->prependFile($this->basePath() . '/rpt_css_js/js/buttons.print.min.js')
+									->prependFile($this->basePath() . '/rpt_css_js/js/buttons.html5.min.js')
+									->prependFile($this->basePath() . '/rpt_css_js/js/vfs_fonts.js')
+									->prependFile($this->basePath() . '/rpt_css_js/js/pdfmake.min.js')
+									->prependFile($this->basePath() . '/rpt_css_js/js/jszip.min.js')
+									->prependFile($this->basePath() . '/rpt_css_js/js/buttons.flash.min.js')
+									->prependFile($this->basePath() . '/rpt_css_js/js/dataTables.buttons.min.js')
+									->prependFile($this->basePath() . '/rpt_css_js/js/jquery.dataTables.min.js')	
+									
+									->prependFile($this->basePath() . '/js/fcb-elements.min.js')
+									->prependFile($this->basePath() . '/js/fcb-inline.min.js')
+									->prependFile($this->basePath() . '/js/jquery.slimscroll.min.js')
+									->prependFile($this->basePath() . '/js/fcb.min.js')									
+									->prependFile($this->basePath() . '/js/fcb-extra.min.js')
+                                    ->prependFile($this->basePath() . '/js/bootstrap.min.js')
+									->prependFile($this->basePath() . '/js/chosen.jquery.js')
+                                    ->prependFile($this->basePath() . '/rpt_css_js/js/jquery-1.12.4.js','text/javascript', array('conditional' => '!IE'))
+                                    ->prependFile($this->basePath() . '/js/jquery.1.11.1.min.js','text/javascript', array('conditional' => 'IE')); ?>  
+                            
+       	<!--[if !IE]>
+			<script type="text/javascript">
+				window.jQuery || document.write("<script src='assets/js/jquery.min.js'>"+"<"+"/script>");
+			</script>
+		 <![endif]-->
+
+		<!--[if IE]>
+			<script type="text/javascript">
+			 window.jQuery || document.write("<script src='assets/js/jquery1x.min.js'>"+"<"+"/script>");
+			</script>
+		<![endif]-->
+		
+		<script type="text/javascript">
+			if('ontouchstart' in document.documentElement) document.write("<script src='assets/js/jquery.mobile.custom.min.js'>"+"<"+"/script>");
+		</script>                             
+     </head>
+     <?php $class = ($user = $this->Identity())?'no-skin':'login-layout light-login patern-bg'; ?>
+	<body class="<?php echo $class;?>">
+		<?php if ($user = $this->Identity()) {  ?>    
+			<?php echo $this->partial('partial/navbar-top.phtml'); ?>
+		<?php } ?> 
+		<div class="main-container" id="main-container">
+			<!-- sidebar menu  -->
+			<?php if ($user = $this->Identity()) {  ?>    
+				<?php echo $this->partial('partial/navbar-side.phtml'); ?>                
+			<?php } ?>  	
+			<div class="main-content">
+				<div class="main-content-inner">
+					<?php if ($user = $this->Identity()) {  ?>  
+						<?php echo $this->partial('partial/breadcrumb.phtml'); ?>    	
+						<div class="page-content">
+					<?php }?>
+						<div class="col-lg-12">
+							<?php echo $this->content; ?>  
+							<?php echo $this->flash_message();?>
+						</div>
+					<?php if ($user = $this->Identity()) {  ?>   
+						</div>
+					<?php }?>
+				</div>
+			</div>
+			<div class="footer">
+				<div class="footer-inner">
+					<div class="footer-content">
+						<span class="bigger-120">
+							<span class="blue bolder">FCBL</span>
+							ERP-System &copy; 2014-<?php echo date('Y'); ?>
+						</span>
+
+						&nbsp; &nbsp;
+						<!--<span class="action-buttons">
+							<a href="#">
+								<i class="ace-icon fa fa-twitter-square light-blue bigger-150"></i>
+							</a>
+
+							<a href="#">
+								<i class="ace-icon fa fa-facebook-square text-primary bigger-150"></i>
+							</a>
+
+							<a href="#">
+								<i class="ace-icon fa fa-rss-square orange bigger-150"></i>
+							</a>
+						</span>-->
+					</div>
+				</div>
+			</div>
+
+			<a href="#" id="btn-scroll-up" class="btn-scroll-up btn btn-sm btn-inverse">
+				<i class="ace-icon fa fa-angle-double-up icon-only bigger-110"></i>
+			</a>	
+		</div>
+	</body>
+</html>			

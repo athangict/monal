@@ -1,0 +1,408 @@
+<?php
+/**
+ * 
+ * View -- of Stock/GoodsrequestController/editgoodsrequestAction
+ * 
+ */
+  $this->headTitle($this->title);
+?>
+<?php echo $this->partial('stock/sam/partial.phtml', array('active' => 'sam')); ?><br/>
+<?php 
+	foreach($sam as $samRow):
+		extract($samRow);
+		$sam_id = $id;
+		$sam_status = $status;
+		$location_id = $location; 
+		$activity_id = $activity;
+	endforeach;	
+?>
+
+<div class="row">
+	<div class="col-lg-12">
+		<div class="widget widget-box">
+			<div class="widget-header">
+				<h5 class="widget-title lighter smaller">
+					# Stock Adjustment Details:<strong>&nbsp;&nbsp;<?php echo $sam_no; ?> | <?php echo $location_code; ?></strong>&nbsp;
+					<?php echo $this->status($status);?>
+				</h5>
+			</div>
+			<div class="widget-body">
+				<div class="widget-main">
+					<form  id="#form" method="post" action="<?php echo $this->url('sam', array('action'=>'editsam')); ?>"  enctype="multipart/form-data" >    
+						<div class="row">	  
+							<input type="hidden" id="sam_id" name="sam_id" value="<?php echo $sam_id;?>"/>						 
+							<div class="form-group col-lg-4">
+								<label for="sam_date" class="control-label">Stock Adjustment Date</label>
+								<div class="date input-group" id="sam_date" data-date="<?php echo date('Y-m-d');?>" data-date-format="yyyy-mm-dd" >
+									<input class="form-control span2" name="sam_date" id="sam_date" type="text" value="<?php echo $sam_date;?>" placeholder="Stock Adjustment Date" readonly required>
+									<span class="input-group-addon add-on"><i class="fa fa-calendar"></i></span>
+								</div>
+							</div> 							
+							<div class="form-group col-lg-4">
+								<label for="location" class="control-label">Location</label>
+								<select id="location" name="location" class="form-control" data-placeholder="Select" required>
+									<option value=""></option>
+									<?php foreach ($regions as $region): ?>
+									<optgroup label="<?php echo $region['region'];?>">
+										<?php
+											$locations = $locationObj->get(array('l.region'=>$region['id']));
+											foreach ($locations as $location):
+											 $selected_location = ($location['id'] == $location_id)?"selected":"";
+											?>
+											 <option value="<?php echo $location['id']; ?>" <?php echo $selected_location; ?>>
+												<?php echo $location['location']; ?>
+											 </option>
+										<?php endforeach;?>
+									</optgroup>
+									<?php endforeach;?>									
+								</select> 
+							</div> 
+							
+							<div class="form-group col-lg-4">
+								<label for="activity" class="control-label">Activity</label>
+								<select class="form-control" name="activity" id="activity" data-placeholder="Select" required>
+									<option value=""></option>
+								    <?php foreach($this->activities as $activity):
+									    $selected_activity = ($activity['id']==$activity_id)?"selected":""; ?>
+										<option value="<?php echo $activity['id'];?>" <?php echo $selected_activity;?>>
+									   		<?php echo $activity['activity']; ?>
+									   	</option>
+									<?php endforeach; ?>
+								</select>
+							</div>
+						</div>
+
+						<div class="row">
+						   <div class="col-lg-12"> 
+							  <h5>Stock Adjustment Details</h5>
+								 <div>
+									<table id="trdetails_table" class="table small-padding">
+										<thead>
+											<tr>
+											    <th>Adjustment Type</th>
+												<th>Item Code</th>
+												<th>Batch</th>
+												<th>UOM</th>
+												<th>Source Quantity</th>
+												<th>Quantity</th>
+												<th>Basic UOM</th>
+												<th>Basic Quantity</th>
+												<th>Remarks</th>
+												<th></th>
+											</tr>
+										</thead>
+										<tbody>
+										<?php
+										if(sizeof($sam_details) > 0): 
+											foreach($sam_details as $sam_detail):?>
+											<tr>
+											  <td>
+												<div class="form-group">
+														<select id="sam_type" name="sam_type[]" class="form-control" data-placeholder="Select" >
+															<option value=""></option>
+															<?php foreach ($this->samTypes as $samType): ?>
+															       <?php $selected = ($samType['id']==$sam_detail['sam_type'])?'selected':''; ?>
+															         <option value="<?php echo $samType['id']; ?>" <?php echo $selected; ?>>
+															            <?php echo $samType['sam_type']; ?>
+															          </option>
+															<?php endforeach; ?>
+														</select>
+													</div>
+												</td>
+												<td>
+													<div class="form-group">
+														<select id="item" name="item[]" class="form-control" data-placeholder="Select" >
+															<option value=""></option>
+															<?php $items =  $itemsObj->get(array('i.activity' => $activity_id));
+															foreach($items as $item):
+															$selected = ($item['id']==$sam_detail['item_id'])?'selected':'';
+															?>
+															<option value="<?php echo $item['id'];?>" <?php echo $selected;?>>
+																<?php echo $item['code']?>
+															</option>							
+															<?php endforeach;?>									
+														</select>
+														<input type="hidden" name="details_id[]" id="details_id-<?php echo $i;?>" value="<?php echo $sam_detail['id'];?>">
+													</div>
+												</td>
+												
+												<td>
+													<div class="form-group">
+														<select id="batch" name="batch[]" class="form-control"  data-placeholder="Select" required>
+															<option value=""></option>
+															<?php
+																$items = $this->itemsObj->get($sam_detail['item_id']);
+																foreach($items as $item):
+																	if($item['valuation'] == 1):
+															?>	
+																<option value="0" selected>N/A</option>
+															<?php
+																else:
+																	$batchs = $this->batchObj->getSamBatch(array('b.item'=>$sam_detail['item_id'],'d.location'=>$location_id));
+																		foreach($batchs as $batch): 
+																			$selected_batch = ($batch['id']==$sam_detail['batch'])?"selected":"";
+															?>
+																<option value="<?php echo $batch['id'];?>" <?php echo $selected_batch;?>>
+																	<?php echo $batch['batch'];?>
+																</option>
+															<?php 		endforeach;
+																	endif;
+																endforeach;
+															?>
+														</select>
+													</div>
+												</td>
+											
+												<td>
+													<div class="form-group">
+														<select id="uom" name="uom[]" class="form-control" data-placeholder="Select" >
+															<option value=""></option>
+															<?php 
+															$items = $this->itemsObj->get($sam_detail['item_id']);
+																foreach($items as $item):
+																	$selected = ($item['uom']==$sam_detail['uom_id'])?"selected":"";
+															?>
+																<option value="<?php echo $item['uom']?>" <?php echo $selected;?>>
+																	<?php echo $this->uomObj->getColumn($item['uom'], 'code');?>
+																</option>
+															<?php endforeach;?>
+															<?php   
+																$itemuoms = $this->itemuomObj->get(array('ui.item' => $sam_detail['item_id']));
+																foreach($itemuoms as $uom):
+																	$selected = ($uom['uom']==$sam_detail['uom_id'])?"selected":"";
+															?>
+																<option value="<?php echo $uom['uom'];?>" <?php echo $selected;?>>
+																	<?php echo $uom['uom_code'];?>
+																</option>
+															<?php endforeach;?>
+														</select>
+													</div>
+												</td>
+												<?php
+													$selected_item = $this->itemsObj->get($details['item_id']);
+													foreach($selected_item as $item);
+													if($item['valuation']==1):
+														$from_quantity = $this->movingitemObj->getColumn(array('item'=>$sam_detail['item_id'],'location'=>$location_id),'quantity');
+													else: 
+														$from_quantity = $this->batch_detailsObj->getColumn(array('batch'=>$sam_detail['batch'],'location'=>$location_id),'quantity');
+													endif;
+													
+													if($item['uom']!=$details['uom']):
+														$conversion = $this->itemuomObj->getColumn(array('item'=>$details['sam_detail'],'uom'=>$details['uom_id']),'conversion');
+														$conversion = ($conversion==0)?1:$conversion;
+														$from_quantity = $from_quantity/$conversion;
+													endif;
+												?>
+												<td>
+													<div class="form-group">
+														<input name="from_balance[]" id="from_balance" type="text" class="form-control" value="<?php echo $from_quantity;?>" data-old-from_balance="<?php echo $from_quantity;?>" readonly />  
+													</div>
+												</td>
+												<td>
+													<div class="form-group">
+														<input type="text" class="form-control" name="quantity[]" id="quantity" value="<?php echo $sam_detail['quantity'];?>"/>
+													</div>         
+												</td>
+												<td>
+													<div class="form-group">
+														<div class="form-group">
+														<select name="basic_uom[]" id="basic_uom" type="text" class="form-control" data-placeholder="Basic Uom" readonly >
+															<option value=""></option>
+															<option value="<?php echo $sam_detail['basic_uom'];?>" selected >
+																<?php echo $this->uomObj->getColumn($sam_detail['basic_uom'],'code');?>
+															</option>
+														</select>
+													    </div> 
+													</div>         
+												</td>
+												<td>
+													<div class="form-group">
+														<input name="basic_quantity[]" id="basic_quantity" type="text" class="form-control" value="<?php echo $sam_detail['basic_quantity'];?>" readonly />
+													</div>         
+												</td>
+												<td>
+													<div class="form-group">
+														<input type="text" class="form-control" name="remark[]" id="remark" value="<?php echo $sam_detail['remark'];?>"/>
+													</div>         
+												</td>
+												<td></td>
+											</tr>
+										<?php endforeach;
+										else: ?>
+											<tr>
+												<td>
+												<div class="form-group">
+														<select id="sam_type" name="sam_type[]" class="form-control" data-placeholder="Select" >
+															<option value=""></option>
+															<?php foreach ($this->samTypes as $samType): ?>
+															         <option value="<?php echo $samType['id']; ?>">
+															            <?php echo $samType['sam_type']; ?>
+															          </option>
+															<?php endforeach; ?>
+														</select>
+													</div>
+												</td>
+												<td>
+													<div class="form-group">
+														<select id="item" name="item[]" class="form-control" data-placeholder="Select" >
+															<option value=""></option>																													
+														</select>
+													</div>
+												</td>
+												<td>
+													<div class="form-group">
+														<select id="batch" name="batch[]" class="form-control"  data-placeholder="Select">
+															<option value=""></option>	
+														</select>
+													</div>
+												</td>
+												<td>
+													<div class="form-group">
+														<select id="uom" name="uom[]" class="form-control" data-placeholder="Select" >
+															<option value=""></option>
+														</select>
+													</div>
+												</td>
+												<td>
+													<div class="form-group">
+														<input name="from_balance[]" id="from_balance" type="text" class="form-control" value="0.00" readonly required />
+													</div>
+												</td>
+												<td>
+													<div class="form-group">
+														<input name="quantity[]" id="quantity" type="text" class="form-control" value="0.00"required />
+													</div>
+												</td>
+												<td>
+													<div class="form-group">
+														<select name="basic_uom[]" id="basic_uom" type="text" class="form-control" data-placeholder="Basic Uom" readonly >
+															<option value=""></option>
+														</select>
+													</div>         
+												</td>
+												<td>
+													<div class="form-group">
+														<input name="basic_quantity[]" id="basic_quantity" type="text" class="form-control" value="0.00" readonly />
+													</div>         
+												</td>
+												<td>
+													<div class="form-group">
+														<input type="text" class="form-control" name="remark[]" id="remark"/>
+													</div>         
+												</td>
+												<td></td>
+											</tr>
+										<?php endif;?>
+										</tbody>
+									</table>
+								</div> <!-- end of div -->
+							</div> <!-- end of col-lg-12 -->
+						</div>	<!-- end of row -->	
+						<div class="row">
+							<div class="col-lg-12">
+								<label class="control-label" for="note">Note: </label>
+								<textarea class="form-control" name="note" id="note"><?php echo $remark;?></textarea>
+							</div>
+						</div>
+						<div class="space-12"></div>
+						<div class="row"> 	
+							<div class="col-lg-9"> 
+								<button type="submit" class="btn btn-success"><i class="fa fa-check"></i> Save </button>
+								<button type="button" class="btn btn-warning" onclick="window.location.href='<?php echo $this->url('sam', array('action'=>'viewsam','id'=>$sam_id));?>'" ><i class="fa fa-times"></i> Cancel </button> 					
+							</div>
+						</div>
+					</form>  
+				</div> <!-- end of widget-main -->  
+	        </div> <!-- end of widget-body -->
+        </div> <!-- end of widget widget-default -->
+    </div> <!-- end of col-lg-12 -->
+</div> <!-- end of row -->
+
+<script type="text/javascript">
+$(function() {
+	$('#sam_date').datepicker();
+	$('#sam_date').on('changeDate',function(){
+		$('form').formValidation('revalidateField', $(this).attr('id'));
+	});
+	
+	$('#trdetails_table').stockadjust({
+		getItems:'<?php echo $this->url("sam", array("action" => "getitembyactivity"));?>',
+		getitemsdtls:'<?php echo $this->url("sam", array("action" => "getitemsdtls"));?>',
+		getStockBalance:'<?php echo $this->url("sam", array("action" => "getStockBalance"));?>',
+		getBasicQty:'<?php echo $this->url("sam", array("action" => "getbasicqty"));?>',
+		getConvertedQty:'<?php echo $this->url("sam", array("action" => "getconvertedqty"));?>',
+	});
+
+	/******** formValidation *************/
+	const fv = FormValidation.formValidation(document.getElementById('#form'), {
+		fields: {
+			'sam_date': {
+				validators: {
+					notEmpty: {
+						message: 'Please select goods request date'
+					}
+				}
+			},
+			'location': {
+				validators: {
+					notEmpty: {
+						message: 'Please select location.'
+					}
+				}
+			},
+			'activity': {
+				validators: {
+					notEmpty: {
+						message: 'Please select activity.'
+					}
+				}
+			}, 
+
+			'sam_type[]': {
+				validators: {
+					notEmpty: {
+						message: 'Please select Stock Adjustment type.'
+					}
+				}
+			},  
+			
+			'item[]': {
+				validators: {
+					notEmpty: {
+						message: 'Please select item.'
+					}
+				}
+			},
+			'uom[]':{
+				validators: {
+					notEmpty: {
+						message: 'Please select uom.'
+					}
+				}
+			}, 
+			'quantity[]':{
+				validators: {
+					notEmpty: {
+						message: 'Please provide quantity.'
+					}
+				}
+			}             
+		},
+		plugins: {
+			trigger: new FormValidation.plugins.Trigger(),
+			bootstrap3: new FormValidation.plugins.Bootstrap3(),
+			submitButton: new FormValidation.plugins.SubmitButton(),
+			defaultSubmit: new FormValidation.plugins.DefaultSubmit(),
+		},
+	}).on('core.element.validated', function (e) {
+		if (e.valid) {
+			$('div#'+ e.field.replace('[]','') +'_chosen').removeClass('is-invalid');
+			$('div#'+ e.field.replace('[]','') +'_chosen').addClass('is-valid');
+		} else {
+			$('div#'+ e.field.replace('[]','') +'_chosen').removeClass('is-valid');
+			$('div#'+ e.field.replace('[]','') +'_chosen').addClass('is-invalid');
+		}
+	});
+});
+</script>
+

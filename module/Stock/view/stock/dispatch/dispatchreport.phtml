@@ -1,0 +1,249 @@
+
+<?php
+	$this->headTitle($this->title);	
+?>
+<?php echo $this->partial('stock/dispatch/partial.phtml', array('active' => 'dispatchreport')); ?><br/>
+<div class="pull-right tableTools-container"></div>		
+<div class="card">
+	<div class="card-header">				
+		<form id="#form" method="post" action="<?php echo $this->url('dispatch', array('action' => 'dispatchreport')); ?>"  enctype="multipart/form-data" >    
+			<div class="row">						
+				<div class="form-group col-lg-2">
+					<label class="control-label" for="source_location">Source Location</label>
+					<select class="form-control" name="source_location" id="source_location" data-placeholder="Source Location" required>
+						<?php $selected_sloc = ($data['source_location'] == '-1')?'selected':'';?>
+						<option value="-1" <?php echo $selected_sloc;?>>All</option>
+									<?php foreach ($locations as $location):
+									$sloc_selected = ($location['id'] == $data['source_location'])?'selected':'';?>
+								 <option value="<?php echo $location['id']; ?>" <?php echo $sloc_selected;?>>
+									<?php echo $location['location']; ?>
+								 </option>
+								<?php endforeach;?>
+					</select>
+				</div>
+				<div class="form-group col-lg-2">
+					<label class="control-label" for="destination_location">Destination Location</label>
+					<select class="form-control" name="destination_location" id="destination_location" data-placeholder="Destination Location" required>
+						<?php echo $selected_dloc = ($data['destination_location'] == '-1')?'selected':'';?>
+						<option value="-1">All</option <?php echo $selected_dloc;?>>
+						<?php foreach ($locations as $location):
+									$dloc_selected = ($location['id'] == $data['destination_location'])?'selected':'';?>
+								 <option value="<?php echo $location['id']; ?>" <?php echo $dloc_selected;?>>
+									<?php echo $location['location']; ?>
+								 </option>
+								<?php endforeach;?>
+					</select>
+				</div>
+				<div class="col-lg-2">
+					<div class="form-group">
+						<label for="start_date" class="control-label">Start Date</label>
+						<div class="date input-group" id="start_date" data-date-format="yyyy-mm-dd" >
+							<input class="form-control span2" name="start_date" id="start_date" type="text" value="<?php echo $data['start_date'];?>" type="text" placeholder="Start Date"  >
+							<span class="input-group-addon add-on"><i class="fa fa-calendar"></i></span>
+						</div>
+					</div>
+				</div>
+				<div class="col-lg-2">
+					<div class="form-group">
+						<label for="end_date" class="control-label">End Date</label>
+						<div class="date input-group" id="end_date" data-date-format="yyyy-mm-dd" >
+							<input class="form-control span2" name="end_date" id="end_date" value="<?php echo $data['end_date'];?>" type="text" placeholder="End Date"  required>
+							<span class="input-group-addon add-on"><i class="fa fa-calendar"></i></span>
+						</div>
+					</div>
+				</div>
+				<div class="form-group col-lg-2">
+					<label class="control-label" for="class">Item Class</label>
+					<select class="form-control" id="class" name="class" data-placeholder="Select" >
+						<option value="-1">All</option>
+						<?php 
+							foreach($this->classObj->getAll() as $class): 
+							//echo '<pre>';print_r($activities);exit;
+							$selected_act = ($class['id']==$data['class'])?'selected':'';?>
+							<option value="<?php echo $class['id'];?>" <?php echo $selected_act;?>>
+								<?php echo $class['item_class'];?>
+							</option>
+						<?php endforeach; ?>
+					</select>
+				</div>	
+				<div class="form-group col-lg-2">
+					<label class="control-label" for="group">Item Group</label>
+					<select class="form-control" id="group" name="group" data-placeholder="Select" >
+						<option value="-1">All</option>
+						<?php 
+							foreach($this->groupObj->getAll() as $groups): 
+							//echo '<pre>';print_r($activities);exit;
+							$selected_act = ($groups['id']==$data['group'])?'selected':'';?>
+							<option value="<?php echo $groups['id'];?>" <?php echo $selected_act;?>>
+								<?php echo $groups['item_group'];?>
+							</option>
+						<?php endforeach; ?>
+					</select>
+				</div>	
+			   <div class="form-group col-lg-2">
+					<label class="control-label" for="item">Item</label>
+					<select class="form-control" id="item" name="item" data-placeholder="Select">
+						<option value="-1">All</option>
+						<?php 
+							foreach($this->itemObj->getAll() as $items): 
+							$selected_act = ($items['id']==$data['item'])?'selected':'';?>
+							<option value="<?php echo $items['id'];?>" <?php echo $selected_act;?>>
+								<?php echo $items['name'];?>
+							</option>
+						<?php endforeach; ?>
+					</select>
+				</div>	
+				<div class="col-lg-1"></div>
+				<div class="col-lg-1">
+					<div class="space-8"></div>
+					<button type="submit" class="btn btn-primary pull-right"><i class="fa fa-refresh"></i>Refresh</button>
+				</div>
+			</div>
+		</form>
+		<div>		
+			<table class="table table-bordered table-condensed table-striped table-hover" id="dataTables">
+				<thead>
+					<tr>
+						<th>#</th>
+						<th>Challan No.</th>
+						<th>Dispatch Date</th>
+						<th>Source</th>
+						<th>Destination</th>
+						<th>Item</th>
+						<th>Uom</th>
+						<th>Dispatch Qty</th>
+						<th>Damaged Qty</th>
+						<th>Accepted Qty</th>
+						<th>Rate</th>
+						<th>Total</th>
+					</tr>
+				</thead>
+				<tbody>
+					<?php $i = 1; 
+						$dispatch = $this->dispatchObj->getDispatch($data);
+						$total=0;$tot=0;
+						foreach($dispatch as $row): 
+							$rate= $this->openingObj->getColumn(array('item'=>$row['item']),'selling_price');
+						?>
+						
+						<tr>
+							  <td><?php echo $i++; ?></td>
+							  <td><?php echo $row['challan_no']; ?></td>
+							  <td><?php echo $row['dispatch_date']; ?></td>
+							  <td><?php echo $this->locationObj->getColumn($row['from_location'],'location'); ?></td>
+							  <td><?php echo $this->locationObj->getColumn($row['to_location'],'location'); ?></td>
+							  <td><?php echo $this->itemObj->getColumn($row['item'],'name'); ?></td>
+							  <td><?php echo $this->uomObj->getColumn($row['basic_uom'],'code'); ?></td>
+							  <td><?php echo number_format($row['basic_quantity'], 2, '.', ','); ?></td>
+							  <td><?php echo number_format($row['damage_qty'], 2, '.', ','); ?></td>
+							  <td><?php echo number_format($row['accepted_qty'], 2, '.', ','); ?></td>
+							  <td><?php echo number_format($rate, 2, '.', ','); ?></td>
+							  <td><?php echo number_format($rate*$row['accepted_qty'], 2, '.', ','); ?></td>
+						</tr>
+						
+					<?php $total+=$row['accepted_qty'];$tot+=$rate*$row['accepted_qty'];endforeach; ?>
+					<tr>
+					  <td></td>
+					  <td></td>
+					  <td></td>
+					  <td></td>
+					  <td></td>
+					  <td></td>
+					  <td></td>
+					  <td><b>Total</b></td>
+					  <td></td>
+					  <td><b><?php echo number_format($total, 2, '.', ',') ?></b></td>
+					  <td></td>
+					  <td><b><?php echo number_format($tot, 2, '.', ','); ?></b></td>
+					</tr>
+				</tbody>
+			</table>	
+		</div>		
+	</div>
+</div>
+<script type="text/javascript">
+		
+		$(function() {
+			$('#dataTables').DataTable({
+		"paging":   true,
+	});
+			$('#start_date').datepicker();
+		//	$('#start_date').on('changeDate', function(){
+				//$('form').formValidation('revalidateField', $(this).attr('id'));
+			//});
+			$('#end_date').datepicker();
+			//$('#end_date').on('changeDate', function(){
+				//$('form').formValidation('revalidateField', $(this).attr('id'));
+		//});
+		$('#class').on('change', function(){
+		//alert($(this).val());
+		$.post(
+			"<?php echo $this->url('sam', array('action' => 'getItemgroup')); ?>",
+			{
+				item_class: $(this).val(),
+			},
+			function(data){
+				console.log(data);
+				$("#group").html(data.subgroup);	
+				$("#group").trigger('chosen:updated');
+			},
+			'json'
+		);	
+	});
+	$('#group,#source_location').on('change', function(){
+		//alert($(this).val());
+		$.post(
+			"<?php echo $this->url('sam', array('action' => 'getItemChange')); ?>",
+			{
+				locationId: $("#source_location").val(),
+				item_subgroup: $("#group").val(),
+			},
+			function(data){
+				console.log(data);
+				$("#item").html(data.items);	
+				$("#item").trigger('chosen:updated');
+			},
+			'json'
+		);	
+	});
+		/*** Form Validation ***/
+		const fv = FormValidation.formValidation(document.getElementById('#form'), {
+				framework: 'bootstrap',
+				excluded: ':disabled',
+				message: 'This value is not valid',
+				fields: {
+					'activity': {
+						validators: {
+							notEmpty: {
+								message: 'Please select activity'
+							}
+						}
+					},
+					'from_location': {
+					 	validators: {
+							notEmpty: {
+								message: 'Please select source location'
+						  	}
+					  	}
+				  	},
+					'to_location': {
+					 	validators: {
+							notEmpty: {
+								message: 'Please select destination location'
+						  	}
+					  	}
+				  	},
+					
+				}
+			}).on('success.field.fv', function(e, data) {
+				if (data.fv.getInvalidFields().length > 0) {    // There is invalid field
+					data.fv.disableSubmitButtons(true);
+			}
+		});
+	});
+	$('#dataTables').genpdftable({
+			src:"<?php echo $this->url('pdfxls', array('action' => 'plainpdf'));?>",
+			orentation:"L",//L =landscape, P = potrait
+		});
+</script>
+

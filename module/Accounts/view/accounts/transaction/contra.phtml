@@ -1,0 +1,149 @@
+<?php
+/**
+ * 
+ * View -- of Accounts/TransactionController/indexAction
+ * 
+ */
+$this->headTitle($this->title);
+?>
+<?php //echo
+$minYear='';
+$minYear = date('Y', strtotime($minYear)); ?>
+<?php echo $this->tabs_helper(array(716)); ?>
+<div class="card">
+    <div class="card-header">
+		<div class="row">
+			<div class="col-lg-9">
+				<form method="post" action="<?php echo $this->url('transaction',array('action' => 'contra')); ?>"  enctype="multipart/form-data" >
+					<div class="form-group col-lg-3">
+						<label class="control-label" for="year">Year</label>
+						<select class="form-control" id="year" name="year" data-placeholder="Select" onchange='this.form.submit()'>
+							<option value=""></option>
+							<?php 
+								for($year=date('Y');$year>=$minYear;$year--):
+									$selected = ($year == $data['year'])?"selected":"";
+							?>
+								<option value="<?php echo $year;?>" <?php echo $selected;?> >
+									<?php echo $year;?> 
+								</option>
+							<?php endfor; ?>
+						</select>
+					</div>
+					<div class="form-group col-lg-3">
+						<label class="control-label" for="month">Month</label>
+						<select class="form-control" id="month" name="month" data-placeholder="Select" onchange='this.form.submit()'>
+							<?php $select_month = ($data['month'] == '-1')?"selected":"";?>
+							<option value="-1" <?php echo $select_month;?>>All</option>
+							<?php for($month=1; $month<=12; $month++):?>
+								<?php $selected = ($month == $data['month'])?'selected':'';?>
+								<option value="<?php echo $month;?>" <?php echo $selected; ?>>
+									<?php echo DateTime::createFromFormat('!m', $month)->format('F');?>
+								</option> 
+							<?php endfor;?>
+						</select>
+					</div>
+					<div class="col-lg-2">
+						<div class="row">
+							<div class="form-group col-lg-8">
+							<label class="control-label" for="date">Date</label>
+							<select class="form-control" id="date" name="date" data-placeholder="Select" onchange='this.form.submit()'>
+								<?php $select_date = ($data['date'] == '-1')?'selected':'';?>
+								<option value="-1" <?php echo $select_date;?>>All</option>
+								<?php
+									for($i=1;$i<=$this->maxdate;$i++):
+										$selected = ($i == $data['date'])?"selected":"";
+								?>
+									<option value="<?php echo $i;?>"<?php echo $selected;?>>
+										<?php echo $i;?>
+									</option>
+								<?php endfor;?>
+							</select>
+							</div>
+						</div>
+					</div>
+				</form>
+			</div>
+			<div class="col-lg-3">
+				<div class="space"></div>
+				<div class="btn-group pull-right">
+					<?php echo $this->button(2,$page);?>
+				</div>
+			</div>
+		</div>
+	</div>
+	<div class="table-responsive">
+		<table class="table table-striped table-bordered table-hover" id="dataTables">
+			<thead>
+				<tr>
+					<th>#</th>
+					<th>Voucher</th>
+					<th>Voucher Amount</th>
+					<th>Action</th>
+				</tr>
+			</thead>
+			<tbody>
+				<?php $i=1+(($page-1)*25); foreach ($paginator as $row):
+				if($user==$row['author'] || $role==100 ||$role==99||$role==3||$role==5)://role 3,99,100 should be given access
+					if($row['voucher_id']==1)://4==Contra Voucher?>
+						<tr>
+							<td><?php echo $i++; ?> </td> 
+							<td>
+								<b><?php echo $row['voucher_no'];?>&nbsp;</b> 
+								<span style="color:#666;font-size:95%;"><?php echo $row['voucher_date'];?></span>
+								<span class="label label-info"><?php echo $row['voucher_type'];?> voucher</span>
+								<?php echo $this->status($row['status']);?>
+							</td>
+							<td>
+								<?php if($row['voucher_id'] == 15):
+									echo"<span class='label label-info'> Opening Balance </span>";
+								else:
+									echo $this->currency($row['voucher_amount']);
+								endif;?>
+							</td>
+							<td><?php echo $this->button(1,$row['id']);?><?php if($role==100):echo $this->button(6,$row['id'],'','773');endif;?></td>
+						</tr>
+				    <?php 
+				    endif;
+			    elseif($user==$row['author'] && $role==2):
+					 //echo '<pre>';print_r($paginator);//exit;
+					if($row['voucher_id']==1)://2==credit Voucher?>
+						<tr data-href="<?php echo $this->button(4,$row['id']); ?>">
+							<td><?php echo $i++; ?> </td>
+							<td>
+								<b><?php echo $row['voucher_no'];?>&nbsp;</b> 
+								<span style="color:#666;font-size:95%;"><?php echo $row['voucher_date'];?></span>
+								<span class="label label-info"><?php echo $row['voucher_type'];?> voucher</span>
+								<?php echo $this->status($row['status']);?>
+							</td>
+							<td>
+								<?php if($row['voucher_id'] == 15):
+									echo"<span class='label label-info'> Opening Balance </span>";
+								else:
+									echo $this->currency($row['voucher_amount']);
+								endif;?>
+							</td>
+							
+						</tr>
+				   <?php 
+				   endif;
+				endif;
+				endforeach;?>
+			</tbody>
+		</table>
+	</div>
+</div>
+<script>		
+	$("tr[data-href]").each(function(){ 
+		if($(this).attr('data-href')!='#'){
+			$(this).css('cursor','pointer');
+			$(this).bind('click',function() {
+				window.document.location = $(this).attr("data-href");
+			});
+		}
+	});
+	$('#dataTables').genpdftable({
+		src:"<?php echo $this->url('pdfxls', array('action' => 'pdf'));?>",
+		orentation:"P",//L =landscape, P = potrait
+	});
+</script>
+

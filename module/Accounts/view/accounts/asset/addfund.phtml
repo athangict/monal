@@ -1,0 +1,79 @@
+<?php
+/**
+ * 
+ * View -- of Accounts/AssetController/addassetAction
+ * 
+ */
+	$this->headTitle($this->title);
+?>
+
+<form id="#form" method="post" action="<?php echo $this->url('asset', array('action' => 'addfund')); ?>" enctype="multipart/form-data" >
+	<div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+        <h4 class="modal-title"><i class="fa fa-asterisk"></i> Add Fund</h4>
+    </div><!-- /modal-header -->
+    <div class="modal-body">
+		<div class="panel panel-default">
+			<div class="panel-body">   
+			    <div class="row">
+					<div class="col-lg-12">   
+						<div class="form-group">
+							<label for="code" class="control-label">Code</label>
+							<input type="text" class="form-control" name="code" id="code" placeholder="Code" required >
+						</div>
+						<div class="form-group">
+							<label for="description" class="control-label">Description</label>
+							<input type="text" class="form-control" name="description" id="description" placeholder="Description" required >
+						</div>
+						<div class="form-group">
+							<label for="fund_date" class="control-label">Fund Date</label>
+							<div class="date input-group" id="fund_date" data-date="<?php echo date('Y-m-d');?>" data-date-format="yyyy-mm-dd" data-date-viewmode="years">
+								<input class="form-control span2" name="fund_date" id="fund_date" type="text" placeholder="Fund Date" readonly required>
+								<span class="input-group-addon add-on"><i class="fa fa-calendar"></i></span>
+							</div>
+						</div>	
+					</div>
+				</div>	
+			</div>
+		</div>
+	</div>
+	<div class="modal-footer">
+		<button type="submit" class="btn btn-success"><i class="fa fa-check"></i> Save </button>
+		<button type="button" class="btn btn-warning" data-dismiss="modal" ><i class="fa fa-times"></i> Cancel </button> 
+	</div><!-- /modal-footer -->
+</form>
+<script>
+	
+$('document').ready(function(){
+	$('#fund_date').datepicker();
+	const fv = FormValidation.formValidation(document.getElementById('#form'), {
+		fields: {
+			code: {
+				validators: {
+					notEmpty: {
+						message: 'Please Input Cash Account.'
+					}
+				}
+			},
+		},
+		plugins: {
+			trigger: new FormValidation.plugins.Trigger(),
+			bootstrap3: new FormValidation.plugins.Bootstrap3(),
+			submitButton: new FormValidation.plugins.SubmitButton(),
+			defaultSubmit: new FormValidation.plugins.DefaultSubmit(),
+		},
+	}).on('core.element.validated', function (e) {
+		if (e.valid) {
+			$('div#'+ e.field.replace('[]','') +'_chosen').removeClass('is-invalid');
+			$('div#'+ e.field.replace('[]','') +'_chosen').addClass('is-valid');
+		} else {
+			$('div#'+ e.field.replace('[]','') +'_chosen').removeClass('is-valid');
+			$('div#'+ e.field.replace('[]','') +'_chosen').addClass('is-invalid');
+		}
+	});
+	$('form select').chosen().change(function () {
+		fv.revalidateField($(this).attr('name'));
+	});
+});
+</script>
+	

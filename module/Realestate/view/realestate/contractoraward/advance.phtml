@@ -1,0 +1,114 @@
+<?php
+/**
+ * 
+ * View -- of Realestate/ContractorawardController/advanceAction
+ * 
+ */
+?>
+<?php 
+	foreach($contract_adv as $ca):
+		if($ca['advance_type'] == 1){ $ad_ma = 1;}elseif($ca['advance_type'] == 2){$ad_sa = 1;}
+	endforeach;
+?>
+<form id="#form" method="post" action="<?php echo $this->url('contaward', array('action' => 'advance', 'id'=> $id)); ?>"  enctype="multipart/form-data" >                 
+    <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+        <h4 class="modal-title"><i class="fa fa-plus"></i> Advance </h4>
+    </div><!-- /modal-header -->
+    <div class="modal-body">
+		<div class="panel panel-default">
+			<div class="panel-body">
+				<div class="row">
+					<div class="form-group col-lg-6">
+						<label for="advance" class="control-label">Advance Type</label>
+						<select class="form-control" name="advance" id="advance" dataplaceholder="Select" >
+							<option value=""></option>
+							<option value="1" <?php echo ($ad_ma == 1)?'disabled':'';?>>Mobilization Advance</option>
+							<option value="2" <?php echo ($ad_sa == 1)?'disabled':'';?>>Secured Advance</option>
+							<option value="3">Any Other Advance</option>
+						</select>
+					</div>
+					<div class="form-group col-lg-6">
+						<label for="adv_amt" class="control-label">Advance Amount</label>
+						<input class="form-control" name="adv_amt" id="adv_amt" placeholder="Enter Advance Amount" />
+					</div>
+				</div>
+				<div class="row">
+					<div class="form-group col-lg-6">
+						<label for="adv_date" class="control-label">Advance Date</label>
+						<div class="date input-group" id="adv_date" data-date="today" data-date-format="yyyy-mm-dd">
+							<input class="form-control span2" name="adv_date" id="adv_date" type="text" placeholder="Date" readonly required>
+							<span class="input-group-addon add-on"><i class="fa fa-calendar"></i></span>
+						</div>
+					</div>
+					<div class="form-group col-lg-6">
+						<label for="cdb_no" class="control-label">CDB No.</label>
+						<input class="form-control" name="cdb_no" id="cdb_no" placeholder="CDB No." required />
+					</div>
+				</div>
+			</div>
+        </div>
+    </div><!-- /modal-body -->
+    <div class="modal-footer">
+        <button type="submit" class="btn btn-success"><i class="fa fa-check"></i> Save </button>
+        <button type="button" class="btn btn-warning" data-dismiss="modal" ><i class="fa fa-times"></i> Cancel </button> 
+    </div><!-- /modal-footer -->
+</form>
+<script type="text/javascript">
+	$('form select').chosen();
+	$('#adv_date').datepicker();
+	$('document').ready(function(){
+		const fv = FormValidation.formValidation(document.getElementById('#form'), {
+			fields: {
+				advance: {
+					validators: {
+						notEmpty: {
+							message: 'Please select Advance Type.'
+						}
+					}
+				},			
+				adv_amt: {
+					validators: {
+						notEmpty: {
+							message: 'Please provide some Value.'
+						},
+						numeric: {
+							message: 'Enter Amount in Figures.'
+						}
+					}
+				},	
+				adv_date: {
+					validators: {
+						notEmpty: {
+							message: 'Please select Date.'
+						},
+					}
+				},
+				cdb_no: {
+					validators: {
+						notEmpty: {
+							message: 'Please provide CDB No.'
+						},
+					}
+				},		
+			},
+			plugins: {
+				trigger: new FormValidation.plugins.Trigger(),
+				bootstrap3: new FormValidation.plugins.Bootstrap3(),
+				submitButton: new FormValidation.plugins.SubmitButton(),
+				defaultSubmit: new FormValidation.plugins.DefaultSubmit(),
+			},
+		}).on('core.element.validated', function (e) {
+			if (e.valid) {
+				$('div#'+ e.field.replace('[]','') +'_chosen').removeClass('is-invalid');
+				$('div#'+ e.field.replace('[]','') +'_chosen').addClass('is-valid');
+			} else {
+				$('div#'+ e.field.replace('[]','') +'_chosen').removeClass('is-valid');
+				$('div#'+ e.field.replace('[]','') +'_chosen').addClass('is-invalid');
+			}
+		});
+		$('#adv_date').on('changeDate',function(){
+			$('form').formValidation('revalidateField','adv_date');
+		});
+	});
+</script>  

@@ -1,0 +1,158 @@
+<?php
+/**
+ * View -- of Purchase/PaymentController/indexAction
+ */
+$this->headTitle($this->title);
+?>
+<?php echo $this->partial('fleet/report/partial.phtml', array('active' => 'vrreport')); ?>
+<div class="card">
+	<div class="card-header">
+		<div class="row">
+			<form method="post" action="<?php echo $this->url('ftreport', array('action' => 'vrreport')); ?>" enctype="multipart/form-data" >
+				<div class="form-group col-lg-2">
+					<label class="control-label" for="location">Location</label>
+					<select class="form-control" name="location" id="location" data-placeholder="select" >
+						<option value="-1" <?php echo ($data['location']=='-1')?'selected':'';?>>All</option>
+						<?php 
+							$location = $this->locationObj->getAll();
+							foreach($location as $row):
+								$selected_location = ($row['id']==$data['location'])?'selected':'';
+						?>
+						
+							<option value="<?php echo $row['id'];?>" <?php echo $selected_location;?>>
+								<?php echo $row['location'];?>
+							</option>
+						<?php endforeach;?>
+					</select>
+				</div>
+				<div class="form-group col-lg-2">
+					<label class="control-label" for="license_plate">License plate</label>
+					<select class="form-control" name="license_plate" id="license_plate" data-placeholder="select" >
+						<option value="-1" <?php echo ($data['license_plate']=='-1')?'selected':'';?>>All</option>
+					</select>
+				</div>
+				<div class="form-group col-lg-2">
+					<label class="control-label" for="start_date">Start Date</label>
+					<div class="date input-group" id="start_date" data-date="<?php echo $data['start_date'];?>" data-date-format="yyyy-mm-dd" >
+						<input class="form-control span2" name="start_date" id="start_date" type="text" placeholder="Start Date" value="<?php echo $data['start_date'];?>" readonly required>
+						<span class="input-group-addon add-on"><i class="fa fa-calendar"></i></span>
+					</div>
+				</div>
+				<div class="form-group col-lg-2">
+					<label class="control-label" for="end_date">End Date</label>
+					<div class="date input-group" id="end_date" data-date="<?php echo $data['end_date'];?>" data-date-format="yyyy-mm-dd" >
+						<input class="form-control span2" name="end_date" id="end_date" type="text" placeholder="End Date" value="<?php echo $data['end_date'];?>" readonly required>
+						<span class="input-group-addon add-on"><i class="fa fa-calendar"></i></span>
+					</div>
+				</div>
+				<div class="form-group col-lg-1"><br>
+					<button type="submit" class="btn btn-sm btn-success pull-right"><i class="fa fa-gear"></i> Generate </button>
+				</div>	
+			</form>
+		</div>
+	</div>
+	<div class="card-body">
+		<div class="row">
+			<table class="table table-striped table-bordered table-hover" id="dataTables">
+				<thead>
+					<tr>
+						<th>#</th>
+						<th>License Plate</th>
+						<th>Location</th>
+						<th>License Plate</th>
+						<th>Closing Tank</th> 
+						<th>Total Kms</td>
+						<th>Total Fuel Consumed</td>
+						<th>Amount</th>
+						<th>Party</th>
+					</tr>
+				</thead>
+				<tbody>
+					<?php
+					//if(sizeof($transport_vr)>0):
+						$i=1;
+					foreach($transport_vr as $row):	?>						 
+					<tr style="border-top:2px solid #ddd;border-bottom:2px solid #ddd;background-color:#FAEBD7;">
+						<td><?php echo $i++;?></td>
+						<td><?php echo $row['sanction_order_date'];?> </td>
+						<td><?php echo $this->locationObj->getColumn($row['location'],'location');?></td>
+						<td><strong><?php echo $this->licenseObj->getColumn($row['license_plate'],'license_plate');?></strong></td>
+						<td><?php echo $row['closing_tank_balance'];?> </td>
+						<td><?php echo $row['km_covered'];?> </td>
+						<td><?php echo $row['total_fuel'];?> </td>
+						<td><?php echo $row['amount'];?> </td>
+						<td><?php if(empty($row['party'])):echo " ";else:echo $this->partyObj->getColumn($row['party'],'name');endif;?> </td>
+					</tr>
+					
+					<?php endforeach;//endif; ?>
+				</tbody>
+			</table>
+		</div>
+	</div>
+</div>
+<div id="modal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+	<div class="modal-dialog">
+		<div class="modal-content">
+		</div>
+	</div>
+</div>
+<script>	
+ $('document').ready(function(){
+	$('#start_date').datepicker();
+		$('#end_date').datepicker();
+		$('#start_date').on('changeDate',function(){
+			$('form').formValidation('revalidateField', $(this).attr('id'));
+		});
+		$('#end_date').on('changeDate',function(){
+			$('form').formValidation('revalidateField', $(this).attr('id'));
+		});
+		$('select#location').on('change',function(){
+		$.post(
+				"<?php echo $this->url('ftreport', array('action' => 'gettransport'));?>",
+				{
+					locationId: $('#location').val(),
+				},
+				function(data){
+					$('select#license_plate').html(data.license_plate);
+					$(license_plate).trigger('chosen:updated');
+
+				   },
+				'json'
+			);
+	    });
+		/*** Form Validation ***/
+		const fv = FormValidation.formValidation(document.getElementById('#form'), {
+			fields: {
+				start_date: {
+					validators: {
+						notEmpty: {
+							message: 'Please select start date'
+						}
+					}
+				},
+				end_date: {
+					validators: {
+						notEmpty: {
+							message: 'Please select end date'
+						}
+					}
+				},
+			},
+			plugins: {
+				trigger: new FormValidation.plugins.Trigger(),
+				bootstrap3: new FormValidation.plugins.Bootstrap3(),
+				submitButton: new FormValidation.plugins.SubmitButton(),
+				defaultSubmit: new FormValidation.plugins.DefaultSubmit(),
+			},
+		}).on('core.element.validated', function (e) {
+			if (e.valid) {
+				$('div#'+ e.field.replace('[]','') +'_chosen').removeClass('is-invalid');
+				$('div#'+ e.field.replace('[]','') +'_chosen').addClass('is-valid');
+			} else {
+				$('div#'+ e.field.replace('[]','') +'_chosen').removeClass('is-valid');
+				$('div#'+ e.field.replace('[]','') +'_chosen').addClass('is-invalid');
+			}
+		});
+		var title_table = $('input#transport').val()+' from '+$('input#st_date').val()+' to '+$('input#ed_date').val();
+});
+</script>

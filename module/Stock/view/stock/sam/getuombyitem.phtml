@@ -1,0 +1,19 @@
+<?php
+/**
+ * 
+ * View -- of Purchase/PurchaseController/getitemuom 
+ * ajax resonse
+ * 
+ */
+?>
+<option value=""></option>
+<?php foreach($this->items as $item):?>
+	<option value="<?php echo $item['st_uom_id']?>">
+		<?php echo $item['st_uom_code'];?>
+	</option>
+<?php endforeach;?>
+<?php foreach ($this->item_uoms as $item_uom): ?>
+   <option value="<?php echo $item_uom['uom_id']; ?>">
+   		<?php echo $item_uom['uom_code'];?>
+   </option>
+<?php endforeach; ?>

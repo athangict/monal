@@ -1,0 +1,129 @@
+<?php
+/**
+ * View -- of Stock/BatchController/viewbatchAction
+ */
+ $this->headTitle($this->title);
+?>
+<?php foreach($postbox as $row);?>
+<?php foreach($this->renew->get(array('registration_id'=>$row['id'],'registration_year'=>$row['year'])) as $new);
+?>
+<style>
+    .widget-titlez {
+      border-bottom: 2px solid #033; /* Add underline to widget titles */
+	   width: 30%; /* Adjust the width of the underline */
+      padding-bottom: 5px; /* Add some spacing between title and content */
+    }
+	/* Styling for the "Cancelled" button */
+#cancelButton {
+    padding: 20px 40px;
+    font-size: 24px;
+    color: red;
+    background-color: transparent;
+    border: 2px solid red;
+    border-radius: 10px;
+    cursor: pointer;
+}
+
+ </style>
+<div class="row">
+	<div class="col-lg-12">
+		<div class="widget widget-box">
+				<div class="widget-header">
+				<h5 class="widget-title grey lighter">
+					<i class="ace-icon fa fa-shopping-cart green"></i>
+					View Postbox Details
+				</h5>
+			</div>
+			<div class="widget-body">
+				<div class="widget-main">
+					<div>
+						<div class="row" id="convert-tb0">
+							<div class="col-lg-4" id="convert-tb1">
+							  <h5 class="widget-titlez grey darker">Personal Details</h5>
+								<p><b>Name:</b><?php echo $row['name'];?></p>
+								<p><b>CID:</b><?php echo $row['cid'];?></p>
+								<p><b>Mobile:</b><?php echo $row['mobile'];?></p>
+								<p><b>Telephone:</b><?php echo $row['tphone'];?></p>
+								<p><b>Email:</b><?php echo $row['email'];?></p>
+								<p><b>Registration Year:</b><?php echo $row['year'];?></p>
+								<p><b>Registration Date:</b><?php echo $row['registration_date'];?></p>
+							</div>
+							<div class="col-lg-4" id="convert-tb2">
+							  <h5 class="widget-titlez grey darker">Present Address</h5>
+								<p><b>Name of organization:</b> <?php echo $row['organisation'];?></p>
+								<p><b>Building Number:</b><?php echo $row['building_no'];?></p>
+								<p><b>Address:</b><?php echo $row['address'];?></p>
+							</div>
+							<div class="col-lg-4" id="convert-tb2">
+							  <h5 class="widget-titlez grey darker">Post Box Details</h5>
+								<p><b>Location:</b> <?php echo $this->locationObj->getColumn($row['location'],'location');?></p>
+								<p><b>Post Box Number:</b> <?php echo $this->poboxObj->getColumn($row['postbox_no'],'po_number');?></p>
+								<p><b>Post Box Size:</b> <?php echo $this->posizeObj->getColumn($row['post_box_size'],'post_box_size');?></p>
+								<p><b>Post Box Rate:</b> <?php echo $row['po_rate'];?></p>
+								<p><b>Key Charges:</b><?php echo   $row['key_rate'];?></p>
+							</div>
+							 <div class="col-lg-8" id="convert-tb2">
+                              <?php if($row['status']!=5):
+								echo $this->button(6,$row['id'],'','1435');
+							    echo $this->button(6,$row['id'],'','1446');
+							  if(empty($new)):echo $this->button(6,$row['id'],'','1448'); endif;
+							  else:?>
+							      <!-- Cancel button -->
+							<button id="cancelButton">Cancelled</button>
+							<?php
+							  endif;?>
+                            </div>
+						</div>
+						
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<div class="col-lg-12">
+		<div class="widget widget-box">
+			<div class="widget-header">
+			<h5 class="widget-title grey lighter">
+				<i class="ace-icon fa fa-shopping-cart purple"></i>
+				 Postbox Renew Details
+			</h5>
+			</div>
+		<div class="widget-body">
+			<div class="widget-main">
+				
+	<div class="table-responsive">
+		<table class="table card-table text-nowrap" id="dataTables">
+			<thead>
+				<tr>
+					<th>#</th>
+					<th>Renwal Year</th>
+					<th>Renwal Date</th>
+					<th>Renewal Amount</th>
+					<th class="no-sort no-printpdf">Action</th>
+				</tr>
+			</thead>
+			<tbody>
+			<?php
+			$i = 1; 
+			foreach ($this->renew->get(array('registration_id'=>$row['id'],'registration_year'=>$row['year'])) as $new): ?>
+					<tr>
+						<td><?php echo $i++; ?></td>
+						<td><?php echo $new['renewal_year']; ?></td>
+						<td><?php echo $new['renewal_date']; ?></td>
+						<td><?php echo $new['renewal_amount']; ?></td>
+						<td class="action"><?php echo $this->button(6, $new['id'],'','1439') ?></td>
+					</tr>
+		<?php endforeach; ?>
+
+
+
+			</tbody>
+		</table>
+	</div>
+			</div>
+		</div>
+			
+	</div>
+	
+	</div>

@@ -1,0 +1,104 @@
+<?php
+/**
+ * View -- of Sales/SchemeController/extendenddateAction
+ */
+?>
+<?php
+	foreach($dispatchs as $dispatch):
+		//echo "<pre>"; print_r($dispatch);
+		extract($dispatch);
+	endforeach;
+?>
+<form id="#form" method="post" action="<?php echo $this->url('dispatch', array('action' => 'revicedispatch')); ?>"  enctype="multipart/form-data" >                 
+    <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+        <h4 class="modal-title"><i class="fa fa-pencil-square-o"></i> Revice Dispatch </h4>
+    </div><!-- /modal-header -->
+    <div class="modal-body">
+		<div class="panel panel-default">
+			<div class="panel-body">
+				<div class="row">
+					<div class="col-lg-6">
+						<input type="hidden" value="<?php echo $id?>" name="dispatch_id" id="dispatch_id" />
+						<span>Dispatch No. <strong class="red"><?php echo $challan_no;?></strong></span>
+					</div>
+					<div class="col-lg-6">
+						<span>Dispatch Date : <strong class="red"><?php echo $dispatch_date;?></strong></span>
+					</div>
+				</div>
+				<div class="row">
+					<div class="col-lg-12">
+						<span>Current Destination Location :<strong class="red"><?php echo $this->locationObj->getColumn($to_location,'location');?></strong></span>
+					</div>
+				</div>
+				<div class="space-12"></div>
+				<div class="row">
+					<div class="col-lg-12 form-group">
+						<label class="control-label">New Destination Location :</label>
+						<select class="form-control" name="to_location" id="to_location" data-placeholder="Select" required >
+							<option value=""></option>
+							<?php 
+								foreach ($regions as $region): ?>
+								<optgroup label="<?php echo $region['region'];?>">
+									<?php  
+										 // retrive locations under the above region ID
+										$locations = $locationObj->get(array('l.region'=>$region['id'],'l.location_type'=>'1'));
+										 foreach ($locations as $location):?>
+									 <option value="<?php echo $location['id']; ?>">
+										<?php echo $location['location']; ?>
+									 </option>
+									<?php 
+									 endforeach;
+									?>
+							  </optgroup>
+							 <?php endforeach;  ?>	
+						</select>
+					</div>
+				</div>
+				<div class="row">
+					<div class="col-lg-12 from-group">
+						<label class="control-label" for="note">Note: </label>
+						<textarea class="form-control" name="note" id="note"><?php echo $note;?></textarea>
+					</div>
+				</div>
+			</div>
+		</div>                    
+    </div><!-- /modal-body -->
+    <div class="modal-footer">
+        <button type="submit" class="btn btn-success"><i class="fa fa-check"></i> Save </button>
+        <button type="button" class="btn btn-warning" data-dismiss="modal" ><i class="fa fa-times"></i> Cancel </button> 
+    </div><!-- /modal-footer -->
+</form>
+<script type="text/javascript">
+	$('form select').chosen();
+	$('document').ready(function(){
+		const fv = FormValidation.formValidation(document.getElementById('#form'), {
+			fields: {
+				to_location: {
+					validators: {
+						notEmpty: {
+							message: 'Please Select Destination Location.'
+						},
+					}
+				},
+			},
+			plugins: {
+				trigger: new FormValidation.plugins.Trigger(),
+				bootstrap3: new FormValidation.plugins.Bootstrap3(),
+				submitButton: new FormValidation.plugins.SubmitButton(),
+				defaultSubmit: new FormValidation.plugins.DefaultSubmit(),
+			},
+		}).on('core.element.validated', function (e) {
+			if (e.valid) {
+				$('div#'+ e.field.replace('[]','') +'_chosen').removeClass('is-invalid');
+				$('div#'+ e.field.replace('[]','') +'_chosen').addClass('is-valid');
+			} else {
+				$('div#'+ e.field.replace('[]','') +'_chosen').removeClass('is-valid');
+				$('div#'+ e.field.replace('[]','') +'_chosen').addClass('is-invalid');
+			}
+		});
+	});
+	$('#to_date').on('changeDate',function(){
+		$('form').formValidation('revalidateField', $(this).attr('id'));
+	});
+</script>

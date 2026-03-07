@@ -1,0 +1,120 @@
+<?php
+/**
+ * 
+ * View -- of Hr/EmployeeController/addemployeeAction
+ * 
+ */
+    $this->headTitle($this->title);
+?>
+<?php foreach($sheet as $sheets);
+foreach($this->employeeObj->get($sheets['employee']) as $emp);
+$employeeUser = $this->userObj->getColumn(array('employee'=>$emp['id']), 'id');	?>
+
+<div class="space-12"></div>
+
+	<div class="row">
+		
+		<div class="col-lg-12"> 
+		<div class="widget-toolbar hidden-xs">
+					<div class="btn-list">
+						<?php //if($edit_option){ echo $this->button(2,$row['id']); }?>
+						<span data-bs-toggle='tooltip' data-bs-placement='top' title='PDF Print'>
+							<a class='btn btn-danger btn-xs' id="print">
+							<i class="ace-icon fa fa-file-pdf-o bigger-120"></i></a></span>
+					</div>
+				</div>
+		
+
+			<div class="widget-box transparent" id="print-content">
+				<div class="row">
+					<div class="col-xs-12 text-center">
+						<div class="widget-header widget-header-smaller">
+							<h4 class="widget-title blue bolder smaller fs-3">Notesheet</h4>
+						</div>
+					</div>
+				</div>
+
+				
+				<div class="widget-body" >
+					<div class="widget-main padding-12">
+						<div class="row" id="convert-tb0">
+							<div class="col-lg-12" id="convert-tb1">
+										Date: <b class="black"><?php  echo date('d-m-Y', strtotime($sheets['date'])); ?></b><br>
+									Number: <b class="black"><?php echo $sheets['number']; ?></b><br>
+										Priority Type: <b class="black"><?php if($sheets['priority_type'] == 1): echo "Urgent"; else: echo "Not Important"; endif; ?></b><br>
+										Subject: <b class="black"><?php echo $sheets['subject']; ?></b>
+								</div>
+						</div>
+						<div class="row">
+							<div class="col-lg-12">
+									<p class="black"><?php echo $sheets['description'];?> </p>
+							</div>
+						</div>
+							<div class="col-lg-12" id="convert-tb2"><?php foreach($this->activityObj->get(array('process'=>522,'process_id'=>$sheets['id'])) as $actvity):?>	
+							<div class='underlined'>
+									<b class="black"><?php echo $this->userObj->getColumn($actvity['author'],'name');?></b>&nbsp;<?php echo $this->status($actvity['status']);?> to: <b class="black"><?php echo strtoupper($this->userObj->getColumn($actvity['send_to'],'name'));?> on</b>&nbsp;<?php echo date('d-m-Y', strtotime($actvity['created'])); ?>
+									<br>Remarks: <b class="black"><?php echo $actvity['remarks'];?></b>
+							</div>
+								<style>
+									.underlined {
+										border-bottom: 0.5px solid #000; /* Black underline */
+										padding-bottom: 10px; /* Adjust spacing as needed */
+										margin-bottom: 10px; /* Adjust spacing as needed */
+									}
+								</style>
+							<?php endforeach;?></div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</div><?php //if($sheets['status']==2 || $sheets['status']==8):?>
+	<div class="col-lg-12">
+		<?php echo $this->partial('partial/attachment.phtml', array('process' => '522', 'process_id'=>$sheets['id'], 'applicationNO'=>$sheets['number'], 'login_id' =>$login_id,'status'=>$sheets['status']));?>
+	</div><?php //endif;?>
+	<div class="row">
+		<div class="col-lg-7">
+		</div>
+		<div class="col-lg-5" style="text-align: right"><?php
+		$employeeUser = $this->userObj->getColumn(array('employee'=>$emp['id']), 'id');	
+		$max_activity = $this->flowtransactionObj->getMax($column='activity', $where=array('application'=>$sheets['id'],'process'=>522));
+		$current_flow = $this->flowtransactionObj->get(array('application'=>$sheets['id'], 'activity'=>$max_activity,'process'=>522));
+		foreach($current_flow as $flow);
+		//echo'<pre>';print_r($flow);exit;
+						if($login_id  == $employeeUser && $sheets['status']!=8 && $sheets['status']!=6 && $sheets['status']!=17 && $sheets['status']!=21 && $sheets['status']!=10):?>
+						<a data-toggle="modal" data-target="#modal" href="<?php echo $this->url('notesheet', array('action'=>'process', 'id'=>$sheets['id'].'-'.'1'.'-'.$flow['id']));?>" class="btn btn-success"> 
+						<i class="fa fa-check-square-o"></i> Apply  </a>								
+						<a href="<?php echo $this->url('notesheet', array('action'=>'editsheet', 'id'=>$sheets['id']));?>" class="btn btn-info"> 
+						<i class="fa fa-pencil"></i> Edit </a>									
+					<?php 
+				
+					elseif($login_id == $flow['role_id']):	
+						$actions = explode('|', $flow['action']);
+						for($i=0; $i < sizeof($actions); $i++):
+							$buttons = $this->flowactionObj->get($actions[$i]);
+							foreach($buttons as $button):?>
+							<span data-bs-toggle='tooltip' data-bs-placement='top' title='<?php echo $button['action']; ?>'>
+							<a data-toggle="modal" data-target="#modal" class="btn <?php echo $button['class']; ?>" href="<?php echo $this->url('notesheet', array('action' => 'process', 'id'=>$sheets['id'].'-'.$button['id'].'-'.$flow['id'])); ?>">
+								<i class="icon <?php echo $button['icon'];?>"></i><?php echo $button['action']; ?>
+							</a></span>
+						<?php
+							endforeach;
+						endfor;
+					endif;													
+			?>						
+		</div>
+	</div>
+
+<script type="text/javascript">	   
+$(function(){
+	 $('#print').gentcpdf({
+		content: '#print-content',
+		src:"<?php echo $this->url('print', array('action' => 'index'));?>",
+		orentation:"P",
+		size: 'A4',
+	});
+	
+});
+</script>
+
+

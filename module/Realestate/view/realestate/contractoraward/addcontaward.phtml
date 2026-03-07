@@ -1,0 +1,206 @@
+<?php
+/**
+ * 
+ * View -- of Realestate/ContractorawardController/addcontawardAction
+ * 
+ */
+	$this->headTitle($this->title);
+?>
+<form id="#form" method="post" action="<?php echo $this->url('contaward', array('action' => 'addcontaward')); ?>"  enctype="multipart/form-data" >
+	<div class="row">
+		<div class="col-lg-12"> 
+			<div class="widget-box">
+				<div class="widget-header widget-header-smaller">
+					<h4 class="widget-title blue bolder smaller"> Contractor Award Details </h4>
+				</div>
+				<div class="widget-body">
+					<div class="widget-main padding-24"> 
+						<div class="row">
+							<div class="form-group col-lg-4">
+								<label for="contractor" class="control-label">Name of Firm</label>
+								<select class="form-control" name="contractor" id="contractor" dataplaceholder="Select" >
+									<option value=""></option>
+									<?php foreach($contractor as $cont):?>
+										<option value="<?php echo $cont['id'];?>"> <?php echo $cont['name'];?>
+									<?php endforeach;?>
+								</select>
+							</div>
+							<div class="form-group col-lg-4">
+								<label for="project" class="control-label">Name of Project</label>
+								<input class="form-control" id="project" name="project" placeholder="Project Name" required />
+							</div>
+							<div class="form-group col-lg-4">
+								<label for="award_date" class="control-label">Award Date</label>
+								<div class="date input-group" id="award_date" data-date="today" data-date-format="yyyy-mm-dd">
+									<input class="form-control span2" name="award_date" id="award_date" type="text" placeholder="Award Date" readonly required>
+									<span class="input-group-addon add-on"><i class="fa fa-calendar"></i></span>
+								</div>
+							</div>
+						</div>
+						
+						<div class="row">
+							<div class="form-group col-lg-4">
+								<label for="cdb_no" class="control-label"> Award No. </label>
+								<input class="form-control" id="cdb_no" name="cdb_no" placeholder="CDB No." required />
+							</div>
+						</div>
+						
+						<div class="row">
+							<div class="form-group col-lg-4">
+								<label for="location" class="control-label">Location</label>
+								<input type="text" class="form-control" id="location" name="location" placeholder="Location" required >
+							</div>
+							<div class="form-group col-lg-4">
+								<label for="start_date" class="control-label">Project Start Date</label>
+								<div class="date input-group" id="start_date" data-date="today" data-date-format="yyyy-mm-dd">
+									<input class="form-control span2" name="start_date" id="start_date" type="text" placeholder="Start Date" readonly required>
+									<span class="input-group-addon add-on"><i class="fa fa-calendar"></i></span>
+								</div>
+							</div>
+							<div class="form-group col-lg-4">
+								<label for="end_date" class="control-label">Project End Date</label>
+								<div class="date input-group" id="end_date" data-date="today" data-date-format="yyyy-mm-dd">
+									<input class="form-control span2" name="end_date" id="end_date" type="text" placeholder="End Date" readonly required>
+									<span class="input-group-addon add-on"><i class="fa fa-calendar"></i></span>
+								</div>
+							</div>
+						</div>
+						
+						<div class="row">
+							<div class="form-group col-lg-4">
+								<label for="project_cost" class="control-label"> Project Cost </label>
+								<input class="form-control" name="project_cost" id="project_cost" placeholder="Project Cost" required />
+							</div>
+							<div class="form-group col-lg-4">
+								<label for="percentage" class="control-label"> % Percent of Security Deposit</label>
+								<input type="text" class="form-control" name="percentage" id="percentage" placeholder="Eg. 10" />
+							</div>
+							<div class="form-group col-lg-4">
+								<label for="security_amt" class="control-label"> Security Deposit Amount </label>
+								<input type="text" class="form-control" name="security_amt" id="security_amt" placeholder="Project Cost * (Percent of Security Deposit / 100)" readonly />
+							</div>
+						</div>
+						<div class="space-6"></div>
+						<div class="row">
+							<div class="col-lg-12">
+								<div>
+									<button type="submit" class="btn btn-success"><i class="fa fa-check"></i> Save </button>
+									<button type="button" class="btn btn-warning" onclick="javascript:history.back();"><i class="fa fa-times"></i> Cancel </button>  
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</form>
+<script type="text/javascript"> 	
+    $(function() {
+		$('#project_cost').on('change', function(){
+			var percent_val = $('input[name=percentage]').val();
+			var actual_amt = $('input[name=project_cost]').val();
+			var val_one = actual_amt * (percent_val / 100);
+			//var security_deposit = actual_amt - val_one;
+			//alert(security_deposit);
+			$('#security_amt').val(parseFloat(val_one).toFixed(2));
+		});
+		
+		$('#percentage').on('change', function(){
+			var percent_val = $(this).val();
+			var actual_amt = $('input[name=project_cost]').val();
+			var val_one = actual_amt * (percent_val / 100);
+			//var security_deposit = actual_amt - val_one;
+			//alert(security_deposit);
+			$('#security_amt').val(parseFloat(val_one).toFixed(2));
+		});
+		
+	});
+	
+	$('form select').chosen();	
+	$('#award_date').datepicker();
+	$('#start_date').datepicker();
+	$('#end_date').datepicker();
+	$('document').ready(function(){
+		const fv = FormValidation.formValidation(document.getElementById('#form'), {
+			fields: {
+				contractor: {
+					validators: {
+						notEmpty: {
+							message: 'Please select Contractor.'
+						}
+					}
+				},
+				project: {
+					validators: {
+						notEmpty: {
+							message: 'Please provide Project Name.'
+						}
+					}
+				},
+				award_date: {
+					validators: {
+						notEmpty: {
+							message: 'Please select date.'
+						}
+					}
+				},
+				cdb_no: {
+					validators: {
+						notEmpty: {
+							message: 'Please provide CDB No.'
+						}
+					}
+				},
+				location: {
+					validators: {
+						notEmpty: {
+							message: 'Please provide Location.'
+						}
+					}
+				},
+				project_cost: {
+					validators: {
+						notEmpty: {
+							message: 'Please provide Project Cost.'
+						},
+						numeric: {
+							message: 'In Figure Only'
+						},
+					}
+				},
+				percentage: {
+					validators: {
+						digits: {
+							message: 'Enter whole number only'
+						},
+					}
+				},
+			},
+			plugins: {
+				trigger: new FormValidation.plugins.Trigger(),
+				bootstrap3: new FormValidation.plugins.Bootstrap3(),
+				submitButton: new FormValidation.plugins.SubmitButton(),
+				defaultSubmit: new FormValidation.plugins.DefaultSubmit(),
+			},
+		}).on('core.element.validated', function (e) {
+			if (e.valid) {
+				$('div#'+ e.field.replace('[]','') +'_chosen').removeClass('is-invalid');
+				$('div#'+ e.field.replace('[]','') +'_chosen').addClass('is-valid');
+			} else {
+				$('div#'+ e.field.replace('[]','') +'_chosen').removeClass('is-valid');
+				$('div#'+ e.field.replace('[]','') +'_chosen').addClass('is-invalid');
+			}
+		});
+		$('#award_date').on('changeDate',function(){
+			$('form').formValidation('revalidateField','award_date');
+		});
+		$('#start_date').on('changeDate',function(){
+			$('form').formValidation('revalidateField','start_date');
+		});
+		$('#end_date').on('changeDate',function(){
+			$('form').formValidation('revalidateField','end_date');
+		});
+	});
+</script>
+

@@ -1,0 +1,135 @@
+<?php
+/**
+ * 
+ * View -- of Stock/BatchController/indexAction
+ * 
+ */
+	$this->headTitle($this->title);
+?>
+<?php echo $this->partial('stock/batch/partial2.phtml', array('active' => 'index')); ?> <br/>
+<?php $minYear=0;
+$minYear = date('Y', strtotime($minYear)); ?>
+<div class="space-12"></div>
+<div class="card">
+	<div class="card-header">
+		<div class="row">
+			<form id="#form" method="post" action="<?php echo $this->url('batch'); ?>"  enctype="multipart/form-data" >
+				<div class="form-group col-lg-3">
+					<label class="control-label" for="year">Year</label>
+					<select class="form-control" id="year" name="year" data-placeholder="Select" onchange='this.form.submit()'>
+						<option value=""></option>
+						<?php 
+							for($year=date('Y');$year>=$minYear;$year--):
+								$selected = ($year == $data['year'])?"selected":"";
+						?>
+							<option value="<?php echo $year;?>" <?php echo $selected;?> >
+								<?php echo $year;?> 
+							</option>
+						<?php endfor; ?>
+					</select>
+				</div>
+				<div class="form-group col-lg-3">
+					<label class="control-label" for="month">Month</label>
+					<select class="form-control" id="month" name="month" data-placeholder="Select" onchange='this.form.submit()'>
+						<?php for($month=1; $month<=12; $month++):?>
+							<?php $selected = ($month == $data['month'])?'selected':'';?>
+							<option value="<?php echo $month;?>" <?php echo $selected; ?>>
+								<?php echo DateTime::createFromFormat('!m', $month)->format('F');?>
+							</option> 
+						<?php endfor;?>
+					</select>
+				</div>
+			</form><br />
+			<div class="form-group col-lg-6">			
+				<div class="clearfix">
+					<div class="pull-right tableTools-container"></div>
+				</div>
+			</div>
+		</div>
+		<div>
+			<table class="table table-bordered table-striped table-hover" id="dataTables">
+				<thead>
+					<tr>
+					    <th>#</th>
+						<th>Batch Code</th>
+						<th>Item</th>
+						<th>UoM</th>
+						<th>Qty</th>
+						<th>Landed Cost</th>
+						<th>Batch Date</th>					
+						<th>Status</th>
+						<th class="no-sort">Action</th>
+					</tr>
+				</thead>
+				<tbody>					
+				  <?php 
+						$sl = 1; 						
+						foreach ($this->batches as $batch):
+					?>		
+						  <tr>
+							  <td><?php echo $sl++; ?></td> 
+							  <td><?php echo $batch['batch']; ?></td>
+							  <td><?php echo $this->itemObj->getColumn($batch['item'],'code'); ?></td>
+							  <td><?php echo $this->uomObj->getColumn($batch['uom'],'code'); ?></td>  
+							  <td><?php echo $batch['quantity']; ?></td>  
+							   <td><?php echo $batch['landed_cost']; ?></td> 
+							   <td><?php echo $batch['batch_date']; ?></td> 							 
+							   <td>
+								<?php
+									 $status_list  = $this->statusObj->get($batch['status']); 
+									 foreach ($status_list as $status):
+										 extract($status);
+									 endforeach;
+								 ?>
+								<span class="label label-<?php echo $label;?>">
+									&nbsp; <?php echo $status; ?> &nbsp;
+								</span>
+							   </td>
+							   <td>
+							    
+							     <div class="hidden-sm hidden-xs btn-group">
+							     	<a class="btn btn-xs btn-info" href="<?php echo $this->url('batch', array('action' => 'editbatch', 'id' => $batch['id'])); ?>" title="Edit">
+										<i class="ace-icon fa fa-pencil bigger-120" ></i> 
+									</a>
+									 <?php
+							      	  if($batch['costing'] == "0"):
+								  	  ?>
+								  	    <a class="btn btn-xs btn-danger" href="<?php echo $this->url('batch', array('action' => 'costingsp', 'id' => $batch['id'])); ?>" title="Costing details">
+										  <i class="ace-icon fa fa-file-text bigger-120" ></i>  
+									    </a>
+								  	  <?php
+								  	  else: 
+								  	  ?>
+								  	  <a class="btn btn-xs btn-success" href="<?php echo $this->url('batch', array('action' => 'viewbatch', 'id' => $batch['id'])); ?>" title="view details">
+										<i class="ace-icon fa fa-eye bigger-120" ></i>  
+									  </a>
+								  	  <?php  								  	  
+								  	endif;
+							     ?>
+							      <a data-toggle="modal" data-target = "#modal" class="btn btn-xs btn-danger" href="<?php echo $this->url('acl', array('action' => 'activitylog', 'id' => "13-".$batch['id'])); ?>" title="View Activity Logs">
+										<i class="ace-icon fa fa-plus bigger-120" ></i>  
+						  		  </a>
+									 
+							     </div>
+							   </td>
+						   </tr>				 
+					<?php endforeach;?>
+				</tbody>
+			</table>
+		</div>
+	</div>
+</div>
+<!--for modal -->
+<div id="modal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content"> </div>
+    </div>
+</div>
+<script type="text/javascript">
+$('document').ready(function(){
+	$('#dataTables').DataTable({
+		"paging":   true,
+	});
+});
+</script>
+

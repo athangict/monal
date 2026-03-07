@@ -1,0 +1,148 @@
+<?php
+/**
+ * View -- of Stock/MasterController/addtripAction
+ */
+?>
+<div class="row">
+	<div class="col-lg-12">
+		<div class="widget widget-box">
+			<div class="widget-header">
+				<h5 class="widget-title lighter smaller">
+					<i class="fa fa-asterisk"></i>&nbsp;Create New Trip Details
+				</h5>
+			</div><!-- end of widget-header -->
+			<div class="widget-body">
+				<div class="widget-main">
+					<form id="#form" method="post" action="<?php echo $this->url('stmaster', array('action'=>'addtrip')); ?>"  enctype="multipart/form-data" >
+						<?php $trips = $this->tripObj->get(array('status'=>1));
+						$tripAll = $this->tripObj->getAll();
+						
+						if(sizeof($trips) > 0):
+								foreach($trips as $trip);?>
+						<div class="alert alert-info">  
+							<i class="ace-icon fa fa-paw"></i> Create New Trip from here. The current active trip no. is <?php echo $trip['trip_no'];?> created on <?php echo $trip['trip_date'];?>.
+							You can either use the active trip no. or anyother trip no. to retrieve the trip details data and make changes on it or you have the option to select the fields required for data retrieval.
+						</div>
+						<?php endif;?>
+						<div class="row">	    
+							<div class="form-group col-lg-4">
+								<label for="trip_date" class="control-label">Trip Date</label>
+								<div class="date input-group" id="trip_date" data-date="<?php echo date('Y-m-d');?>" data-date-format="yyyy-mm-dd" >
+									<input class="form-control span2" name="trip_date" id="trip_date" type="text" value="<?php echo date('Y-m-d');?>" placeholder="Trip Date" readonly required>
+									<span class="input-group-addon add-on"><i class="fa fa-calendar"></i></span>
+								</div>
+							</div>
+							<?php if(sizeof($tripAll) > 0):?>
+							<div class="form-group col-lg-4">
+								<label for="trip_id" class="control-label">Select the Trip no to retrieve the details</label>
+								<select class="form-control" name="trip_id" id="trip_id" data-placeholder="Select">
+									<option value=""></option>
+									<?php foreach($this->tripObj->getAll() as $trip_no):
+										$selected = ($trip_no['id'] == $trip['id'])?'selected':'';?>
+										<option value="<?php echo $trip_no['id'];?>" <?php echo $selected;?>>
+											<?php echo $trip_no['trip_no']; ?>
+										</option>
+									<?php endforeach; ?>
+								</select>
+							</div>
+							<?php endif;?>
+						</div>
+						<?php if(sizeof($tripAll) > 0):?>
+						<span><i class="fa fa-check"></i> Select the fields for which the data should be retrived from the selected trip no.</span>
+						<div class="row">
+							<div class="col-lg-12">
+								<div class="checkbox">
+									<label>
+										<input name="checkbox[]" type="checkbox" class="ace" value="1" checked />
+										<span class="lbl"> Plain Distance</span>
+									</label>
+								</div>
+								<div class="checkbox">
+									<label>
+										<input name="checkbox[]" type="checkbox" class="ace" value="2" checked />
+										<span class="lbl"> Hill Distance</span>
+									</label>
+								</div>
+								<div class="checkbox">
+									<label>
+										<input name="checkbox[]" type="checkbox" class="ace" value="3" checked />
+										<span class="lbl"> Plain Rate</span>
+									</label>
+								</div>
+								<div class="checkbox">
+									<label>
+										<input name="checkbox[]" type="checkbox" class="ace" value="4" checked />
+										<span class="lbl"> Hill Rate</span>
+									</label>
+								</div>
+								<div class="checkbox">
+									<label>
+										<input name="checkbox[]" type="checkbox" class="ace" value="5" checked />
+										<span class="lbl"> Number of Hops</span>
+									</label>
+								</div>
+							</div>
+						</div>
+						<?php endif;?>
+						<div class="row">
+							<div class="col-lg-12">
+								<label class="control-label" for="note">Note: </label>
+								<textarea class="form-control" name="note" id="note"></textarea>
+							</div>
+						</div>
+						<div class="space-12"></div>
+						<div class="row"> 
+							<div class="col-lg-9"></div>
+							<div class="col-lg-3"> 
+								<button type="submit" class="btn btn-success"><i class="fa fa-save"></i> Save Trip Details </button>
+								<button type="button" class="btn btn-warning" onclick="window.location.href='<?php echo $this->url('stmaster',array('action'=>'trip'));?>'" ><i class="fa fa-times"></i> Cancel </button> 					
+							</div>
+						</div>
+					</form>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+<script type="text/javascript">
+$('document').ready(function(){
+	$('#trip_date').datepicker();
+	$('#trip_date').on('changeDate',function(){
+		$('form').formValidation('revalidateField', $(this).attr('id'));
+	});
+	/******** formValidation *************/
+	const fv = FormValidation.formValidation(document.getElementById('#form'), {
+		fields: {
+			'trip_date': {
+				validators: {
+					notEmpty: {
+						message: 'Please select trip date'
+					}
+				}
+			},
+			/*'trip_id': {
+				validators: {
+					notEmpty: {
+						message: 'Please select trip no. to retrieve the data'
+					}
+				}
+			}, */  
+		},
+		plugins: {
+			trigger: new FormValidation.plugins.Trigger(),
+			bootstrap3: new FormValidation.plugins.Bootstrap3(),
+			submitButton: new FormValidation.plugins.SubmitButton(),
+			defaultSubmit: new FormValidation.plugins.DefaultSubmit(),
+		},
+	}).on('core.element.validated', function (e) {
+		if (e.valid) {
+			$('div#'+ e.field.replace('[]','') +'_chosen').removeClass('is-invalid');
+			$('div#'+ e.field.replace('[]','') +'_chosen').addClass('is-valid');
+		} else {
+			$('div#'+ e.field.replace('[]','') +'_chosen').removeClass('is-valid');
+			$('div#'+ e.field.replace('[]','') +'_chosen').addClass('is-invalid');
+		}
+	});
+});
+</script>
+

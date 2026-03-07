@@ -1,0 +1,59 @@
+<?php
+/**
+ * 
+ * View -- of Stock/MsaterController/uomAction
+ * 
+ */
+	$this->headTitle($this->title);
+?>
+<?php echo $this->partial('stock/master/partial.phtml', array('active' => 'uom')); ?>
+<div class="card">
+	<div class="card-header">
+		<div class="btn-group pull-right">
+			<?php echo $this->button(2);?>
+		</div>
+	</div>
+	<table class="table table-bordered table-striped table-hover" id="dataTables">
+		<thead>
+			<tr>
+				<th>#</th>
+				<th>Code</th>
+				<th>UOM Type</th>
+				<th>Description</th>
+				<th class="no-sort">Action</th>
+			</tr>
+		</thead>
+		<tbody>
+			<?php
+				$i = 1; 
+				foreach ($this->uoms as $uom):
+					$uomtype = $this->uomtypeObj->select(array('id'=>$uom['uom_type']))->current()->description;
+			?>
+					<tr>
+						<td><?php echo $i++; ?> </td> 
+						<td><b><?php echo $uom['code']; ?></b></td> 
+						<td><?php echo $uomtype; ?></td>  
+						<td><?php echo $uom['description']; ?></td>                               
+						<td>
+							<a class="btn btn-xs btn-info" data-toggle="modal" href="<?php echo $this->url('stmaster', array('action'=>'edituom', 'id' => $uom['id']));?>" data-target="#modal">
+								<i class="ace-icon fa fa-pencil bigger-120"></i>
+							</a>                                                                    
+						</td>
+					</tr>
+			<?php endforeach;?>
+		</tbody>
+	</table>
+</div>
+<!--for modal -->
+<div id="modal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content"> </div>
+    </div>
+</div>
+<script>
+$('document').ready(function(){
+	$('#dataTables').DataTable({
+		"paging":   true,
+	});
+});
+</script>

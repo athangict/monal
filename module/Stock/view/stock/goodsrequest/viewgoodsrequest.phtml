@@ -1,0 +1,174 @@
+<?php
+/**
+ * 
+ * View -- of Stock/StockController/viewgoodsrequest
+ * 
+ */
+?>
+<?php echo $this->partial('stock/dispatch/partial.phtml', array('active' => 'request')); ?> <br/>
+<?php 
+	foreach($good_request as $grn):
+		extract($grn);
+		$grn_id = $id;
+		$grn_status = $status;
+	endforeach;
+	foreach($gr_details as $tdrow);
+	//print_r($tdrow);exit;
+?>
+<style>
+	.mytable tr th,.mytable tr td {
+		padding:5px;
+	}
+</style>
+
+<div class="row">
+	<div class="col-lg-12">
+		<div class="widget widget-box">
+			<div class="widget-header">
+				<h5 class="widget-title lighter smaller">
+					# Goods Request Details:<strong>&nbsp;&nbsp;<?php echo $gr_no;?> | <?php //echo $location; ?></strong>&nbsp;
+					<?php if($grn['type']==1):?>
+						<span class="label label-warning">Purchase Request</span>
+					<?php else:?>
+						<span class="label label-info">Dispatch Request</span>
+					<?php endif;?>&nbsp;
+					<?php echo $this->status($status);?>
+				</h5>
+				
+				<div class="widget-toolbar hidden-xs">	
+					<a class="btn btn-xs btn-danger" data-toggle="modal" data-target="#modal" href="<?php echo $this->url('acl', array('action' => 'activitylog', 'id' => "12-".$grn_id)); ?>" title="View Activity Logs">
+						<i class="ace-icon fa fa-plus bigger-120" ></i>  
+					</a> |				
+					<a style='cursor:pointer' id="print">
+						<i class="ace-icon fa fa-file-pdf-o red"></i>
+					</a>
+				</div>
+			</div>
+			<div class="widget-body">
+				<div class="widget-main padding-12">
+					<div id="report-print">
+						<div class="row" id="convert-tb0">
+							<div class="col-lg-8" id="convert-tb1">
+								<ul class="list-unstyled spaced">
+									<li>
+										<i class="ace-icon fa fa-caret-right blue"></i>
+										GRN No : <b class="red"><?php echo $gr_no; ?></b>
+									</li>
+									<li>
+										<i class="ace-icon fa fa-caret-right blue"></i>
+										From Location : <b class="red"><?php echo $this->locationObj->getColumn($from_location,'location'); ?></b>
+									</li>
+									<li>
+										<i class="ace-icon fa fa-caret-right blue"></i>
+										GRN Type : <b class="red"><?php echo ($type==1)?"Purchase Request":"Dispatch Request";?></b>
+									</li>
+								</ul>
+							</div>
+							<div class="col-lg-4" id="convert-tb2">
+								<ul class="list-unstyled spaced">
+									<li>
+										<i class="ace-icon fa fa-caret-right blue"></i>
+										GRN Date : <b class="red"><?php echo $gr_date; ?></b>
+									</li>
+									<li>
+										<i class="ace-icon fa fa-caret-right blue"></i>
+										Activity : <b class="red"><?php echo $activity; ?></b>
+									</li>
+									<li>
+										<i class="ace-icon fa fa-caret-right blue"></i>
+										To Location : <b class="red"><?php echo $this->locationObj->getColumn($to_location,'location'); ?></b>
+									</li>									
+								</ul>
+							</div>
+						</div>
+						<div class="row">
+							<div class="col-lg-12">
+								<ul class="list-unstyled spaced">
+									<li>
+										<i class="ace-icon fa fa-caret-right blue"></i>Note : <b class="red"><?php echo $note; ?> </b>
+									</li>
+								</ul>
+							</div>
+						</div>
+						<div class="row">
+							<div class="col-lg-12" style="text-align: right">		
+							<?php if($grn_status == 2):echo $this->button(6, $id, ' ', '1196');endif;?>
+							</div>
+						</div>
+						<div class="row">
+								<div class="col-lg-12" >
+									<table class="table" style="border-top:2px solid #ddd;">
+										<thead>
+											<tr>
+												<th>#</th>
+												<th>Item</th>
+												<th>UOM</th>											
+												<th>Requested Qty</th>
+												<th>Rate(Nu)</th>
+												<th>Amount(Nu)</th>
+												<th>Qty as of <?php echo $this->dateformat($gr_date); ?> </th>
+												<th>Action</th>	
+	
+											</tr>
+										</thead>
+										<tbody>
+											<?php $sl=1;$total=0;$totalqty=0;foreach($gr_details as $tdrow):
+											
+											$rate = $this->stopeningObj->getColumn(array('item'=>$tdrow['item_id']),'selling_price');
+											$total += ($rate * $tdrow['requested_qty']);
+											$totalqty += $tdrow['requested_qty'];													
+											?>
+												<tr>
+													<td><?php echo $sl++;?></td>
+													<td><?php echo $tdrow['name'];?></td>
+													<td><?php echo $tdrow['uom'];?></td>
+													<td><?php echo $tdrow['requested_qty'];?></td>
+													<td><?php echo $rate;
+													?></td>
+													<td><?php echo $rate * $tdrow['requested_qty'];
+													?></td>
+													<td><?php echo $tdrow['existing_qty'];?></td>
+													<td><?php if($grn_status == 2):echo $this->button(1,$tdrow['id']);endif;?></td>
+												</tr>
+											<?php endforeach;?>
+											<tr style="border-top:2px solid #ddd;border-bottom:2px solid #ddd;">
+													<td></td>
+													<td></td>
+													<td><b>Total</b></td>
+													<td><b><?php echo $totalqty;?></b></td>
+													<td><b><?php echo $total;?></b></td>
+													<td></td>
+													<td></td>
+											</tr>
+										</tbody>
+									</table>
+								</div>
+						</div>
+						</div>
+					<!-- Upload and Download file attachments -->	
+					<div class="row">
+						<div class="col-lg-12" style="text-align: right">		
+							<?php $depoyManager = $this->userRoleObj->get(array('id'=>$this->userID,'role'=>2));
+									$purchaseOfficial = $this->userRoleObj->get(array('id'=>$this->userID,'role'=>2));	?>						
+							<?php if($grn_status == '2' && $this->user_location == $to_location /*&& sizeof($depoyManager)>0*/):?>
+									<a href="<?php echo $this->url('goodsrequest', array('action'=>'editgoodsrequest', 'id'=>$grn_id));?>" class="btn btn-info"> <i class="fa fa-pencil"></i> Edit </a>
+									<a data-toggle="modal" data-target="#modal" href="<?php echo $this->url('goodsrequest', array('action'=>'processgr', 'id'=>$grn_id.'-1'));?>" class="btn btn-success"> <i class="fa fa-check-square-o"></i>Send Request</a>
+							<?php elseif($grn_status == '6' && $this->user_location == $from_location /*&& (sizeof($depoyManager)>0 || sizeof($purchaseOfficial)>0)*/): ?>
+									<a data-toggle="modal" data-target="#modal" href="<?php echo $this->url('goodsrequest', array('action'=>'processgr', 'id'=>$grn_id.'-2'));?>" class="btn btn-success"> <i class="fa fa-check-square-o"></i>&nbsp; Receive GRN</a>
+									<a href="<?php echo $this->url('goodsrequest', array('action'=>'cancelgoodrequest', 'id'=>$grn_id));?>" class="btn btn-danger"> <i class="fa fa-times"></i>&nbsp; Cancel GRN</a>
+						
+							<?php endif;?>
+						</div>			
+					</div>					
+					
+				    <!-- End of attachment -->
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+<div id="modal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content"> </div>
+    </div>
+</div>

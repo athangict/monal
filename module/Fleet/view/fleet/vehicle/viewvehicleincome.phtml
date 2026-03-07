@@ -1,0 +1,210 @@
+<?php
+/**
+ * 
+ * View -- of Purchase/PurchaseController/viewporder
+ * 
+ */
+?>
+<?php 
+	foreach($repair as $row);
+		extract($row); 
+	//echo '<pre>';	print_r($row);exit;
+                $rm_id = $row['id'];
+                $rm_status = $row['status'];
+	//endforeach;exit;
+	foreach($this->RMDObject->get(array('repair' =>$id)) as $repair);
+?>
+<style>
+	.mytable tr th,.mytable tr td {
+		padding:5px;
+	}
+</style>
+<div class="row">
+	<div class="col-lg-12">
+		<div class="widget widget-box">
+			<form method="post" action="<?php echo $this->url('vehicle', array('action' => 'viewvehicleincome')); ?>" >
+				<div class="widget-header">
+					<h5 class="widget-title lighter smaller">
+						# Transport Income Details:<strong>&nbsp;&nbsp;<?php echo $location; ?> | <?php //echo $supplier; ?> | <?php //echo $cost_center ?></strong>&nbsp;
+						<?php $this->status($status);?>
+					</h5>
+					<div class="widget-toolbar hidden-xs">
+							<button type="button" id="rm_btn" class="btn btn-white btn-warning btn-bold btn-xs"><i class="fa fa-plus"></i> <a href="<?php echo $this->url('vehicle', array('action'=>'addvehicleincome'));?>"> Add Vehicle Income</a></button>
+					</div>
+					<div class="widget-toolbar hidden-xs">
+						<div class="btn-group">
+							<a class="btn btn-xs btn-danger" data-toggle="modal" data-target="#modal" href="<?php echo $this->url('acl', array('action' => 'activitylog', 'id' => "30-".$rm_id )); ?>" title="View Activity Logs">
+								<i class="ace-icon fa fa-plus bigger-120" ></i>  
+							</a> 
+							<a class="btn btn-xs" id="print" title="Print">
+								<i class="ace-icon fa fa-file-pdf-o bigger-120"></i>
+							</a>
+						</div>
+					</div>
+				</div>
+			</form>
+			<div class="widget-body">
+				<div class="widget-main padding-12">
+					<div id="report-print">
+						<div class="row" id="convert-tb0">
+							<div class="col-lg-8" id="convert-tb1">
+								<ul class="list-unstyled spaced">
+								    <li>
+										<i class="ace-icon fa fa-caret-right blue"></i>
+										<b>Work Order Date : </b><?php echo $this->dateformat($work_order_date); ?>
+									</li>
+									<li>
+										<i class="ace-icon fa fa-caret-right blue"></i>
+										<b>Income no : </b><?php echo $repair_no; ?>
+									</li>
+									<li>
+										<i class="ace-icon fa fa-caret-right blue"></i>
+										<b>Location :  </b><?php echo $location;?>
+									</li>
+									<li>
+										<i class="ace-icon fa fa-caret-right blue"></i>
+										<b>Income Amount : </b><?php echo $total_amount; ?>
+									</li>
+									</li>
+                                  
+								</ul>
+							</div>
+							<div class="col-lg-4" id="convert-tb2">
+								<ul class="list-unstyled spaced">
+								    <li>
+										<i class="ace-icon fa fa-caret-right blue"></i>
+										<b> Voucher No. : </b> <?php echo $this->transObj->getColumn($transaction,'voucher_no'); ?> 
+									</li>
+	
+									
+								</ul>
+							</div>
+							<?php if($repair['cash']== 2):?>
+							<div class="col-lg-4" id="convert-tb2">
+								<ul class="list-unstyled spaced">
+								   <li>
+										<i class="ace-icon fa fa-caret-right blue"></i>
+										<b>Party : </b><?php echo $this->partyObj->getColumn($repair['party'],'name'); ?> 
+									</li>
+									<li>
+										<i class="ace-icon fa fa-caret-right blue"></i>
+										<b>Refernece Number : </b><?php echo $repair['ref_no']; ?> 
+									</li>
+									
+								</ul>
+							</div>
+							<?php elseif($repair['cash']== 0):?>
+							<div class="col-lg-4" id="convert-tb2">
+								<ul class="list-unstyled spaced">
+									<li>
+										<i class="ace-icon fa fa-caret-right blue"></i>
+										<b>Bank : </b><?php echo $this->bankObj->getColumn($repair['bankacc'],'code').' '.$this->bankObj->getColumn($repair['bankacc'],'account'); ?> 
+									</li>
+								   <li>
+										<i class="ace-icon fa fa-caret-right blue"></i>
+										<b>Journal Number : </b><?php echo $repair['journal']; ?> 
+									</li>
+									<li>
+										<i class="ace-icon fa fa-caret-right blue"></i>
+										<b>Phone Number : </b><?php echo $repair['phone']; ?> 
+									</li>
+								</ul>
+							</div>
+							<?php else:?>
+								<ul class="list-unstyled spaced">
+									<li>
+										<i class="ace-icon fa fa-caret-right blue"></i>
+										<b>Cash : </b><?php echo  $this->cashObj->getColumn($repair['cashacc'],'cash_account_code').' '.$this->cashObj->getColumn($repair['cashacc'],'cash_account_name'); ?> 
+									</li>
+								</ul><?php endif;?>
+						</div>
+						<div class="row">
+							<div class="col-lg-12">
+								<ul class="list-unstyled spaced">
+									<li>
+										<i class="ace-icon fa fa-caret-right blue"></i><b>Note:</b><?php echo $remarks;?> 
+									</li>
+								</ul>
+							</div>
+						</div>
+						<div class="space-6"></div>
+						<div class="row">
+							<div class="col-lg-12" >
+								<table class="table" style="border-top:2px solid #ddd;">
+									<thead>
+										<tr>
+											<th>#</th>
+											<th>Head</th>
+											<th>Subhead</th>
+											<th>Amount</th>
+											
+										</tr>
+									</thead>
+									<tbody>
+										<?php $sl = 1; 
+											foreach($this->RMDObject->get(array('repair' =>$id)) as $tdrow):
+											?>
+											<tr>
+												<td><?php echo $sl++; ?></td>
+												<td><?php echo $this->serviceObj->getColumn($tdrow['service'],'code');?></td>
+												<td><?php echo $this->vehicleObj->getColumn($tdrow['service_item'],'name');?></td>
+												<td><?php echo $tdrow['amount'];?></td>
+											</tr>
+										<?php endforeach;?>
+										<tr style="border-top:2px solid #ddd;border-bottom:2px solid #ddd;">
+											<th></th>
+											<th colspan="2">Net Amount :</th>
+											<th colspan="2"> 
+											<?php echo $this->currency($total_amount);?></th>
+										</tr>
+									</tbody>
+								</table>
+							</div>
+						</div>
+					<?php if($status == '3'):?>
+							<div class="row" id="convert-tb0" style='text-align:center;'>
+								<div class="col-lg-6 pull_left" id="convert-tb1">
+									<ul class="list-unstyled spaced">
+										<li>
+											<i>Verified and Authorized by : <?php echo $this->userObj->getColumn($so_author,'name');?></i> 
+										</li>
+									</ul>
+								</div>
+							</div>
+							<div class="row" id="convert-tb1" style='text-align:center;'>
+								<div class="col-lg-6 pull_left" id="convert-tb2">
+									<ul class="list-unstyled spaced">
+										<li></li>
+									</ul>
+								</div>
+							</div>
+                                         <?php endif;?>
+					</div>
+					<div class="row">
+						<div class="col-lg-12" style="text-align: right">
+							<?php if($status == '2'):?>
+								<a href="<?php echo $this->url('vehicle', array('action'=>'editvehicleincome', 'id'=>$id));?>" class="btn btn-info"> <i class="fa fa-pencil"></i> Edit </a>
+								<a href="<?php echo $this->url('vehicle', array('action'=>'commitvehicleincome', 'id'=>$id));?>" class="btn btn-success"> <i class="fa fa-check"></i> Commit </a>
+							<?php endif;?>
+						</div>
+					</div>
+					<!-- Upload and Download file attachments -->			
+					<?php   
+					   echo $this->partial('partial/attachment.phtml', array('process' => '1', 'process_id'=> $rm_id , 'status' => $rm_status));
+					?>					
+				    <!-- End of attachment -->
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+<script type="text/javascript">
+	$('#rm_btn').on('click',function(){
+		window.document.location = "<?php echo $this->url('vehicle', array('action' => 'addrepair'));?>";
+	});
+	$('#print').genpdfinvoice({
+		content: '#report-print',
+		src:"<?php echo $this->url('pdfxls', array('action' => 'pdf'));?>",
+		orentation:"L",//L =landscape, P = potrait
+	});
+</script>

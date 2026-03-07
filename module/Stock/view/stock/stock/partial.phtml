@@ -1,0 +1,40 @@
+<?php // partial.phtml 
+	$item = ($this->active == "index")?"active":"";
+	$itemclass = ($this->active == "itemclass")?"active":"";
+	$itemgroup = ($this->active == "itemgroup")?"active":"";
+	$itemsubgroup = ($this->active == "itemsubgroup")?"active":"";
+	$stock = ($this->active == "stock")?"active":"";
+?>
+<br/>
+<ul class="nav nav-tabs padding-18 nav-fixed-top" id="myTab">
+	<li class="<?php echo $stock; ?>">
+		<a href="<?php echo $this->url('stock', array('action' => 'stock')); ?>" title="Item Conversion">
+			<i class="blue ace-icon fa fa-magnet bigger-120"></i>
+			<span class="hidden-xs">Stock</span>
+		</a>
+	</li>
+	<li class="<?php echo $item; ?>">
+		<a href="<?php echo $this->url('stock', array('action' => 'index')); ?>" title="Dispatch of Items">
+			<i class="orange ace-icon fa fa-cubes bigger-120"></i>
+			<span class="hidden-xs">Item</span>
+		</a>
+	</li>
+	<li class="<?php echo $itemclass; ?>">
+		<a href="<?php echo $this->url('stock', array('action' => 'itemclass')); ?>" title="Good Request for Purchase or Dispatch">
+			<i class="green ace-icon fa fa-filter bigger-120"></i>
+			<span class="hidden-xs">Item Class</span>
+		</a>
+	</li>
+	<li class="<?php echo $itemgroup; ?>">
+		<a href="<?php echo $this->url('stock', array('action' => 'itemgroup')); ?>" title="Item Conversion">
+			<i class="blue ace-icon fa fa-magnet bigger-120"></i>
+			<span class="hidden-xs">Item Group</span>
+		</a>
+	</li>
+	<li class="<?php echo $itemsubgroup; ?>">
+		<a href="<?php echo $this->url('stock', array('action' => 'itemsubgroup')); ?>" title="Item Conversion">
+			<i class="blue ace-icon fa fa-magnet bigger-120"></i>
+			<span class="hidden-xs">Item Sub-Group</span>
+		</a>
+	</li>	
+</ul>

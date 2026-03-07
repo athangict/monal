@@ -1,0 +1,347 @@
+<?php
+/**
+ * 
+ * View -- of Realestate/BuildingController/editbuildingAction
+ * 
+ */
+$this->headTitle($this->title);
+?>
+<?php 
+foreach($flats as $rows):
+    
+endforeach; //exit;
+?>
+<form id="#form" method="post" action="<?php echo $this->url('building', array('action' => 'editflatinfo', 'id'=> $rows['id'])); ?>"  enctype="multipart/form-data" >                 
+<div class="modal-header">
+	  <div class="row">
+		<div class="col-lg-12">
+			<div class="widget-box">
+				<div class="widget-header widget-header-smaller">
+					<h4 class="widget-title blue bolder smaller">Assets Register
+				</div>
+				<div class="widget-body">
+					<div class="widget-main padding-24">
+					    <div class="row">
+						<div class="form-group col-lg-4">
+								<label for="tenants" class="control-label">Tenants</label>
+								<input type="text" class="form-control" name="tenants" id="tenants" value="<?php echo $rows ['tenants'];?>" placeholder="Enter tenants name" required />
+							</div>
+
+							<div class="form-group col-lg-4">
+								<label for="contact" class="control-label"> contact Name</label>
+								<input type="text" class="form-control" name="contact" id="contact" value="<?php echo $rows ['contact'];?>" style="text-transform: capitalize;" />
+							</div>
+
+							<div class="form-group col-lg-4">
+								<label for="rent" class="control-label">rent</label>
+								<input class="form-control" name="rent" id="rent" value="<?php echo $rows ['rent'];?>" />
+							</div>
+						</div>
+						
+						<div class="form-group col-lg-4">
+								<label for="flat_status" class="control-label">flat_status</label>
+								<input class="form-control" name="flat_status" id="flat_status" value="<?php echo $rows ['flat_status'];?>" />
+							</div>
+						</div>
+						
+						<div class="form-group col-lg-4">
+								<label for="agrement_date" class="control-label">agrement_date</label>
+								<input class="form-control" name="agrement_date" id="agrement_date" value="<?php echo $rows ['agrement_date'];?>" />
+							</div>
+						</div>
+						<div class="form-group col-lg-4">
+								<label for="start_date" class="control-label">start_date</label>
+								<input class="form-control" name="start_date" id="start_date" value="<?php echo $rows ['start_date'];?>"/>
+							</div>
+						</div>
+
+						<div class="row">	
+						<div class="form-group col-lg-4">
+								<label for="end_date" class="control-label">end_date</label>
+								<select class="form-control chosen-widget" id="end_date" name="end_date" data-placeholder="Select" value="<?php echo $rows ['end_date'];?>" required >
+									<option value=""></option>
+								</select>
+							</div>
+
+								<div class="form-group col-lg-4">
+									<label for="remarks" class="control-label"> Remarks</label>
+									<textarea id='remarks' name='remarks' rows='3' cols='65' value="<?php echo $rows ['remarks'];?>"></textarea>
+								</div>
+
+							</div>
+									<button type="submit" class="btn btn-success"><i class="fa fa-check"></i> Save </button>
+									<button type="button" class="btn btn-warning" onclick="javascript:history.back();"><i class="fa fa-times"></i> Cancel </button>
+					</div>
+				</div>
+			</div>
+		</div>
+
+
+</form>
+<script type="text/javascript"> 	
+    $(function() {
+		$('#location').on('change', function(){
+			$location_id = $(this).val(),
+			//alert($location_id);
+			$.post(
+				"<?php echo $this->url('realestate', array('action' => 'getLeasedGodown')); ?>",
+				{
+					location_id: $location_id,
+				},
+				function(data){
+					console.log(data);
+					$('#storage_type').html(data.leaseditem);
+					$('#storage_type').trigger('chosen:updated');
+					$('form').formValidation('revalidateField','storage_type');
+				},
+				'json'
+			);
+		});
+		
+	}); 
+	$('form select').chosen();
+	$('document').ready(function(){
+		const fv = FormValidation.formValidation(document.getElementById('#form'), {
+			fields: {
+				block: {
+					validators: {
+						notEmpty: {
+							message: 'Please select block.'
+						}
+					}
+				},
+				asset: {
+					validators: {
+						notEmpty: {
+							message: 'Please select Asset'
+						}
+					}
+				},
+				assetid: {
+					validators: {
+						notEmpty: {
+							message: 'Please provide Asset id.'
+						},
+						numeric:{
+							message: 'Enter a Figure Value'
+						}
+					}
+				},
+				region: {
+					validators: {
+						notEmpty: {
+							message: 'Please provide Region.'
+						}
+					}
+				},
+				location: {
+					validators: {
+						notEmpty: {
+							message: 'Please provide location.'
+						},
+						numeric:{
+							message: 'Enter a Figure Value'
+						}
+					}
+				},
+				asset: {
+					validators: {
+						notEmpty: {
+							message: 'Please select Asset'
+						}
+					}
+			},
+			custodian: {
+					validators: {
+						notEmpty: {
+							message: 'Please select custodian'
+						}
+					}
+			},
+			unit: {
+					validators: {
+						notEmpty: {
+							message: 'Please select unit'
+						}
+					}
+			},
+			status: {
+					validators: {
+						notEmpty: {
+							message: 'Please select status'
+						}
+					}
+			},
+			purchase_bill_no: {
+					validators: {
+						notEmpty: {
+							message: 'Please select Asset'
+						}
+					}
+			},
+
+
+			entry_date: {
+					validators: {
+						notEmpty: {
+							message: 'Please select Asset'
+						}
+					}
+			},
+			put_in_use_date: {
+					validators: {
+						notEmpty: {
+							message: 'Please select Asset'
+						}
+					}
+			},
+			purchase_amount: {
+					validators: {
+						notEmpty: {
+							message: 'Please select Asset'
+						}
+					}
+			},
+			salvage_value: {
+					validators: {
+						notEmpty: {
+							message: 'Please select Asset'
+						}
+					}
+			},
+			useful_life: {
+					validators: {
+						notEmpty: {
+							message: 'Please select Asset'
+						}
+					}
+			},
+			dep_rate: {
+					validators: {
+						notEmpty: {
+							message: 'Please select dep_rate'
+						}
+					}
+			},
+			day: {
+					validators: {
+						notEmpty: {
+							message: 'Please select day'
+						}
+					}
+			},
+			dep_rate: {
+					validators: {
+						notEmpty: {
+							message: 'Please select dep_rate'
+						}
+					}
+			},
+			accumulated_depreciation: {
+					validators: {
+						notEmpty: {
+							message: 'Please select accumulated_depreciation'
+						}
+					}
+			},
+			depreciated_amount_std: {
+					validators: {
+						notEmpty: {
+							message: 'Please select depreciated_amount_std'
+						}
+					}
+			},
+			depreciated_amount_in_year: {
+					validators: {
+						notEmpty: {
+							message: 'Please select depreciated_amount_in_year'
+						}
+					}
+			},
+			days: {
+					validators: {
+						notEmpty: {
+							message: 'Please select days'
+						}
+					}
+			},
+			ad: {
+					validators: {
+						notEmpty: {
+							message: 'Please select ad'
+						}
+					}
+			},
+			to_see_net_if_neg: {
+					validators: {
+						notEmpty: {
+							message: 'Please select to_see_net_if_neg'
+						}
+					}
+			},
+			da_dec: {
+					validators: {
+						notEmpty: {
+							message: 'Please select da_dec'
+						}
+					}
+			},
+			da_std: {
+					validators: {
+						notEmpty: {
+							message: 'Please select da_std'
+						}
+					}
+			},
+			nv: {
+					validators: {
+						notEmpty: {
+							message: 'Please select nv'
+						}
+					}
+			},
+			a_d: {
+					validators: {
+						notEmpty: {
+							message: 'Please select a_d'
+						}
+					}
+			},
+			da_nov: {
+					validators: {
+						notEmpty: {
+							message: 'Please select da_nov'
+						}
+					}
+			},
+			total: {
+					validators: {
+						notEmpty: {
+							message: 'Please select total'
+						}
+					}
+			},
+
+			plugins: {
+				trigger: new FormValidation.plugins.Trigger(),
+				bootstrap3: new FormValidation.plugins.Bootstrap3(),
+				submitButton: new FormValidation.plugins.SubmitButton(),
+				defaultSubmit: new FormValidation.plugins.DefaultSubmit(),
+
+			},
+		}
+		}).on('core.element.validated', function (e) {
+			if (e.valid) {
+				$('div#'+ e.field.replace('[]','') +'_chosen').removeClass('is-invalid');
+				$('div#'+ e.field.replace('[]','') +'_chosen').addClass('is-valid');
+			} else {
+				$('div#'+ e.field.replace('[]','') +'_chosen').removeClass('is-valid');
+				$('div#'+ e.field.replace('[]','') +'_chosen').addClass('is-invalid');
+			}
+		});
+		$('form select').chosen().change(function () {
+            fv.revalidateField($(this).attr('name'));
+        });
+	});
+
+	</script>

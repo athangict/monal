@@ -1,0 +1,12 @@
+/** all css of fcb ***/
+
+@import url("css/fcb_bootstrap.min.css");
+@import url("css/fcb_style.min.css");
+@import url("font-awesome/css/font-awesome.min.css");
+@import url("fonts/fonts.googleapis.com.css");
+@import url("css/jquery-ui.custom.min.css");
+@import url("css/formValidator.css");
+@import url("css/datepicker.min.css");
+@import url("toastr.min.css");
+@import url("css/jscrollpane.min.css");
+@import url("css/perfect-scrollbar.min.css");

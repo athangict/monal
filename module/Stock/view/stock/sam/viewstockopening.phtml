@@ -1,0 +1,151 @@
+<?php
+/**
+ * View -- of Stock/BatchController/viewbatchAction
+ */
+ $this->headTitle($this->title);
+?>
+<style>
+	.mytable tr th,.mytable tr td {
+		padding:5px;
+	}
+</style>
+<?php foreach($openings as $opening);?>
+
+<div class="row">
+	<div class="col-lg-12">
+		<div class="widget widget-box">
+			<div class="widget-header">
+				<h5 class="widget-title lighter smaller">
+					# Stock Opening Details:<strong>&nbsp;&nbsp;<?php echo $opening['batch']; ?> | <?php echo $this->itemObj->getColumn($opening['item'],'code'); ?></strong>&nbsp;
+				</h5>
+				<div class="widget-toolbar hidden-xs">
+					<a style='cursor:pointer' id="print">
+						<i class="ace-icon fa fa-file-pdf-o red"></i>
+					</a>
+				</div>
+			</div>
+			<div class="widget-body">
+				<div class="widget-main">
+					<div id="report-print">
+						<div class="row" id="convert-tb0">
+							<div class="col-lg-8" id="convert-tb1">
+								<ul class="list-unstyled spaced">
+									<li>
+										<i class="ace-icon fa fa-caret-right blue"></i>
+										Opening Date: <b class="red"><?php echo $this->dateformat($opening['opening_date']);?></b>
+									</li>
+									<li>
+										<i class="ace-icon fa fa-caret-right blue"></i>
+										Issue Date: <b class="red"><?php echo $this->dateformat($opening['issue_date']);?></b>
+									</li>											
+									<li>
+										<i class="ace-icon fa fa-caret-right blue"></i>
+										Item : <b class="red"><?php echo $this->itemObj->getColumn($opening['item'],'name');?></b>
+										<a href="<?php echo $this->url('stock', array('action'=>'viewitem', 'id'=>$opening['item']));?>" target="_blank">
+										<i class='fa fa-arrow-right'></i></a>
+									</li>
+									<li>
+										<i class="ace-icon fa fa-caret-right blue"></i>
+										Opening Status : <b class="red"><?php echo $this->status($opening['status']);?></b>
+									</li>
+								</ul>
+							</div>
+							<div class="col-lg-4" id="convert-tb2">
+								<ul class="list-unstyled spaced">
+									<li>
+										<i class="ace-icon fa fa-caret-right blue"></i>
+										 Quantity : <b class="red"><?php echo $this->uomObj->getColumn($opening['uom'],'code');?> | <?php echo $this->openingdtlObj->getSMSUM(array('opening_stock'=>$opening['id']),'quantity'); ?></b>
+									</li>	
+									<li>
+										<i class="ace-icon fa fa-caret-right blue"></i>
+										Selling Price/No's : <b class="red"><?php echo $opening['selling_price'];?></b>
+									</li>								
+									<li>
+										<i class="ace-icon fa fa-caret-right blue"></i>
+										Amount(Nu): <b class="red"><?php echo $opening['selling_price']*$this->openingdtlObj->getSMSUM(array('opening_stock'=>$opening['id']),'quantity');?></b>
+									</li>
+								</ul>
+							</div>
+						</div>
+						<?php if($role==100||$role==99):?>
+							<div class="col-lg-12" style="text-align: right">
+								<?php echo $this->button(6,$opening['id'],'','1200');?>
+							</div>
+						<?php endif;?>
+						<?php $activity_id = $this->itemObj->getColumn($opening['item'],'activity');?>
+						<div class="space-12"></div>
+						<div class="row">
+							<div class="col-lg-12" >
+								 <table class="table" style="border-top:2px solid #ddd;">
+								    <thead>																		
+									    <th>#</th>
+										<th>Location</th>	
+										<th>Opening Qty</th>
+										<th>Remaining Qty</th>
+										<th>Author</th>
+										<th>Status</th>
+										<th>Action</th>
+									</thead>
+									<tbody>									
+										<?php
+											$i=1;
+											foreach($openingdtls as $tdrow): ?>
+											<tr>
+												<td><?php echo  $i++; ?></td>
+												<td><?php echo $this->locationObj->getColumn($tdrow['location'],'location'); ?>
+												&nbsp;&nbsp;
+												<span class="label label-info"> 
+												<?php 
+													  $loc_type_id = $this->locationObj->getColumn($tdrow['location'],'location_type'); 
+													  echo $this->locationTypeObj->getColumn($loc_type_id,'location_type');
+												?>											    
+												</span>
+												</td>
+												<td><?php echo round($tdrow['opening_qty'],2);?></td>
+												<td><?php echo round($tdrow['quantity'],2);?></td>
+												<td><i><?php echo $this->usersObj->getColumn($tdrow['author'],'name');?></i></td>
+												<td><?php echo $this->status($tdrow['status']);?></td>
+												<td>
+												<?php if($role==100 || $role==99):?>
+												<a class="btn btn-xs btn-primary" data-toggle="modal" data-target="#modal" href="<?php echo $this->url('sam', array('action' => 'editstockopeningdetail', 'id' => $tdrow['id'])); ?>" >
+													<i class="ace-icon fa fa-edit" ></i>  
+													</a>
+													<?php endif;?>
+												</td>
+											</tr>
+										<?php endforeach; ?>
+									</tbody>
+								</table>	
+							</div>
+						</div>
+						<div class="row">
+							<div class="col-lg-5" style="text-align: right"></div>
+							<div class="col-lg-7" style="text-align: right">
+								<?php //if(in_array($activity_id,array('7'))):?>
+								<a href="<?php echo $this->url('sam', array('action'=>'editstockopening', 'id'=>$opening['id']));?>" class="btn btn-info btn-sm"> <i class="fa fa-pencil"></i> Add Opening For Remaining Locations</a>
+								<!--a href="<?php //echo $this->url('sam', array('action'=>'updatebatch', 'id'=>$opening['id']));?>" class="btn btn-warning btn-sm"> <i class="fa fa-refresh"></i> Update to Batch Details</a-->
+                                <?php //endif;?>
+								<button type="button" class="btn btn-default btn-sm" onclick="javascript:history.back();" ><i class="fa fa-arrow-left"></i> Back </button> 
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+<!-- for modal -->
+<div id="modal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+	<div class="modal-dialog">
+		<div class="modal-content">
+		</div>
+	</div>
+</div>
+<script type="text/javascript">
+$('document').ready(function(){
+	$('#dataTables').DataTable({
+		"paging":   true,
+	});
+});
+</script>
+

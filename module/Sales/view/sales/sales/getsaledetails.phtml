@@ -1,0 +1,63 @@
+<?php
+/**
+ * View -- Sales/SalesController/getsaledetails.pthml
+ * ajax response
+ */
+?>
+<style>
+	table#trdetails_table > thead > tr {
+		background: rgba(179, 174, 174, 0.18);
+		border-top:2px solid #ddd;
+	}
+</style>
+<?php 
+	
+	$sales_date = strtotime($sales_data['sales_date']);
+	$location = $sales_data['location'];
+	$activity = $sales_data['activity'];
+	$credit  = $sales_data['credit'];
+	
+	/*echo "Sales Date : ".$sales_date."<br>";
+	echo "Location : ".$location."<br>";
+	echo "Activity : ".$activity."<br>";
+	echo "credit :" .$credit."<br>";*/
+?>	
+<table class="table table-bordered table-striped table-hover" id="trdetails_table">
+	<thead>
+		<tr>
+			<th>#</th>
+			<th>Item</th>
+			<th>Batch</th>
+			<th>UOM</th>
+			<th>Rate</th>
+			<th>Quantity</th>
+			<th>Discount Qty</th>
+			<th>Amount</th>
+			<th>Transaction</th>
+		</tr>
+	</thead>
+	<tbody>
+		<?php 	
+		$i = 1;
+		foreach($this->saledetails as $saledetail):?>
+        	<tr>
+	          <td><?php echo $i++; ?></td>
+	          <td><?php echo $saledetail['item']; ?></td>
+	          <td><?php echo $this->batchObj->getColumn($saledetail['batch'],'batch'); ?></td>
+	          <td><?php echo $this->uomObj->getColumn($saledetail['uom'], 'code');?></td>
+	          <td><?php echo $saledetail['rate'];?></td>
+	          <td><?php echo $saledetail['quantity'];?></td>
+	          <td><?php echo $saledetail['discount_qty'];?></td>
+	          <td><?php echo $saledetail['rate'] * $saledetail['quantity'];?></td>
+	          <td><?php echo $saledetail['transaction'];?></td>
+	     </tr>
+  		<?php endforeach; ?>
+	</tbody>	
+</table>
+<div class="row">
+	<div class="col-lg-7"></div>
+	<div class="col-lg-3">
+		<label class="control-label" for="total_amount"><strong>Total Amount:</strong></label>
+		<i><strong><?php echo $this->currency($sum);?></strong></i>
+	</div>
+</div>

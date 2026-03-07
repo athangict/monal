@@ -1,0 +1,47 @@
+<?php // partial.phtml 
+  $service = ($this->active == "service")?"active":"";
+  $subservice = ($this->active == "subservice")?"active":"";
+  $fees = ($this->active == "fees")?"active":"";
+  $feestarriff = ($this->active == "feestarriff")?"active":"";
+  $fixedfactor = ($this->active == "fixedfactor")?"active":"";
+  $subservicetarriff = ($this->active == "subservicetarriff")?"active":"";
+?>
+<br/>
+<ul class="nav nav-tabs padding-18" id="myTab">
+	<li class="<?php echo $service; ?>">
+		<a href="<?php echo $this->url('masterpos', array('action' => 'service')); ?>">
+			<i class="green ace-icon fa fa-money bigger-120"> </i>
+			<span class="hidden-xs">Service</span>
+		</a>
+	</li>
+	<li class="<?php echo $subservice; ?>">
+		<a href="<?php echo $this->url('masterpos', array('action' => 'subservice')); ?>">
+			<i class="green ace-icon fa fa-money bigger-120"> </i>
+			<span class="hidden-xs">Sub Service</span>
+		</a>
+	</li>
+	<li class="<?php echo $fees; ?>">
+		<a href="<?php echo $this->url('masterpos', array('action' => 'fees')); ?>">
+			<i class="green ace-icon fa fa-money bigger-120"> </i>
+			<span class="hidden-xs">Fees</span>
+		</a>
+	</li>
+	<li class="<?php echo $feestarriff; ?>">
+		<a href="<?php echo $this->url('masterpos', array('action' => 'feestarriff')); ?>">
+			<i class="green ace-icon fa fa-money bigger-120"> </i>
+			<span class="hidden-xs">Fees Tarriff</span>
+		</a>
+	</li>
+	<li class="<?php echo $fixedfactor; ?>">
+		<a href="<?php echo $this->url('masterpos', array('action' => 'fixedfactor')); ?>">
+			<i class="green ace-icon fa fa-money bigger-120"> </i>
+			<span class="hidden-xs">Fixed Factors</span>
+		</a>
+	</li>
+	<li class="<?php echo $subservicetarriff; ?>">
+		<a href="<?php echo $this->url('masterpos', array('action' => 'subservicetarriff')); ?>">
+			<i class="green ace-icon fa fa-money bigger-120"> </i>
+			<span class="hidden-xs">tarriff </span>
+		</a>
+	</li>
+</ul>

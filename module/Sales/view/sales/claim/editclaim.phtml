@@ -1,0 +1,255 @@
+<?php
+/**
+* edit claims----Sales/Controller/editclaim
+*/
+	$this->headTitle($this->title);
+?>
+<?php foreach($claims as $claim):
+	extract($claim);
+	$cl_id = $id;
+	$claim_type_id = $claim_type;
+	$location_id = $location;
+	$activity_id = $activity;
+	$supplier_id = $supplier;
+	$subheadID = $sub_head;
+	$headID = $head;
+	endforeach; 
+?>
+<div class="row">
+	<div class="col-lg-12">
+		<div class="widget widget-box">
+			<div class="widget-header">
+				<h5 class="widget-title lighter smaller">
+					<i class="fa fa-asterisk"></i>&nbsp;&nbsp;Edit Claims
+				</h5>
+			</div><!-- end of widget-header -->
+			<div class="widget-body">
+				<div class="widget-main">
+					<form id="#form" method="post" action="<?php echo $this->url('claim', array('action' => 'editclaim')); ?>"  enctype="multipart/form-data" >    <div class="row">
+							<div class="col-lg-4"> 
+								<div class="form-group">
+									<input type="hidden" class="form-control" id="cl_id" name="cl_id" value="<?php echo $cl_id;?>"/>
+									<input type="hidden" class="form-control" id="claim_no" name="claim_no" value="<?php echo $claim_no;?>"/>
+									<label for="claim_type" class="control-label">Claim Type</label>
+									<select id="claim_type" name="claim_type" class="form-control" data-placeholder="Select" required>
+										<option value=""></option>	
+										<?php foreach ($claimtypeObj->getAll() as $claimtype):
+											$selected = ($claim_type_id == $claimtype['id'])?'selected':'';
+										?>
+											<option value="<?php echo $claimtype['id'];?>" <?php echo $selected;?>>
+												<?php echo $claimtype['claim_type']; ?>
+											</option>
+										<?php endforeach; ?>
+									</select> 
+								</div>	
+							</div>		
+							<div class="col-lg-4">    
+								<div class="form-group">
+									<label for="claim_date" class="control-label">Claim Date</label>
+									<div class="date input-group" id="claim_date" data-date="<?php echo date('Y-m-d');?>" data-date-format="yyyy-mm-dd" >
+										<input class="form-control span2" name="claim_date" id="claim_date" type="text" placeholder="Claim Date" value="<?php echo $claim_date;?>" readonly required>
+										<span class="input-group-addon add-on"><i class="fa fa-calendar"></i></span>
+									</div>
+								</div>
+							</div>
+							<div class="col-lg-4"> 
+								<div class="form-group">
+									<label for="location" class="control-label">Location</label>
+									<select id="location" name="location" class="form-control" data-placeholder="Select" required>
+										<option value=""></option>	
+									<?php foreach ($this->locationObj->getAll() as $location):
+										$selected =($location_id == $location['id'])?'selected':'';
+									?>
+											<option value="<?php echo $location['id'];?>"<?php echo $selected;?>>
+												<?php echo $location['location']; ?>
+											</option>
+										<?php endforeach; ?>
+									</select> 
+								</div>	
+							</div>
+						</div>
+						<div class="row">
+							<div class="col-lg-4">
+								<div class="form-group">
+									<label for="activity" class="control-label"> Activity</label>
+									<select id="activity" name="activity" class="form-control" data-placeholder="Select" required>
+										<option value=""></option>
+										<?php foreach($activityObj->getAll() as $activity):
+											$selected = ($activity_id == $activity['id'])?'selected':'';
+										?>
+											<option value="<?php echo $activity['id'];?>" <?php echo $selected;?>>
+												<?php echo $activity['activity'];?>
+											</option>
+										<?php endforeach;?>
+									</select>
+								</div>	
+							</div>
+							<div class="col-lg-4">
+								<div class="form-group">
+									<label for="supplier" class="control-label">Supplier</label>
+									<select id="supplier" name="supplier" class="form-control" data-placeholder="Select" required>
+										<option value=""></option>
+										<?php foreach($supplierObj->getAll() as $supplier):
+											$selected =($supplier_id == $supplier['id'])?'selected':'';
+										?>
+											<option value="<?php echo $supplier['id'];?>"<?php echo $selected;?>>
+												<?php echo $supplier['code'];?>
+											</option>
+										<?php endforeach;?>
+									</select>
+								</div>
+							</div>
+							<div class="col-lg-4">
+								<div class="form-group">
+									<label for="head" class="control-label">Head</label>
+									<select id="head" name="head" class="form-control tr_head" data-placeholder="Select" required >
+										<?php 
+											foreach ($heads as $head):
+											$selected = ($headID == $head['id'])?'selected':''
+										?>
+											<option value="<?php echo $head['id'];?>" <?php echo $selected;?>>
+												<?php echo $head['code'];?>
+											</option>
+										<?php 
+											endforeach;
+										?>
+									</select>
+								</div>
+							</div>
+						</div>
+						<div class="row">
+						    <div class="col-lg-4">
+								<div class="form-group">
+									<label for="sub_head" class="control-label">Sub Head</label>
+									<select id="sub_head" name="sub_head" class="form-control" data-placeholder="Select" required>
+										<option value=""></option>
+										<?php foreach($this->subheadsObj->get(array('sh.type'=> array('9','2'))) as $subhead):
+											$selected = ($subheadID == $subhead['id'])?'selected':'';
+										?>
+											<option value="<?php echo $subhead['id'];?>" <?php echo $selected;?>>
+												<?php echo $subhead['code'];?>
+											</option>
+										<?php endforeach;?>
+									</select> 
+								</div>
+							</div>
+							<div class="col-lg-4">
+								<div class="form-group">
+									<label for="amount" class="control-label">Amount</label>
+									<input type="text" class="form-control" name="amount" id="amount" value="<?php echo $amount;?>"placeholder="Enter Amount" required/>
+								</div>
+							</div>
+						</div>
+						<div class="space-12"></div>
+						<div class="row">
+							<div class="col-lg-12">
+								<label class="control-label" for="note">Note: </label>
+								<textarea class="form-control" name="note" id="note"><?php echo $note;?></textarea>
+							</div>
+						</div>
+						<div class="space-12"></div>
+						<div class="row"> 	
+							<div class="col-lg-9"> 
+								<button type="submit" class="btn btn-success"><i class="fa fa-check"></i> Save </button>
+								<a class="btn btn-warning" onclick="javascript:history.back();"><i class="fa fa-times"></i> Cancel </a>  					
+							</div>
+						</div>
+					</form>	
+				</div><!-- widget widget-main -->
+			</div>  <!-- widget widget-body -->   
+		</div> <!-- widget widget-box --> 
+	</div><!-- col-lg-12 -->
+</div><!-- row -->
+
+<script type="text/javascript"> 
+$('#head').on('change',function(){
+	//alert($(this).val());
+	$.post(
+		"<?php echo $this->url('claim', array('action' => 'getsubhead'));?>",
+		{
+			head: $(this).val(),
+		},
+		function(data){
+			console.log(data);
+			$('select#sub_head').html(data.subhead);
+			$('select#sub_head').trigger('chosen:updated');
+		},
+		'json'
+	);
+});
+	
+$(function() {
+	$('#claim_date').datepicker();
+	$('#claim_date').on('changeDate',function(){
+		$('form').formValidation('revalidateField', $(this).attr('id'));
+	});
+	//formValidation
+	const fv = FormValidation.formValidation(document.getElementById('#form'), {
+		fields: {
+			'claim_date': {
+				validators: {
+					notEmpty: {
+						message: 'Please select claim date'
+					}
+				}
+			},
+			'claim_type': {
+				validators: {
+					notEmpty: {
+						message: 'Please select claim type'
+					}
+				}
+			}, 
+			'location': {
+				validators: {
+					notEmpty: {
+						message: 'Please select location'
+					}
+				}
+			}, 
+			'activity': {
+				validators: {
+					notEmpty: {
+						message: 'Please select activity'
+					}
+				}
+			}, 
+			'supplier': {
+				validators: {
+					notEmpty: {
+						message: 'Please select supplier'
+					}
+				}
+			}, 
+			'sub_head': {
+				validators: {
+					notEmpty: {
+						message: 'Please select sub_head'
+					}
+				}
+			}, 
+			'amount': {
+				validators: {
+					notEmpty: {
+						message: 'Please enter amount'
+					}
+				}
+			}, 
+		},
+		plugins: {
+			trigger: new FormValidation.plugins.Trigger(),
+			bootstrap3: new FormValidation.plugins.Bootstrap3(),
+			submitButton: new FormValidation.plugins.SubmitButton(),
+			defaultSubmit: new FormValidation.plugins.DefaultSubmit(),
+		},
+	}).on('core.element.validated', function (e) {
+		if (e.valid) {
+			$('div#'+ e.field.replace('[]','') +'_chosen').removeClass('is-invalid');
+			$('div#'+ e.field.replace('[]','') +'_chosen').addClass('is-valid');
+		} else {
+			$('div#'+ e.field.replace('[]','') +'_chosen').removeClass('is-valid');
+			$('div#'+ e.field.replace('[]','') +'_chosen').addClass('is-invalid');
+		}
+	});
+});  
+</script>

@@ -1,0 +1,157 @@
+
+<?php
+/**
+ * 
+ * View -- of Accounts/ChartaccountController/addclassAction
+ * 
+ */
+//$this->headTitle($this->title);
+foreach($assets as $ast);
+/*CHECK IF THE YEAR IS LEAP AND COUNT THE LEAP IN BETWEEN*/
+$current_year=date('Y');
+$put_in_use_year = date('Y', strtotime($ast['putin_date']));
+$usefullife = $ast['usefullife'];
+$end_of_life = $put_in_use_year + $usefullife;
+
+$year_of_use= $current_year - $put_in_use_year;
+$leap = 0;
+for ($year = $put_in_use_year; $year <= $end_of_life; $year++) {
+	if (($year % 4 == 0 && $year % 100 != 0) || ($year % 400 == 0)) {
+		$leap++;
+	}
+}
+/*TOTAL USEFULLIFE IN DAYS*/ 
+$total_days_with_leap = $leap * 366;
+$regular_year = $usefullife - $leap;
+$total_days_with_regular_year = $regular_year * 365;
+$total_useful_days = $total_days_with_leap + $total_days_with_regular_year;
+
+/*TOTAL USEFULLIFE IN COMPLETED*/
+$startDate = $ast['putin_date'];
+$currentDate = date("Y-m-d");
+
+/*DAY FROM USE UNTIL TODAY*/
+$timestampStartDate = strtotime($startDate);
+$timestampEndDate = strtotime($currentDate);
+if ($timestampStartDate === false || $timestampEndDate === false) {
+} else {
+	$timeDifference = $timestampEndDate - $timestampStartDate;
+	$daysCompletedtilltoday = floor($timeDifference / (60 * 60 * 24));
+}
+//echo '<pre>';print_r($total_useful_days);
+//echo '<pre>';print_r($daysCompletedtilltoday.'-'.'Days from the date of purchase');
+//echo '<pre>';print_r($timeDifference);
+//echo '<pre>';print_r($daysCompletedtilltoday);exit;
+
+/*DEPRECIATION AMOUNT PER DAY*/
+$actual_asset_value = $ast['asset_value'];
+$salvage_value = $ast['salvage'];
+if($salvage_value > 0 && $actual_asset_value != $salvage_value){
+	$depreciation_per_day = ($actual_asset_value - $salvage_value) / $total_useful_days;
+}
+//echo '<pre>';print_r($depreciation_per_day.'-'.'Daily');exit;
+//echo '<pre>';print_r($depreciation_per_day * 22 .'-'.'in 22-Days');//exit;
+/*ACCUMULATED DEPRECIATION UNTIL TODAY*/
+$today_date = date('d', strtotime($currentDate));
+$previous_month = $daysCompletedtilltoday - $today_date;
+//echo '<pre>';print_r($daysCompletedtilltoday);
+//echo '<pre>';print_r($previous_month);
+
+if($daysCompletedtilltoday < $total_useful_days){
+	$acc_depreciation = $depreciation_per_day * $previous_month;
+}else{
+	$acc_depreciation = $actual_asset_value - $salvage_value;
+}
+if($ast['depreciation']==1 && $usefullife >=1 ){
+	$depreciation_anually = ($actual_asset_value - $salvage_value) / $usefullife;
+}else{
+	$depreciation_anually = 0.00;
+}
+//echo '<pre>';print_r($acc_depreciation);//exit;
+/*CALCULATE NET AMOUNT*/
+$net_value = $ast['net'];
+?>
+<form  id="#form" method="post" action="<?php echo $this->url('assets', array('action' => 'writeoff','id'=>$ast['id'])); ?>"  enctype="multipart/form-data" >
+    <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+        <h4 class="modal-title"> <i class="fa fa-asterisk"></i> Asset Write Off</h4>
+    </div>  <!-- /modal-header -->
+    <div class="modal-body">
+        <div class="panel panel-default">                       
+            <div class="panel-body"> 
+                <div class="row">
+				<div class="col-lg-12"> 
+						<div class="form-group">
+						<label for="write_off_date" class="control-label">Write Off Date</label>
+								<div class="date input-group" id="write_off_date" data-date="<?php echo date('Y-m-d');?>" data-date-format="yyyy-mm-dd" data-date-viewmode="years">
+									<input class="form-control span2" name="write_off_date" id="write_off_date" type="text" placeholder="Write off Date" required>
+									<span class="input-group-addon add-on"><i class="fa fa-calendar"></i></span>
+								</div>
+						</div>  
+					</div> 
+				    <div class="col-lg-12"> 
+						<div class="form-group">
+							<label for="pvalue" class="control-label">Purchase Value</label>
+							<input class="form-control" name="pvalue" id="pvalue" size="30" value ="<?php echo $actual_asset_value;?>" placeholder="Purchase Value" readonly> 
+						</div>  
+					</div>  
+					<div class="col-lg-12"> 
+						<div class="form-group">
+							<label for="salvage" class="control-label">Salvage Value</label>
+							<input class="form-control" name="salvage" id="salvage" size="30" value ="<?php echo $salvage_value;?>" placeholder="Salvage Value"readonly > 
+						</div>  
+					</div>  
+					<div class="col-lg-12"> 
+						<div class="form-group">
+							<label for="net" class="control-label">Net Value</label>
+							<input class="form-control" name="net" id="net" size="30" value ="<?php echo $net_value;?>" placeholder="Disposal Amount Credit"readonly> 
+						</div>  
+					</div>  
+					<div class="col-lg-12"> 
+						<div class="form-group">
+							<label for="writeoff_amount" class="control-label">Write off Amount</label>
+							<input class="form-control" name="writeoff_amount" id="writeoff_amount" size="30" value ="<?php echo $net_value+$salvage_value;?>" placeholder="Disposal Amount Credit" readonly> 
+						</div>   
+					</div> 
+				</div> 
+            </div>
+        </div>
+    </div> <!-- /modal-body -->
+     <div class="modal-footer">
+        <button type="submit" class="btn btn-success"><i class="fa fa-check"></i> Save </button>
+        <button type="button" class="btn btn-warning" data-dismiss="modal"><i class="fa fa-times"></i> Cancel </button>
+    </div>  
+</form>
+<script>
+$(function(){
+$('#write_off_date').datepicker();
+	const fv = FormValidation.formValidation(document.getElementById('#form'), {
+		fields: {
+			disposal_amount: {
+				validators: {
+					notEmpty: {
+		 				message: 'Please Disposal Amount.'
+					}
+				}
+			},
+		},
+		plugins: {
+			trigger: new FormValidation.plugins.Trigger(),
+			bootstrap3: new FormValidation.plugins.Bootstrap3(),
+			submitButton: new FormValidation.plugins.SubmitButton(),
+			defaultSubmit: new FormValidation.plugins.DefaultSubmit(),
+		},
+	}).on('core.element.validated', function (e) {
+		if (e.valid) {
+			$('div#'+ e.field.replace('[]','') +'_chosen').removeClass('is-invalid');
+			$('div#'+ e.field.replace('[]','') +'_chosen').addClass('is-valid');
+		} else {
+			$('div#'+ e.field.replace('[]','') +'_chosen').removeClass('is-valid');
+			$('div#'+ e.field.replace('[]','') +'_chosen').addClass('is-invalid');
+		}
+	});
+	$('form select').chosen().change(function () {
+		fv.revalidateField($(this).attr('name'));
+	});
+});
+</script>

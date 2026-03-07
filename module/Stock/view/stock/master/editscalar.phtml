@@ -1,0 +1,96 @@
+<?php
+/**
+ * 
+ * View -- of Stock/MasterController/editscalarAction
+ * 
+ */
+?>
+<?php 
+    foreach($this->scalars as $scalar):
+        extract($scalar);        
+    endforeach;
+?>
+
+<form id="#form" method="post" action="<?php echo $this->url('stmaster', array('action' => 'editscalar', 'id' => $id)); ?>"  enctype="multipart/form-data" >                  
+    <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+        <h4 class="modal-title"> <i class="fa fa-pencil-square-o"></i> Edit Scalar Conversion</h4>
+    </div>  <!-- /modal-header -->
+    
+    <div class="modal-body">       
+		<div class="panel panel-default">                       
+			<div class="panel-body"> 
+				<div class="form-group">
+					<label for="from">From UOM</label>
+					<select class="form-control" style="width:100%" placeholder="Select Uom type" name="from" id="from" required >
+						<?php foreach($this->uomTable->getAll() as $uom):
+							$selected = ($from_uom == $uom['id'])?"selected":"";?>
+							 <option value="<?php echo $uom['id'];?>"<?php echo $selected;?>><?php echo $uom['code'];?></option>
+						<?php endforeach;?>				
+					</select>	 
+				</div>
+				<div class="form-group">
+					<label for="to">To UOM</label>
+					<select class="form-control" style="width:100%" placeholder="Select Uom type" name="to" id="to" required >
+						<?php foreach($this->uomTable->getAll() as $uom):
+							$selected = ($to_uom == $uom['id'])?"selected":"";?>
+							 <option value="<?php echo $uom['id'];?>"<?php echo $selected;?>><?php echo $uom['code'];?></option>
+						<?php endforeach;?>				
+					</select>	 
+				</div>
+				<div class="form-group">
+					<label for="conversion">Conversion</label>
+					<input type="text" class="form-control" name="conversion" id="conversion" value="<?php echo $conversion;?>" size="30" required> 
+				</div>
+			</div>
+		</div>
+	</div> <!-- /modal-body -->    
+    <div class="modal-footer">
+        <button type="submit" class="btn btn-success"><i class="fa fa-check"></i> Save </button>
+        <button type="button" class="btn btn-warning" data-dismiss="modal" ><i class="fa fa-times"></i> Cancel </button> 
+    </div>
+</form>
+<script>
+$('document').ready(function(){
+	$('select').chosen({ allow_single_deselect: true });
+	const fv = FormValidation.formValidation(document.getElementById('#form'), {
+		fields: {
+			from: {
+				validators: {
+					notEmpty: {
+						message: 'Please select from UOM.'
+					}
+				}
+			},
+			to: {
+				validators: {
+					notEmpty: {
+						message: 'Please select to UOM.'
+					},
+				}
+			},
+			conversion: {
+				validators: {
+					notEmpty: {
+						message: 'Please provide conversion.'
+					},
+				}
+			},
+		},
+		plugins: {
+			trigger: new FormValidation.plugins.Trigger(),
+			bootstrap3: new FormValidation.plugins.Bootstrap3(),
+			submitButton: new FormValidation.plugins.SubmitButton(),
+			defaultSubmit: new FormValidation.plugins.DefaultSubmit(),
+		},
+	}).on('core.element.validated', function (e) {
+		if (e.valid) {
+			$('div#'+ e.field.replace('[]','') +'_chosen').removeClass('is-invalid');
+			$('div#'+ e.field.replace('[]','') +'_chosen').addClass('is-valid');
+		} else {
+			$('div#'+ e.field.replace('[]','') +'_chosen').removeClass('is-valid');
+			$('div#'+ e.field.replace('[]','') +'_chosen').addClass('is-invalid');
+		}
+	});
+});
+</script>

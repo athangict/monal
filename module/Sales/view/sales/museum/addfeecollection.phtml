@@ -1,0 +1,154 @@
+<?php
+/**
+ * 
+ * View -- of Sales/MasterposController/addsubservicesAction
+ * 
+ */
+?>
+<form id="#form" method="post" action="<?php echo $this->url('museum', array('action' => 'addfeecollection')); ?>"  enctype="multipart/form-data" >
+    <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+        <h4 class="modal-title"> <i class="fa fa-plus"></i> Add </h4>
+    </div>  <!-- /modal-header -->
+    <div class="modal-body">
+		<div class="panel panel-default">                       
+			<div class="panel-body">  
+				<div class="form-group">
+					<label for="sales_date" class="control-label">Sales Date</label>
+					<div class="date input-group" id="date" data-date="<?php echo date('Y-m-d');?>" data-date-format="yyyy-mm-dd" >
+						<input class="form-control span2" name="date" id="date" type="text" value="<?php echo date('Y-m-d');?>" placeholder="Collection Date" readonly required>
+						<span class="input-group-addon add-on"><i class="fa fa-calendar"></i></span>
+					</div>
+				</div>			
+                <div class="form-group">
+                    <label for="category" class="control-label">Categories</label>
+					<select class="form-control" name="category" id="category" data-placeholder="Select" required > 
+						<option value="">None</option>	
+						<?php foreach($category as $row): ?>
+                            <option value="<?php echo $row['id'];?>">
+								<?php echo $row['category'];?>
+							</option>
+						<?php
+						endforeach;
+						?>
+					</select>
+				</div>
+                <div class="form-group">
+                    <label for="fees" class="control-label">Fees</label>
+					<input type="text" class="form-control" name="fees" id="fees" value="0" readonly required > 
+				</div>
+                <div class="form-group">
+					<label for="heads" class="control-label">No. of heads</label>
+					<input type="text" class="form-control" name="heads" id="heads" placeholder="No of Heads" required>
+				</div>
+                <div class="form-group">
+					<label for="total" class="control-label">Total Amount</label>
+					<input type="text" class="form-control" name="total" id="total" value=0 required>
+				</div>
+				<div class="form-group">
+					<label for="payment_mode" class="control-label">Payment Mode</label>
+					<select class="form-control" name="payment_mode" id="payment_mode" data-placeholder="Select">	
+						<option value="">None</option>
+						<option value=0>Cash</option>
+						<option value=1>Bank</option>
+					</select>
+				</div>
+				<div class="form-group" id="jrnl" style="display:none;">
+					<label for="jrnl_no" class="control-label">Journal No</label>
+					<input type="text" class="form-control" name="jrnl_no" id="jrnl_no" placeholder="Journal No">	
+				</div>
+				<div class="form-group" id="phone" style="display:none;">
+					<label for="mobile" class="control-label">Mobile No</label>
+					<input type="text" class="form-control" name="mobile" id="mobile" placeholder="Mobile No">	
+				</div>
+		</div>
+    </div> <!-- /modal-body -->
+    <div class="modal-footer">
+        <button type="submit" class="btn btn-success"><i class="fa fa-check"></i> Save </button>
+        <button type="button" class="btn btn-warning" data-dismiss="modal" ><i class="fa fa-times"></i> Cancel </button> 
+    </div>  
+</form>
+<script>
+$('document').ready(function(){
+    $('#category').on('change', function(){
+		$.post(
+			"<?php echo $this->url('museum', array('action' => 'getfees')); ?>",
+			{
+				category:$(this).val(),
+
+			},
+			function(data){
+				console.log(data);
+				$("#fees").val(data.fees);	
+			},
+			'json'
+		);	
+    });
+    var feeInput = $('#fees');
+	var headInput = $('#heads');
+  // Add an event listener for changes in the fees and head inputs
+  feeInput.on('input', calculateTotal);
+  headInput.on('input', calculateTotal);
+
+  // Function to calculate the total and update the total input field
+	function calculateTotal() {
+		var fees = parseFloat(feeInput.val());
+		var head = parseFloat(headInput.val());	
+		var total = fees * head;
+    // Check if the total is a valid number
+    if (!isNaN(total)) {
+      $('#total').val(total.toFixed(2)); // Display the total with 2 decimal places
+    }
+	$('#date').datepicker();
+	}
+	$('#payment_mode').change(function(){
+		if($('#payment_mode').val()==1){
+			$('#jrnl').show();
+			$('#phone').show();
+		}else{
+			$('#jrnl').hide();
+			$('#phone').hide();
+		}
+	});
+	const fv = FormValidation.formValidation(document.getElementById('#form'), {
+		fields: {
+            category: {
+                    validators: {
+                        notEmpty: {
+                            message: 'Please provide category.'
+                        }
+                    }
+                },
+				payment_mode: {
+                    validators: {
+                        notEmpty: {
+                            message: 'Please provide Payment Mode.'
+                        }
+                    }
+                },
+				heads: {
+                    validators: {
+                        notEmpty: {
+                            message: 'Please Enter No of heads.'
+                        }
+                    }
+                },
+
+            },
+		plugins: {
+			trigger: new FormValidation.plugins.Trigger(),
+			bootstrap3: new FormValidation.plugins.Bootstrap3(),
+			submitButton: new FormValidation.plugins.SubmitButton(),
+			defaultSubmit: new FormValidation.plugins.DefaultSubmit(),
+		},
+	}).on('core.element.validated', function (e) {
+		if (e.valid) {
+			$('div#'+ e.field.replace('[]','') +'_chosen').removeClass('is-invalid');
+			$('div#'+ e.field.replace('[]','') +'_chosen').addClass('is-valid');
+		} else {
+			$('div#'+ e.field.replace('[]','') +'_chosen').removeClass('is-valid');
+			$('div#'+ e.field.replace('[]','') +'_chosen').addClass('is-invalid');
+		}
+	});
+});
+</script>

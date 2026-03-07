@@ -1,0 +1,126 @@
+<?php
+/**
+ * View -- of Store/StoreController/viewitem
+ */
+?>
+<?php 
+//echo "<pre>"; print_r($items); exit;
+	foreach($this->items as $item ):
+		extract($item);
+		$item_id = $id;
+		$item_id = $id;
+	endforeach;
+?>
+<div class="row">
+	<div class="col-lg-12">
+		<div class="widget widget-box">
+			<div class="widget-header">
+				<h5 class="widget-title lighter smaller">
+					# Item Details:<strong>&nbsp;&nbsp;<?php echo $code; ?>&nbsp;
+					<b class="red"> | <?php echo $item_code;?> </b></strong>&nbsp;&nbsp;
+					<?php
+						 if($status==1):
+						 	$status_name = "Active";
+						 	$label = "success";
+						 else:
+						 	$status_name = "Inactive";
+						 	$label = "danger";
+						 endif;
+					 ?>
+					<span class="label label-<?php echo $label;?>">
+						&nbsp; <?php echo $status_name; ?> &nbsp;
+					</span>
+				</h5>
+				<div class="widget-toolbar hidden-xs">
+					<div class="btn-group">
+						<a class="btn btn-xs btn-danger" data-toggle="modal" data-target="#modal" href="<?php echo $this->url('acl', array('action' => 'activitylog', 'id' => "36-".$item_id)); ?>" title="View Activity Logs">
+							<i class="ace-icon fa fa-plus bigger-120" ></i>  
+						</a> 
+						<a class="btn btn-xs" id="print" title="Print">
+							<i class="ace-icon fa fa-file-pdf-o bigger-120"></i>
+						</a>
+					</div>
+				</div>
+			</div>
+			<div class="widget-body">
+				<div class="widget-main padding-24">
+					<div id="report-print">
+						<div class="row" id="convert-tb0">
+							<div class="col-lg-4" id="convert-tb1">
+							    <h4>1. Name and Description</h4>
+								<ul class="list-unstyled spaced">
+									<li>
+										<i class="ace-icon fa fa-caret-right blue"></i>
+										Item Name : <b class="red"><?php echo $name; ?></b>
+									</li>
+									<li>
+										<i class="ace-icon fa fa-caret-right blue"></i>
+										Item Group: <b class="red"><?php echo $this->itemgroupObj->getColumn($item_group_id,'name'); ?></b>
+									</li>
+									<li>
+										<i class="ace-icon fa fa-caret-right blue"></i>
+										Item Sub Group: <b class="red"><?php echo $this->itemsubgroupObj->getColumn($item_sub_group_id,'name'); ?></b>
+									</li>							
+								</ul>
+							</div>
+							<div class="col-lg-4" id="convert-tb2">
+							    <h4>2. Item Type Code, Item Specfication Code and UOM</h4>
+								<ul class="list-unstyled spaced">
+								    <li>
+										<i class="ace-icon fa fa-caret-right blue"></i>
+										Unit of Measurement: <b class="red"><?php echo $this->uomObj->getColumn($uom,'code'); ?></b>
+									</li>
+									<li>
+										<i class="ace-icon fa fa-caret-right blue"></i>
+										Item Type Code : <b class="red"><?php echo $item_type_code; ?></b>
+									</li>
+									<li>
+										<i class="ace-icon fa fa-caret-right blue"></i>
+										Item Specification Code: <b class="red"><?php echo $item_specification_code; ?></b>
+									</li>
+								</ul>
+							</div>
+							<div class="col-lg-4" id="convert-tb3">
+							    <h4>2. Inventory and Valuation Details</h4>
+								<ul class="list-unstyled spaced">
+									<li>
+										<i class="ace-icon fa fa-caret-right blue"></i>
+										Item Valuation : <b class="red"><?php echo ($valuation==1)?"Simple Average":""; ?></b>
+									</li>
+									<li>
+										<i class="ace-icon fa fa-caret-right blue"></i>
+										Barcode : <b class="red"><?php echo $barcode; ?></b>
+									</li>
+									<li>
+										<i class="ace-icon fa fa-caret-right blue"></i>
+										Expiry Date : <b class="red"><?php echo $barcode; ?></b>
+									</li>
+								</ul>
+							</div>
+						</div>
+					<div class="row">
+						<div class="col-lg-7">
+						</div>
+						<div class="col-lg-5" style="text-align: right">
+							<a href="<?php echo $this->url('store', array('action'=>'edititem', 'id'=>$item_id));?>" class="btn btn-info"> <i class="fa fa-pencil"></i> Edit </a>
+							<button type="button" class="btn btn-danger" onclick="javascript:history.back();" ><i class="fa fa-times"></i> Cancel </button> 
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+<!--for modal -->
+<div id="modal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content"> </div>
+    </div>
+</div>
+<script type="text/javascript">
+	$('#print').genpdfinvoice2({
+		content: '#report-print',
+		src:"<?php echo $this->url('pdfxls', array('action' => 'pdf'));?>",
+		orentation:"L",//L =landscape, P = potrait
+	});
+</script>

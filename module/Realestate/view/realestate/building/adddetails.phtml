@@ -1,0 +1,151 @@
+<?php
+/**
+ *
+ * View -- of Realestate/EstateController/addleasedAction
+ *
+ */
+$this->headTitle($this->title);
+?>
+<?php 
+foreach($building as $rows):
+    extract($rows);
+   // echo'<pre>';print_r($rows);
+endforeach;
+//exit;
+    
+?>
+<form id="#form" method="post" action="<?php echo $this->url('building', array('action' => 'adddetails','id' => $rows['id'])); ?>"  enctype="multipart/form-data" >
+    <div class="row">
+        <div class="col-lg-12">
+            <div class="widget-box">
+                <div class="widget-header widget-header-smaller">
+                    <h4 class="widget-title blue bolder smaller"> Leased Agreement Details
+                </div>
+                <div class="widget-body">
+                    <div class="widget-main padding-24">
+                        <div class="row">
+                            <input type="hidden" class="form-control" name="assetid" id="assetid" value="<?php echo $assetid;?>" /> 
+                            <input type="hidden" class="form-control" name="region" id="region" value="<?php echo $region;?>" /> 
+                            <input type="hidden" class="form-control" name="location" id="location" value="<?php echo $location;?>" />  
+                                <div class="form-group col-lg-4">
+                                        <label for="unit_no" class="control-label">Unit No</label>
+                                        <input class="form-control" name="unit_no" id="unit_no" placeholder="Enter unit no">
+                                </div>
+                                        
+
+							<div class="form-group col-lg-4">
+                                <label for="areasqt" class="control-label">Area sqaure</label>
+                                <input type="text" class="form-control" name="areasqt" id="areasqt" style="text-transform: capitalize;"placeholder="Enter in sq.ft"/>
+                            </div>
+  
+                            <div class="form-group col-lg-4">
+								<label for="floor" class="control-label">Floor</label>
+								<select class="form-control" id="floor" name="floor" data-placeholder="Select" required >
+									<option value=""></option>
+									<?php foreach($floor as $floors):?>
+										<option value="<?php echo $floors['id'];?>">
+										<?php echo $floors['floor'];?>
+										</option>
+									<?php endforeach;?>
+								</select>
+							</div>  
+                       
+                        </div>
+                    <div class="row">
+                    <div class="form-group col-lg-4">
+                                <label for="remark" class="control-label">Remarks</label>
+                                <input type="text" class="form-control" name="remark" id="remark" style="text-transform: capitalize;"placeholder="Enter remarks"/>
+                            </div>
+                    </div>
+               
+                        <div class="row">
+                            <div class='col-md-8'>
+                                <button type="submit" class="btn btn-success"><i class="fa fa-check"></i> Save </button>
+                                <button type="button" class="btn btn-warning" onclick="javascript:history.back();"><i class="fa fa-times"></i> Cancel </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</form>
+<script type="text/javascript">
+   $(function() {
+		$('#location').on('change', function(){
+			$location_id = $(this).val(),
+			//alert($location_id);
+			$.post(
+				"<?php echo $this->url('realestate', array('action' => 'getLeasedGodown')); ?>",
+				{
+					location_id: $location_id,
+				},
+				function(data){
+					console.log(data);
+					$('#storage_type').html(data.leaseditem);
+					$('#storage_type').trigger('chosen:updated');
+					$('form').formValidation('revalidateField','storage_type');
+				},
+				'json'
+			);
+		});
+    });
+    $('form select').chosen();
+    $('#agreement_date').datepicker();
+    $('#start_date').datepicker();
+    $('#end_date').datepicker();
+    $('document').ready(function(){
+        const fv = FormValidation.formValidation(document.getElementById('#form'), {
+            fields: {
+                agreement_no: {
+                    validators: {
+                        notEmpty: {
+                            message: 'Please provide Leased Agreement No.'
+                        }
+                    }
+                },
+                agreement_date: {
+                    validators: {
+                        notEmpty: {
+                            message: 'Please select date.'
+                        }
+                    }
+                },
+             
+                lessee: {
+                    validators: {
+                        notEmpty: {
+                            message: 'Please provide Lessee Name.'
+                        }
+                    }
+                },
+              
+          
+            },
+            plugins: {
+                trigger: new FormValidation.plugins.Trigger(),
+                bootstrap3: new FormValidation.plugins.Bootstrap3(),
+                submitButton: new FormValidation.plugins.SubmitButton(),
+                defaultSubmit: new FormValidation.plugins.DefaultSubmit(),
+            },
+        }).on('core.element.validated', function (e) {
+            if (e.valid) {
+                $('div#'+ e.field.replace('[]','') +'_chosen').removeClass('is-invalid');
+                $('div#'+ e.field.replace('[]','') +'_chosen').addClass('is-valid');
+            } else {
+                $('div#'+ e.field.replace('[]','') +'_chosen').removeClass('is-valid');
+                $('div#'+ e.field.replace('[]','') +'_chosen').addClass('is-invalid');
+            }
+        });
+
+        $('#agreement_date').on('changeDate',function(){
+            $('form').formValidation('revalidateField','agreement_date');
+        });
+        $('#start_date').on('changeDate',function(){
+            $('form').formValidation('revalidateField','start_date');
+        });
+        $('#end_date').on('changeDate',function(){
+            $('form').formValidation('revalidateField','end_date');
+        });
+    });
+</script>

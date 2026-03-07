@@ -1,0 +1,94 @@
+<?php
+/**
+ * 
+ * View -- of Stock/MasterController/edituomAction
+ * 
+ */
+?>
+<?php 
+    foreach($this->subgroups as $subgroup):
+        extract($subgroup);        
+    endforeach;
+?>
+
+<form id="#form" method="post" action="<?php echo $this->url('inmaster', array('action' => 'editsubgroup', 'id' => $id)); ?>"  enctype="multipart/form-data" >                  
+    <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+        <h4 class="modal-title"> <i class="fa fa-pencil-square-o"></i> Edit Make</h4>
+    </div>  <!-- /modal-header -->
+    
+    <div class="modal-body">       
+		<div class="panel panel-default">                       
+			<div class="panel-body"> 
+				<div class="form-group">
+					<label for="name" class="control-label">Name</label>
+					<input type="text" class="form-control" name="name" id="name" value="<?php echo $name;?>" size="30" required> 
+				</div>
+				<div class="form-group">
+					<label for="code" class="control-label">Code</label>
+					<input type="text" class="form-control" name="code" id="code" value="<?php echo $code;?>" size="30" required> 
+				</div>
+				<div class="form-group">
+				    <input type="hidden" name="group_id" id="group_id" value="<?php echo $id;?>" />
+					<label for="item_group" class="control-label">Select Group Item</label>
+					<select id="item_group" name="item_group" class="form-control" data-placeholder="Select" required>
+						<option value=""></option>
+						<?php
+							foreach ($this->groupObj->getAll() as $rowset):
+							$selected_group = ($item_group ==$rowset['id'])?"selected":"";
+						?>
+						 <option value="<?php echo $rowset['id']; ?>"<?php echo $selected_group;?>>
+							<?php echo $rowset['code']; ?>
+						 </option>
+						<?php endforeach;?>								
+					</select> 
+				</div>
+				<div class="form-group">
+					<label for="prefix" class="control-label">Item Prefix </label>
+					<input type="text" class="form-control" name="prefix" id="prefix" size="30" value ="<?php echo $prefix;?>" placeholder="prefix" required/> 
+				</div>
+			</div>
+		</div>
+	</div> <!-- /modal-body -->    
+    <div class="modal-footer">
+        <button type="submit" class="btn btn-success"><i class="fa fa-check"></i> Save </button>
+        <button type="button" class="btn btn-warning" data-dismiss="modal" ><i class="fa fa-times"></i> Cancel </button> 
+    </div><!-- /modal-footer -->
+</form>
+<script>
+    $('select').chosen({ allow_single_deselect: true });	
+	$('document').ready(function(){
+		const fv = FormValidation.formValidation(document.getElementById('#form'), {
+			fields: {
+				name: {
+					validators: {
+						notEmpty: {
+							message: 'Eneter name'
+						},
+					}
+				},
+				code: {
+					validators: {
+						notEmpty: {
+							message: 'Enter the Code'
+						},
+					}
+				},
+			},
+			plugins: {
+				trigger: new FormValidation.plugins.Trigger(),
+				bootstrap3: new FormValidation.plugins.Bootstrap3(),
+				submitButton: new FormValidation.plugins.SubmitButton(),
+				defaultSubmit: new FormValidation.plugins.DefaultSubmit(),
+			},
+		}).on('core.element.validated', function (e) {
+			if (e.valid) {
+				$('div#'+ e.field.replace('[]','') +'_chosen').removeClass('is-invalid');
+				$('div#'+ e.field.replace('[]','') +'_chosen').addClass('is-valid');
+			} else {
+				$('div#'+ e.field.replace('[]','') +'_chosen').removeClass('is-valid');
+				$('div#'+ e.field.replace('[]','') +'_chosen').addClass('is-invalid');
+			}
+		});
+	});
+</script>

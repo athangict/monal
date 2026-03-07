@@ -1,0 +1,83 @@
+<?php
+/**
+ * 
+ * View -- of Sales/MasterpsController/serviceAction
+ * 
+ */
+$this->headTitle($this->title);
+?>
+<?php foreach($subservicetarriff as $subservicetarriffs);?>
+<div class="card">
+	<div class="card-header">
+		<div class="btn-group pull-right">
+			<?php echo $this->button(6,$subservicetarriffs['id'],'','2675');?>
+		</div>
+	</div>
+	<div class="table-responsive">
+		<table class="table table-striped table-bordered table-hover" id="dataTables">
+			<thead>
+				<tr>
+					<th>#</th>
+					<th>From(Grams)</th>
+					<th>To(Grams)</th>
+					<th>Rate(Ngultrum)</th>
+					<?php if($this->button(1)!=""):?>
+						<th class="no-sort no-printpdf">Action</th>
+					<?php endif;?>
+				</tr>
+			</thead>
+			<tbody>
+				<?php
+					$i = 1; 
+					foreach ($fixedslab as $fixedslabs):?>
+					<tr>
+						<td><?php echo $i++; ?> </td>
+						<td><b><?php echo $fixedslabs['from'];?></b></td>
+						<td><b><?php echo $fixedslabs['to'];?></b></td>
+						<td><b><?php echo $fixedslabs['rate'];?></b></td>
+						<?php if($this->button(1)!=""):?>
+							<td><?php echo $this->button(1, $fixedslabs['id']);?></td>
+						<?php endif;?>
+					</tr>
+				<?php endforeach;?>
+			</tbody>
+		</table>
+	</div>
+</div>
+<div class="card">
+	<div class="card-header">
+		<div class="btn-group pull-right">
+		<?php echo $this->button(6,$subservicetarriffs['id'],'','2678');?>
+		</div>
+	</div>
+	<div class="table-responsive">
+		<table class="table table-striped table-bordered table-hover" id="dataTables">
+			<thead>
+				<tr>
+					<th>#</th>
+					<th>For Every(Grams)</th>
+					<th>Rate(Ngultrum)</th>
+					<th>Upto(Grams)</th>
+					<?php if($this->button(1)!=""):?>
+						<th class="no-sort no-printpdf">Action</th>
+					<?php endif;?>
+				</tr>
+			</thead>
+			<tbody>
+				<?php
+					$i = 1; 
+					foreach ($propotionateslab as $propotionateslabs):?>
+					<tr>
+						<td><?php echo $i++; ?> </td>
+						<td><b><?php echo $propotionateslabs['for_every'];?></b></td>
+						<td><b><?php echo $propotionateslabs['rate']?></b></td>
+						<td><b><?php echo $propotionateslabs['upto']?></b></td>
+						<?php if($this->button(1)!=""):?>
+							<td><?php echo $this->button(1, $propotionateslabs['id']);?></td>
+						<?php endif;?>
+					</tr>
+				<?php endforeach;?>
+			</tbody>
+		</table>
+	</div>
+</div>

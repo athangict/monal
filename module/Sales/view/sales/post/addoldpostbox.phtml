@@ -1,0 +1,386 @@
+<?php
+/**
+ * View -- of Sales/SalesController/addmarketAction
+ */
+  $this->headTitle($this->title);
+ 
+?>
+<div class="row">
+    <div class="col-lg-12">
+        <div class="widget widget-box">
+            <div class="widget-header">
+                <h5 class="widget-title lighter smaller">
+                    <i class="fa fa-asterisk"></i>&nbsp;&nbsp;Old Post-Box Registration
+                </h5>
+            </div><!-- end of widget-header -->
+            <div class="widget-body">
+                <div class="widget-main">
+                    <form id="form" method="post" action="<?php echo $this->url('postbox', array('action' => 'addoldpostbox')); ?>" enctype="multipart/form-data">
+                        <div class="row">
+                            <div class="col-lg-3">
+                                <div class="form-group">
+                                    <label for="region" class="control-label">Region</label>
+									<?php if($this->user_role == 99):?>
+									<select class="form-control" name="region" id="region" data-placeholder="select" >
+										<option value=""></option>
+											<?php  
+												$regions = $regionObj->getAll();
+												
+												foreach ($regions as $region):
+													$selected_r = ($region['id']==$data['region'])?"selected":"";
+											?>
+												<option value="<?php echo $region['id']; ?>" <?php echo $selected_r;?>>
+													<?php echo $region['region']; ?>
+												</option>
+										<?php endforeach;  ?>									
+									</select><?php
+									else:?>
+									<select class="form-control" name="region" id="region" data-placeholder="select" >
+										<option value=""></option>
+											<?php  
+												$regions = $location->get(array('id'=>$this->user_location));
+												
+												foreach ($regions as $region):
+													$selected_r = ($region['region']==$data['region'])?"selected":"";
+											?>
+												<option value="<?php echo $region['region']; ?>" <?php echo $selected_r;?>>
+													<?php echo $this->regionObj->getColumn($region['region'],'region'); ?>
+												</option>
+										<?php endforeach;  ?>									
+									</select><?php endif;?>
+								</div>
+                            </div>
+							<div class="col-lg-3">
+                                <div class="form-group">
+									<label for="location" class="control-label">Location</label>
+									<?php if($this->user_role == 99):?>
+									<select id="location" name="location" class="form-control" data-placeholder="Select" required>
+										<option value=""></option><?php
+										$locations = $location->getAll();
+										foreach ($locations as $location):
+										?>
+										 <option value="<?php echo $location['id']; ?>" selected>
+											<?php echo $location['location']; ?>
+										 </option>
+										<?php endforeach;?>	
+									</select> <?php else: ?>
+									<select id="location" name="location" class="form-control" data-placeholder="Select" required>
+										<option value=""></option><?php
+										$locations = $location->get($this->user_location);
+										foreach ($locations as $location):
+										?>
+										 <option value="<?php echo $location['id']; ?>" selected>
+											<?php echo $location['location']; ?>
+										 </option>
+										<?php endforeach;?>	
+									</select> <?php endif;?>
+								</div>
+                            </div>
+							<div class="col-lg-3">
+                                <div class="form-group">
+                                    <label for="postbox_no" class="control-label">Postbox No.</label>
+									<select class="form-control" name="postbox_no" id="postbox_no" data-placeholder="Select" > 
+										<option value=""></option>
+									</select>
+                                </div>
+                            </div>
+								<div class="col-lg-3">
+                                <div class="form-group">
+                                    <label for="post_box_size" class="control-label">Postbox Size</label>
+									<select class="form-control" name="post_box_size" id="post_box_size" data-placeholder="Select" > 
+										<option value=""></option>
+									</select>
+                                </div>
+                            </div>
+						</div>
+                        <br><br>
+						<div class="row">
+							<div class="col-lg-6">
+								<div class="card">
+									<div class="card-header">
+										<h5>Applicant Details:</h5>
+									</div>
+									<div class="card-body">
+									<div class="col-lg-6">
+										<div class="form-group">
+											<label for="name">Name</label>
+											<input type="text" name="name" id="name" class="form-control" required>
+										</div></div>
+									<div class="col-lg-6">
+
+										<div class="form-group">
+											<label for="cid">CID/License Number</label>
+											<input type="text" name= "cid" id="cid" class="form-control">
+										</div></div>
+									<div class="col-lg-6">
+
+										<div class="form-group">
+											<label for="mobile">Mobile No</label>
+											<input type="text" name="mobile" id="mobile" class="form-control" required>
+										</div></div>
+									<div class="col-lg-6">
+
+										<div class="form-group">
+											<label for="tphone">Telephone No</label>
+											<input type="text" name="tphone" id="tphone" class="form-control">
+										</div></div>
+									<div class="col-lg-6">
+
+										<div class="form-group">
+											<label for="email">Email</label>
+											<input type="email" name="email" id="email" class="form-control" >
+										</div></div>
+										<div class="col-lg-6">
+											<label>Registration Date</label>
+											<div class="date input-group" id="registration_date" data-date-format="yyyy-mm-dd">
+												<input class="form-control" name="registration_date" id="registration_date" type="text" placeholder="Registration Date" required >
+												<span class="input-group-addon add-on"><i class="fa fa-calendar"></i></span>
+											</div>
+										</div> 	
+									</div>
+								</div>
+							</div>
+				
+						<div class="col-lg-6">
+							<div class="card">
+								<div class="card-header">
+									<h5>Present Address</h5>
+								</div>
+								<div class="card-body">
+								<div class="col-lg-6">
+									<input type="hidden" name="po_rate" id="po_rate">
+									<input type="hidden" name="key_rate" id="key_rate">
+									<div class="form-group">
+										<label for="organizationName">Name of Organization</label>
+										<input type="text" name="organizationName" id="organizationName" class="form-control" required>
+									</div></div>
+								<div class="col-lg-6">
+
+									<div class="form-group">
+										<label for="building_no">Building No</label>
+										<input type="text" name="building_no" id="building_no" class="form-control" >
+									</div></div>
+								<div class="col-lg-6">
+
+									<div class="form-group">
+										<label for="address">Address</label>
+										<input type="text" name="address" id="address" class="form-control" required>
+
+									</div></div>
+
+								</div>
+							</div>
+						</div>
+					</div>
+						<div class="space-12"></div>
+						<div class="row"> 	
+							<div class="col-lg-9"> 
+								<button type="save" class="btn btn-success"><i class="fa fa-check"></i> Submit </button>					
+							</div>
+						</div>
+					</form>	
+				</div><!-- widget widget-main -->
+			</div>  <!-- widget widget-body -->   
+		</div> <!-- widget widget-box --> 
+	</div><!-- col-lg-12 -->
+</div><!-- row -->
+<script>
+$('document').ready(function(){
+	  $('#registration_date').datepicker();
+	$("#region").change(function() {
+		$.post(
+			"<?php echo $this->url('postbox', array('action' => 'getlocation'));?>",
+			{
+				regId: $('#region').val(),
+			},
+			function(data){
+				//console.log(data);	
+				$('select#location').html(data.location);
+				$('select#location').trigger('chosen:updated');
+			},
+			'json'
+		);	
+	});
+	$("#region,#location").change(function() {
+		$.post(
+			"<?php echo $this->url('postbox', array('action' => 'getpostbox'));?>",
+			{
+				regId: $('#region').val(),
+				locId: $('#location').val(),
+			},
+			function(data){
+				console.log(data);	
+				$('select#postbox_no').html(data.postbox_no);
+				$('select#postbox_no').trigger('chosen:updated');
+			},
+			'json'
+		);	
+	});
+	$("#postbox_no").change(function() {
+		var poId = $('#postbox_no').val();
+		$.post(
+			"<?php echo $this->url('postbox', array('action' => 'getposize'));?>",
+			{
+				poId: poId
+			},
+			function(data){
+				$('select#post_box_size').html(data.post_box_size);
+				$('select#post_box_size').val(data.selected_value); // Set the selected value
+				$('select#post_box_size').trigger('chosen:updated');
+				$('#po_rate').val(data.po_rate);
+				$('#key_rate').val(data.key_rate);
+			},
+			'json'
+		); 
+	});
+	$("#post_box_size").change(function() {
+		var poSz = $('#post_box_size').val();
+		$.post(
+			"<?php echo $this->url('postbox', array('action' => 'getporate'));?>",
+			{
+				poSz: poSz
+			},
+			function(data){
+				$('#po_rate').html(data.po_rate);
+				$('#key_rate').html(data.key_rate);
+			},
+			'json'
+		); 
+	});
+	$("#location").change(function() {
+		$.post(
+			"<?php echo $this->url('postbox', array('action' => 'getbankcashacc'));?>",
+			{
+				locId: $('#location').val(),
+			},
+			function(data){
+				//console.log(data);	
+				$('select#bank_acc').html(data.bankaccount);
+				$('select#bank_acc').trigger('chosen:updated');
+				$('select#cash_acc').html(data.cashaccount);
+				$('select#cash_acc').trigger('chosen:updated');
+			},
+			'json'
+		);	
+	});
+$('input[type=radio][name=cash]').change(function(){
+        if ($(this).val() == "0") {
+			$('#journal').show();
+			 //$('#phone').show();
+			 $('#ref_no').hide(); 
+			 $('#cash_acc').hide();
+			 $('#bank_acc').show();
+        } 
+		else if($(this).val() == "1"){
+			$('#journal').hide();
+			 //$('#phone').hide();
+			  $('#ref_no').hide();
+			  $('#cash_acc').show();
+			 $('#bank_acc').hide();
+			
+		}else {
+           $('#journal').hide();
+			 //$('#phone').hide();
+			 $('#ref_no').hide();
+        } 
+    });
+
+	const fv = FormValidation.formValidation(document.getElementById('#form'), {
+		fields: {
+			region: {
+				validators: {
+					notEmpty: {
+						message: 'Please select region.'
+					}
+				}
+			},
+			location: {
+				validators: {
+					notEmpty: {
+						message: 'Please select location'
+					},
+				}
+			},
+			postbox_no: {
+				validators: {
+					notEmpty: {
+						message: 'Please provide postbox number'
+					},
+				}
+			},
+			name: {
+				validators: {
+					notEmpty: {
+						message: 'Please provide Name'
+					},
+				}
+			},
+		/*	cid: {
+				validators: {
+					notEmpty: {
+						message: 'Please provide CID/License'
+					},
+				}
+			},*/
+			mobile: {
+				validators: {
+					notEmpty: {
+						message: 'Please provide Mobile No'
+					},
+				}
+			},
+			/*email: {
+				validators: {
+					notEmpty: {
+						message: 'Please provide Email'
+					},
+				}
+			},*/
+			registration_date: {
+				validators: {
+					notEmpty: {
+						message: 'Please provide Registration date'
+					},
+				}
+			},
+			organizationName: {
+				validators: {
+					notEmpty: {
+						message: 'Please provide Organization'
+					},
+				}
+			},
+			cash: {
+				validators: {
+					notEmpty: {
+						message: 'Please select cash or bank'
+					},
+				}
+			},
+		},
+		plugins: {
+			trigger: new FormValidation.plugins.Trigger(),
+			bootstrap3: new FormValidation.plugins.Bootstrap3(),
+			submitButton: new FormValidation.plugins.SubmitButton(),
+			defaultSubmit: new FormValidation.plugins.DefaultSubmit(),
+		},
+	}).on('core.element.validated', function (e) {
+		if (e.valid) {
+			$('div#'+ e.field.replace('[]','') +'_chosen').removeClass('is-invalid');
+			$('div#'+ e.field.replace('[]','') +'_chosen').addClass('is-valid');
+		} else {
+			$('div#'+ e.field.replace('[]','') +'_chosen').removeClass('is-valid');
+			$('div#'+ e.field.replace('[]','') +'_chosen').addClass('is-invalid');
+		}
+	});
+	$('form select').chosen().change(function () {
+		fv.revalidateField($(this).attr('name'));
+	});
+	
+	
+});
+
+
+</script>
+
+

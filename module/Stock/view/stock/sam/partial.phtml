@@ -1,0 +1,33 @@
+<?php // partial.phtml 
+	$sam = ($this->active == "sam")?"active":"";
+	$opening = ($this->active == "opening")?"active":"";
+	$conversion = ($this->active == "conversion")?"active":"";
+	$stockreport = ($this->active == "stockreport")?"active":"";
+?>
+<br/>
+<ul class="nav nav-tabs padding-18 nav-fixed-top" id="myTab">
+	<li class="<?php //echo $sam; ?>">
+		<!--a href="<?php //echo $this->url('sam', array('action' => 'index')); ?>" title="Dispatch of Items">
+			<i class="orange ace-icon fa fa-cubes bigger-120"></i>
+			<span class="hidden-xs">Stock Adjustment Memo</span>
+		</a>
+	</li>
+	<li class="<?php //echo $conversion; ?>">
+		<a href="<?php //echo $this->url('sam', array('action' => 'conversion')); ?>" title="Item Conversion">
+			<i class="blue ace-icon fa fa-magnet bigger-120"></i>
+			<span class="hidden-xs">Good Conversion</span>
+		</a>
+	</li-->
+	<li class="<?php echo $opening; ?>">
+		<a href="<?php echo $this->url('sam', array('action' => 'openingstock')); ?>" title="Opening Stock">
+			<i class="green ace-icon fa fa-paperclip bigger-120"></i>
+			<span class="hidden-xs">Opening Stock</span>
+		</a>
+	</li>
+	<li class="<?php echo $stockreport; ?>">
+		<a href="<?php echo $this->url('sam', array('action' => 'stockreport')); ?>" title="Opening Stock">
+			<i class="blue ace-icon fa fa-bar-chart bigger-120"></i>
+			<span class="hidden-xs">Stock Report</span>
+		</a>
+	</li>
+</ul>

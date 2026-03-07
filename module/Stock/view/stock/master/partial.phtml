@@ -1,0 +1,76 @@
+<?php // partial.phtml 
+	$uomtype = ($this->active == "uomtype")?"active":"";
+	$uom = ($this->active == "uom")?"active":"";
+	$scalar = ($this->active == "scalar")?"active":"";
+	$charge = ($this->active == "chargetax")?"active":"";
+	$costing_head = ($this->active == "costinghead")?"active":"";
+	$trip= ($this->active == "trip")?"active":"";
+	$invdeffield = ($this->active == "invdeffield")?"active":"";
+	$supinvoice = ($this->active == "supinvoice")?"active":"";
+	$formula = ($this->active == "formula")?"active":"";
+        $cagre = ($this->active == "cagreement")?"active":"";
+  
+?>
+<br/>
+<ul class="nav nav-tabs padding-18 nav-fixed-top" id="myTab">
+	<li class="<?php echo $uomtype; ?>">
+		<a href="<?php echo $this->url('stmaster', array('action' => 'uomtype')); ?>" title="UOM Type">
+			<i class="orange ace-icon fa fa-cubes bigger-120"></i>
+			<span class="hidden-xs">UOM Type</span>
+		</a>
+	</li>
+	<li class="<?php echo $uom; ?>">
+		<a href="<?php echo $this->url('stmaster', array('action' => 'uom')); ?>" title="">
+			<i class="green ace-icon fa fa-filter bigger-120"></i>
+			<span class="hidden-xs">UOM</span>
+		</a>
+	</li>
+	<!--li class="<?php echo $scalar; ?>">
+		<a href="<?php echo $this->url('stmaster', array('action' => 'scalar')); ?>" title="Scalar Conversion">
+			<i class="red ace-icon fa fa-magnet bigger-120"></i> 
+			<span class="hidden-xs">Scalar Conversion</span>
+		</a>
+	</li>
+	<li class="<?php echo $charge; ?>">
+		<a href="<?php echo $this->url('stmaster', array('action' => 'chargetax')); ?>" title="Charge Tax">
+			<i class="blue ace-icon fa fa-suitcase bigger-120"></i> 
+			<span class="hidden-xs">Charge Tax</span>
+		</a>
+	</li>
+	<li class="<?php //echo $costing_head; ?>">
+		<a href="<?php //echo $this->url('stmaster', array('action' => 'costinghead')); ?>" title="Costing Head">
+			<i class="green ace-icon fa fa-money bigger-120"></i> 
+			<span class="hidden-xs">Costing Head</span>
+		</a>
+	</li>
+	<li class="<?php //echo $trip; ?>">
+		<a href="<?php //echo $this->url('stmaster', array('action' => 'trip')); ?>" title="Trip">
+			<i class="red ace-icon fa fa-truck bigger-120"></i> 
+			<span class="hidden-xs">Trip</span>
+		</a>
+	</li>
+	<li class="<?php //echo $invdeffield; ?>">
+		<a href="<?php //echo $this->url('stmaster', array('action' => 'invdeffield')); ?>">
+			<i class="orange ace-icon fa fa-th-list bigger-120"></i>
+			<span class="hidden-xs">Invoice Fields</span>
+		</a>
+	</li>
+	<li class="<?php //echo $supinvoice; ?>">
+		<a href="<?php //echo $this->url('stmaster', array('action' => 'supinvoice')); ?>">
+			<i class="green ace-icon fa fa-credit-card bigger-120"></i>
+			<span class="hidden-xs">Invoice Defination</span>
+		</a>
+	</li>
+	<li class="<?php //echo $formula; ?>">
+		<a href="<?php// echo $this->url('formula', array('action' => 'index')); ?>">
+			<i class="green ace-icon fa fa-book bigger-120"></i>
+			<span class="hidden-xs">Costing Formula</span>
+		</a>
+	</li>
+        <li class="<?php //echo $cagre; ?>">
+		<a href="<?php //echo $this->url('stmaster', array('action' => 'contagreement')); ?>">
+			<i class="green ace-icon fa fa-reorder bigger-120"></i>
+			<span class="hidden-xs">Contractor Agreement</span>
+		</a>
+	</li-->
+</ul>

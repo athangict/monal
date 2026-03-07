@@ -1,0 +1,33 @@
+<?php // partial.phtml 
+  $schemetypes = ($this->active == "schemetypes")?"active":"";
+  $claimtype = ($this->active == "claimtype")?"active":"";
+  $creditauthority = ($this->active == "creditauthoritys")?"active":"";
+  $creditceiling = ($this->active == "creditceiling")?"active":"";
+?>
+<br/>
+<ul class="nav nav-tabs padding-18" id="myTab">
+	<li class="<?php echo $schemetypes; ?>">
+		<a href="<?php echo $this->url('slmaster', array('action' => 'schemetype')); ?>">
+			<i class="green ace-icon fa fa-money bigger-120"> </i>
+			<span class="hidden-xs">Scheme Type</span>
+		</a>
+	</li>
+	<li class="<?php echo $claimtype; ?>">
+		<a href="<?php echo $this->url('slmaster', array('action' => 'claimtype')); ?>">
+			<i class="green ace-icon fa fa-heartbeat bigger-120"> </i>
+			<span class="hidden-xs">Claim Type</span>
+		</a>
+	</li>
+	<li class="<?php echo $creditauthority; ?>">
+		<a href="<?php echo $this->url('slmaster', array('action' => 'creditauthority')); ?>">
+			<i class="green ace-icon fa fa-money bigger-120"> </i>
+			<span class="hidden-xs">Credit Authority</span>
+		</a>
+	</li>
+	<li class="<?php echo $creditceiling; ?>">
+		<a href="<?php echo $this->url('slmaster', array('action' => 'creditceiling')); ?>">
+			<i class="blue ace-icon fa fa-credit-card bigger-120"> </i>
+			<span class="hidden-xs">Credit Ceiling</span>
+		</a>
+	</li>
+</ul>

@@ -1,0 +1,80 @@
+<?php
+/**
+ * 
+ * View -- of Sales/MasterController/addfixedslab
+ * 
+ */
+?>
+<?php foreach($servicetarriff as $row);?>
+<form id="#form" method="post" action="<?php echo $this->url('masterpos', array('action' => 'addfixedslab')); ?>" enctype="multipart/form-data">
+    <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+        <h4 class="modal-title"> <i class="fa fa-plus"></i> Add Fixed Slab</h4>
+    </div>  <!-- /modal-header -->
+    <div class="modal-body">
+		<div class="panel panel-default">                       
+			<div class="panel-body">
+			<input type="hidden"  name="servicetarriff" id="servicetarriff" value=<?php echo $row['id']; ?> />   
+				<div class="form-group">
+					<label for="from" class="control-label">From</label>
+					<input type="decimal" class="form-control" name="from" id="from" placeholder="From" required />
+				</div>
+				<div class="form-group">
+					<label for="to" class="control-label">To</label>
+					<input type="decimal" class="form-control" name="to" id="to" placeholder="To" required />
+				</div>
+				<div class="form-group">
+					<label for="rate" class="control-label">Rate</label>
+					<input type="decimal" class="form-control" name="rate" id="rate" placeholder="Rate" required />
+				</div>
+			</div>
+		</div>
+	</div> <!-- /modal-body -->
+    <div class="modal-footer">
+        <button type="submit" class="btn btn-success"><i class="fa fa-check"></i> Save </button>
+        <button type="button" class="btn btn-warning" data-dismiss="modal" ><i class="fa fa-times"></i> Cancel </button> 
+    </div>  
+</form>
+<script>
+$('document').ready(function(){
+	const fv = FormValidation.formValidation(document.getElementById('#form'), {
+		fields: {
+			scheme_type: {
+				validators: {
+					notEmpty: {
+						message: 'Please provide scheme type.'
+					}
+				}
+			},
+			description: {
+				validators: {
+					notEmpty: {
+						message: 'Please provide description for the scheme'
+					}
+				}
+			},
+		},
+		plugins: {
+			trigger: new FormValidation.plugins.Trigger(),
+			bootstrap3: new FormValidation.plugins.Bootstrap3(),
+			submitButton: new FormValidation.plugins.SubmitButton(),
+			defaultSubmit: new FormValidation.plugins.DefaultSubmit(),
+		},
+	}).on('core.element.validated', function (e) {
+		if (e.valid) {
+			$('div#'+ e.field.replace('[]','') +'_chosen').removeClass('is-invalid');
+			$('div#'+ e.field.replace('[]','') +'_chosen').addClass('is-valid');
+		} else {
+			$('div#'+ e.field.replace('[]','') +'_chosen').removeClass('is-valid');
+			$('div#'+ e.field.replace('[]','') +'_chosen').addClass('is-invalid');
+		}
+	});
+});
+</script>
+
+
+
+
+
+
+

@@ -1,0 +1,128 @@
+<?php
+/**
+ * View -- of Administration/MasterController/addactivity
+ * chophel@athang.com
+ */
+?>
+<?php 
+	foreach($this->postage as $row );?>
+   <form id="#form" method="post" action="<?php echo $this->url('postage', array('action' => 'commitbulk','id'=>$row['id'])); ?>" enctype="multipart/form-data">
+        <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+            <h4 class="modal-title"> <i class="ace-icon fa fa-plus-square-o"></i> <?php echo $this->title; ?></h4>
+        </div>     
+        <div class="modal-body">    
+            <div class="panel panel-default">                       
+                <div class="panel-body">
+				<input type="hidden"  name="service" value="<?php echo $row['service'];?>" id="service"  />
+                <div  class="form-group col-lg-12">
+						<label for="cash" class="control-label">Payment</label>
+						<div class="radio">
+							<label>  
+								<input class="ace" type="radio" name="cash" id="cash"  value="1"/>
+								<span class="lbl"> Cash </span>
+							</label> 
+							<label>  
+								<input class="ace" type="radio" name="cash" id="cash" value="0"/>
+								<span class="lbl"> Bank </span>
+							</label> 
+							<label> 
+								<input class="ace" type="radio" name="cash" id="cash" value="2" /> 
+								<span class="lbl"> Credit </span>
+							</label>
+						</div>
+					</div>
+					<div class="form-group row" id="journal" style="display:none;">
+						<label for="journal_no" class="col-md-4 col-form-label">Journal No</label>
+						<div class="col-md-8">
+							<input type="text" class="form-control" name="journal_no"
+								id="journal_no" placeholder="Journal No" />
+						</div>
+					</div>
+					<div class="form-group row" id="phone" style="display:none;">
+						<label for="phone" class="col-md-4 col-form-label">Phone No</label>
+						<div class="col-md-8">
+							<input type="text" class="form-control" name="phone" value="0"
+								id="phone" placeholder="Phone No" />
+						</div>
+					</div>
+					<div class="form-group row" id="party" style="display:none;">
+						<label for="party" class="col-md-4 col-form-label">Credit Customer</label>
+						<div class="col-md-8">
+							<select class="form-control" id="party" name="party">
+							<option value="0"></option>
+							<?php foreach($party as $partys):?>
+								<option value="<?php echo $partys['id'];?>"><?php echo $partys['code'].'-'.$partys['name'];?>
+								</option>
+							<?php endforeach;?>
+							</select>
+						</div>
+					</div>
+					<div class="form-group row" id="ref_no" style="display:none;">
+						<label for="ref_no" class="col-md-4 col-form-label">Reference No</label>
+						<div class="col-md-8">
+							<input type="text" class="form-control" name="ref_no" value="0"
+								id="ref_no" placeholder="Phone No" />
+						</div>
+					</div>
+                </div>
+            </div>
+            
+        </div>    
+        <div class="modal-footer">
+            <button type="submit" class="btn  btn-success"><i class="fa fa-check"></i> Commit </button>
+            <button type="button" class="btn btn-warning" data-dismiss="modal" ><i class="fa fa-times"></i> Cancel </button> 
+        </div>  
+    </form>  
+    <script>
+        $('input[type=radio][name=cash]').change(function(){
+        if ($(this).val() == "0") {
+			$('#journal').show();
+			 $('#phone').show();
+			 $('#party').hide();
+			 $('#ref_no').hide();
+        } 
+		else if($(this).val() == "1"){
+			$('#journal').hide();
+			 $('#phone').hide();
+			 $('#party').hide();
+			 $('#ref_no').hide();
+			
+		}else {
+           $('#journal').hide();
+			 $('#phone').hide();
+			 $('#party').show();
+			 $('#ref_no').show();
+        } 
+    });
+	$(function(){
+	const fv = FormValidation.formValidation(document.getElementById('#form'), {
+		fields: {
+			cash: {
+				validators: {
+					notEmpty: {
+						message: 'Please Select Payment Mode.'
+					}
+				}
+			},
+		},
+		plugins: {
+			trigger: new FormValidation.plugins.Trigger(),
+			bootstrap3: new FormValidation.plugins.Bootstrap3(),
+			submitButton: new FormValidation.plugins.SubmitButton(),
+			defaultSubmit: new FormValidation.plugins.DefaultSubmit(),
+		},
+	}).on('core.element.validated', function (e) {
+		if (e.valid) {
+			$('div#'+ e.field.replace('[]','') +'_chosen').removeClass('is-invalid');
+			$('div#'+ e.field.replace('[]','') +'_chosen').addClass('is-valid');
+		} else {
+			$('div#'+ e.field.replace('[]','') +'_chosen').removeClass('is-valid');
+			$('div#'+ e.field.replace('[]','') +'_chosen').addClass('is-invalid');
+		}
+	});
+	$('form select').chosen().change(function () {
+		fv.revalidateField($(this).attr('name'));
+	});
+});
+    </script>

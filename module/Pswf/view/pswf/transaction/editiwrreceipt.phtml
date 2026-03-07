@@ -1,0 +1,599 @@
+<?php
+/**
+ * 
+ * View -- of Accounts/AssetController/edittransactionAction
+ * 
+ */
+?>
+<style>
+    .input-cell {
+        max-width: 100px; /* Adjust the value as per your requirement */
+    }
+</style>
+<?php
+	foreach($this->transactions as $row):
+		extract($row);
+		//echo '<pre>';print_r($row);
+	endforeach;
+	//exit;
+?>
+<div class="row">
+	<div class="col-lg-12">
+        <div class="widget widget-box">
+            <div class="widget-header">
+            	<h5 class="widget-title lighter smaller">
+	            	<i class="fa fa-pencil-square-o"></i> Edit IWR Receipt
+	            </h5>
+            </div>
+            <div class="widget-body">
+				<div class="widget-main">
+					<form id="#form" method="post" action="<?php echo $this->url('transaction', array('action' => 'editiwrreceipt','id' => $id)); ?>"  enctype="multipart/form-data" >    
+						<div class="row"> 
+							<div class="col-lg-4">    
+								<div class="form-group">
+									<label for="voucher_date" class="control-label">Voucher Date</label>
+									<div class="date input-group" id="voucher_date" data-date="<?php echo date('Y-m-d', strtotime($voucher_date));?>" data-date-format="yyyy-mm-dd" >
+										<input class="form-control span2" name="voucher_date" id="voucher_date" type="text" placeholder="Voucher Date" value="<?php echo $voucher_date;?>" readonly required>
+										<span class="input-group-addon add-on"><i class="fa fa-calendar"></i></span>
+									</div>
+								</div>
+							</div>
+							<div class="col-lg-4">
+								<div class="form-group">
+									<label for="voucher_type">Voucher Type</label>
+									<select id="voucher_type" name="voucher_type" class="form-control " data-placeholder="Select"  required>
+										<option value=""></option>
+										<?php 
+										foreach ($journals as $journal):
+											$selected =($voucher_id==$journal['id'])? 'selected':'';
+										?>
+											<option value="<?php echo $journal['id'];?>" <?php echo $selected;?>>
+												<?php echo $journal['journal']; ?>
+											</option>
+										<?php 
+										endforeach;
+										?>
+									</select>
+								</div>
+							</div>
+							<div class="col-lg-4">
+								<div class="form-group">
+									<label for="doc_id">Document ID</label>
+									<input type="text" class="form-control" name="doc_id" id="doc_id" value="<?php echo $doc_id;?>" > 
+								</div> 
+							</div>
+						</div>
+						<div class="row">
+							<div class="col-lg-4">
+								<div class="form-group">
+									<label for="doc_type">Document Type</label>
+									<input type="text" class="form-control" name="doc_type" id="doc_type" value="<?php echo $doc_type;?>" > 
+								</div>
+							</div>
+							
+							<div class="col-lg-4">
+								<div class="form-group">
+									<label for="voucher_amount">Voucher Amount</label>
+									<input type="text" class="form-control" name="voucher_amount" id="voucher_amount" value="<?php echo $voucher_amount;?>" required  readonly > 
+								</div>
+							</div>
+                            <div class="col-lg-4">
+								<div class="form-group">
+									<label for="cheque_no1">Checque No.</label>
+									<input type="text" class="form-control" name="cheque_no1" id="cheque_no1" value="<?php echo $cheque_no;?>"> 
+								</div>
+							</div>							
+						</div>
+						<div class="row">
+							<div class="col-lg-12"> 
+								<label>Transaction Details</label>
+								<table id="trdetails_table" class="table small-padding form-table">
+									<thead>
+										<tr>
+										    <th>Voucher No</th>
+											<th>Location</th>
+											<th>Head</th>
+											<th>Sub Head</th>
+											<th>Debit</th>
+											<th>Credit</th>
+											<th>&nbsp;</th>
+										</tr>
+									</thead>
+									<tbody>
+										<?php 
+										$rownum=1;
+										$total_debit = 0;
+										$total_credit = 0;
+										foreach($this->tdetailsObj->get(array('td.transaction'=>$id, 'td.type' => 2)) as $tdetail2): // type=2 system generated data ?>
+											<tr>
+												<td class="col-lg-2">
+													<?php echo $tdetail2['location']; ?>
+												</td>
+												<td class="col-lg-2">
+													<?php echo $tdetail2['head'];?>
+												</td>
+												<td class="col-lg-2">
+													<?php echo $tdetail2['sub_head']; ?>
+												</td>
+												<td class='col-lg-2' >
+													<?php echo $tdetail2['bank_ref_no'];?>        
+												</td>
+												<td class="col-lg-2">
+													<?php 
+														echo $tdetail2['debit'];
+														$total_debit += $tdetail2['debit'];
+													?>      
+												</td>
+												<td class="col-lg-2">
+													<?php 
+														echo $tdetail2['credit'];
+														$total_credit += $tdetail2['credit'];
+													?>        
+												</td>
+												<td width="30px;"> </td>
+											</tr>
+										<?php endforeach;
+										foreach($this->tdetailsObj->get(array('td.transaction'=>$id, 'td.type' => 1)) as $tdetail1): // type=1 user inputted data 
+										?>
+											<tr>
+												<td class="col-lg-2">
+													<div class="form-group">
+														<select id="vno" name="vno" class="form-control" data-placeholder="Select"  readonly>
+															<option value="-1">Nan</option>
+															<?php 
+																foreach ($transactions as $tras):
+															?>
+																<option value="<?php echo $tras['id'];?>"><?php echo $tras['voucher_no'];?></option>
+															<?php 
+																endforeach;
+															?>
+														</select>
+													</div>
+												</td>
+												<td class="col-lg-2">
+													<div class="form-group">
+														<input type="hidden" id="id" name="id[]" value="<?php echo $tdetail1['id'];?>"/>
+														<select id="location" name="location[]" class="form-control" data-placeholder="Select" required >
+															<option value=""></option>
+															<?php 
+																foreach ($regions as $region_row):
+															?>
+																<optgroup label="<?php echo $region_row['region'];?>">
+																	<?php 
+																		$locations = $locationObj->get(array('region'=>$region_row['id']));
+																		  
+																		foreach ($locations as $location_row):
+																			$selected_loc =($tdetail1['location_id']==$location_row['id'])?'selected':'';
+																	?>
+																		<option value="<?php echo $location_row['id']; ?>" <?php echo $selected_loc;?>>
+																			<?php echo $location_row['location']; ?>
+																		</option>
+																	<?php 
+																		endforeach;
+																	?>
+																 </optgroup>
+															<?php 
+															  endforeach;
+															?>
+														</select>
+													</div>
+												</td>
+												<td class="col-lg-2 input-cell">
+													<div class="form-group">
+														<select id="head" name="head[]" class="form-control tr_head" data-placeholder="Select" required>
+															<option value=""></option>
+															<?php 
+																foreach ($heads as $head):
+																	$selected_h =($head['id']==$tdetail1['head_id'])?'selected':'';
+															?>
+																<option value="<?php echo $head['id'];?>" <?php echo $selected_h;?> ><?php echo $head['code'];?></option>
+															<?php 
+																endforeach;
+															?>
+														</select>
+													</div>
+												</td>
+												<td class="col-lg-2 input-cell">
+													<div class="form-group">
+														<select id="sub_head" name="sub_head[]" class="form-control" data-placeholder="Select" required >
+															<option value=""></option>
+															<?php  
+																$subheads = $subheadObj->get(array('sh.head'=>$tdetail1['head_id'])); 
+																foreach ($subheads as $subhead):
+																	$selected_sh =($subhead['id']==$tdetail1['sub_head_id'])?'selected':'';
+															?>
+																<option value="<?php echo $subhead['id']; ?>" <?php echo $selected_sh;?>>
+																	<?php echo $subhead['code'].'-'.$subhead['name']; ?>
+																</option>
+															<?php 
+																 endforeach;
+															?>
+														</select>
+													</div>
+												</td>
+												<td class="col-lg-2">
+													<div class="form-group">
+														<input type="text" class="form-control" name="debit[]" id="debit" value="<?php echo $tdetail1['debit'];?>"  required >
+													</div>         
+												</td>
+												<td class="col-lg-2">
+													<div class="form-group">
+														<input type="text" class="form-control" name="credit[]" id="credit" value="<?php echo $tdetail1['credit'];?>" required >
+													</div>         
+												</td>
+												<td width="30px;"> </td>
+											</tr>
+										<?php endforeach;
+										if(sizeof($this->tdetailsObj->get(array('td.transaction'=>$id, 'td.type' => 1))) == 0): // type=1 user inputted data ?>
+											<tr>
+												<td class="col-lg-2">
+													<div class="form-group">
+														<select id="vno" name="vno" class="form-control" data-placeholder="Select"  >
+															<option value="-1">Nan</option>
+															<?php 
+																foreach ($transactions as $tras):
+															?>
+																<option value="<?php echo $tras['id'];?>"><?php echo $tras['voucher_no'];?></option>
+															<?php 
+																endforeach;
+															?>
+														</select>
+													</div>
+												</td>
+												<td class="col-lg-2">
+													<div class="form-group">
+														<select id="location" name="location[]" class="form-control" data-placeholder="Select" >
+															<option value=""></option>
+															<?php 
+																foreach ($regions as $region_row):
+															?>
+																<optgroup label="<?php echo $region_row['region'];?>">
+																	<?php 
+																		$locations = $locationObj->get(array('region'=>$region_row['id']));
+																		  
+																		foreach ($locations as $location_row):
+																	?>
+																		<option value="<?php echo $location_row['id']; ?>">
+																			<?php echo $location_row['location']; ?>
+																		</option>
+																	<?php  endforeach; ?>
+																 </optgroup>
+															<?php endforeach; ?>
+														</select>
+													</div>
+												</td>
+												<td class="col-lg-2">
+													<div class="form-group">
+														<select id="head" name="head[]" class="form-control tr_head" data-placeholder="Select">
+															<option value=""></option>
+															<?php  foreach ($heads as $head): ?>
+																<option value="<?php echo $head['id'];?>"><?php echo $head['code'];?></option>
+															<?php  endforeach; ?>
+														</select>
+													</div>
+												</td>
+												<td class="col-lg-2">
+													<div class="form-group">
+														<select id="sub_head" name="sub_head[]" class="form-control" data-placeholder="Select" >
+															<option value=""></option>
+														</select>
+													</div>
+												</td>
+												<td class="col-lg-2">
+													<div class="form-group">
+														<input type="text" class="form-control" name="debit[]" id="debit" value="" >
+													</div>         
+												</td>
+												<td class="col-lg-2">
+													<div class="form-group">
+														<input type="text" class="form-control" name="credit[]" id="credit" value="" >
+													</div>         
+												</td>
+												<td width="30px;"> </td>
+											</tr>
+										<?php endif;?>
+									</tbody>
+								</table>
+							</div>
+						</div>
+						<div class="row">
+							<div class="col-lg-6">
+							    <?php //echo $this->partial('partial/attachment.phtml', array('process' => '431', 'process_id'=> $row['id'], 'applicationNO'=>$row['voucher_no'], 'login_id' =>$login_id));?>
+							</div>
+							<div class="col-lg-3">
+								<div class="form-group">
+									<label for="total_debit">Total Debit</label>
+									<input type="text" class="form-control" name="total_debit" id="total_debit" data-match="#total_credit" value="<?php echo $voucher_amount;?>" readonly />
+									<div class="help-block with-errors"></div> 
+								</div>
+							</div> 
+							<div class="col-lg-3">
+								<div class="form-group">
+									<label for="total_credit">Total Credit</label>
+									<input type="text" class="form-control" name="total_credit" id="total_credit"  value="<?php echo $voucher_amount;?>" readonly />
+									<div class="help-block with-errors"></div> 
+								</div>
+							</div>
+						</div>
+						<div class="row">
+							<div class="col-lg-12">
+								<div class="form-group">
+									<label for="remarks">Remark</label>
+									<textarea class="form-control" name="remark" id="remark" ><?php echo $remark;?></textarea>  
+								</div>
+							</div>
+						</div>
+						<button type="submit" class="btn btn-success"><i class="fa fa-check"></i> Save </button>
+						<button type="button" class="btn btn-warning" onclick="javascript:history.back();" ><i class="fa fa-times"></i> Cancel </button> 
+					</form>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+<script type="text/javascript">
+var room = 1;
+function education_fields() {
+    room++;
+    var objTo = document.getElementById('trdetails_table');
+    var divtest = document.createElement('tr');
+    divtest.setAttribute('class', 'form-group removeclass' + room);
+  
+    divtest.innerHTML = '<tr><td class="col-lg-4"><div class="form-group"><select name="vno[]" class="form-control trr_head vno" data-placeholder="Select" required><option value="-1">Nan</option><?php foreach ($transactions as $tras):?><option value="<?php echo $tras['id'];?>"><?php echo $tras['voucher_no'];?></option><?php endforeach;?></select></div></td><td class="col-lg-2"><div class="form-group"><select id="location" name="location[]" class="form-control tr_location" data-placeholder="Select" required><option value=""></option><?php foreach ($regions as $region):?><optgroup label="<?php echo $region['region'];?>"><?php  $locations = $locationObj->get(array('region'=>$region['id'])); foreach($userlocation as $user_loc); foreach ($locations as $location): $selected_act =($location['id']==$user_loc['admin_location'])?'selected':''; ?> <option value="<?php echo $location['id']; ?>" <?php echo $selected_act;?> ><?php echo $location['location']; ?> </option> <?php  endforeach; ?> </optgroup><?php   endforeach;?></select></div></td><td class="col-lg-2"><div class="form-group"><select id="head" name="head[]" class="form-control tr_head" data-placeholder="Select" required><option value=""></option><?php foreach ($heads as $head):?><option value="<?php echo $head['id'];?>"><?php echo $head['code'];?></option><?php endforeach;?></select></div></td><td class="col-lg-2"><div class="form-group"><select id="sub_head" name="sub_head[]" class="form-control tr_subhead" data-placeholder="Select" required><option value=""></option><?php foreach ($this->subheadObj->getAll() as $shead):?><option value="<?php echo $shead['id'];?>"><?php echo $shead['code'];?></option><?php endforeach;?></select></div></td><td class="col-lg-2"><div class="form-group"><input type="text" class="form-control tr_debit" id="debit" name="debit[]"  value=""></div></td><td class="col-lg-2"><div class="form-group"><input type="text" class="form-control tr_credit" name="credit[]"  value="" id="credit" ></div> </td><td class="col-lg-1"><div class="input-group-btn"><button class="btn btn-sm btn-danger" type="button" onclick="remove_education_fields(' + room + ');"><span class="glyphicon-minus" aria-hidden="true"></span></button></div></td><tr>';
+
+    objTo.appendChild(divtest);
+    console.log('education_fields executed');
+    //Attach onchange event listener to the new row inputs
+    divtest.querySelectorAll('input:not(.vno)').forEach(function (input) {
+	    input.addEventListener('change', handleChange);
+    });
+	divtest.querySelectorAll('select.vno').forEach(function (select) {
+		select.addEventListener('change', handleChange);
+		$(select).trigger('change'); // Trigger change event on select.vno
+	});
+}
+
+function handleChange(event) {
+  console.log('handleChange event triggered');
+  
+  var inputElement = event.target;
+  var row = inputElement.closest('tr');
+  var inputs = row.querySelectorAll('input:not(.vno)');
+  var selects = row.querySelectorAll('select.vno');
+  
+  // Perform the AJAX post request to retrieve data
+  console.log('on change select vno');
+  $.post(
+    '<?php echo $this->url('transaction', array('action' => 'getvprev')); ?>',
+    {
+      id: inputElement.value
+    },
+    function (data) {
+        console.log('AJAX response:', data);
+		// Update the remaining inputs with the fetched data
+		$(inputElement).closest('tr').find('select.tr_location').val(data.loc).trigger('change');
+		$(inputElement).closest('tr').find('.tr_head').val(data.head);
+		$(inputElement).closest('tr').find('.tr_subhead').val(data.subhead);
+		$(inputElement).closest('tr').find('.tr_credit').val(data.credit);
+		calculateTotalDebit();
+		calculateTotalCredit();
+    },
+    'json'
+  );
+}
+function remove_education_fields(rid) {
+  $('.removeclass' + rid).remove();
+}
+
+$('#education_field').on('change', 'select.vno', function () {
+  var inputElement = this;
+  var value = $(inputElement).val();
+
+  // Update the inputs in the current row
+  var row = inputElement.closest('tr');
+  var inputs = row.querySelectorAll('input:not(.vno)');
+  var selects = row.querySelectorAll('select.vno');
+
+  // Perform the AJAX post request to retrieve data
+  console.log('on change select vno');
+  $.post(
+    '<?php echo $this->url('transaction', array('action' => 'getvprev')); ?>',
+    {
+      id: value
+    },
+    function (data) {
+      console.log('AJAX response:', data);
+        // Update the remaining inputs with the fetched data
+		$(inputElement).closest('tr').find('select.tr_location').val(data.loc).trigger('change');
+		$(inputElement).closest('tr').find('select.tr_location').val(data.loc).trigger('change');
+		$(inputElement).closest('tr').find('.tr_head').val(data.head);
+		$(inputElement).closest('tr').find('.tr_subhead').val(data.subhead);
+		$(inputElement).closest('tr').find('.tr_credit').val(data.credit);
+		 calculateTotalDebit();
+		 calculateTotalCredit();
+    },
+    'json'
+  );
+});
+//CALCULATE DEBIT ON GETVPREV DATA
+function calculateTotalDebit() {
+  var totalDebit = 0;
+  $('.tr_debit').each(function () {
+    var debit = parseFloat($(this).val());
+    if (!isNaN(debit)) {
+      totalDebit += debit;
+    }
+  });
+  $('#total_debit').val(totalDebit.toFixed(2)).trigger('change');
+  $('#voucher_amount').val(totalDebit.toFixed(2)).trigger('change');
+}
+//CALCULATE CREDIT ON FORM INPUT
+function calculateTotalCredit() {
+  var totalCredit = 0;
+  $('.tr_credit').each(function () {
+    var credit = parseFloat($(this).val());
+    if (!isNaN(credit)) {
+      totalCredit += credit;
+    }
+  });
+  $('#total_credit').val(totalCredit.toFixed(2)).trigger('change');
+}
+
+$('#education_field').on('change', '.tr_debit', function () {
+  calculateTotalDebit();
+});
+$('#education_field').on('change', '.tr_credit', function () {
+  calculateTotalCredit();
+});
+
+$(document).ready(function () {
+$('#voucher_date').datepicker();
+  calculateTotalDebit(); // Calculate initial total debit
+  calculateTotalCredit();// Calculate initial total credit
+
+  $('#education_field').on('change', '.tr_debit', function () {
+    calculateTotalDebit(); // Recalculate total debit on any change
+  });
+  $('#education_field').on('change', '.tr_credit', function () {
+	calculateTotalCredit(); // Recalculate total credit on any change
+  });
+
+  $('#vno').on('change', function () {
+    $.post(
+      '<?php echo $this->url('transaction', array('action' => 'getvprev')); ?>',
+      {
+        id: $(this).val(),
+      },
+      function (data) {
+        console.log(data);
+        $('#location').val(data.loc);
+        $("#location").trigger('chosen:updated');
+        $('#head').val(data.head);
+        $("#head").trigger('chosen:updated');
+        $('#sub_head').val(data.subhead);
+        $("#sub_head").trigger('chosen:updated');
+		//CREDIT of previous voucher becomes debit(debit==credit)
+        $('#credit').val(data.credit);
+        $("#credit").trigger('chosen:updated');
+        calculateTotalDebit(); // Recalculate total debit
+		calculateTotalCredit();
+      },
+      'json'
+    );
+  });
+});
+
+$('#head').on('change', function() {
+  var headId = $(this).val();
+
+  // Perform the AJAX post request to retrieve the subhead options
+  $.post(
+    '<?php echo $this->url('transaction', array('action' => 'getSubheads')); ?>',
+    { headId: headId },
+    function(data) {
+      console.log('AJAX response:', data);
+
+      var subHeadSelect = $('#sub_head'); // Select element
+      subHeadSelect.empty(); // Clear existing options
+
+      // Construct and append new options based on the AJAX response
+      $.each(data.subhead, function(index, option) {
+        subHeadSelect.append($('<option>', {
+          value: option.value,
+          text: option.text
+        }));
+      });
+
+      // Trigger chosen:updated event to update the chosen select plugin
+      subHeadSelect.trigger('chosen:updated');
+    },
+    'json' // Specify the expected response type as JSON
+  );
+});
+$(function() {
+		//$('#voucher_date').datepicker();
+		//$('#trdetails_table').transaction({src:'<?php echo $this->url("ajresponse", array("action" => "getsubhead")); ?>'});	
+		//formValidation
+		$('form')         
+		.formValidation({
+			framework: 'bootstrap',
+	        excluded: ':disabled',
+	        message: 'This value is not valid',
+	        fields: {
+	            'voucher_date': {
+	                validators: {
+	                    notEmpty: {
+	                        message: 'Please enter voucher date'
+	                    }
+	                }
+	            },
+                'cheque_no': {
+	                validators: {
+	                    notEmpty: {
+	                        message: 'Please enter Cheque No.'
+	                    }
+	                }
+	            },
+	            'voucher_type': {
+	                validators: {
+	                    notEmpty: {
+	                        message: 'Please select voucher type'
+	                    }
+	                }
+	            }, 
+	            'location[]': {
+	                validators: {
+	                    notEmpty: {
+	                        message: 'Please select location'
+	                    }
+	                }
+	            },
+	            'head[]': {
+	                validators: {
+	                    notEmpty: {
+	                        message: 'Please select head'
+	                    }
+	                }
+	            }, 
+	            'sub_head[]': {
+	                validators: {
+	                    notEmpty: {
+	                        message: 'Please select subhead'
+	                    }
+	                }
+	            },  
+	            'credit[]': {
+	                validators: {
+	                    notEmpty: {
+	                        message: 'Please enter either credit or debit'
+	                    }
+	                }
+	            },  
+	            'total_debit': {
+	                validators: {
+	                	 identical: {
+	                         field: 'total_credit',
+	                         message: 'Total credit must be equal to total dedit'
+	                     }
+	                }
+	            }, 
+	            'total_credit': {
+	                validators: {
+	                	 identical: {
+	                         field: 'total_debit',
+	                         message: 'Total debit must be equal to total credit'
+	                     }
+	                }
+	            },           
+	        }
+		})
+		.on('success.field.fv', function(e, data) {
+            if (data.fv.getInvalidFields().length > 0) {    // There is invalid field
+                data.fv.disableSubmitButtons(true);
+            }
+        });
+		$('#voucher_date').on('changeDate',function(){
+			$('form').formValidation('revalidateField', $(this).attr('id'));
+		});
+	});
+</script> 

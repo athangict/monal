@@ -1,0 +1,281 @@
+<?php
+/**
+ * 
+ * View -- of Accounts/AssetController/addassetAction
+ * 
+ */
+	$this->headTitle($this->title);
+?>
+<div class="space-12"></div>
+<div class="row">
+	<div class="col-lg-12">
+		<div class="widget widget-box">
+			<div class="widget-header">
+				<h5 class="widget-title lighter smaller">
+					<i class="fa fa-asterisk"></i> New Asset
+				</h5>
+			</div>
+			<div class="widget-body">
+				<div class="widget-main">
+					<form id="#form" method="post" action="<?php echo $this->url('asset', array('action' => 'addasset')); ?>" enctype="multipart/form-data" >
+						<div class="row">   
+							<div class="form-group col-lg-4">
+								<label for="fund" class="control-label">Fund</label>
+								<select class="form-control" id="fund" name="fund" data-placeholder="Select" required >
+									<option value=""></option>
+									<?php 
+									foreach ($funds as $fund):
+									?>
+										<option value="<?php echo $fund['id'];?>">
+											<?php echo $fund['code'];?> (<?php echo $fund['description']; ?>)
+										</option>
+									<?php
+									endforeach;
+									?>
+								</select>
+							</div>
+							<div class="form-group col-lg-4">
+								<label for="activity" class="control-label">Activity</label>
+								<select class="form-control" id="activity" name="activity" data-placeholder="Select" required >
+									<option value=""></option>
+									<?php 
+									foreach ($activity as $activity):
+									?>
+										<option value="<?php echo $activity['id'];?>">
+											<?php echo $activity['activity'];?>
+										</option>
+									<?php
+									endforeach;
+									?>
+								</select>
+							</div>
+							<div class="form-group col-lg-4">
+								<label for="code" class="control-label"> Asset Code</label>
+								<input type="text" class="form-control" name="code" id="code" required>
+							</div> 
+						</div>
+						<div class="row"> 
+							<div class="form-group col-lg-4">
+								<label for="name" class="control-label">Asset Name</label>
+								<input type="text" class="form-control" name="name" id="name" required>
+							</div>
+							<div class="form-group col-lg-4">
+								<label for="region" class="control-label">Region</label>
+								<select class="form-control" id="region" name="region" data-placeholder="Select" required >
+									<option value=""></option>
+									<?php 
+									foreach ($regions as $regionrow):
+									?>
+										<option value="<?php echo $regionrow['id'];?>">
+											<?php echo $regionrow['region'];?>
+										</option>
+									<?php
+									endforeach;
+									?>
+								</select>
+							</div>     
+							<div class="form-group col-lg-4">
+								<label for="location" class="control-label">Location</label>
+								<select class="form-control chosen-widget" id="location" name="location" data-placeholder="Select" required >
+									<option value=""></option>
+								</select>
+							</div>   
+						</div>
+						<div class="row">                                                  
+							<div class="form-group col-lg-4">
+								<label for="purchase_date" class="control-label">Purchase Date</label>
+								<div class="date input-group" id="purchase_date" data-date="<?php echo date('Y-m-d');?>" data-date-format="yyyy-mm-dd" data-date-viewmode="years">
+									<input class="form-control span2" name="purchase_date" id="purchase_date" type="text" placeholder="Purchase Date" readonly required>
+									<span class="input-group-addon add-on"><i class="fa fa-calendar"></i></span>
+								</div>
+							</div>  
+							<div class="form-group col-lg-4">
+								<label for="asset_value" class="control-label">Purchase Value</label>
+								<input type="money" class="form-control" name="asset_value" id="asset_value" required>
+							</div>                                              
+							<div class="form-group col-lg-4">
+								<label for="salvage" class="control-label">Salvage </label>
+								<div class="radio">                                			
+									<label>
+										<input class="ace" type="radio" name="salvage" id="salvage" value="1" >
+										<span class="lbl"> Yes </span>
+									</label>
+									<label>
+										<input class="ace" type="radio" name="salvage" id="salvage" value="0" checked >
+										<span class="lbl"> No </span>
+									</label>	
+								</div>
+							</div>      
+						</div>
+						<div class="row">                                            
+							<div class="form-group col-lg-4">
+								<label for="depreciation" class="control-label">Depreciation </label>
+								<div class="radio">                                			
+									<label>
+										<input class="ace" type="radio" name="depreciation" id="depreciation" value="1" >
+										<span class="lbl"> Yes </span>
+									</label>
+									<label>
+										<input class="ace" type="radio" name="depreciation" id="depreciation" value="0" checked >
+										<span class="lbl"> No </span>
+									</label>	
+								</div>
+							</div> 
+							<div class="form-group col-lg-4">
+								<label for="rate" class="control-label">Depreciation Rate</label>
+								<input type="text" class="form-control" name="rate" id="rate" disabled >
+							</div>  
+							<div class="form-group col-lg-4">
+								<label for="method" class="control-label">Method </label>
+								<div class="radio">                                			
+									<label>
+										<input class="ace" type="radio" name="method" id="method" value="1" disabled  >
+										<span class="lbl"> W.D.V </span>
+									</label>
+									<label>
+										<input class="ace" type="radio"  name="method" id="method" value="2"  disabled >
+										<span class="lbl"> S.L </span>
+									</label>	
+								</div>
+							</div>                                        
+						</div>
+
+						<div class="row">
+							<div class="col-lg-12">  
+								<h5 class='header blue'>Sub Head Details</h5>
+								<table id="head_table" class="table small-padding">
+									<thead>
+										<tr>
+											<th>Head Type</th>
+											<th>Head</th>
+											<th>&nbsp;</th>
+										</tr>
+									</thead>
+									<tbody>
+										<tr>
+											<td>
+												<div class="form-group">
+													<select class="form-control" id="head_type" name="head_type[]" data-placeholder="Select" required>
+														<option value=""></option>
+														<?php 
+														foreach ($headtypes as $headtype):
+														?>
+															<option value="<?php echo $headtype['id'];?>">
+																<?php echo $headtype['head_type'];?>
+															</option>
+														<?php
+														endforeach;
+														?>
+													</select>
+												</div>
+											</td>
+											<td>
+												<div class="form-group">
+													<select class="form-control" id="head" name="head[]" data-placeholder="Select" required>
+														<option value=""></option>
+													</select>
+												</div>
+											</td>
+											<td width="10px;"></td>
+										</tr>
+									</tbody>
+								</table>
+							</div>
+						</div>
+						<div class="row">
+							<div class="col-lg-12">
+								<button type="submit" class="btn btn-success"><i class="fa fa-check"></i> Save </button>
+								<button type="button" class="btn btn-warning" onclick="javascript:history.back();"><i class="fa fa-times"></i> Cancel </button>
+							</div>
+						</div> 
+					</form>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+<script>
+$('document').ready(function(){
+	$('#region').on('change',function(){
+		//alert($('#region').val());
+		$.post(
+			'<?php echo $this->url('asset', array('action' => 'getlocation')); ?>',
+			{
+				region: $(this).val(),
+			},
+			function(data){
+				//console.log(data);	
+				$('#location').html(data.location);	
+				$("#location").trigger("chosen:updated");			
+			},
+			'json'
+		);
+	});
+	
+	$("#purchase_date").datepicker();		
+	$("input[name=depreciation]:radio").change(function () {
+		if($("input:radio[name='depreciation']:checked").val()=="1"){
+			$("#rate").removeAttr("disabled");
+			$("input[name=method]:radio").removeAttr("disabled");
+		}else{
+			$("#rate").val("");
+			$("#rate").attr("disabled", "disabled");
+			$("input[name=method]:radio").removeAttr("checked");
+			$("input[name=method]:radio").attr("disabled","disabled");
+		}
+	});
+	
+	if($.isNumeric($("#asset_value").val())){
+		$("#asset_value").val(parseFloat($("#asset_value").val().replace(/,/g, ""))
+			.toFixed(3)
+			.toString()
+			.replace(/\B(?=(\d{3})+(?!\d))/g, ",")
+		);
+	}else{
+		$("#asset_value").val("0.000");
+	}
+	
+	$("#asset_value").blur(function (){ 
+		if($.isNumeric($(this).val())){
+			$(this).val(parseFloat($(this).val().replace(/,/g, ""))
+				.toFixed(3)
+				.toString()
+				.replace(/\B(?=(\d{3})+(?!\d))/g, ",")
+			);
+		}else{
+			$(this).val("0.000");
+		}
+	});		
+	/****** dynamic insertion of table row*******/
+	$('#head_table').subhead({src:'<?php echo $this->url("ajresponse", array("action" => "gethead")); ?>'});	
+    const fv = FormValidation.formValidation(document.getElementById('#form'), {
+		fields: {
+			code: {
+				validators: {
+					notEmpty: {
+						message: 'Please select Code.'
+					}
+				}
+			},
+		},
+		plugins: {
+			trigger: new FormValidation.plugins.Trigger(),
+			bootstrap3: new FormValidation.plugins.Bootstrap3(),
+			submitButton: new FormValidation.plugins.SubmitButton(),
+			defaultSubmit: new FormValidation.plugins.DefaultSubmit(),
+		},
+	}).on('core.element.validated', function (e) {
+		if (e.valid) {
+			$('div#'+ e.field.replace('[]','') +'_chosen').removeClass('is-invalid');
+			$('div#'+ e.field.replace('[]','') +'_chosen').addClass('is-valid');
+		} else {
+			$('div#'+ e.field.replace('[]','') +'_chosen').removeClass('is-valid');
+			$('div#'+ e.field.replace('[]','') +'_chosen').addClass('is-invalid');
+		}
+	});
+	$('form select').chosen().change(function () {
+		fv.revalidateField($(this).attr('name'));
+	});
+});
+</script>
+	

@@ -1,0 +1,144 @@
+<?php
+/**
+ * 
+ * View -- of Hr/MasterController/addtpnAction
+ * 
+ */
+foreach($pbvid as $pbvids);
+?>
+
+<form method="post" id="#form" action="<?php echo $this->url('payroll', array('action' => 'editpbvi','id'=>$id)); ?>"  enctype="multipart/form-data" >    
+    <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+        <h4 class="modal-title"> <i class="fa fa-asterisk"></i> Edit PBVI for <?php echo $this->empObj->getColumn($pbvids['employee'],'full_name').'('.$this->empObj->getColumn($pbvids['employee'],'emp_id').')' ?> </h4>
+    </div>     
+    <div class="modal-body">       
+		<div class="panel panel-default">                       
+			<div class="panel-body">
+				<div class="form-group">
+					<label for="salary" class="control-label">Annual Basic Salary</label>
+						<input class="form-control" name="salary" id="salary" type="text" value="<?php echo $pbvids['gross_salary'];?>" placeholder="Enter Annual Basic Salary">
+			    </div>
+				<div class="form-group">
+					<label for="percentage" class="control-label">Percentage</label>
+					<input type="text" class="form-control" name="percentage" id="percentage" value="<?php echo $pbvids['percentage'];?>" > 
+				</div>
+				<div class="form-group">
+					<label for="gross" class="control-label">Gross Amount</label> 
+					<input type="text" class="form-control" name="gross" id="gross" value="<?php echo $pbvids['gross'];?>" > 
+				</div>
+                <div class="form-group">
+					<label for="tds" class="control-label">TDS</label>
+					<input type="text" class="form-control" name="tds" id="tds" value="<?php echo $pbvids['tds'];?>" readonly> 
+				</div>
+                <div class="form-group">
+					<label for="other_ded" class="control-label">Other Deduction</label>
+					<input type="text" class="form-control" name="other_ded" id="other_ded" value="<?php echo $pbvids['other_deduction'];?>"> 
+				</div>
+                <div class="form-group">
+					<label for="net" class="control-label">Net Amount</label>
+					<input type="text" class="form-control" name="net" id="net"value="<?php echo $pbvids['net'];?>" readonly> 
+				</div>
+			</div>
+		</div>
+	</div> <!-- /modal-body -->        
+	<div class="modal-footer">
+		<button type="submit" class="btn btn-success"><i class="fa fa-check"></i> Save </button>
+		<button type="button" class="btn btn-warning" data-dismiss="modal" ><i class="fa fa-times"></i> Cancel </button> 
+    </div>  
+</form>   
+<script>
+	$(function(){
+		$('#date').datepicker();
+        var salaryInput = $('#salary');
+	    var percentageInput = $('#percentage');
+        var tdsInput = $('#tds');
+        var grossInput = $('#gross');
+        var otherdedInput = $('#other_ded');
+    
+  // Add an event listener for changes in the rate and quantity inputs
+  salaryInput.on('input', calculateTotal);
+  percentageInput.on('input', calculateTotal);
+
+  otherdedInput.on('input', calculateNet);
+  grossInput.on('input', calculateTotal);
+  // Function to calculate the total and update the total input field
+	function calculateTotal() {
+		var salary = parseFloat(salaryInput.val());
+		var percentage = parseFloat(percentageInput.val());	
+		var amt = parseFloat(grossInput.val());	//salary * (percentage/100);
+    // Check if the total is a valid number
+        // if (!isNaN(amt)) {
+        // $('#gross').val(amt.toFixed(2)); // Display the total with 2 decimal places
+        // }
+        $.post(
+            "<?php echo $this->url('payroll', array('action' => 'gettds')); ?>", // Correct URL for getdeduction action
+            {
+                amount: $('#gross').val(), // Sending the amount
+            },
+            function(data) {
+                console.log(data); // Log the returned data to check the response
+                
+                // Update the deduction field with the TDS value
+                $('#tds').val(data.tds); // Assuming .tr_deduction is an input field, use .val() to update it
+                calculateNet();
+            },
+            'json'
+      );  	
+    }
+    function calculateNet() {
+		var gross = parseFloat(grossInput.val());
+		var tds = parseFloat(tdsInput.val());
+        var otherded = parseFloat(otherdedInput.val());
+		var amt = Math.ceil(gross - (tds + otherded));
+	
+        if (!isNaN(amt)) {
+        $('#net').val(amt.toFixed(2)); // Display the total with 2 decimal places
+
+        }
+
+    }
+	const fv = FormValidation.formValidation(document.getElementById('#form'), {
+		fields: {
+			salary: {
+				validators: {
+					notEmpty: {
+						message: 'Please Enter Annual Basic salary.'
+					}
+				}
+			},
+            percentage: {
+				validators: {
+					notEmpty: {
+						message: 'Please Enter percentage.'
+					}
+				}
+			},
+            other_ded: {
+				validators: {
+					notEmpty: {
+						message: 'Other Deduction Cannot be Empty.'
+					}
+				}
+			},
+		},
+		plugins: {
+			trigger: new FormValidation.plugins.Trigger(),
+			bootstrap3: new FormValidation.plugins.Bootstrap3(),
+			submitButton: new FormValidation.plugins.SubmitButton(),
+			defaultSubmit: new FormValidation.plugins.DefaultSubmit(),
+		},
+	}).on('core.element.validated', function (e) {
+		if (e.valid) {
+			$('div#'+ e.field.replace('[]','') +'_chosen').removeClass('is-invalid');
+			$('div#'+ e.field.replace('[]','') +'_chosen').addClass('is-valid');
+		} else {
+			$('div#'+ e.field.replace('[]','') +'_chosen').removeClass('is-valid');
+			$('div#'+ e.field.replace('[]','') +'_chosen').addClass('is-invalid');
+		}
+	});
+	$('form select').chosen().change(function () {
+		fv.revalidateField($(this).attr('name'));
+	});
+});
+</script> 

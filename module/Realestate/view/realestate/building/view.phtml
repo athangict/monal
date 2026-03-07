@@ -1,0 +1,231 @@
+
+<?php 
+/**
+ *
+ * View -- of Realestate/EstateController/indexAction
+ *
+ */
+ ?>   
+<style>
+	.mytable tr th,.mytable tr td {
+		padding:5px;
+	}
+</style> 
+<?php 
+foreach ($flat as $fd):
+	extract($fd);
+endforeach;
+?>
+<div class="row">
+	<div class="col-lg-12">
+		<div class="widget widget-box">
+			<div class="widget-header">
+			<h5 class="widget-title grey lighter">
+				<i class="ace-icon fa fa-shopping-cart green"></i>
+				Flat Details
+			</h5>
+		</div>
+		<div class="widget-body">
+			<div class="widget-main padding-12">
+				<div id="report-print">
+					<div class="row" id="convert-tb0">
+						<div class="col-lg-8" id="convert-tb1">
+							<ul class="list-unstyled spaced">
+								<li>
+									<i class="ace-icon fa fa-caret-right blue"></i>
+									Floor : <b class="red"><?php echo $this->floorObj->getColumn($floor,'floor'); ?></b>
+								</li>
+								<li>
+									
+									<i class="ace-icon fa fa-caret-right blue"></i>
+									Flat No : <b class="red"><?php echo $flat_no; ?></b>
+								</li>
+								<li>
+									<i class="ace-icon fa fa-caret-right blue"></i>
+									Area sqaure: <b class="red"><?php echo $area; ?></b>
+								</li>
+							</ul>
+						</div>
+						<div class="col-lg-4" id="convert-tb2">
+							<ul class="list-unstyled spaced">
+								<li>
+									
+									<i class="ace-icon fa fa-caret-right blue"></i>
+									Flat Status : <b class="red"><?php echo $this->status->getColumn($flat_status,'status'); ?></b>
+								</li>
+
+								<li>
+									<i class="ace-icon fa fa-caret-right blue"></i>
+									Rent : <b class="red"><?php echo $rent; ?></b>
+								</li>
+							</ul>
+						</div>
+					</div>
+					<?php if($flat_status==1):?>
+					<div class="row">
+						<div class="col-lg-5" style="text-align: right"></div>
+						<div class="col-lg-7" style="text-align: right">
+						<?php echo $this->button(2,$id); ?>
+						</div>
+					</div>
+					<?php endif;?>
+					<div class="space-12"></div>
+					<div class="row">
+						<div class="col-lg-12" >
+							<table class="table" style="border-top:2px solid #ddd;">
+								<thead>
+									<tr>
+										<th>#</th>
+										<th>Lesse name</th>
+										<th>CID number</th>
+										<th>Contact number</th>
+										<th>Agreement Date</th>
+										<th>Start Date</th>
+										<th>End Date</th>
+										<th>Remarks</th>
+										<th>action</th>	
+										<!-- <th class="no-sort no-printpdf">Action</th> -->
+									</tr>
+								</thead>
+								<tbody>
+									<?php
+										$i = 1;
+										foreach ($this->leasedrent->get(array('flat'=>$id)) as $rows):	?>
+										<tr data-href="<?php echo $this->button(4, $rows['id']); ?>">
+											<td><?php echo $i++; ?> </td>
+											<td><?php echo $this->tenant->getColumn($rows['lesse_name'],'name'); ?></td>
+											<td><strong><?php echo $rows['cid']; ?></strong></td>
+											<td><strong><?php echo $rows['contact']; ?></strong></td>
+											<td><?php echo $rows['agreement_date']; ?></td>
+											<td><?php echo $rows['start_date']; ?></td>
+											<td><?php echo $rows['end_date']; ?></td>
+											<td><?php echo $rows['remarks']; ?></td>
+											<td><?php echo ($rows['status']!=20)?$this->button(1, $rows['id']):$this->status($rows['status']); ?></td>
+									  
+										</tr>
+								<?php   endforeach;?>
+								</tbody>
+							</table>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>	
+	</div>
+</div>
+<div id="modal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+	<div class="modal-dialog">
+		<div class="modal-content">
+		</div>
+	</div>
+</div>
+<script type="text/javascript">
+	$("tr[data-href]").each(function(){
+		$(this).find('td').not('td.action').each(function(){
+			$(this).css('cursor','pointer');
+			$(this).bind('click',function() {
+				window.document.location = $(this).closest('tr').attr("data-href");
+			});
+		});
+	});
+
+	$('document').ready(function(){
+		$('#dataTables').DataTable();
+	});
+	const fv = FormValidation.formValidation(document.getElementById('#form'), {
+	    fields: {
+			'prn_date': {
+				validators: {
+					notEmpty: {
+						message: 'Please select voucher date'
+					}
+				}
+			},
+		
+			'location': {
+				validators: {
+					notEmpty: {
+						message: 'Please select location'
+					}
+				}
+			},
+			'activity': {
+				validators: {
+					notEmpty: {
+						message: 'Please select activity'
+					}
+				}
+			},
+			'supplier': {
+				validators: {
+					notEmpty: {
+						message: 'Please select supplier'
+					}
+				}
+			},
+			'challan_no': {
+				validators: {
+					notEmpty: {
+						message: 'Please provide challan no.'
+					}
+				}
+			},  
+			'challan_date':{
+				validators: {
+					notEmpty:{
+						message: 'Please select challan date'
+					},
+				}
+			}, 
+			'po_no':{
+				validators: {
+					notEmpty:{
+						message: 'Please select PO No.'
+					},
+				}
+			},      
+			'item[]':{
+				validators: {
+					notEmpty:{
+						message: 'Please select item'
+					},
+				}
+			},  
+			'uom[]':{
+				validators: {
+					notEmpty:{
+						message: 'Please select uom'
+					},
+				}
+			}, 
+			'po_qty[]':{
+				validators: {
+					notEmpty:{
+						message: 'Please provide PO Qty'
+					},
+				}
+			},  
+			'challan_qty[]':{
+				validators: {
+					notEmpty:{
+						message: 'Please provide challan_qty'
+					},
+				}
+			},
+		},
+		plugins: {
+			trigger: new FormValidation.plugins.Trigger(),
+			bootstrap3: new FormValidation.plugins.Bootstrap3(),
+			submitButton: new FormValidation.plugins.SubmitButton(),
+			defaultSubmit: new FormValidation.plugins.DefaultSubmit(),
+		},
+	}).on('core.element.validated', function (e) {
+		if (e.valid) {
+			$('div#'+ e.field.replace('[]','') +'_chosen').removeClass('is-invalid');
+			$('div#'+ e.field.replace('[]','') +'_chosen').addClass('is-valid');
+		} else {
+			$('div#'+ e.field.replace('[]','') +'_chosen').removeClass('is-valid');
+			$('div#'+ e.field.replace('[]','') +'_chosen').addClass('is-invalid');
+		}
+	});
+</script>

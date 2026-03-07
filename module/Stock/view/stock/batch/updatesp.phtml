@@ -1,0 +1,87 @@
+<?php 
+	/**
+	 * View -- Stock\BatchController\updatespAction
+	 */
+	$this->headTitle($this->title);
+?>
+<div class="row">
+	<div class="col-lg-12">
+		<div class="widget widget-box">
+			<div class="widget-header">
+				<h5 class="widget-title lighter smaller">
+					<i class="fa fa-pencil"></i>&nbsp;&nbsp;<strong>Update the Selling Price for the Stock Items with Effect Date on <span class="red"><?php echo date('Y-m-d');?></span></strong>&nbsp;
+				</h5>
+				<div class="widget-toolbar hidden-xs">
+					<div class="btn-group">
+						<a class="btn btn-xs" href="<?php echo $this->url('moving', array('action' => 'movingitem'));?>"><span class="fa fa-step-forward"></span> view selling price </a>
+					</div>
+				</div>
+			</div><!-- end of widget-header -->
+			<div class="widget-body">
+				<div class="widget-main">
+					<div class="row">
+						<div class="col-lg-1"></div>
+						<div class="col-lg-10"> 
+							<h4 class="center"> 
+								<span class="blue">Batch With Effected Selling Price<span>
+								<?php  
+									$batch = $this->batchObj->getBatchForMISp(array('b.sp_effect_date' => date('Y-m-d'),'b.status' => '3'));
+									//echo "<pre>"; print_r($batch); exit;
+									foreach($batch as $bat):
+										$check = $bat['id'];
+									endforeach;
+									if($check > 0):
+								?>
+								<form id="#form" method="post" action="<?php echo $this->url('batch', array('action' => 'doupdatesp')); ?>"  enctype="multipart/form-data">
+									<button type="submit" class="btn btn-primary btn-xs pull-right" ><i class="fa fa-check"></i><strong> Update Effected Selling Price</strong></button>
+								</form>
+							</h4>
+							<div class="space-18"></div>
+							
+								<table class="table table-bordered table-striped table-hover">
+									<thead>
+										<tr>  
+											<th>#</th>
+											<th>Item</th>					
+											<th>Batch</th>					
+											<th>UOM</th>					
+											<th>ELC</th>					
+											<th>Location</th>					
+										</tr>
+									</thead>
+									<tbody>
+									<?php 
+										$i=1;
+										foreach($batch as $row):
+									?>
+										<tr>
+											<td><?php echo $i++; ?></td>
+											<td><?php echo $this->itemObj->getColumn(array('id' => $row['item']),'name'); ?></td>
+											<td><?php echo $row['batch']; ?></td>
+											<td><?php echo $this->uomObj->getColumn(array('id' => $row['uom']),'code'); ?></td>
+											<?php 
+												$conversion = $this->itemuomObj->getColumn(array('item' => $row['item'],'costing_uom' => '1'),'conversion');
+												$value = $row['landed_cost'];
+												$elc = $value/$conversion;
+											?>
+											<td><?php echo number_format($elc,2);?></td>
+											<td><?php echo $this->locationObj->getColumn(array('id' => $row['location']),'location'); ?></td>
+										</tr>
+									<?php 
+										endforeach;
+									?>
+									</tbody>
+								</table>
+							<?php else: ?>
+								<div class="space-6"></div>
+								<div class="alert alert-warning fade in">
+									<h3><i>No Moving Items with effected Selling Price to Update</i></h3>
+								</div>
+							<?php endif; ?>
+						</div>
+					</div>
+			    </div>
+			</div>
+		</div>
+	</div>
+</div>

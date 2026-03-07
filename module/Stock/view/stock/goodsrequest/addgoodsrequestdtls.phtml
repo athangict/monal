@@ -1,0 +1,127 @@
+<?php
+/**
+ * 
+ * View -- of Stock/MasterController/adduomtypeAction
+ * 
+ */
+?>
+<?php foreach($goodrequest as $row);?>
+<form id="#form" method="post" action="<?php echo $this->url('goodsrequest', array('action' => 'addgoodsrequestdtls')); ?>"  enctype="multipart/form-data" >
+    <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+        <h4 class="modal-title"> <i class="fa fa-asterisk"></i>Good Request Details</h4>
+    </div>  <!-- /modal-header -->
+    <div class="modal-body">
+	<input type="hidden" name="gr_id" value=<?php echo $row['id']?>>
+	<input type="hidden" id="location" name="location" value=<?php echo $row['from_location']?>>
+	<input type="hidden" id="to_location" name="to_location" value=<?php echo $row['to_location']?>>
+		<div class="panel panel-default">                       
+			<div class="panel-body">   
+				<div class="form-group">
+					<label for="item" class="control-label">Item</label>
+					<select class="form-control" name="item" id="item" data-placeholder="Select" required>
+						<option value=""></option><?php
+						foreach($item as $items):?>
+							<option value="<?php echo $items['id'];?>">
+								<?php echo $items['name'];?>
+							</option><?php
+						 endforeach;?>	
+					</select>		
+				</div>
+				<div class="form-group">
+					<label for="uom" class="control-label">Uom</label>
+					<select class="form-control ace" name="uom" id="uom" data-placeholder="Select" required>
+						<option value=""></option>
+					</select>		
+				</div>
+				<div class="form-group">
+					<label for="stock_qty" class="control-label">Stock Quantity</label>
+					<input type="text" class="form-control" name="stock_qty" id="stock_qty" value="0.00" placeholder="Stock Quantity" readonly/> 
+				</div>
+				<div class="form-group">
+					<label for="quantity" class="control-label">Quantity</label>
+					<input type="text" class="form-control" name="quantity" id="quantity" value="" placeholder="Quantity"/> 
+				</div>
+			</div>
+		</div>
+    </div> <!-- /modal-body -->
+    <div class="modal-footer">
+        <button type="submit" class="btn btn-success"><i class="fa fa-check"></i> Save </button>
+        <button type="button" class="btn btn-warning" data-dismiss="modal" ><i class="fa fa-times"></i> Cancel </button> 
+    </div>  
+</form>
+<script>
+$('document').ready(function(){
+	 $("#quantity").on('input',function() {
+		 var enteredQuantity = parseFloat($(this).val()) || 0;
+		  console.log('Quantity:', enteredQuantity);
+		var stockQty = parseFloat($('#stock_qty').val());
+	  //  var stockQty = parseFloat(stockQtyElement.val()) || 0;
+
+		// Check if entered quantity exceeds stock quantity
+		if (stockQty - enteredQuantity < 0){
+			alert('Entered quantity exceeds available stock!');
+			$(this).val(stockQty); // Reset to max available quantity (optional)
+			// You might also want to add visual cues, like changing the background color
+			$(this).css('background-color', '#FFCCCC');
+		} else {
+			$(this).css('background-color', ''); // Reset background color
+		}
+	});
+	$("#item,#location").change(function() {
+		$.post(
+			"<?php echo $this->url('goodsrequest', array('action' => 'getuom'));?>",
+			{
+				itemId: $('#item').val(),
+				locationId: $('#location').val(),
+			},
+			function(data){
+				//console.log(data);	
+				$('select#uom').html(data.uom);
+				$('select#uom').trigger('chosen:updated');
+				$('#stock_qty').val(data.quantity);
+			},
+			'json'
+		);	
+	});
+	
+	$('#location').trigger('change');
+	const fv = FormValidation.formValidation(document.getElementById('#form'), {
+		fields: {
+			item: {
+				validators: {
+					notEmpty: {
+						message: 'Please provide item.'
+					}
+				}
+			},
+			uom: {
+				validators: {
+					notEmpty: {
+						message: 'Please provide UOM'
+					},
+				}
+			},
+		},
+		plugins: {
+			trigger: new FormValidation.plugins.Trigger(),
+			bootstrap3: new FormValidation.plugins.Bootstrap3(),
+			submitButton: new FormValidation.plugins.SubmitButton(),
+			defaultSubmit: new FormValidation.plugins.DefaultSubmit(),
+		},
+	}).on('core.element.validated', function (e) {
+		if (e.valid) {
+			$('div#'+ e.field.replace('[]','') +'_chosen').removeClass('is-invalid');
+			$('div#'+ e.field.replace('[]','') +'_chosen').addClass('is-valid');
+		} else {
+			$('div#'+ e.field.replace('[]','') +'_chosen').removeClass('is-valid');
+			$('div#'+ e.field.replace('[]','') +'_chosen').addClass('is-invalid');
+		}
+	});
+	$('form select').chosen().change(function () {
+		fv.revalidateField($(this).attr('name'));
+	});
+});
+
+
+</script>

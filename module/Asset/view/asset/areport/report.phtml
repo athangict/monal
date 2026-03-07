@@ -1,0 +1,276 @@
+<?php 
+/**
+ * View -- of Administration/AssetController/assetAction
+ * chophel@athang.com -- 2022
+ */
+	$this->headTitle($this->title);
+?>
+<div class="card">
+    <div class="card-header">
+	    <div class="red fa fa-graph">
+		    <label> <i class=""></i> <h4>ASSET REPORTS</h4></label>
+		</div>
+	</div>
+	<div class="card-body">
+		<div class="col-lg-12">
+			<form id="#form" method="POST" action="<?php echo $this->url('areport', array('action' => 'report')); ?>" enctype="multipart/form-data" >    
+				<div class="row">
+					<div class="form-group col-lg-2">
+						<label for="assettype" class="control-label">Asset Type</label>
+						<select class="form-control" name="assettype" id="assettype" data-placeholder="Select"  required>
+							<option value="-1">All</option>
+							<?php foreach($this->assettypeObj->getAll() as $assettype):
+								$selected = ($data['typeid'] == $assettype['id'])?'selected':'';?>
+							<option value="<?php echo $assettype['id'];?>"<?php echo $selected;?>>
+								<?php echo $assettype['name']; ?>
+							</option>
+						<?php endforeach;?>
+						</select>
+					</div>
+					<div class="form-group col-lg-2">
+						<label for="region" class="control-label">Region</label>
+						<select class="form-control" name="region" id="region" data-paceholder="Select">
+							<option value="-1">All</option>
+							<?php $regions = $this->regionObj->getAll();
+							foreach ($regions as $region):?>
+							<?php $selected_reg = ($data["region"]==$region['id'])? 'selected':'';?>
+								<option value="<?php echo $region['id'];?>" <?php echo $selected_reg;?>>
+									<?php echo $region['region']; ?>
+								</option>
+							<?php endforeach;?>									
+						</select>
+					</div> 
+					<div class="form-group col-lg-2">
+						<label for="location" class="contol-label">Location</label>
+						<select class="form-control" name="location" id="location" data-placeholder="Select" >
+							<option value="-1">All</option>
+							<?php if($data["region"]>0):
+								foreach($this->locationObj->get(array('region'=> $data["region"])) as $locations):
+							?>
+								<?php $selected_loc = ($data["location"]==$locations['id'])? 'selected':'';?>
+								<option value="<?php echo $locations['id'];?>" <?php echo $selected_loc;?> >
+									<?php echo $locations['location'];?>
+								</option>
+							<?php endforeach;
+							endif;?>							
+						</select>
+					</div> 
+					<div class="form-group col-lg-2">
+						<label for="custodian" class="contol-label">Custodian</label>
+						<select class="form-control" name="custodian" id="custodian" data-placeholder="Select" >
+							<option value="-1">All</option>
+							<?php 
+								foreach($this->employeeObj->getAll() as $cus):
+							?>
+								<?php $selected_cus = ($data["custodian"]==$cus['id'])? 'selected':'';?>
+								<option value="<?php echo $cus['id'];?>" <?php echo $selected_cus;?> >
+									<?php echo $cus['full_name'].'('.$cus['emp_id'].')';?>
+								</option>
+							<?php endforeach;?>							
+						</select>
+					</div> 
+					<div class="form-group col-lg-2">
+						<label for="status" class="control-label">status</label>
+						<select multiple="" class="form-control" name="status[]" id="status" data-placeholder="Select" >
+									<option value="-1">All</option>
+							<?php //$status_array = explode(',',$data['status']);
+							foreach($this->statusObj->getarray([1,19,22,23]) as $sta):
+								$selected = (in_array($sta['id'] ,$data['status']))?'selected':'';?>
+							<option value="<?php echo $sta['id'];?>"<?php echo $selected;?>>
+								<?php echo $sta['status']; ?>
+							</option>
+							<?php endforeach;?>
+						</select>
+					</div>
+					<div class="form-group col-lg-2">
+						<label class="control-label" for="end_date">End Date</label>
+						<div class="date input-group" id="end_date" data-date="<?php echo $data['current_date'];?>" data-date-format="yyyy-mm-dd" >
+							<input class="form-control span2" name="end_date" id="end_date" type="text" placeholder="End Date" value="<?php echo $data['current_date'];?>" readonly required>
+							<span class="input-group-addon add-on"><i class="fa fa-calendar"></i></span>
+						</div>
+					</div>
+					<div class="form-group col-lg-1"><br>
+						<div class="col-lg-12">
+							<button type="submit" class="btn btn-sm btn-success pull-right"><i class="fa fa-gear"></i> Generate </button>
+						</div>
+					</div>
+				</div>
+			</form>
+		</div>
+		<!-- <div class="col-lg-3 ">
+			<div class="space"></div>
+			<div class="btn-group pull-right">
+				<?php echo $this->button(2,$page);?>
+			</div>
+		</div> -->
+	</div>
+	<div class="table-responsive">
+		<table class="table card-table table-vcenter text-nowrap datatable" id="dataTables">
+			<thead>
+				<tr>
+					<th>#</th>
+					<th>Assets</th>
+					<th>Asset ID</th>
+					<th>Location</th>
+					<th>Put-in Use Date</th>
+					<th>Custodian</th>
+					<th>Useful Life</th>
+					<th>Gross Value</th>
+					<th>Salvage Value</th>
+					<th>Depreciable Amt</th>
+					<th>Dep per Day</th>
+					<th>Opening Dep</th>
+					<th>Depreciation</th>
+					<th>Net Value</th>
+					<th>Status</th>
+				</tr>
+			</thead>
+			<tbody>
+			<?php 
+				$net_value = 0;
+				$total_asset_value =0;
+				$total_aac_dep_value =0;
+				$dep=0;
+				$total_salvage=0;
+				$total_depreciable=0;
+				$total_net_value =0;
+				$acc_dep_total=0;
+				$i=1; foreach ($assetmgtTable as $row):
+				/*CHECK IF THE YEAR IS LEAP AND COUNT THE LEAP IN BETWEEN*/
+				
+				$current_year = date('Y', strtotime($data['current_date']));
+				
+				$put_in_use_year = date('Y', strtotime($row['putin_date']));
+				$usefullife = $row['usefullife'];
+				$end_of_life = $put_in_use_year + $usefullife;
+				
+				$year_of_use= $current_year - $put_in_use_year;
+				$leap = 0;
+				for ($year = $put_in_use_year; $year <= $end_of_life; $year++) {
+					if (($year % 4 == 0 && $year % 100 != 0) || ($year % 400 == 0)) {
+						$leap++;
+					}
+				}
+				/*TOTAL USEFULLIFE IN DAYS*/ 
+				$total_days_with_leap = $leap * 366;
+				$regular_year = $usefullife - $leap;
+				$total_days_with_regular_year = $regular_year * 365;
+				$total_useful_days = $total_days_with_leap + $total_days_with_regular_year;
+				
+				/*TOTAL USEFULLIFE IN COMPLETED*/
+				$startDate = $row['putin_date'];
+				$currentDate = date("Y-m-d");
+				
+				/*DAY FROM USE UNTIL TODAY*/
+				$timestampStartDate = strtotime($startDate);
+				$timestampEndDate = strtotime($currentDate);
+				if ($timestampStartDate === false || $timestampEndDate === false) {
+				} else {
+					$timeDifference = $timestampEndDate - $timestampStartDate;
+					$daysCompletedtilltoday = floor($timeDifference / (60 * 60 * 24));
+				}
+				/*DEPRECIATION AMOUNT PER DAY*/
+				$actual_asset_value = $row['asset_value'];
+				$salvage_value = $row['salvage'];
+				/*CALCULATE NET AMOUNT*/
+				$depreciable=$row['depreciable_amount'];
+				
+				/*CALCULATE SUM FROM THE LIST AMOUNT*/
+				//$total_asset_value += $row['asset_value'];
+				//$total_aac_dep_value += $acc_depreciation;
+				//$total_net_value += $net_value;
+				$total_salvage+=$row['salvage'];
+				$total_depreciable+=$depreciable;
+				
+				/*PREVIOUS-YEAR*/
+				//$previous_dep =$this->assetObj->getPreDep($row['id'],'previous_depreciated_amount');
+			   // foreach($previous_dep as $pre);
+				$acc_dep=$row['previous_depreciated_amount'];
+				$year=$current_year-1;
+				$previous_year_dep=$this->depreciationObj->getPreDepindividual($row['id'],$row['asset_type'],$year,'dep_amount');
+				foreach($previous_year_dep as $preyeardep);
+				if($current_year<=2024){
+					$opening=$acc_dep;
+				}
+				else{
+					$opening=$acc_dep+$preyeardep['totalpredepsum'];
+				}
+				
+				$current_dep=$this->depreciationObj->getCurrentDepIndividual($row['id'],$current_year,'dep_amount');
+				foreach($current_dep as $current);
+				$acc_dep_current=$current['totalcurrentsum'];//SUM OF Depreciation
+				//$asset_opening=$opening+$acc_dep_current;
+				$net_value+=$actual_asset_value - ($opening + $acc_dep_current) ;
+				$net=$depreciable - ($opening + $acc_dep_current);
+				
+				
+				?>
+				<tr data-href="<?php echo $this->button(4,$row['id']);?>">
+					<td><?php  echo $i++; ?></td>								       
+					<td class="fw-bold"><?php echo $row['name'];?></td>
+					<td><?php echo $row['assetid'];?></td>
+					<td><?php echo $this->locationObj->getColumn($row['location'],'location');?></td>
+					<td><?php echo $row['putin_date'];?></td> 
+					<td><?php echo $this->employeeObj->getColumn($row['custodian'],'full_name');?></td> 
+					<td><?php echo $row['usefullife'];?></td> 
+					<td class="fw-bold"><?php echo number_format($row['asset_value'],2);?></td>
+					<td class="fw-bold"><?php echo number_format($row['salvage'],2);?></td>
+					<td class="fw-bold"><?php echo number_format($depreciable,2);?></td>
+					<td class="fw-bold"><?php echo number_format($row['dep_per_day'],2);?></td>
+					<td class="fw-bold"><?php echo $acc_dep=number_format($opening,2)?number_format($opening,2):'0.00';?></td>
+					<td class="fw-bold"><?php echo $acc_dep=number_format($acc_dep_current,2)?number_format($acc_dep_current,2):'0.00';?></td>
+					<td class="fw-bold"><?php echo number_format($net,2);?></td>
+					<td class="fw-bold"><?php echo $this->status($row['status']);?></td>
+				</tr>
+			<?php $dep+=$opening;$total_net_value+=$net;$acc_dep_total+=$acc_dep_current; $total_asset_value+=$row['asset_value'];endforeach;//exit;?>
+				<tr>
+					<td></td>								       
+					<td></td>
+					<td></td>
+					<td></td>
+					<td></td>		
+					<td></td>			
+					<td></td>			
+					<td class="fw-bold"><?php echo number_format($total_asset_value,2);?></td>
+					<td class="fw-bold"><?php echo number_format($total_salvage,2);?></td>
+					<td class="fw-bold"><?php echo number_format($total_depreciable,2);?></td>
+					<td></td>	
+					<td class="fw-bold"><?php echo number_format($dep,2);?></td>
+					<td class="fw-bold"><?php echo number_format($acc_dep_total,2);?></td>
+					<td class="fw-bold"><?php echo number_format($total_net_value,2);?></td>
+					<td class="fw-bold"></td>
+				</tr>
+			</tbody>
+		</table>
+	</div>
+</div>
+<div class="modal fade" id="modal" tabindex="-1" role="dialog" aria-hidden="true">
+	<div class="modal-dialog modal-lg" role="document">
+		<div class="modal-content">
+		</div><!-- /.modal-content -->
+	</div><!-- /.modal-dialog -->
+</div><!-- /.modal -->
+<script>
+$('document').ready(function(){
+	$('#end_date').datepicker();
+	$("#region").change(function() { 
+			$.post( "<?php echo $this->url('ajresponse', array('action' => 'getlocation')); ?>/"+ $("#region").val(), function( data ) {
+				var newdata ="<option value='-1'>All</option>"+data
+				$('#location').html( newdata );
+				$("#location").trigger('chosen:updated');
+			});
+	    });
+	$("tr[data-href]").each(function(){ 
+		if($(this).attr('data-href')!='#'){
+			$(this).css('cursor','pointer');
+			$(this).bind('click',function() {
+				window.document.location = $(this).attr("data-href");
+			});
+		}
+	});
+	$('#dataTables').DataTable({
+		"paging":   true,
+		"pageLength": 20, // Set the number of rows per page to 50
+	});
+});
+</script>

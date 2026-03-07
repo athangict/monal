@@ -1,0 +1,71 @@
+<?php
+/**
+ * View -- of Purchase/ContractorController/indexAction
+ */
+$this->headTitle($this->title);
+?>
+<div class="row">
+	<div class="col-lg-12">
+		<div class="clearfix">
+			<div class="pull-right tableTools-container"></div>
+			<a class="red pull-right DTTT_button btn btn-white btn-info btn-bold" data-tooltip="tooltip" data-placement="top" title="Add New Contractor Invoice" href="<?php echo $this->url('contractor', array('action'=>'addcontractor'));?>" >
+				<span class="red"><i class="fa fa-plus"></i> <span class="hidden-sm hidden-xs">&nbsp;Add Contractor Invoice</span></span>
+			</a>
+		</div>
+		<div>
+			<table class="table table-striped table-bordered table-hover" id="dataTables">
+				<thead>
+					<tr>
+						<th>#</th>
+						<th>Contractor Invoice No.</th>
+						<th>Invoice Date</th>
+						<th>Start Date</th>
+						<th>End Date</th>
+						<th>Payable Amount</th>
+						<th>Action</th>
+					</tr>
+				</thead>
+				<tbody>
+					<?php $sl = 1;?>
+					<?php foreach($contractor_invoice as $row):?>
+					<tr class="tr-clickable" data-href="<?php echo $this->url('contractor', array('action'=>'viewcontractor', 'id'=>$row['id']));?>">
+						<td><?php echo $sl++;?></td>	
+						<td>
+							<b><?php echo $row['invoice_no'];?></b>&nbsp;&nbsp;&nbsp;
+							<span style="font-size:12px">
+								 <?php  echo $row['contractor'];   ?> &nbsp;&nbsp;&nbsp;
+								 <i>
+									 <span class="label label-info"> 
+										<?php echo $row['activity']; ?> &nbsp;&nbsp;&nbsp;
+									 </span>
+								</i>        
+								 &nbsp;
+								 <?php $this->status($row['status']);?>
+							</span>									     
+						</td>
+						<td><?php echo $row['invoice_date']; ?></td>
+						<td><?php echo $row['from_date'];?></td>
+						<td><?php echo $row['to_date'];?></td>
+						<td><?php echo $row['payable_amount'];?></td>
+						<td>
+							<a data-toggle="modal" data-target = "#modal" class="btn btn-xs btn-danger" href="<?php echo $this->url('acl', array('action' => 'activitylog', 'id' => "1-".$row['id'])); ?>" title="View Activity Logs">
+								<i class="ace-icon fa fa-plus bigger-120" ></i>  
+							</a>
+						</td>	
+					</tr>							
+					<?php endforeach;?>
+				</tbody>
+			</table>
+		</div>
+	</div>
+</div>
+<script>		
+	$("tr[data-href]").each(function(){ 
+		if($(this).attr('data-href')!='#'){
+			$(this).css('cursor','pointer');
+			$(this).bind('click',function() {
+				window.document.location = $(this).attr("data-href");
+			});
+		}
+	});
+</script>

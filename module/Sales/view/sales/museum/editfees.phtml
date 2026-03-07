@@ -1,0 +1,81 @@
+<?php
+/**
+ * 
+ * View -- of Sales/MasterposController/addsubservicesAction
+ * 
+ */
+foreach($fees as $row);
+?>
+<form id="#form" method="post" action="<?php echo $this->url('museum', array('action' => 'editfees','id'=>$row['id'])); ?>"  enctype="multipart/form-data" >
+    <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+        <h4 class="modal-title"> <i class="fa fa-edit"></i> Edit Fees</h4>
+    </div>  <!-- /modal-header -->
+    <div class="modal-body">
+		<div class="panel panel-default">                       
+			<div class="panel-body">   
+             <div class="form-group">
+                    <label for="category" class="control-label">Categories</label>
+					<select class="form-control" name="category" id="category" data-placeholder="Select" required > 
+						<option value="-1">None</option>	
+						<?php foreach($category as $category): ?>
+                            <option value="<?php echo $category['id'];?>" <?php echo ($row['category']==$category['id'])?'selected':'';?>>
+								<?php echo $category['category'];?>
+							</option>
+						<?php
+						endforeach;
+						?>
+					</select>
+				</div>
+				<div class="form-group">
+					<label for="fees" class="control-label">Fees</label>
+					<input type="text" class="form-control" name="fees" id="fees" value="<?php echo $row['fee'];?>" placeholder="Fees" required>
+				</div>
+				
+			</div>
+		</div>
+    </div> <!-- /modal-body -->
+    <div class="modal-footer">
+        <button type="submit" class="btn btn-success"><i class="fa fa-check"></i> Save </button>
+        <button type="button" class="btn btn-warning" data-dismiss="modal" ><i class="fa fa-times"></i> Cancel </button> 
+    </div>  
+</form>
+<script>
+$('document').ready(function(){
+	const fv = FormValidation.formValidation(document.getElementById('#form'), {
+		fields: {
+                sub_service: {
+                    validators: {
+                        notEmpty: {
+                            message: 'Please provide service.'
+                        }
+                    }
+                },
+                service: {
+                    validators: {
+                        callback: {
+                            message: 'Please Select Services.',
+                            callback: function(input) {
+                                return (input.value != "-1");
+                            }
+                        }
+                    }
+                },
+            },
+		plugins: {
+			trigger: new FormValidation.plugins.Trigger(),
+			bootstrap3: new FormValidation.plugins.Bootstrap3(),
+			submitButton: new FormValidation.plugins.SubmitButton(),
+			defaultSubmit: new FormValidation.plugins.DefaultSubmit(),
+		},
+	}).on('core.element.validated', function (e) {
+		if (e.valid) {
+			$('div#'+ e.field.replace('[]','') +'_chosen').removeClass('is-invalid');
+			$('div#'+ e.field.replace('[]','') +'_chosen').addClass('is-valid');
+		} else {
+			$('div#'+ e.field.replace('[]','') +'_chosen').removeClass('is-valid');
+			$('div#'+ e.field.replace('[]','') +'_chosen').addClass('is-invalid');
+		}
+	});
+});
+</script>

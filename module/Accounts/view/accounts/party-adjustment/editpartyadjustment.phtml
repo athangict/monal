@@ -1,0 +1,293 @@
+eceipt -- of Sales/SalesController/editreceiptAction
+ */
+  $this->headTitle($this->title);	
+  foreach($this->receipts as $receiptRow); 
+  if($receiptRow['status'] != "3"){
+?>
+<div class="row">
+	<div class="col-lg-12">
+		<div class="widget widget-box">
+			<div class="widget-header">
+				<h5 class="widget-title lighter smaller"> 
+					<i class="fa fa-taxi"></i> Edit Credit Receipt
+				</h5>
+				<div class="widget-toolbar hidden-xs">
+					<a style='cursor:pointer' id="print">
+						<i class="ace-icon fa fa-file-pdf-o red"></i>
+					</a>
+				</div>
+			</div>
+			<div class="widget-body">
+				<div class="widget-main">
+				    <form method="post" action="<?php echo $this->url('partyadjustment', array('action' => 'editpartyadjustment')); ?>" enctype="multipart/form-data">
+						<div class="row">
+						   <div class="col-lg-3">
+								<div class="form-group">
+								<input type="hidden" value="<?php echo $receiptRow['id'];?>" name="receipt_id" id="receipt_id">
+								  <label for="location" class="control-label">Location</label>
+									<select id="location" name="location" class="form-control" data-placeholder="Select" required>
+										<option value=""></option>
+										<?php foreach ($this->locationObj->getAll() as $location):?>
+										<?php $selected = ($location['id'] == $receiptRow['location'])?"selected":"";?>
+											<option value="<?php echo $location['id'];?>" <?php echo $selected; ?>>
+												<?php echo $location['location'];?>
+											</option>
+										<?php endforeach;?>
+									</select>		
+								</div>	
+							</div>		
+							 <div class="col-lg-3">
+						       <div class="form-group">
+									<label for="received_date" class="control-label">Receipt Date </label>
+									<div class="date input-group" id="receipt_date" data-date="<?php echo $receiptRow['receipt_date']; ?>" data-date-format="yyyy-mm-dd" >
+										<input class="form-control span2" name="received_date" id="received_date" type="text" value="<?php echo $receiptRow['receipt_date']; ?>" required>
+										<span class="input-group-addon add-on"><i class="fa fa-calendar"></i></span>
+									</div>
+								</div>
+						    </div>			           						 
+							<div class="col-lg-3"> 
+							   <div class="form-group">
+								  <label for="customer" class="control-label">Customer</label>
+									<select id="customer" name="customer" class="form-control" data-placeholder="Select" required>																		
+											<option value="<?php echo $receiptRow['customer'];?>">
+												<?php echo $this->partyObj->getColumn($receiptRow['customer'],'name');?>
+											</option>										
+									</select>		
+								</div>	
+							</div> 
+					    </div>		
+					    <div class="row">
+					        <div class="col-lg-12">
+					           <table class="table" id="trdetails_table" style="border-top:2px solid #ddd;" >
+								 <thead>
+								   <tr>
+									  <th>#</th> 
+									  <th>Memo No.</th>
+									  <th>Sales Date  -  Due Date</th>									
+									  <th>Invoice Amount(<?php echo $this->currency_code();?>)</th>
+									  <th>Penalty</th>
+									  <th>TDS</th>
+									  <th>Payable Amount</th>
+									  <th>Due Amount</th>									
+									  <th>Check Payment</th>									
+									</tr>
+								   </thead>
+								   <tbody>
+								    <?php $sl = 1; 
+									 foreach ($this->receiptDtls as $memo):  ?>
+									   <tr>
+										 <td><?php echo $sl++; ?>.<input type="hidden" name="id[]" value="<?php echo $memo['id'];?>" id="sales"></td>
+										 <td><?php echo $memo['sales_no']; ?></td>
+										 <td><?php foreach($this->salesObj->get($memo['sales']) as $salesDtls); 
+										 echo $this->dateformat($salesDtls['sales_date']); ?> &nbsp; : &nbsp;<?php echo $this->dateformat($salesDtls['due_date']); ?></td>
+										 <td><?php echo $memo['credit_amount']; ?> 
+										 <input type="hidden" name="invoice[]" value="<?php echo $memo['credit_amount']; ?>" id="invoice"></td>
+										 <td><input type="text" class="form-control" value="<?php echo $memo['penalty']; ?>" name="penalty[]" id="penalty" size = "6" disabled ></td>
+										 <td><input type="text" class="form-control" name="tds[]" id="tds" value="<?php echo $memo['tds']; ?>" size="5" disabled></td>
+										 <td><input type="text" class="form-control" name="payable[]" id="payable" value="<?php echo $memo['received_amount']; ?>" size="8"></td>
+										 <td><input type="text" class="form-control" name="due_amount[]" id="due_amount" value="<?php echo $memo['due_amount'];?>" size="5" readonly></td>
+										 <td ><input type="checkbox" class="form-control" id="payment_check" name="payment_check[]" value="1" checked></td>
+									   </tr>
+									 <?php endforeach;  ?>
+								   </tbody>
+								 </table>
+					        </div>
+					    </div>	
+					     <div class="space-12"></div>
+					    <div class="row">
+							<div class="col-lg-3"> &nbsp; 
+							</div>	
+							<div class="col-lg-3">
+								<div class="form-group">
+								  <label for="amount" class="control-label">Total TDS Amount</label>								   
+								  <input type="text" class="form-control" id="total_tds" name="total_tds" value="<?php echo $receiptRow['total_tds']; ?>" readonly>	
+								</div>	
+							</div>	
+                            <div class="col-lg-3">
+								<div class="form-group">
+								  <label for="amount" class="control-label">Total Penalty</label>								   
+								  <input type="text" class="form-control" id="total_penalty" name="total_penalty" value="<?php echo $receiptRow['penalty']; ?>" readonly>	
+								</div>	
+							</div>							
+							<div class="col-lg-3">
+								<div class="form-group">
+								  <label for="amount" class="control-label">Total Payable Amount</label>								   
+								  <input type="text" class="form-control" id="total_payable" name="total_payable" value="<?php echo $receiptRow['amount']; ?>" readonly>	
+								</div>	
+							</div>
+						</div>
+					    <div class="row">
+							<div class="col-lg-12">
+								<div class="form-group">
+									<label for="remarks">Note (Narration)</label>
+									<textarea class="form-control" name="note" id="note" ><?php echo $receiptRow['note'];?></textarea>  
+								</div>
+							</div>
+						</div>					   
+					    <div class="space-12"></div>
+						<div class="row"> 	
+							<div class="col-lg-9"> 
+								<button type="submit" class="btn btn-success"><i class="fa fa-check"></i> Save </button>
+								<button type="button" class="btn btn-warning" onclick="window.location.href='<?php echo $this->url('sales', array('action'=>receipt));?>'" ><i class="fa fa-times"></i> Cancel </button> 					
+							</div>
+						</div>	
+						 <div class="space-12"></div>
+			  		<div class="row"> 	
+			  		<div class="col-lg-9"> 
+    				<div class="alert alert-info fade in">  
+    				     * <b>Credit Payment Penalty Policy</b>
+    				     <ol>
+    				       <li>X = 24% of Sales Amount</li>
+						   <li>Penalty Amount = (X Divided by 360) and Multiplied  By Ageing Days [( X / 360 ) * Ageing] </li>    				      
+    				     </ol>
+    				 </div>
+    				 </div>				
+					</div>	
+			       </form>			       									
+				</div> 
+				
+			</div>
+		</div>
+	</div>
+</div>
+  <?php } ?>
+<script type="text/javascript">
+  $(function() {	  
+	 $('#receipt_date').datepicker();
+	 $('form select').chosen({ allow_single_deselect: true });		
+	 $("#bankreftype").change(function() { 
+		var subHeadType;					
+		if( parseInt($("#bankreftype").val()) == 4  ){	subHeadType = 6 +"-"+ $("#location").val(); }else{ subHeadType = 3+"-"+ $("#location").val(); }	
+		$("#sub_head").load('<?php echo $this->url("sales", array("action" => "getsubheadbytype")); ?>/'+ subHeadType, function() {
+			$("#sub_head").trigger("chosen:updated");
+			$('form').formValidation('revalidateField','head');
+		});
+	 }); 		
+		var tr_id = 0;
+		var total_invoice = 0;		
+		var payable = 0;
+		var due_amount = 0;	
+		var parentObj = $('#trdetails_table');	
+		parentObj.wrap("<div style='overflow-x:scroll;margin-bottom:5px;'> </div>");
+		parentObj.find("tbody tr").each(function(){
+			$(this).attr('id',++tr_id);				
+			$(this).find(':input').each(function(){
+	            var old_id = $(this).attr('id');			
+	            var new_id=(old_id.lastIndexOf('-') > 0)? old_id.substr(0, old_id.lastIndexOf('-')): old_id;
+	            $(this).attr('id',new_id+'-'+tr_id);
+	            $(this).addClass('tr-'+new_id);
+	        });	
+			var id = $(this).attr('id');
+			$("#tds_applicable").click(function() {				   
+				if ($(this).prop('checked')==true){ 	
+				   $("#tds-"+id).removeAttr("disabled");
+                   $("#tds-"+id).focus();	   
+				}else{	
+                   $("#tds-"+id).attr("disabled", "disabled");			   
+                   $("#tds-"+id).val(0.00);	
+					if ($("#penalty_applicable").prop('checked')==true){
+					payable = parseFloat($("#invoice-"+id).val()) - parseFloat($("#tds-"+id).val());}else
+					{payable = parseFloat($("#invoice-"+id).val()) + parseFloat($("#tds-"+id).val());}
+					   $("#payable-"+id).val(parseFloat(payable).toFixed(2));
+					   tdsSum(parentObj);				   
+					   payableSum(parentObj);			   
+					}
+			});
+			$("#penalty_applicable").click(function() {				   
+			if ($(this).prop('checked')==true){ 	
+			   $("#penalty-"+id).removeAttr("disabled");
+			   $("#penalty-"+id).focus();	   
+			}else{	
+			   $("#penalty-"+id).attr("disabled", "disabled");			   
+			   $("#penalty-"+id).val(0.00);	
+				if ($("#penalty_applicable").prop('checked')==true){
+				payable = parseFloat($("#invoice-"+id).val()) + parseFloat($("#penalty-"+id).val());}else
+				{payable = parseFloat($("#invoice-"+id).val());}
+				   $("#payable-"+id).val(parseFloat(payable).toFixed(2));
+				   penaltySum(parentObj);				   
+				   payableSum(parentObj);			   
+				}
+			});	
+			$("#tds-"+id).change(function() {				
+			    if ($("#penalty_applicable").prop('checked')==true){
+				 payable = parseFloat($("#payable-"+id).val()) - parseFloat($(this).val());					
+				}else{
+					payable = parseFloat($("#payable-"+id).val()) - parseFloat($(this).val());	
+				}
+				tds = parseFloat($(this).val()); 
+				$("#tds").val(parseFloat(tds).toFixed(2));
+				$("#payable-"+id).val(parseFloat(payable).toFixed(2)); 
+				payableSum(parentObj);	
+				tdsSum(parentObj);	
+		    });	
+			$("#penalty-"+id).change(function() {				
+			    if ($("#penalty_applicable").prop('checked')==true){
+		            payable = parseFloat($("#payable-"+id).val()) + parseFloat($(this).val());					
+				}else{
+					payable = parseFloat($("#payable-"+id).val()) - parseFloat($(this).val());	
+				}
+				penalty = parseFloat($(this).val()); 
+				$("#penalty").val(parseFloat(penalty).toFixed(2));
+				$("#payable-"+id).val(parseFloat(payable).toFixed(2)); 
+				payableSum(parentObj);	
+				penaltySum(parentObj);	
+		    });	
+            $("#payable-"+id).change(function() {	
+			if ($("#penalty_applicable").prop('checked')==true || $("#tds_applicable").prop('checked')==true){
+
+                                		            due_amount = parseFloat($("#invoice-"+id).val()) + parseFloat($("#penalty-"+id).val()) - parseFloat($("#tds-"+id).val()) + parseFloat($(this).val());
+
+				}else{
+					due_amount = parseFloat($("#invoice-"+id).val()) - parseFloat($(this).val());
+				}
+				if(due_amount > 0 ) { $("#due_amount-"+id).val(parseFloat(due_amount).toFixed(2)); }else{  $("#due_amount-"+id).val('0.00'); }
+				payableSum(parentObj);
+		    });
+			$("#payment_check-"+id).change(function() {				
+		        payableSum(parentObj);
+		        penaltySum(parentObj);
+		        tdsSum(parentObj);
+		    });
+		});		
+        function payableSum(obj){
+			var total_payable = 0;
+			obj.find('tbody tr').each(function(){
+				var id = $(this).attr("id");
+				if ($("#payment_check-"+id).prop('checked')==true){
+					total_payable += parseFloat($("#payable-"+id).val()); 
+				}				
+			});
+			$("#total_payable").val(parseFloat(total_payable).toFixed(2));
+			$("#payable").val();
+		}			
+		function penaltySum(obj){
+			var total_penalty = 0;
+			obj.find('tbody tr').each(function(){
+				var id = $(this).attr("id");
+				if($("#penalty_applicable").prop('checked')==true){
+					if ($("#payment_check-"+id).prop('checked')==true){
+						total_penalty += parseFloat($("#penalty-"+id).val()); 
+					}		
+				}					
+			});
+			$("#total_penalty").val(parseFloat(total_penalty).toFixed(2));
+		}	
+		function tdsSum(obj){
+			var total_tds = 0;
+			obj.find('tbody tr').each(function(){
+				var id = $(this).attr("id");
+				if($("#penalty_applicable").prop('checked')==true){
+					if ($("#payment_check-"+id).prop('checked')==true){
+						total_tds += parseFloat($("#tds-"+id).val()); 
+					}		
+				}
+                else
+				{
+					
+					total_tds += parseFloat($("#tds-"+id).val()); 
+				}				
+			});
+			$("#total_tds").val(parseFloat(total_tds).toFixed(2));
+		}	
+	});			
+</script>

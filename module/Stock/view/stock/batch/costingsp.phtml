@@ -1,0 +1,391 @@
+<?php
+/**
+ * View -- of Stock/BatchController/costingspAction
+ */
+	$this->headTitle($this->title);
+?>
+<?php 
+	foreach($batch as $batch_rows):
+	   // echo"<pre>"; print_r($batch_rows);
+	    extract($batch_rows);
+		$batch_id = $id;
+		$item_id = $item;
+		$estLandedCost = $landed_cost;
+		$source_location = $location;
+    endforeach;	
+?>
+<style>
+	.mytable tr th,.mytable tr td {
+		padding:5px;
+	}
+</style>
+<div class="row">
+	<div class="col-lg-12">
+		<div class="widget widget-box">
+			<div class="widget-header">
+				<h5 class="widget-title lighter smaller">
+					# Batch Details:<strong>&nbsp;&nbsp;<?php echo $batch; ?> | <?php echo $item_code; ?></strong>&nbsp; <?php echo $this->status($status); ?>
+				</h5>
+				<div class="widget-toolbar hidden-xs">
+					<a style='cursor:pointer' id="print">
+						<i class="ace-icon fa fa-file-pdf-o red"></i>
+					</a>
+				</div>	
+			</div>
+			<form method="post" action="<?php echo $this->url('batch', array('action' => 'costingsp')); ?>"  enctype="multipart/form-data" >    
+			<div class="widget-body">
+				<div class="widget-main padding-12">
+					<div id="report-print">
+						<div class="row" id="convert-tb0">
+							<div class="col-lg-8" id="convert-tb1">
+								<ul class="list-unstyled spaced">
+									<li>
+										<i class="ace-icon fa fa-caret-right blue"></i>
+										Batch No. | Batch Date: <b class="red"> <?php echo $batch; ?> | <?php echo $batch_date;?></b>
+									</li>
+									<li>
+									    <i class="ace-icon fa fa-caret-right blue"></i>
+										Item | Barcode : <b class="red"><?php echo $item_code;?> | <?php echo $barcode; ?></b>
+									</li>
+									<li>
+										<i class="ace-icon fa fa-caret-right blue"></i>
+										Source Location : <b class="red"><?php echo $this->locationObj->getColumn($source_location,'location');?></b>
+									</li>
+								</ul>
+							</div>
+							<div class="col-lg-4" id="convert-tb2">
+								<ul class="list-unstyled spaced">
+									<li>
+										<i class="ace-icon fa fa-caret-right blue"></i>
+										UOM | Quantity : <b class="red"><?php echo $uom_code;?> | <?php echo $quantity; ?></b>
+									</li>
+									<li>
+										<i class="ace-icon fa fa-caret-right blue"></i>
+										Landed Cost: <b class="red"><?php echo number_format($landed_cost, 3, '.', ',')?></b>
+									</li>
+									<?php
+							  $costingItemID = $this->costItemObj->getMax('id',array('batch'=>$batch_id));
+							  if($costingItemID > 0){
+								  foreach($this->costItemObj->get($costingItemID) as $row);
+										$costing_sheetID = $row['costing_sheet'];
+										$sinvDtlID = $row['po_sinv_dtl'];								 
+								  foreach($this->costSheetObj->get($costing_sheetID) as $row1);
+								  if($row1['po_invoice'] == "2"){
+									  $sinv_no = $row1['po_invoice_no'];
+									  $mrp = $this->sinvdtlObj->getColumn( $sinvDtlID, 'mrp');
+									  ?>
+									     	<li>
+										<i class="ace-icon fa fa-caret-right blue"></i>
+										MRP : <b class="red"><?php echo $this->currency($mrp); ?></b>
+									</li>
+									  <?php
+								  }
+							  }
+							  
+							?>
+								</ul>
+							</div>
+						</div>
+							<?php 
+									$itemDtls = $this->itemObj->get($item_id);
+									foreach ($itemDtls as $itemdtl):
+									   $st_uom_code = $itemdtl['st_uom_code'];
+										$item_name = $itemdtl['code'];
+										$location_costing = $itemdtl['transportation_charge'];
+										$item_activity = $itemdtl['activity'];
+										$netWeight = $itemdtl['net_weight'];
+										$scalarUnit = $itemdtl['scalar_uom'];
+										$basic_uom = $itemdtl['uom'];
+									endforeach;
+									
+									$costItemDtls =  $this->costItemObj->get(array('batch'=>$batch_id));
+									foreach ($costItemDtls as $itemDtl):
+										$sinv_dtl = $itemDtl['po_sinv_dtl'];
+										$sheet_id = $itemDtl['costing_sheet'];											
+									endforeach;	
+									
+									$netWeight_MT_CASE = '1';
+									$units = array('13001','15001','16001');
+									if(!in_array($basic_uom, $units)){
+										if($scalarUnit > 0 ){
+											$scalar_convesion_value = $this->scalarConversionObj->getColumn(array('from_uom'=> $scalarUnit, 'to_uom'=>'59001'),'conversion');
+											if(is_numeric($scalar_convesion_value)){
+												$netWeight_MT_PEC = $netWeight / $scalar_convesion_value;
+												$netWeight_MT_CASE = $netWeight_MT_PEC * $unit_uom; 
+											}else{?>
+												<div class="alert alert-warning fade in"> 
+													* Scalar Conversion is not inserted.
+												</div>
+										<?php }
+										}
+										else{
+											 ?>
+											 <div class="alert alert-success fade in"> 
+												 * Scalar Unit is missing for <?php echo $item_name;  ?>. Check the Item Master details.
+											 </div>
+											 <?php     										
+											}
+										
+									}								
+								   $UoM = $this->uomObj->getColumn($uom, 'code');								
+								?>					
+							<?php 
+							   if($location_costing == "1"):
+								  ?> <div class="alert alert-warning fade in">*NB : Transportation charge included for this Item</div><?php
+							   else:
+								  ?> <div class="alert alert-warning fade in">*NB : Transportation charge excluded for this Item</div><?php
+							   endif; 
+							?>							
+						 <div class="space-12"></div>
+						 <div class="row">
+							<div class="col-lg-12">
+								<span style="font-size:11px;"> <i>* UOM = <?php echo $unit_uom." ".$UoM; ?>  &nbsp;[ &nbsp;Weight: <?php echo $netWeight_MT_CASE; ?>&nbsp;MT&nbsp;]</i></span>
+								<input type="hidden" name="batch" value="<?php echo $batch_id; ?>" >
+								<table class="table" style="border-top:2px solid #ddd;">
+									<thead>
+										<tr>
+											<th>#</th>
+											<th>Location</th>
+                                            <?php $standard_UOMs = $this->itemUomObj->get(array('item'=>$item_id, 'costing_uom'=>'1'));
+											  foreach($standard_UOMs as $suomRow):
+											     $standard_UOM = $suomRow['uom_code'];
+											  endforeach;
+										    ?>													
+                                        <?php if($location_costing == "1"): ?>											
+											 <th>TPT/<?php echo $standard_UOM; ?></th>
+											 <th>Labour/<?php echo $standard_UOM; ?></th>
+										<?php endif; ?>	
+                                             <th>ELC/<?php echo $standard_UOM; ?></th>										
+                                             <th>Margin%</th>	
+										     <th>Margin/<?php echo $standard_UOM; ?></th>	
+											 <th>SP/<?php echo $standard_UOM; ?></th>																															
+											 <th>SP/<?php echo $st_uom_code; ?></th>
+											<?php
+											  $itemUoms = $this->itemUomObj->get(array('item'=>$item_id));
+											  foreach($itemUoms as $uomRow):
+                                                if($uomRow['costing_uom']!= '1'):											  
+												   ?><th>SP/<?php echo $uomRow['uom_code']; ?></th><?php
+												endif; 
+											  endforeach; 
+											?>
+										</tr>
+									</thead>
+									<tbody>
+									<?php
+									if($location_costing == "1"){	
+									  foreach ($this->locationFormula as $loc_formula):
+									      //   echo"<pre>"; print_r($loc_formula);
+										/* calculation */
+										$string = $loc_formula['formula'];
+										$needle1 = "[";
+										$needle2 = "]";
+										$lastPos = 0;
+										$Pos = 0;
+										$start_pos = array();
+										$end_pos = array();
+									
+										while (($lastPos = strpos($string, $needle1, $lastPos))!== false) {
+											$start_pos[] = $lastPos;
+											$lastPos = $lastPos + strlen($needle1);
+										}
+											
+										while (($Pos = strpos($string, $needle2, $Pos))!== false) {
+											$end_pos[] = $Pos;
+											$Pos = $Pos + strlen($needle2);
+										}
+											
+										$variables = array();
+										for($i = 0; $i < sizeof($start_pos); $i++){
+											$len = $end_pos[$i] - $start_pos[$i];
+											$var = substr($string, $start_pos[$i] + 1, $len - 1);
+											if(strlen($var) > 0) { array_push($variables, $var ); }
+											$operPos = $start_pos[$i] + $len + 1 ;
+											$operator = substr($string, $operPos, 1);
+											if(strlen($operator) > 0 ) { array_push($variables, $operator); }
+										}
+									   endforeach; // end of formula
+									  }
+									 $i=1;
+									 // $result = $this->locationObj->get(array('sales' =>'1'));  
+									 $result = $this->locationObj->getAll();                              	
+									  foreach($result as $location):
+										 $t_labour_charge = 0;
+										 $Total_TPT = 0;									 
+										  ?>
+										 <tr>
+										 <td><?php echo $i++; ?> </td>
+										<td> 
+										<input type="hidden" name="location[]" value="<?php echo $location['id']?>">
+										<?php 
+										if($location['id'] == $source_location){
+											echo "<b>".$location['location']."</b>";
+										}else{
+											echo $location['location'];
+										}
+										  $active_trip_id = $this->tripObj->getColumn(array('status'=>1),'id');
+										  $tripDtls = $this->tripdtlsObj->get(array('trip'=>$active_trip_id,'source_location'=>$source_location, 'destination_location'=>$location['id']));
+										  if(sizeof($tripDtls) < 1){
+										    $tripDtls = $this->tripdtlsObj->get(array('trip'=>$active_trip_id,'source_location'=>$location['id'], 'destination_location'=>$source_location));
+										  }									
+										  if(sizeof($tripDtls) < 1 && $location_costing == '1'){
+											?> <span style="color:red">*</span><?php
+										  }
+										  ?>&nbsp;&nbsp;
+										  <span class="label label-info"> 
+											<?php echo $location['location_type']; ?> 
+										  </span>
+										</td>	                                      									
+										<?php 
+												   // Landed cost calculation with location costing	
+												   $formula = "";											  
+												   if($location_costing == "1"):
+													  if(sizeof($tripDtls) > 0)
+													  {
+														 $formula = "";
+														 foreach($variables as $var):
+														   $stored_operators = array("/","*","-","+", "(", ")");
+														   //Check whether the variable is operator or not
+														   if( in_array($var, $stored_operators)){
+																$formula =  $formula.$var;
+														   }
+														   else
+														   {
+															$table = substr($var, 0, 1); // get the table name to fetch data	
+															$chargeValue = "0";
+
+															switch($table)
+															{
+																case "B": // Landed cost per case or MT
+																		$formula = $formula.$estLandedCost;
+																		break;
+																case "T": // Transportation Cost
+																        $charge = 0; 
+																	$TTL = 0;  
+																	if(sizeof($tripDtls) > 0){																		
+																		 foreach($tripDtls as $dtl); 
+																		 $charge = (($dtl['plain_distance'] * $dtl['plain_rate']) + ($dtl['hill_distance'] * $dtl['hill_rate'])) * $netWeight_MT_CASE;	
+																		   $TTL = $dtl['hop'];
+																	}																														
+																	$Total_TPT = $charge;
+																	$formula = $formula.$charge;  
+																	break;
+															case "C": // get values from Charge
+																	 $field = substr($var, 2);																	
+																	/* if(sizeof($tripDtls) > 0 ):
+																		foreach ($ctripDtls as $ctrip):
+																		  $from_location = $ctrip['from_location'];
+																		endforeach;		 */																
+																		$chargeDtls = $this->chargeObj->get(array('charge_tax'=>$field));
+																		foreach ($chargeDtls as $charge):
+																		  if($charge['percentage'] == "1"){
+																		      $chargeValue = $chargeValue + $charge['value']/100;
+																		  }
+																		  else {
+																		      $chargeValue = $chargeValue + $charge['value'];
+																		  }
+																		  $totalLCharge = $chargeValue * ($TTL + 1);
+																		  $t_labour_charge = $t_labour_charge + $totalLCharge;
+																		endforeach;
+																		$formula = $formula . $totalLCharge;
+																	 //  endif;															   	 
+																	break;
+																}
+															}															
+												  endforeach; // end of location
+												  //echo "[".$formula."]";
+												  $c_estLandedCost = eval('return '.$formula.";");
+												  }
+												  else {
+													$c_estLandedCost = $estLandedCost;
+												  }
+												  ?>
+												   <td><?php echo $Total_TPT ; ?> </td>
+												   <td> <?php echo $t_labour_charge; ?></td> 
+												  <?php
+										   else:
+											   $c_estLandedCost = $estLandedCost; 
+										   endif;
+										?>		
+										<td><?php $total_elc = $landed_cost + $Total_TPT + $t_labour_charge;  
+										        echo number_format($total_elc, 3,'.',','); ?>
+												  <input type="hidden" name="landed_cost[]" value="<?php echo round($total_elc,3); ?>" />
+												  </td>                                     									
+										  <td> 
+										  <?php $checkMargin = 0; 
+											$marginPercent = $this->marginObj->getColumn(array('item'=>$item_id, 'location_type'=>$location['location_type']),"margin");
+											if(!is_numeric($marginPercent)){
+												$checkMargin++; 
+												echo $marginPercent = 0;
+											}else{												
+												echo $marginPercent; 
+											}
+										  ?>
+										   <input type="hidden" name="margin[]" value="<?php echo  $marginPercent;  ?>" />
+										</td>	
+										<td>
+										  <?php 
+										        $margin_value = $total_elc * ($marginPercent/100); 
+										        echo number_format($margin_value, 3, '.', ','); ?>
+										   
+										</td>	
+											<td>
+											<?php $sp_st_uom = $c_estLandedCost+$margin_value; 
+											      echo number_format($sp_st_uom, 2, '.', ','); ?>
+											</td>
+											<td>
+											  <?php 
+												$sp_basic_uom = $sp_st_uom /$unit_uom;
+												echo number_format($sp_basic_uom, 2, '.', ',');											
+											  ?>
+											   <input type="hidden" name="selling_price[]" value="<?php echo round($sp_basic_uom,2);?>" />
+											</td>										
+											
+											<?php
+											  $itemUoms = $this->itemUomObj->get(array('item'=>$item_id));
+											  foreach($itemUoms as $uomRow):
+											      if($uomRow['costing_uom'] != "1"):
+											      ?> 
+												    <td><?php echo number_format($sp_basic_uom * $uomRow['conversion'], 2,'.',','); ?>
+													</td>
+												  <?php
+												  endif; 
+											  endforeach;
+											?>
+											</tr>
+										<?php 
+									 endforeach;
+										?>                                  
+									</tbody> 
+								</table>	
+							</div>
+						</div>
+					</div>
+					<div class="row">
+						<input type="hidden" name="source_location" value="<?php echo $source_location; ?>" />				  
+						<div class="col-lg-4">
+						    <?php if($checkMargin > 0): ?>
+  						       <div class="alert alert-success fade in"> 
+							 *Some Margins might be missing for <?php echo $item_name;  ?>. Check the Item Master details.
+						       </div>
+						    <?php endif; ?>
+							<span style="color:red;"><i>* Trip details not found in trip master table</i> </span> 
+						</div>
+						<div class="col-lg-8" style="text-align: right; padding:10px;">
+							<button type="submit" class="btn btn-success" onclick="return confirm('Are you sure you want to proceed?')"><i class="fa fa-check"></i> Save Selling Price </button>
+							<a href="<?php echo $this->url('batch');?>" class="btn btn-danger"> <i class="fa fa-times"></i> Cancel </a>
+						</div>
+					</div>
+				</div>
+			</div>
+			</form>
+		</div>
+	</div>
+</div>
+<script type="text/javascript">
+	$('#print').genpdfinvoice({
+		content: '#report-print',
+		src:"<?php echo $this->url('pdfxls', array('action' => 'pdf'));?>",
+		orentation:"P",//L =landscape, P = potrait
+	});
+</script>
+

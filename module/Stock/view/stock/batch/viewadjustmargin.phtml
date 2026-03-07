@@ -1,0 +1,241 @@
+<?php
+/**
+ * View -- of Stock/BatchController/viewbatchAction
+ */
+$this->headTitle($this->title);
+foreach($results as $row):
+		   $id = $row['id'];
+		   $adjust_date = $row['adjust_date'];
+		   $sp_effect_date = $row['sp_effect_date'];
+	   $itemID = $row['item'];
+	   $batchID=$row['batch'];
+	   $item = $this->itemObj->getColumn($row['item'],'code');
+	   $batch = $this->batchObj->getColumn($row['batch'],'batch');
+	   $status = $row['status'];
+endforeach;
+
+?>
+<style>
+	.mytable tr th,.mytable tr td {
+		padding:5px;
+	}
+</style>
+<div class="row">
+	<div class="col-lg-12">
+		<div class="widget widget-box">
+			<div class="widget-header">
+				<h5 class="widget-title lighter smaller">
+					# Margin Adjustment Details:<strong>&nbsp;&nbsp;<?php echo $adjust_date; ?> | <?php echo $item; ?> | <?php echo $batch; ?></strong>&nbsp;
+				        <?php $this->status($status);?> 
+				</h5>				
+				<div class="widget-toolbar hidden-xs">
+					<a style='cursor:pointer' id="print">
+						<i class="ace-icon fa fa-file-pdf-o red"></i>
+					</a>
+				</div>
+			</div>
+			<div class="widget-body">
+			<div class="widget-main">
+				<div id="report-print">
+					<div class="row" id="convert-tb0">
+						<div class="col-lg-8" id="convert-tb1">
+							<ul class="list-unstyled spaced">
+							    <li>
+									<i class="ace-icon fa fa-caret-right blue"></i>
+									Margin Adjust Date : <b class="red"><?php echo $adjust_date;?></b>
+								</li>
+								<li>
+									<i class="ace-icon fa fa-caret-right blue"></i>
+									 Item Name: <b class="red"><?php echo $item; ?> </b>
+								</li>	
+							</ul>
+						</div>
+						<div class="col-lg-4" id="convert-tb2">
+						<ul class="list-unstyled spaced">
+								<li>
+									<i class="ace-icon fa fa-caret-right blue"></i>
+									Batch No. : <b class="red"><?php echo $batch; ?></b>
+								</li>
+								<li>
+									<i class="ace-icon fa fa-caret-right blue"></i>
+									SP Effect  Date : <b class="red"><?php echo $sp_effect_date;?></b>
+								</li>
+							</ul>
+						</div>
+					</div>
+			<div class="space-12"></div>
+			  <?php $standard_UOMs = $this->itemUomObj->get(array('item'=>$itemID, 'costing_uom'=>'1'));
+				 foreach($standard_UOMs as $suomRow):
+					 $standard_UOM = $suomRow['uom_code'];
+					 $conversion = $suomRow['conversion'];
+				 endforeach;
+			?>			
+			<div class="row">
+			  <form id="#form" method="post" action="<?php echo $this->url('batch', array('action' => 'viewadjustmargin', 'id' =>$id)); ?>"  enctype="multipart/form-data" >    
+			    <div class="col-lg-4"> 
+			     <h4>Batch Details</h4>
+				   <?php
+				      foreach($this->batchObj->get($batchID) as $batchdtl);
+				   ?>
+			       <table class="table table-bordered table-striped table-hover">
+				   <thead>
+				    <tr>  
+					 <th>Elements</th>
+					 <th>Details</th>					
+				    </tr>
+				    </thead>
+				    <tbody>
+				     <tr><td>Batch Date</td><td><?php echo $this->dateformat($batchdtl['batch_date']); ?></td></tr> 
+					 <tr><td>Source Location</td><td>
+					 <?php $location = $this->batchObj->getColumn($batchID,'location');
+					  echo $this->locationObj->getColumn($location,'location'); ?> </td></tr> 
+				     <tr><td>Source Location ELC</td><td><?php echo $this->currency($batchdtl['landed_cost']); ?></td></tr> 					 
+				     <tr><td>Standard Costing UOM</td><td><?php  echo $standard_UOM; ?></td></tr>
+				   </tbody>
+				</table>
+			    </div>		   
+				 <div class="col-lg-6" >
+				  <h4>Margin Details</h4>
+			      <table class="table table-bordered table-striped table-hover">
+				  <thead>
+				    <tr>   
+					 <th>#</th>
+					 <th>Location type</th>
+					 <th>Present Margin(%)</th>
+					 <th>New Margin(%)</th>
+				    </tr>
+				    </thead>
+				     <tbody>
+				      <?php  $sl =1;
+                       foreach($marginDtls as $margindtl): ?>
+				         <tr>
+					   <td><?php echo $sl++; ?> </td>
+					   <td>
+					      <?php echo $this->locationTypeObj->getColumn($margindtl['location_type'],'location_type'); ?>
+					   </td>
+					   <td> <?php echo $margindtl['old_margin']; ?></td>
+				           <td> <?php echo $margindtl['new_margin']; ?></td>
+					 </tr>
+				       <?php
+				       endforeach; 
+				       ?>				    
+				   </tbody>
+				</table>
+			    </div>
+				 <div class="col-lg-2" >
+				   <!-- Upload and Download file attachments -->		
+				    <?php   
+			        echo $this->partial('partial/attachment.phtml', array('process' => '20', 'process_id'=> $id , 'status' => $status));
+			        ?>
+				   <!-- End of attachment -->
+				 </div>
+			  </div>
+			 <div class="row">
+			    <div class="col-lg-12">
+			           <div class="alert alert-info fade in">  
+				      <i class="ace-icon"> </i>&nbsp;&nbsp;<b>Selling prices at different locations.</b>
+				   </div>
+				 <?php
+			         $unit_uom = $this->CostingItemsObj->getColumn(array('batch'=>$batchID, 'item'=>$itemID), 'unit_uom');
+				     $batchUom = $this->batchObj->getColumn($batchID,'uom');
+                     $uom_code = $this->uomObj->getColumn($batchUom,'code');
+			         $batchDtls = $this->batchDtlsObj->get(array('batch'=>$batchID)); 
+		          if(sizeof($batchDtls)>0):  ?>
+                    <table class="table table-bordered table-striped table-hover">
+				    <thead>
+				    <tr>   
+  					 <th>#</th>
+					 <th>Location</th>		
+					 <th>New Margin%</th>
+					 <th>ELC/<?php echo  $standard_UOM;  ?></th>
+					 <th>New SP/<?php echo  $standard_UOM;  ?></th>					
+					 <th>New SP/<?php echo $uom_code;?></th>
+					 <?php if($status != "3"): ?> <th>Old SP/<?php echo $uom_code;?></th> <?php endif; ?>
+				    </tr>
+				    </thead>
+				     <tbody>
+				      <?php $sl = 1;
+					  foreach($this->marginBatchObj->get(array('margin_adjust'=>$id)) as $dtl): 					
+					  if($status != "3"):  ?>				
+					      <tr>
+					        <td><?php echo $sl++; ?> 
+						      <input type="hidden" value="<?php echo $dtl['batch_detail'];?>" name="batchdtlID[]"> </td>
+							  <input type="hidden" value="<?php echo $dtl['location'];?>" name="locationID[]">
+					        <td>
+						 <?php  
+						    $locationDtls = $this->locationObj->get($dtl['location']); 
+						    foreach($locationDtls as $locdtl):
+						          echo $locdtl['location'];  
+							  ?>    &nbsp;&nbsp;&nbsp;&nbsp;
+							   <span class="label label-info"> 
+								<?php  echo $locdtl['location_type'];	?>						    
+							   </span>
+							  <?php
+						    endforeach;
+						    ?></td>						
+							  <td><?php echo $dtl['margin'];?>  
+							  <td><?php echo $dtl['landed_cost']; ?> </td>
+							  <td><?php echo $dtl['selling_price'] * $conversion; ?></td>
+							   <td><?php echo $dtl['selling_price']; ?> </td>
+							  <input type="hidden" value="<?php echo $dtl['margin']; ?>" name="margin[]">
+							   <input type="hidden" value="<?php echo $dtl['selling_price']; ?>" name="selling_price[]">							 
+							  <td><?php echo $this->batchDtlsObj->getColumn($dtl['batch_detail'],'selling_price');  ?></td>							   		
+				          </tr>	    			          
+				   <?php elseif($status == 3): ?>
+                          <tr>
+					        <td><?php echo $sl++; ?>        <td>
+						 <?php  
+						    $locationDtls = $this->locationObj->get($dtl['location']); 
+						    foreach($locationDtls as $locdtl):
+						          echo $locdtl['location'];  
+							  ?>    &nbsp;&nbsp;&nbsp;&nbsp;
+							   <span class="label label-info"> <?php  echo $locdtl['location_type']; ?>   </span>
+							  <?php
+						    endforeach;
+						    ?></td>
+						  <td><?php echo $dtl['margin'];?>  
+							  <td><?php echo $dtl['landed_cost']; ?></td>
+							  <td><?php echo $dtl['selling_price'] * $conversion;  ?></td>
+							   <td><?php echo $dtl['selling_price']; ?></td>
+							  <input type="hidden" value="<?php echo $dtl['margin']; ?>" name="margin[]">
+							   <input type="hidden" value="<?php echo $dtl['selling_price']; ?>" name="selling_price[]">	
+				          </tr>	    			 
+				   <?php endif; ?>
+				     <?php endforeach;  ?>
+			             </tbody>
+				   </table>
+				    <?php
+				 else:
+				 ?>
+                   <div class="alert alert-info fade in">  
+				       Batch Details and selling price not found.
+				   </div>
+				 <?php
+				 endif; 
+			       ?>			       
+			     </div>
+			  </div>
+		     <div class="row">
+		          <div class="col-lg-12">
+			   <input type="hidden" name="batchID" value="<?php echo $batchID; ?>">
+			   <input type="hidden" value="<?php echo $itemID; ?>" name="itemID">
+			   <input type="hidden" value="<?php echo $id; ?>" name="marginID">
+			<?php if($status < 3): ?>
+              <button type="submit" class="btn btn-success" name="button" value="1" onClick="return confirm('Are you sure to commit the margin and selling prices')"><i class="fa fa-check"></i> Commit and dispatch new Selling Price </button>
+			  <button type="submit" class="btn btn-danger" name="button" value="2" onClick="return confirm('This will cancel the new margin and the selling price.')"><i class="fa fa-times"></i> Delete Margin Adjustment</button>
+			<?php endif; ?>  
+			 </div>
+		     </div>
+		  </div>
+	       </div>
+          </div>
+       </div>
+    </div>
+</div>
+<script type="text/javascript">
+	$('#print').genpdfinvoice({
+		content: '#report-print',
+		src:"<?php echo $this->url('pdfxls', array('action' => 'pdf'));?>",
+		orentation:"P",//L =landscape, P = potrait
+	});
+</script>

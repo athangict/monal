@@ -1,0 +1,50 @@
+<?php 
+/** 
+ * fleet/master/partial.phtml 
+**/
+	$fuel = ($this->active == "fuel")?"active":"";
+	$vehicleclass = ($this->active == "vehicleclass")?"active":"";
+	$make = ($this->active == "make")?"active":"";
+	$vehiclegroup = ($this->active == "vehiclegroup")?"active":"";
+	$vehiclepart = ($this->active == "vehiclepart")?"active":"";
+	$requisitionitem = ($this->active == "requisitionitem")?"active":"";
+?>
+<br/>
+<ul class="nav nav-tabs padding-18 nav-fixed-top" id="myTab">
+	<!--li class="<?php //echo $fuel; ?>">
+		<a href="<?php //echo $this->url('ftmaster', array('action' => 'fuel')); ?>" title="Vehicle Fuel">
+			<i class="green ace-icon fa fa-plug bigger-120"></i>
+			<span class="hidden-xs">Vehicle Fuel</span>
+		</a>
+	</li>
+	<li class="<?php //echo $vehicleclass; ?>">
+		<a href="<?php //echo $this->url('ftmaster', array('action' => 'vehicleclass')); ?>" title="Vehicle Class">
+			<i class="green ace-icon fa fa-car bigger-120"></i>
+			<span class="hidden-xs">Vehicle Class</span>
+		</a>
+	</li>
+	<li class="<?php //echo $make; ?>">
+		<a href="<?php //echo $this->url('ftmaster', array('action' => 'make')); ?>" title="Vehicle Make">
+			<i class="green ace-icon fa fa-car bigger-120"></i>
+			<span class="hidden-xs">Vehicle Make</span>
+		</a>
+	</li-->
+	<li class="<?php echo $vehiclegroup; ?>">
+		<a href="<?php echo $this->url('ftmaster', array('action' => 'vehiclegroup')); ?>" title="Vehicle Group">
+			<i class="green ace-icon fa fa-bus bigger-120"></i>
+			<span class="hidden-xs">Vehicle Group</span>
+		</a>
+	</li>
+	<!--li class="<?php //echo $vehiclepart; ?>">
+		<a href="<?php //echo $this->url('ftmaster', array('action' => 'vehiclepart')); ?>" title="Vehicle Parts">
+			<i class="green ace-icon fa fa-bus bigger-120"></i>
+			<span class="hidden-xs">Vehicle Parts</span>
+		</a>
+	</li>
+	<li class="<?php //echo $requisitionitem; ?>">
+		<a href="<?php //echo $this->url('ftmaster', array('action' => 'requisitionitem')); ?>" title="Vehicle Parts">
+			<i class="green ace-icon fa fa-bus bigger-120"></i>
+			<span class="hidden-xs">Vehicle Requisition Item</span>
+		</a>
+	</li-->
+</ul>

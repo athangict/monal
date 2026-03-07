@@ -1,0 +1,78 @@
+<?php 
+/**
+ * View -- of Administration/AssetController/assetAction
+ * chophel@athang.com -- 2022
+ */
+	$this->headTitle($this->title);
+?>
+<?php echo $this->tabs_helper(array(3169,3186,3187,3180)); ?>
+<div class="card">
+    <div class="card-header">
+		<div class="row">
+			<div class="col-lg-12 ">
+				<div class="space"></div>
+				<div class="btn-group pull-right">
+					<?php echo $this->button(2);?>
+				</div>
+			</div>
+		</div> 
+	</div>
+	<div class="table-responsive">
+		<table class="table card-table table-vcenter text-nowrap datatable" id="dataTables">
+			<thead>
+				<tr>
+					<th>#</th>
+					<th>Application Date</th>
+					<th>Beneficiary</th>
+					<th>Category</th>
+					<th>Location</th>
+					<th>Subhead(COA)</th>
+					<th>Amount</th>
+					<th>status</th>
+					<th>Action</th>
+					
+				</tr>
+			</thead>
+			<tbody>
+			<?php $i=1; foreach ($benefit as $row):
+			
+				//echo '<pre>';print_r($paginator);exit;?>
+				<tr>
+					<td><?php  echo $i++; ?></td>								       
+					<td class="fw-bold"><?php echo $row['date'];?></td>
+					<td><?php echo $this->employeeObj->getColumn($row['employee'],'full_name');?></td>
+					<td><?php echo $this->categoryObj->getColumn($row['category'],'name');?></td>
+					<td><?php echo $this->locationObj->getColumn($row['location'],'location'); ?></td>
+					<td><?php echo $this->subheadObj->getColumn($row['subhead'],'name'); ?></td>
+					<td><?php echo $row['approved_amt'];?></td>
+					<td><?php $this->status($row['status'])?></td>
+					<td><a href="<?php echo $this->url('benefit', array('action'=>'viewbenefit','id'=>$row['process_id']));?>" class="btn btn-xs btn-primary"> <i class="fa fa-eye"></i></a></td>
+				</tr>
+			<?php  
+			endforeach;?>
+			</tbody>
+		</table>
+	</div>
+</div>
+<div class="modal fade" id="modal" tabindex="-1" role="dialog" aria-hidden="true">
+	<div class="modal-dialog modal-lg" role="document">
+		<div class="modal-content">
+		</div><!-- /.modal-content -->
+	</div><!-- /.modal-dialog -->
+</div><!-- /.modal -->
+<script>
+$('document').ready(function(){
+	$("tr[data-href]").each(function(){ 
+		if($(this).attr('data-href')!='#'){
+			$(this).css('cursor','pointer');
+			$(this).bind('click',function() {
+				window.document.location = $(this).attr("data-href");
+			});
+		}
+	});
+	$('#dataTables').DataTable({
+		"paging":   true,
+	});
+	
+});
+</script>

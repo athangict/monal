@@ -1,0 +1,114 @@
+<?php
+/**
+ * 
+ * View -- of POS/MuseumController/reportAction
+ * 
+ */
+	$this->headTitle($this->title);
+?>
+<div class="card">
+	<div class="card-header">
+		<div class="row">
+		<form method="post" action="<?php echo $this->url('museum',array('action'=>'report')); ?>"  enctype="multipart/form-data" >
+           <div class="form-group col-lg-3">	
+			<label class="control-label" for="start_date">Start Date</label>
+				<div class="date input-group" id="start_date" data-date="<?php echo $data['start_date'];?>" data-date-format="yyyy-mm-dd" >
+					<input class="form-control span2" name="start_date" id="start_date" type="text" placeholder="Start Date" value="<?php echo $data['start_date'];?>" onchange='this.form.submit()'  required>
+					<span class="input-group-addon add-on"><i class="fa fa-calendar"></i></span>
+				</div>
+			</div>
+			<div class="form-group col-lg-2">
+				<label class="control-label" for="end_date">End Date</label>
+				<div class="date input-group" id="end_date" data-date="<?php echo $data['end_date'];?>" data-date-format="yyyy-mm-dd" >
+					<input class="form-control span2" name="end_date" id="end_date" type="text" placeholder="End Date" value="<?php echo $data['end_date'];?>" onchange='this.form.submit()' required>
+					<span class="input-group-addon add-on"><i class="fa fa-calendar"></i></span>
+				</div>
+			</div>
+			<div class="form-group col-lg-3">
+				<label class="control-label" for="category">Category</label>
+				<select class="form-control" id="category" name="category" data-placeholder="Select" onchange='this.form.submit()'>
+					<option value="-1">All</option>
+					<?php 
+						foreach($this->categoryObj->getAll() as $category): 
+						$selected_act = ($category['id']==$data['category'])?'selected':'';?>
+						<option value="<?php echo $category['id'];?>" <?php echo $selected_act;?>>
+							<?php echo $category['category'];?>
+						</option>
+					<?php endforeach; ?>
+				</select>
+			</div>	
+		</form>
+		</div>
+		<div>
+			<table class="table table-bordered table-condensed table-striped table-hover" id="dataTables">
+				<thead>
+					<tr>
+					    <th>#</th>
+						<th>Date</th>
+						<th>Category</th>
+						<th>Fees</th>
+						<th>No. of Heads</th>
+						<th>Cash</th>
+						<th>Bank</th>
+					</tr>
+				</thead>
+				<tbody>					
+					<?php $i=1;$cash=0;$bank=0;$total=0;$total_heads=0;
+						foreach($paginator as $row):
+						//echo '<pre>';print_r($openingstocks);
+					?>
+						<tr>
+							<td><?php echo $i++;?></td>
+							<td><?php echo $row['date'];?></td>
+							<td><?php echo $this->categoryObj->getColumn($row['category'],'category')?></td>
+							<td><?php echo $row['fees']?></td>
+							<td><?php echo $row['heads'];?></td>
+							<?php if($row['payment_mode']==0):?>
+							<td><?php echo $row['total'];?></td>
+							<td><?php echo "0";?></td>
+							<?php elseif($row['payment_mode']==1):?>
+							<td><?php echo "0"?></td>
+							<td><?php echo $row['total'];?></td>
+							<?php endif;?>
+						</tr>
+					<?php if($row['payment_mode']==0):
+							$cash+=$row['total'];
+					else:
+						$bank+=$row['total'];
+					endif;
+						$total+=$row['total'];$total_heads+=$row['heads'];
+					endforeach;?>  
+					<tr>
+						<td></td>
+						<td></td>
+						<td></td>
+						<td><b>Total</b></td>
+						<td><b><?php echo $total_heads;?></b></td>
+						<td><b><?php echo $cash;?></b></td>
+						<td><b><?php echo $bank;?></b></td>
+					</tr>
+					<tr>
+						<td></td>
+						<td></td>
+						<td></td>
+						<td></td>
+						<td><b><?php echo $total;?></b></td>
+						<td></td>
+						<td></td>
+					</tr>
+					
+				</tbody>
+			</table>
+		</div>
+	</div>
+</div>
+<script type="text/javascript">
+$('document').ready(function(){
+	$('#start_date').datepicker();
+	$('#end_date').datepicker();
+	$('#dataTables').DataTable({
+		"paging":   true,
+	});
+});
+</script>
+

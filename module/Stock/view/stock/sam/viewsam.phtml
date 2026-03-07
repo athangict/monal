@@ -1,0 +1,146 @@
+<?php
+/**
+ * 
+ * View -- of Stock/StockController/viewgoodsrequest
+ * 
+ */
+?>
+<?php echo $this->partial('stock/sam/partial.phtml', array('active' => 'sam')); ?><br/>
+<?php 
+	foreach($sam as $samRow):
+		extract($samRow);
+		$sam_id = $id;
+		$sam_status = $status;
+	endforeach;
+	$location_code =  $this->locationObj->getColumn($location, 'location'); 
+?>
+<style>
+	.mytable tr th,.mytable tr td {
+		padding:5px;
+	}
+</style>
+<div class="row">
+	<div class="col-lg-12">
+		<div class="widget widget-box">
+			<div class="widget-header">
+				<h5 class="widget-title lighter smaller">
+					# Stock Adjustment Details:<strong>&nbsp;&nbsp;<?php echo $sam_no; ?> | <?php echo $location_code; ?></strong>&nbsp;
+					<?php echo $this->status($status);?>
+				</h5>
+				<div class="widget-toolbar hidden-xs">
+					<a style='cursor:pointer' id="print">
+						<i class="ace-icon fa fa-file-pdf-o red"></i>
+					</a>
+				</div>	
+			</div>
+			<div class="widget-body">
+				<div class="widget-main padding-12">
+					<div id="report-print">
+                            <h4 class="widget-title lighter smaller center">
+							<b>Stock Adjustment</b>
+						</h4>
+						<div class="row" id="convert-tb0">
+							<div class="col-lg-8" id="convert-tb1">
+								<ul class="list-unstyled spaced">
+									<li>
+										<i class="ace-icon fa fa-caret-right blue"></i>
+										<b> Stock Adjustment No  : </b><?php echo $sam_no; ?>
+									</li>
+									<li>
+										<i class="ace-icon fa fa-caret-right blue"></i>
+										<b> Location : </b><?php echo $location_code; ?>
+									</li>
+								</ul>
+							</div>
+							<div class="col-lg-4" id="convert-tb2">
+								<ul class="list-unstyled spaced">
+									<li>
+										<i class="ace-icon fa fa-caret-right blue"></i>
+										<b> Date : </b><?php echo $sam_date; ?>
+									</li>
+									<li>
+										<i class="ace-icon fa fa-caret-right blue"></i>
+										<b>Activity : </b><?php echo $this->activityObj->getColumn($activity, 'activity'); ?>
+									</li>
+								</ul>
+							</div>
+						</div>
+						<div class="space-12"></div>
+						<div class="row">
+							<div class="col-lg-12" >
+								<table class="table" style="border-top:2px solid #ddd;">
+									<thead>
+										<tr>
+											<th>#</th>
+											<th>Adjustment Type</th>
+											<th>Item Code</th>
+											<th>Batch</th>
+											<th>UOM</th>
+											<th>Adjustment Quantity</th>									
+											<th>Basic UOM</th>									
+											<th>Basic Quantity</th>									
+											<th>Remarks</th>
+										</tr>
+									</thead>
+									<tbody> 
+										<?php $sl=1;foreach($sam_details as $tdrow): ?>
+											<tr>
+												<td><?php echo $sl++;?></td>
+												<td><?php echo $tdrow['sam_type_code'];?></td>
+												<td><?php echo $tdrow['item'];?></td>
+												<?php $items = $this->itemsObj->get($tdrow['item_id']);
+												foreach($items as $item);
+												if($item['valuation'] == 0):?>
+												<td><?php echo $this->batchObj->getColumn($tdrow['batch'],'batch');?></td>
+												<?php else:?>
+												<td><?php echo "NILL";?></td>
+												<?php endif;?>
+												<td><?php echo $tdrow['uom_code'];?></td>
+												<td><?php echo $tdrow['quantity'];?></td>
+												<td><?php echo $this->itemuomObj->getColumn($tdrow['basic_uom'],'code');?></td>
+												<td><?php echo $tdrow['basic_quantity'];?></td>
+												<td><?php echo $tdrow['remark'];?></td>
+											</tr>
+										<?php endforeach;?>
+										<tr style="border-top:2px solid #ddd;border-bottom:2px solid #ddd;"></tr>
+									</tbody>
+								</table>
+							</div>
+						</div>
+					</div>
+					<div class="row">
+						<div class="col-lg-8">
+						  <i> *<b>Note:&nbsp; </b><?php echo $remark;  ?> </i>
+						</div>
+						<div class="col-lg-4" style="text-align: right">
+							<?php if($sam_status == '1' || $sam_status == '2'):?>
+								<a href="<?php echo $this->url('sam', array('action'=>'editsam', 'id'=>$sam_id));?>" class="btn btn-info"> <i class="fa fa-pencil"></i> Edit </a>
+								<a href="<?php echo $this->url('sam', array('action'=>'pendingsam', 'id'=>$sam_id));?>" class="btn btn-success" data-toggle="modal" data-target="#modal"> <i class="fa fa-check-square-o"></i> Commit </a>
+							<?php endif;?>
+						</div>
+					</div>
+				<!-- Upload and Download file attachments -->						
+				<?php   
+				   echo $this->partial('partial/attachment.phtml', array('process' => '15', 'process_id'=> $sam_id , 'status' => $sam_status));
+				?>					
+			    <!-- End of attachment -->
+				</div>
+			</div>
+		</div>
+	</div>
+	<!-- for modal -->
+	<div id="modal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+		<div class="modal-dialog">
+			<div class="modal-content">
+			</div>
+		</div>
+    </div>
+</div>
+<script type="text/javascript">
+$('document').ready(function(){
+	$('#dataTables').DataTable({
+		"paging":   true,
+	});
+});
+</script>
+

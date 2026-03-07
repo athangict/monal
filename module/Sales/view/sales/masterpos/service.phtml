@@ -1,0 +1,63 @@
+<?php
+/**
+ * 
+ * View -- of Sales/MasterpsController/serviceAction
+ * 
+ */
+$this->headTitle($this->title);
+?>
+<?php echo $this->partial('sales/masterpos/partial.phtml', array('active' => 'service')); ?>
+<div class="card">
+	<div class="card-header">
+		<div class="btn-group pull-right">
+			<?php echo $this->button(2);?>
+		</div>
+	</div>
+	<div class="table-responsive">
+		<table class="table table-striped table-bordered table-hover" id="dataTables">
+			<thead>
+				<tr>
+					<th>#</th>
+					<th>Sub services</th>
+					<th>Services</th>
+					<th>Sub Head</th>
+					<th>Status</th>
+					<?php if($this->button(1)!=""):?>
+						<th class="no-sort no-printpdf">Action</th>
+					<?php endif;?>
+				</tr>
+			</thead>
+			<tbody>
+				<?php
+					$i = 1; 
+					foreach ($service as $services):
+				?>
+					<tr>
+						<td><?php echo $i++; ?> </td>
+						<td><b><?php echo $services['service'];?></b></td>
+						<td><b><?php echo $this->scopeObj->getColumn(array('id'=>$services['scope']),'scope');?></b></td>
+						<td><b><?php echo  $this->subheadObj->getColumn(array('id'=>$services['sub_head']),'name');?></b></td>
+						<td><b><?php $this->status($services['status'])?></b></td>
+						<?php if($this->button(1)!=""):?>
+						<td><?php echo $this->button(1, $services['id']);?></td>
+						<?php endif;?>
+					</tr>
+				<?php endforeach;?>
+			</tbody>
+		</table>
+	</div>
+</div>
+<!-- for modal -->
+<div id="modal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+	<div class="modal-dialog">
+		<div class="modal-content">
+		</div>
+	</div>
+</div>
+<script type="text/javascript">
+$('document').ready(function(){
+	$('#dataTables').DataTable({
+		"paging":   true,
+	});
+});
+</script>

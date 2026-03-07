@@ -1,0 +1,427 @@
+<style>
+  .highlighted-row {
+    background-color: #daf0d3; /* Set your desired background color here */
+  }
+  
+  
+</style>
+<?php
+/**
+ * 
+ * View -- of Accounts/TransactionController/viewtransactionAction
+ * 
+ */
+?>
+	
+<?php 
+	foreach($this->postage as $row ):
+		extract($row);
+	endforeach;
+if($bulkid == null):?>
+<?php if(!isset($transaction_id)):echo $this->button(2,$id);else:?> <span class="badge bg-info text-dark">Committed</span><div class="widget-toolbar hidden-s">
+				<!-- <button id="print">Print</button> -->
+				</div>
+				
+				<?php endif;?>
+<div class="space"></div>
+<div class="col-lg-12">
+	<div class="widget-box transparent">
+		<div class="widget-header widget-header-large">
+			<h5 class="widget-title grey lighter">
+			<i class="ace-icon fa fa-file-text-o fa-2x blue"></i>
+				<b><?php echo $article_no;?> | <?php echo $this->serviceObj->getColumn($service,'service');?></b>
+			</h5>
+			<?php //if($status==4):?>
+			<div class="widget-toolbar hidden-s">
+			<button id="print">Print</button>
+			</div>
+			<?php //endif;?>
+		</div>
+		<div class="widget-body">
+			<div class="widget-main padding-24">
+					<div class="row" id="convert-tb0">
+						<div class="col-lg-9" id="convert-tb1">
+						<h5 class="widget-title grey lighter">
+							<i class="ace-icon fa fa-plane fa-2x purple"></i>
+							<b>From Address</b>
+						</h5>
+							<ul class="list-unstyled spaced">
+								<li>
+									<i class="ace-icon fa fa-caret-right blue"><b></i>Name : </b> <?php echo $from_name;?>
+								</li>
+								<li>
+									<i class="ace-icon fa fa-caret-right blue"><b></i>Address : </b> <?php echo $from_address;?>
+								</li>
+								<li>
+									<i class="ace-icon fa fa-caret-right blue"><b></i>Email : </b> <?php echo $from_email_address;?>
+								</li>
+								<li>
+									<i class="ace-icon fa fa-caret-right blue"><b></i>Post Office : </b> <?php echo $this->locationObj->getColumn($location,'location');?>
+								</li>
+								<li>
+									<i class="ace-icon fa fa-caret-right blue"><b></i>Mobile Number : </b> <?php echo $from_mobile_number;?>
+								</li>
+							</ul>
+						</div>
+						<div class="col-lg-3" id="convert-tb3">
+							<h5 class="widget-title grey lighter">
+								<i class="ace-icon fa fa-home fa-2x blue"></i>
+								<b>To Address</b>
+							</h5>
+							<ul class="list-unstyled spaced">
+								<li>
+									<i class="ace-icon fa fa-caret-right blue"><b></i>Name : </b> <?php echo $to_name;?>
+								</li>
+								<li>
+									<i class="ace-icon fa fa-caret-right blue"><b></i>Address : </b> <?php echo $to_address;?>
+								</li>
+								<?php if($scope!=1):?>
+								<li>
+									<i class="ace-icon fa fa-caret-right blue"><b></i>Country : </b> <?php If(empty($country)):echo "";else: echo $this->countryObj->getColumn($country,'name');endif;?>
+								</li>
+								<li>
+									<i class="ace-icon fa fa-caret-right blue"><b></i>City: </b> <?php If(empty($city)):echo "";else:echo $this->cityObj->getColumn($city,'city');endif;?>
+								</li>
+								<?php endif;?>
+								<?php If(!empty($po_name)):?>
+								<li>
+									<i class="ace-icon fa fa-caret-right blue"><b></i>Post Office : </b> <?php echo  $this->postofficeObj->getColumn($po_name,'post_office');?>
+								</li>
+								<li>
+									<i class="ace-icon fa fa-caret-right blue"><b></i>Post Code : </b> <?php echo $post_code;?>
+								</li>
+								<?php endif;?>
+								<?php if($scope!=1):?>
+								<li>
+									<i class="ace-icon fa fa-caret-right blue"><b></i>zip Code : </b> <?php echo $zip_code;?>
+								</li>
+								<?php endif;?>
+								<li>
+									<i class="ace-icon fa fa-caret-right blue"><b></i>Mobile Number : </b> <?php echo $to_mobile_number;?>
+								</li>
+							</ul>
+						</div>
+					</div>
+					<div class="row">
+					    <div class="col-lg-12">
+							<h5 class="widget-title grey lighter">
+								<i class="ace-icon fa fa-balance-scale  fa-2x red"></i>
+								<b>Charges for Weight of <?php echo $weight;?> Grams</b>
+							</h5> 
+							<table class="table">
+								<thead>
+									<th style="font-size:14px">Heading</th>
+									<th style="font-size:14px">Rate</th>
+								</thead>
+								<tbody>
+									<tr>
+										<td style="font-size:13px">Postage Rate</td>
+										<td style="font-size:13px"><?php echo $postage_rate;?></td>
+									</tr>
+									<tr>
+										<td style="font-size:13px">Registration Fee</td>
+										<td style="font-size:13px"><?php echo $registration_fee;?></td>
+									</tr>
+									<?php if($ad==1):?>
+									<tr>
+										<td style="font-size:13px">Advice of delivery</td>
+										<td style="font-size:13px"><?php echo $advice_delivery_fee;?></td>
+									</tr>
+									<?php endif;
+									 if($in==1):?>
+									<tr>
+										<td style="font-size:13px">Insurance Amount</td>
+										<td style="font-size:13px"><?php echo $insurance_amount;?></td>
+									</tr>
+									<?php endif;
+									 if($pm==1):?>
+									<tr>
+										<td style="font-size:13px">Stamp Pasted</td>
+										<td style="font-size:13px"><?php echo $prepaid_mode;?></td>
+									</tr>
+									<?php endif;?>
+									<tr>
+										<td style="font-size:13px">Other Charges</td>
+										<td style="font-size:13px"><?php echo $other_charges;?></td>
+									</tr>
+									<tr>
+										<td style="font-size:13px"><b>Total Amount</b></td>
+										<td style="font-size:13px"><b><?php echo $total_amt;?></b></td>
+									</tr>
+								</tbody>
+							</table>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div></div>
+</div><?php else:?>
+
+<div class="bulk-data-container">
+	<div class="space">
+	 <?php 
+		$total_bulk_amount=0;foreach($bulkbook as $bulkbooks):
+		$total_bulk_amount+=$bulkbooks['total_amt'];endforeach;?></div>
+	<div class="col-lg-12">
+		<div class="widget-box transparent">
+			<div class="widget-header widget-header-large">
+			    <div class="widget-toolbar hidden-s">
+				    <button id="print">Print</button><i class=" fa-2x blue">Total:<?php echo $total_bulk_amount;?></i>
+				</div>
+				<?php if(!isset($transaction_id)):echo $this->button(2,$id);?>
+				<?php else:?> 
+				<span class="badge bg-info text-dark">Committed</span>
+				<?php endif;?><?php foreach($bulkbook as $bulkbooks):?>
+				<h5 class="widget-title grey lighter">
+				<i class="ace-icon fa fa-file-text-o fa-2x blue"></i>
+					<b><?php echo $bulkbooks['article_no'];?> | <?php echo $this->serviceObj->getColumn($bulkbooks['service'],'service');?></b>
+				</h5>
+			</div>
+			<div class="widget-body">
+				<div class="widget-main padding-24">
+					<div id="report-print">
+						<div class="row" id="convert-tb0">
+							<div class="col-lg-9" id="convert-tb1">
+							<h5 class="widget-title grey lighter">
+								<i class="ace-icon fa fa-plane fa-2x purple"></i>
+								<b>From Address</b>
+							</h5>
+								<ul class="list-unstyled spaced">
+									<li>
+										<i class="ace-icon fa fa-caret-right blue"><b></i>Name : </b> <?php echo $bulkbooks['from_name'];?>
+									</li>
+									<li>
+										<i class="ace-icon fa fa-caret-right blue"><b></i>Address : </b> <?php echo $bulkbooks['from_address'];?>
+									</li>
+									<li>
+										<i class="ace-icon fa fa-caret-right blue"><b></i>Email : </b> <?php echo $bulkbooks['from_email_address'];?>
+									</li>
+									<li>
+										<i class="ace-icon fa fa-caret-right blue"><b></i>Mobile Number : </b> <?php echo $bulkbooks['from_mobile_number'];?>
+									</li>
+								</ul>
+							</div>
+							<div class="col-lg-3" id="convert-tb3">
+								<h5 class="widget-title grey lighter">
+									<i class="ace-icon fa fa-home fa-2x blue"></i>
+									<b>To Address</b>
+								</h5>
+								<ul class="list-unstyled spaced">
+									<li>
+										<i class="ace-icon fa fa-caret-right blue"><b></i>Name : </b> <?php echo $bulkbooks['to_name'];?>
+									</li>
+									<li>
+										<i class="ace-icon fa fa-caret-right blue"><b></i>Address : </b> <?php echo $bulkbooks['to_address'];?>
+									</li>
+									<?php if($scope!=1):?>
+									<li>
+										<i class="ace-icon fa fa-caret-right blue"><b></i>Country : </b> <?php echo $this->countryObj->getColumn($bulkbooks['country'],'name');?>
+									</li>
+									<li>
+										<i class="ace-icon fa fa-caret-right blue"><b></i>City: </b> <?php if(empty($bulkbooks['city'])):echo ""; else:echo $this->cityObj->getColumn($bulkbooks['city'],'city');endif;?>
+									</li>
+									<?php endif;?>
+									<li>
+										<i class="ace-icon fa fa-caret-right blue"><b></i>Post Office : </b> <?php if(empty($bulkbooks['po_name'])): echo ""; else:echo  $this->postofficeObj->getColumn($bulkbooks['po_name'],'post_office');endif;?>
+									</li>
+									<li>
+										<i class="ace-icon fa fa-caret-right blue"><b></i>Post Code : </b> <?php echo $bulkbooks['post_code'];?>
+									</li>
+									<?php if($scope!=1):?>
+									<li>
+										<i class="ace-icon fa fa-caret-right blue"><b></i>zip Code : </b> <?php echo $bulkbooks['zip_code'];?>
+									</li>
+									<?php endif;?>
+									<li>
+										<i class="ace-icon fa fa-caret-right blue"><b></i>Mobile Number : </b> <?php echo $bulkbooks['to_mobile_number'];?>
+									</li>
+								</ul>
+							</div>
+						</div>
+						<div class="row">
+							<div class="col-lg-12">
+								<h5 class="widget-title grey lighter">
+									<i class="ace-icon fa fa-balance-scale  fa-2x red"></i>
+									<b>Charges for Weight of <?php echo $bulkbooks['weight'];?> Grams</b>
+								</h5> 
+								<table class="table">
+									<thead>
+										<th style="font-size:14px">Heading</th>
+										<th style="font-size:14px">Rate</th>
+									</thead>
+									<tbody>
+										<tr>
+											<td style="font-size:13px">Postage Rate</td>
+											<td style="font-size:13px"><?php echo $bulkbooks['postage_rate'];?></td>
+										</tr>
+										<tr>
+											<td style="font-size:13px">Registration Fee</td>
+											<td style="font-size:13px"><?php echo $bulkbooks['registration_fee'];?></td>
+										</tr>
+										<?php if($ad==1):?>
+										<tr>
+											<td style="font-size:13px">Advice of delivery</td>
+											<td style="font-size:13px"><?php echo $bulkbooks['advice_delivery_fee'];?></td>
+										</tr>
+										<?php endif;
+										if($in==1):?>
+										<tr>
+											<td style="font-size:13px">Insurance Amount</td>
+											<td style="font-size:13px"><?php echo $bulkbooks['insurance_amount'];?></td>
+										</tr>
+										<?php endif;
+										if($pm==1):?>
+										<tr>
+											<td style="font-size:13px">Stamp Pasted</td>
+											<td style="font-size:13px"><?php echo $bulkbooks['prepaid_mode'];?></td>
+										</tr>
+										<?php endif;?>
+										<tr>
+											<td style="font-size:13px">Other Charges</td>
+											<td style="font-size:13px"><?php echo $bulkbooks['other_charges'];?></td>
+										</tr>
+										<tr>
+											<td style="font-size:13px"><b>Total Amount</b></td>
+											<td style="font-size:13px"><b><?php echo $bulkbooks['total_amt'];?></b></td>
+										</tr>
+									</tbody>
+								</table>
+							</div>
+						</div>
+					</div>
+				</div>
+				<?php endforeach;endif;?>
+			</div>
+		</div>
+	</div>
+</div>
+
+
+
+<div class="modal fade" id="modal" tabindex="-1" role="dialog" aria-hidden="true">
+	<div class="modal-dialog" role="document">
+		<div class="modal-content">
+		</div><!-- /.modal-content -->
+	</div><!-- /.modal-dialog -->
+</div><!-- /.modal -->
+
+<script>
+    $(document).ready(function () {
+        $('#print').click(function () {
+            // Hide elements you don't want to print
+            $('.widget-toolbar').hide();
+            $('.bulk-data-container').hide();
+            $('.space').hide();
+
+            // Create a print window
+            var printWindow = window.open('', '', 'width=800,height=600'); // Adjust width and height as needed
+            
+            // Add CSS for styling
+			printWindow.document.write('<style>');
+			printWindow.document.write('body { font-size: 12px; margin: 5px; padding: 0; display: flex; flex-direction: column; }');
+			printWindow.document.write('.row { display: flex; flex-direction: row; margin-bottom: 5px; margin-left: 10px; }'); // Added margin-left
+			printWindow.document.write('.column { flex: 1; padding: 5px; }');
+			printWindow.document.write('.left-column { margin-right: 10px; }'); // Added margin-right for separation
+			printWindow.document.write('.right-column { margin-left: 10px; }'); // Added margin-left for separation
+			printWindow.document.write('h2, p, table { font-size: 12px; margin: 2px 0; padding: 0; }');
+			printWindow.document.write('table td { padding: 2px 10px; }');
+			printWindow.document.write('</style>');
+            <?php  foreach($this->postage as $row):
+            extract($row); 
+             endforeach;
+            if($bulkid== null):?>
+                // Add the div for each record to the print window
+                printWindow.document.write('<div class="row">');
+                // Left column
+				printWindow.document.write('<div class="column left-column">'); 
+				printWindow.document.write('<img src="<?php echo $this->basePath() . '/images/logo-nav.png' ?>" alt="Logo" style="width: 30px; height: 30px; padding:0 0 0 65px;">'); // Adjust the path and size as needed
+                printWindow.document.write('<p><?php echo $article_no; ?></p>');
+				printWindow.document.write('<p>To:<?php echo $to_name; ?>,</p>');
+				printWindow.document.write('<p><?php if(empty($country)):?><?php echo $this->postofficeObj->getColumn($po_name, 'post_office'); else:echo $this->countryObj->getColumn($country,'name');endif;?></p>');
+				printWindow.document.write('<p>Ph: #<?php echo $to_mobile_number; ?></p>');
+				printWindow.document.write('<p><?php echo $this->cityObj->getColumn($city,'city');?></p>');
+				printWindow.document.write('<p>Wt:<?php echo intval($weight); ?>g, Amt:<?php echo intval($total_amt); ?></p>');
+				printWindow.document.write('<p>Date: <?php echo date("Y-m-d", strtotime($created));?></p>');
+				printWindow.document.write('<p>From:<?php echo $this->locationObj->getColumn($location,'location');?></p>');
+				 // Add more left column data as needed...
+                printWindow.document.write('</div>');
+
+                // Right column (replicating left side data)
+                printWindow.document.write('<div class="column left-column">'); 
+				printWindow.document.write('<img src="<?php echo $this->basePath() . '/images/logo-nav.png' ?>" alt="Logo" style="width: 30px; height: 30px; padding:0 0 0 65px;">');  // Adjust the path and size as needed
+                printWindow.document.write('<p><?php echo $article_no; ?></p>');
+				printWindow.document.write('<p>To:<?php echo $to_name; ?>,</p>');
+				printWindow.document.write('<p><?php if(empty($country)):?><?php echo $this->postofficeObj->getColumn($po_name, 'post_office'); else:echo $this->countryObj->getColumn($country,'name');endif;?></p>');
+				printWindow.document.write('<p>Ph: #<?php echo $to_mobile_number; ?></p>');
+				printWindow.document.write('<p><?php echo $this->cityObj->getColumn($city,'city');?></p>');
+				printWindow.document.write('<p>Wt:<?php echo intval($weight); ?>g, Amt:<?php echo intval($total_amt); ?></p>');
+				printWindow.document.write('<p>Date: <?php echo date("Y-m-d", strtotime($created));?></p>');
+				printWindow.document.write('<p>From:<?php echo $this->locationObj->getColumn($location,'location');?></p>');
+				  // Add more right column data as needed...
+                printWindow.document.write('</div>');
+
+                // Close the div for each record
+                printWindow.document.write('</div>');
+            <?php else:?>
+            // Loop through each row and print the data
+            <?php foreach ($this->bulkbook as $row): ?>
+                // Extract data from the row
+                <?php extract($row); ?>
+
+                // Add the div for each record to the print window
+                printWindow.document.write('<div class="row">');
+
+                // Left column
+				printWindow.document.write('<div class="column left-column">');
+                printWindow.document.write('<img src="<?php echo $this->basePath() . '/images/logo-nav.png' ?>" alt="Logo" style="width: 30px; height: 30px; padding:0 0 0 65px;">'); // Adjust the path and size as needed				
+                printWindow.document.write('<p><?php echo $article_no; ?></p>');
+				printWindow.document.write('<p>To:<?php echo $to_name; ?>,</p>');
+				printWindow.document.write('<p><?php if(empty($country)):?><?php echo $this->postofficeObj->getColumn($po_name, 'post_office'); else:echo $this->countryObj->getColumn($country,'name');endif;?></p>');
+				printWindow.document.write('<p>Ph: #<?php echo $to_mobile_number; ?></p>');
+				printWindow.document.write('<p><?php echo $this->cityObj->getColumn($city,'city');?></p>');
+				printWindow.document.write('<p>Wt:<?php echo intval($weight); ?>g, Amt:<?php echo intval($total_amt); ?></p>');
+				printWindow.document.write('<p>Date: <?php echo date("Y-m-d", strtotime($created));?></p>');
+				printWindow.document.write('<p>From:<?php echo $this->locationObj->getColumn($location,'location');?></p>');
+				 // Add more left column data as needed...
+                printWindow.document.write('</div>');
+
+                // Right column (replicating left side data)
+                printWindow.document.write('<div class="column left-column">'); 
+				printWindow.document.write('<img src="<?php echo $this->basePath() . '/images/logo-nav.png' ?>" alt="Logo" style="width: 30px; height: 30px; padding:0 0 0 65px;">'); // Adjust the path and size as needed
+                printWindow.document.write('<p><?php echo $article_no; ?></p>');
+				printWindow.document.write('<p>To:<?php echo $to_name; ?>,</p>');
+				printWindow.document.write('<p><?php if(empty($country)):?><?php echo $this->postofficeObj->getColumn($po_name, 'post_office'); else:echo $this->countryObj->getColumn($country,'name');endif;?></p>');
+				printWindow.document.write('<p>Ph: #<?php echo $to_mobile_number; ?></p>');
+				printWindow.document.write('<p><?php echo $this->cityObj->getColumn($city,'city');?></p>');
+				printWindow.document.write('<p>Wt:<?php echo intval($weight); ?>g, Amt:<?php echo intval($total_amt); ?></p>');
+				printWindow.document.write('<p>Date: <?php echo date("Y-m-d", strtotime($created));?></p>');
+				printWindow.document.write('<p>From:<?php echo $this->locationObj->getColumn($location,'location');?></p>');
+				  // Add more right column data as needed...
+                printWindow.document.write('</div>');
+
+                // Close the div for each record
+                printWindow.document.write('</div>');
+
+            <?php endforeach; endif;?>
+
+            // Close the HTML document
+            printWindow.document.write('</body></html>');
+            printWindow.document.close();
+
+            // Add an event listener to detect when the printing is done
+            printWindow.onafterprint = function () {
+                // Close the print window
+                printWindow.close();
+
+                // Restore hidden elements
+                $('.widget-toolbar').show();
+                $('.bulk-data-container').show();
+                $('.space').show();
+            };
+
+            // Trigger printing
+            printWindow.print();
+        });
+    });
+</script>

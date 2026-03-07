@@ -1,0 +1,416 @@
+<?php
+/**
+ * 
+ * View -- of Report/SalesreportController/productwiseAction
+ * 
+ */
+	$this->headTitle($this->title);
+?>
+<div class="row">
+	<div class="col-lg-12">
+		<div class="widget widget-box transparent">
+			<div class="widget-header">
+				<div class="col-lg-12">
+					<h5 class="widget-title lighter smaller">
+						<i class="fa fa-gears"></i> Generate Location Wise - Product Wise Sales Report
+					</h5>
+				</div>
+			</div>
+			<div class="widget-body">
+				<div class="widget-main padding-12">
+					<form method="post" action="<?php echo $this->url('salesreport', array('action' => 'locationproductwise')); ?>"  enctype="multipart/form-data" >    
+						<div class="row">
+							<div class="form-group col-lg-2">
+								<label class="control-label" for="location">Location</label>
+								<select class="form-control" name="location" id="location" data-placeholder="Select" >
+									<option value=""></option>
+									<option value="-1" <?php echo ($data['location']=='-1')?'selected':'';?> >All</option>
+									<?php 
+										$locations = $this->locationObj->getSalesLocation('-1'); //-1 is the region_id
+										foreach($locations as $location):
+											$selected_loc = ($location['id']==$data['location'])?'selected':'';
+									?>
+										<option value="<?php echo $location['id'];?>" <?php echo $selected_loc;?> >
+											<?php echo $location['location'];?>
+										</option>
+									<?php endforeach;?>
+								</select>
+							</div>
+							<div class="form-group col-lg-2">
+								<label class="control-label" for="activity">Activity</label>
+								<select class="form-control" name="activity" id="activity" data-placeholder="select" >
+									<option value=""></option>
+									<?php 
+										$activities = $this->activityObj->getAll();
+										foreach($activities as $activity):
+											$selected_act = ($activity['id'] == $data['activity'])?'selected':'';
+									?>
+										<option value="<?php echo $activity['id'];?>" <?php echo $selected_act; ?>>
+											<?php echo $activity['activity'];?>
+										</option>
+									<?php endforeach;?>
+								</select>
+							</div>
+							<div class="form-group col-lg-2">
+								<label class="control-label" for="payment">Credit/Cash/All</label>
+								<select class="form-control" name="payment" id="payment" data-placeholder="select" >
+									<option value=""></option>
+									<option value="-1" <?php echo ($data['payment']=='-1')?'selected':'';?> >All</option>
+									<option value="0" <?php echo ($data['payment']=='0')?'selected':'';?> >Cash</option>
+									<option value="1" <?php echo ($data['payment']=='1')?'selected':'';?> >Credit</option>
+								</select>
+							</div>
+							<div class="form-group col-lg-2">
+								<label class="control-label" for="start_date">Start Date</label>
+								<div class="date input-group" id="start_date" data-date="<?php echo date('Y-m-d');?>" data-date-format="yyyy-mm-dd" >
+									<input class="form-control span2" name="start_date" id="start_date" type="text" placeholder="Start Date" value="<?php echo $data['start_date'];?>" readonly required>
+									<span class="input-group-addon add-on"><i class="fa fa-calendar"></i></span>
+								</div>
+							</div>
+							<div class="form-group col-lg-2">
+								<label class="control-label" for="end_date">End Date</label>
+								<div class="date input-group" id="end_date" data-date="<?php echo date('Y-m-d');?>" data-date-format="yyyy-mm-dd" >
+									<input class="form-control span2" name="end_date" id="end_date" type="text" placeholder="End Date" value="<?php echo $data['end_date'];?>" readonly required>
+									<span class="input-group-addon add-on"><i class="fa fa-calendar"></i></span>
+								</div>
+							</div>
+							<div class="form-group col-lg-2">
+								<div class="space-12"></div>
+								<label>
+									<?php $checked = ($data['item_details']=='1')?'checked':'';?>
+									<input name="item_details" id="item_details" type="checkbox" value="1" class="ace" <?php echo $checked;?>/>
+									<span class="lbl"> View Item Details </span>
+								</label>
+							</div>
+						</div>
+						<div class="row">
+							<div class="col-lg-10">
+								<div class="alert alert-block alert-info">
+									<i class="fa fa-check"></i>The Report Generated will all be <strong class="blue">Item Group</strong> wise for all the Activities except for <u>Agency</u> which will be <strong class="blue">Supplier</strong> wise.<br>
+									<i class="fa fa-check"></i>To view <strong class="blue">Item</strong> wise, the "View Item Details" option must be checked.
+								</div>
+							</div>
+							<div class="col-lg-2">
+								<button type="submit" class="btn btn-sm btn-success pull-right"><i class="fa fa-gear"></i> Generate </button>
+							</div>
+						</div>
+					</form>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+<div class="hr hr-dotted"></div>
+<div id="report-print">
+	<div class="row">
+		<div class="col-lg-12">
+			<div class="clearfix">
+				<label><i class="red fa fa-map-marker"></i> <strong>Location:</strong></label> <span><?php echo ($data["location"] == -1 || !isset($data['location']))? "All Locations": $this->locationObj->getColumn($data["location"], 'location');?></span>.&nbsp;&nbsp;
+				<label><i class="purple fa fa-tags"></i> <strong>Activity:</strong></label> <span><?php echo ($data["activity"] == -1 || !isset($data['activity']))? "All Activities": $this->activityObj->getColumn($data["activity"], 'activity');?></span>.&nbsp;&nbsp;
+				<label><i class="blue fa fa-money"></i> <strong>Cash/Credit/All :</strong></label>
+					<span>
+						<?php 
+							if($data['payment']== '-1' || !isset($data['payment'])){
+								echo 'Both Cash & Credit Sales';
+							}else if($data['payment']=='0'){
+								echo 'Cash Sales';
+							}else{
+								echo 'Credit Sales';
+							}
+						?>
+					</span>.&nbsp;&nbsp;
+				<label><i class="green fa fa-calendar"></i> <strong>Date:</strong></label> <span><?php echo (!isset($data['start_date']))?'-select-':$data['start_date'].' to '.$data['end_date'];?></span>
+				<div class="pull-right">
+					<a title="Export to Excel" id="excel">
+						<i class="ace-icon fa fa-file-excel-o fa-lg blue"></i>
+					</a>&nbsp;&nbsp;
+					<a href="#" id="print">
+						<i class="ace-icon fa fa-file-pdf-o fa-lg red"></i>
+					</a>
+				</div>
+			</div>
+			<div class="space-12"></div>
+			<div>
+				<table class="table table-hover" id="table2excel">
+					<thead>
+						<tr>
+							<th>
+								<?php 
+									if($data['activity'] == '1'){
+										echo ($data['item_details'] == '1')?'Item Name':'Supplier Name';
+									}else{
+										echo ($data['item_details'] == '1')?'Item Name':'Item Group Name';
+									}
+								?>
+							</th>
+							<th style="text-align:right">Quantity</th>
+							<th style="text-align:right">Gross Amount</th>
+							<th style="text-align:right">Discount</th>
+							<th style="text-align:right">Net Amount</th>
+						</tr>
+					</thead>
+					<tbody>	
+						<?php
+						if($data['location']=='-1'):
+						    $locations = $this->salesObj->getDistinctLocation($data);
+						else:
+						    $locations = $this->locationObj->get($data['location']);
+						endif;    
+						foreach($locations as $location):
+						    $data_new = array(
+                					'location' => $location['id'],
+                					'activity' => $data['activity'],
+                					'payment' => $data['payment'],
+                					'start_date' => $data['start_date'],
+                					'end_date' => $data['end_date'],
+                					'item_details' => $data['item_details'],
+                			);
+                			//echo "<pre>";print_r($data_new);
+                		?>
+                			<tr style="background: #dbdbe0;border-top:3px solid #ddd;border-bottom:3px solid #ddd;">
+								<td colspan='5'><strong><?php echo $location['location'];?></strong></td>
+							</tr>
+                		<?php
+						if($data_new['activity'] == 1): //agency
+							$suppliers = $this->salesObj->getDistinctSupplier($data_new);
+							$total_supplier_qty = 0;
+							$total_supplier_amt = 0;
+							$total_supplier_dis = 0;
+							$total_supplier_net = 0;
+							foreach($suppliers as $supplier):
+								$supplier_items = $this->salesObj->getSuppliersItem($data_new,$supplier['supplier']);
+								$sup_sum_qty = 0;
+								$sup_sum_amt = 0;
+								$sup_sum_dis = 0;
+								foreach($supplier_items as $supplier_item):
+									$sale_uom_conversion = $this->itemuomObj->getColumn(array('item'=>$supplier_item['item'],'uom'=>$supplier_item['uom']),'conversion');
+									$sale_uom_conversion = ($sale_uom_conversion == '')?'1':$sale_uom_conversion;
+									$basic_quantity = ($supplier_item['basic_uom']==$supplier_item['uom'])?$supplier_item['quantity']:$supplier_item['quantity']*$sale_uom_conversion;
+									$basic_rate = ($supplier_item['basic_uom']==$supplier_item['uom'])?$supplier_item['rate']:$supplier_item['rate']/$sale_uom_conversion;
+									$basic_amount = $basic_quantity * $basic_rate;
+									$sup_sum_qty +=$basic_quantity;
+									$sup_sum_amt +=$basic_amount;
+									
+									//total 
+									$total_supplier_qty += $basic_quantity;
+									$total_supplier_amt += $basic_amount;
+									
+									if($supplier_item['free_item']==0 && $supplier_item['free_item_uom']==0):
+										$sup_sum_dis += $supplier_item['discount_qty'];
+										$total_supplier_dis += $supplier_item['discount_qty'];
+									endif;
+								endforeach;
+								$sup_net_amt = $sup_sum_amt - $sup_sum_dis;
+								$total_supplier_net += $sup_net_amt;
+						?>
+						    
+							<tr>
+								<td><strong><?php echo $supplier['name'];?></strong></td>
+								<td style="text-align:right"><strong><?php echo number_format($sup_sum_qty,'2','.',',');?></strong></td>
+								<td style="text-align:right"><strong><?php echo number_format($sup_sum_amt,'2','.',',');?></strong></td>
+								<td style="text-align:right"><strong><?php echo number_format($sup_sum_dis,'2','.',',');?></strong></td>
+								<td style="text-align:right"><strong><?php echo number_format($sup_net_amt,'2','.',',');?></strong></td>
+							</tr>
+							<?php
+								if($data_new['item_details'] == '1'):
+									$items = $this->salesObj->getDistinctItems($data_new,$supplier['supplier']);
+									foreach($items as $item):
+										$item_sales = $this->salesObj->getItemSales($data_new,$supplier['supplier'],$item['item']);
+										$sum_qty = 0;
+										$sum_amt = 0;
+										$sum_dis = 0;
+										foreach($item_sales as $item_sale):
+											$sale_uom_conversion = $this->itemuomObj->getColumn(array('item'=>$item_sale['item'],'uom'=>$item_sale['uom']),'conversion');
+											$sale_uom_conversion = ($sale_uom_conversion == '')?'1':$sale_uom_conversion;
+											$basic_quantity = ($supplier['uom']==$item_sale['uom'])?$item_sale['quantity']:$item_sale['quantity']*$sale_uom_conversion;
+											$basic_rate = ($supplier['uom']==$item_sale['uom'])?$item_sale['rate']:$item_sale['rate']/$sale_uom_conversion;
+											$basic_amount = $basic_quantity * $basic_rate;
+											$sum_qty +=$basic_quantity;
+											$sum_amt +=$basic_amount;
+											if($item_sale['free_item']==0 && $item_sale['free_item_uom']==0):
+												$sum_dis += $item_sale['discount_qty'];
+											endif;
+										endforeach;
+										$net_amt = $sum_amt - $sum_dis;
+							?>
+							<tr>
+								<td><?php echo $item['name'];?></td>
+								<td style="text-align:right"><?php echo number_format($sum_qty,'2','.',',');?></td>
+								<td style="text-align:right"><?php echo number_format($sum_amt,'2','.',',');?></td>
+								<td style="text-align:right"><?php echo number_format($sum_dis,'2','.',',');?></td>
+								<td style="text-align:right"><?php echo number_format($net_amt,'2','.',',');?></td>
+							</tr>
+						<?php		endforeach;
+								endif;
+							endforeach;
+						?>
+							<tr style="border-top:3px solid #ddd;border-bottom:3px solid #ddd;">
+								<td><strong>Total</strong></td>
+								<td style="text-align:right"><strong><?php echo number_format($total_supplier_qty,'2','.',',');?></strong></td>
+								<td style="text-align:right"><strong><?php echo number_format($total_supplier_amt,'2','.',',');?></strong></td>
+								<td style="text-align:right"><strong><?php echo number_format($total_supplier_dis,'2','.',',');?></strong></td>
+								<td style="text-align:right"><strong><?php echo number_format($total_supplier_net,'2','.',',');?></strong></td>
+							</tr>
+						<?php
+						else: // food grains
+						$itemgroups = $this->salesObj->getDistinctItemgroups($data_new);
+						$total_group_qty = 0;
+						$total_group_amt = 0;
+						$total_group_dis = 0;
+						$total_group_net = 0;
+						foreach($itemgroups as $itemgroup):
+							$group_items = $this->salesObj->getGroupItem($data_new,$itemgroup['itemgroup_id']);
+							$group_sum_qty = 0;
+							$group_sum_amt = 0;
+							$group_sum_dis = 0;
+							foreach($group_items as $group_item):
+								$sale_uom_conversion = $this->itemuomObj->getColumn(array('item'=>$group_item['item'],'uom'=>$group_item['uom']),'conversion');
+								$sale_uom_conversion = ($sale_uom_conversion == '')?'1':$sale_uom_conversion;
+								$basic_quantity = ($group_item['basic_uom']==$group_item['uom'])?$group_item['quantity']:$group_item['quantity']*$sale_uom_conversion;
+								$basic_rate = ($group_item['basic_uom']==$group_item['uom'])?$group_item['rate']:$group_item['rate']/$sale_uom_conversion;
+								$basic_amount = $basic_quantity * $basic_rate;
+								$group_sum_qty +=$basic_quantity;
+								$group_sum_amt +=$basic_amount;
+								
+								//total
+								$total_group_qty += $basic_quantity;
+								$total_group_amt += $basic_amount;
+								if($group_item['free_item']==0 && $group_item['free_item_uom']==0):
+									$group_sum_dis += $group_item['discount_qty'];
+									$total_group_dis += $group_item['discount_qty'];
+								endif;
+							endforeach;
+							$sup_net_amt = $group_sum_amt - $group_sum_dis;
+							$total_group_net += $sup_net_amt;
+						?>
+							<tr>
+								<td><strong><?php echo $itemgroup['itemgroup_name'];?></strong></td>
+								<td style="text-align:right"><strong><?php echo number_format($group_sum_qty,'2','.',',');?></strong></td>
+								<td style="text-align:right"><strong><?php echo number_format($group_sum_amt,'2','.',',');?></strong></td>
+								<td style="text-align:right"><strong><?php echo number_format($group_sum_dis,'2','.',',');?></strong></td>
+								<td style="text-align:right"><strong><?php echo number_format($sup_net_amt,'2','.',',');?></strong></td>
+							</tr>
+						<?php
+							if($data_new['item_details'] == '1'):
+								$items = $this->salesObj->getDistinctGroupItems($data_new,$itemgroup['itemgroup_id']);
+								foreach($items as $item):
+									$item_sales = $this->salesObj->getItemGroupSales($data_new,$itemgroup['itemgroup_id'],$item['item']);
+									$sum_qty = 0;
+									$sum_amt = 0;
+									$sum_dis = 0;
+									foreach($item_sales as $item_sale):
+										$sale_uom_conversion = $this->itemuomObj->getColumn(array('item'=>$item_sale['item'],'uom'=>$item_sale['uom']),'conversion');
+										$sale_uom_conversion = ($sale_uom_conversion == '')?'1':$sale_uom_conversion;
+										$basic_quantity = ($supplier['uom']==$item_sale['uom'])?$item_sale['quantity']:$item_sale['quantity']*$sale_uom_conversion;
+										$basic_rate = ($supplier['uom']==$item_sale['uom'])?$item_sale['rate']:$item_sale['rate']/$sale_uom_conversion;
+										$basic_amount = $basic_quantity * $basic_rate;
+										$sum_qty +=$basic_quantity;
+										$sum_amt +=$basic_amount;
+										if($item_sale['free_item']==0 && $item_sale['free_item_uom']==0):
+											$sum_dis += $item_sale['discount_qty'];
+										endif;
+									endforeach;
+									$net_amt = $sum_amt - $sum_dis;
+							?>
+								<tr>
+									<td><?php echo $item['name'];?></td>
+									<td style="text-align:right"><?php echo number_format($sum_qty,'2','.',',');?></td>
+									<td style="text-align:right"><?php echo number_format($sum_amt,'2','.',',');?></td>
+									<td style="text-align:right"><?php echo number_format($sum_dis,'2','.',',');?></td>
+									<td style="text-align:right"><?php echo number_format($net_amt,'2','.',',');?></td>
+								</tr>
+							
+							<?php
+								endforeach;
+							endif;
+						endforeach;
+						?>
+							<tr style="border-top:3px solid #ddd;border-bottom:3px solid #ddd;">
+								<td><strong>Total</strong></td>
+								<td style="text-align:right"><strong><?php echo number_format($total_group_qty,'2','.',',');?></strong></td>
+								<td style="text-align:right"><strong><?php echo number_format($total_group_amt,'2','.',',');?></strong></td>
+								<td style="text-align:right"><strong><?php echo number_format($total_group_dis,'2','.',',');?></strong></td>
+								<td style="text-align:right"><strong><?php echo number_format($total_group_net,'2','.',',');?></strong></td>
+							</tr>
+						<?php
+						endif; endforeach;
+						?>
+					</tbody>
+				</table>
+			</div>
+		</div>
+	</div>
+</div>
+<script type="text/javascript">
+	$('#start_date').datepicker();
+	$('#end_date').datepicker();
+	$('#start_date').on('changeDate',function(){
+		$('form').formValidation('revalidateField', $(this).attr('id'));
+	});
+	$('#end_date').on('changeDate',function(){
+		$('form').formValidation('revalidateField', $(this).attr('id'));
+	});
+	$(function() {
+		$('#print').genpdfinvoice({
+			content: '#report-print',
+			src:"<?php echo $this->url('pdfxls', array('action' => 'pdf'));?>",
+			orentation:"L",//L =landscape, P = potrait
+		});
+	//var doc_loc = $('input#loc').val()+'(from: '+$('input#start_date').val()+' to: '+$('input#end_date').val()+')';
+		$("#excel").click(function(){
+		  $("#table2excel").table2excel({
+			// exclude CSS class
+			exclude: ".noExl",
+			name: "Worksheet Name",
+			//filename: "CashBook_"+doc_loc, //do not include extension
+		  }); 
+		});
+	/*** Form Validation ***/
+	$('form').formValidation({
+			framework: 'bootstrap',
+			excluded: ':disabled',
+			message: 'This value is not valid',
+			fields: {
+				'location': {
+					validators: {
+						notEmpty: {
+							message: 'Please select location'
+						}
+					}
+				},
+				'activity': {
+					validators: {
+						notEmpty: {
+							message: 'Please select activity'
+						}
+					}
+				},
+				'payment': {
+					validators: {
+						notEmpty: {
+							message: 'Please select cash/credit/all'
+						}
+					}
+				},
+				'start_date': {
+					validators: {
+						notEmpty: {
+							message: 'Please select start date'
+						}
+					}
+				},
+				'end_date': {
+					validators: {
+						notEmpty: {
+							message: 'Please select end date'
+						}
+					}
+				},
+			}
+		}).on('success.field.fv', function(e, data) {
+			if (data.fv.getInvalidFields().length > 0) {    // There is invalid field
+				data.fv.disableSubmitButtons(true);
+			}
+		});
+	});
+</script>

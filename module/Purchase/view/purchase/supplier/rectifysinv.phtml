@@ -1,0 +1,477 @@
+<?php
+/**
+ * 
+ * View -- of Purchase/InvoiceController/rectifysinvAction
+ * 
+ */
+$this->headTitle($this->title);
+?>
+<?php foreach($supplier_invoice as $sup_inv):
+	extract($sup_inv);
+	//echo "<pre>";print_r($sup_inv);
+	$sup_inv_id = $id;
+endforeach;?>
+<?php if($costing == 0):
+		$display = 1;
+	else:
+		$costingsheets = $this->costingsheetObj->get(array('po_invoice'=>'2','po_invoice_no'=>$sup_inv_id));
+		if(sizeof($costingsheets)>0):
+			foreach($costingsheets as $cs);
+			$costingitems = $this->costingitemObj->get(array('costing_sheet'=>$cs['id']));
+			if(sizeof($costingitems)>0 || $cs['status'] == '3'):
+				$display = 0;
+			else:
+				$display = 1;
+			endif;
+		else:
+			$display = 0;
+		endif;
+	endif;?>
+	
+<div class="row">
+	<div class="col-lg-12">
+		<div class="widget widget-box">
+			<div class="widget-header">
+				<h5 class="widget-title lighter smaller">
+					<i class="fa fa-pencil red"></i>&nbsp;Rectify Supplier Invoice : &nbsp;
+					<strong><?php echo $invoice_no; ?> | <?php echo $supplier; ?> | <?php echo $activity ?> </strong>
+					<?php $this->status($status);?>
+				</h5>
+			</div>
+			<div class="widget-body">
+				<div class="widget-main">
+					<form id="#form" method="post" action="<?php echo $this->url('supplier', array('action' => 'rectifysinv')); ?>"  enctype="multipart/form-data" >
+						<input type="hidden" name="sup_inv_id" id="sup_inv_id" value="<?php echo $sup_inv_id; ?>" />
+						<input type="hidden" name="purchase_receipt" id="purchase_receipt" value="<?php echo $purchase_receipt; ?>" />
+                    	
+						<?php 	if($display == 0):?>
+							<div class="alert alert-danger">
+								You Cannot Rectify this supplier invoice "<?php echo $invoice_no;?>". The ELC has been already calculated in the Costing Sheet <b><a target="_blank" href="<?php echo $this->url('cost', array('action'=>'elccosting','id'=>$cs['id']));?>"><?php echo $cs['costing_no'];?></a></b>.
+								Please Reset and Redo Costing Sheet first to Rectify this Supplier Invoice. 
+							</div>
+						<?php else:?>
+							<div class="alert alert-warning">
+								If Change of Location, Activity, Supplier, or Quantity of the Item is required, Please Rectify Purchase Receipt 
+								<b><a target="_blank" href="<?php echo $this->url('receipt', array('action'=>'viewreceipt','id'=>$purchase_receipt));?>"><?php echo $this->prnObj->getColumn($purchase_receipt,'prn_no');?></a></b> first and then Redo Supplier Invoice.
+							</div>
+						<?php endif;?>
+						
+						<div class="row">	
+							<div class="form-group col-lg-3">
+								<label for="location" class="control-label">Location</label>
+								<select class="form-control" id="location" name="location" data-placeholder="Select" readonly required>
+									<option value=""></option>
+								  	<?php foreach ($regions as $region): ?>
+									<optgroup label="<?php echo $region['region'];?>">
+										<?php  
+											// retrive locations under the above region ID
+											$locations = $locationObj->get(array('l.region'=>$region['id']));
+											foreach ($locations as $location):
+											$selected = ($location['id']==$location_id)?'selected':'';
+										?>
+										<option value="<?php echo $location['id']; ?>" <?php echo $selected;?>>
+											<?php echo $location['location']; ?>
+										</option>
+										<?php endforeach; ?>
+								    </optgroup>
+									<?php endforeach;  ?>									
+								</select> 
+							</div>	
+							<div class="form-group col-lg-3">
+								<label for="activity" class="control-label">Activity</label>
+								<select id="activity" name="activity" class="form-control" data-placeholder="Select" readonly required>
+									<option value=""></option>
+									<?php foreach ($this->activities as $activity):
+										$selected = ($activity['id'] == $activity_id)?'selected':'';
+									?>
+								        <option value="<?php echo $activity['id'];?>" <?php echo $selected;?>>
+								       		<?php echo $activity['activity']; ?>
+								       	</option>
+									<?php endforeach; ?>								
+								</select> 
+							</div>
+							<div class="form-group col-lg-3">
+								<label for="supplier" class="control-label">Supplier</label>
+								<select id="supplier" name="supplier" class="form-control" data-placeholder="Select" readonly required>
+									<option value=""></option>	
+									<?php foreach ($this->suppliers as $supplier): 
+										$selected = ($supplier[id] == $supplier_id)?'selected':'';	
+									?>
+									    <option value="<?php echo $supplier['id'];?>" <?php echo $selected; ?>>
+									    	<?php echo $supplier['name']; ?>
+									    </option>
+									<?php endforeach; ?>								
+								</select> 
+							</div>	
+							<div class="form-group col-lg-3">
+								<label for="inv_defn" class="control-label">Invoice Defination</label>
+								<select id="inv_defn" name="inv_defn" class="form-control inv_def" data-placeholder="Select" >
+									<option value="-1">None</option>
+									<?php 
+									$inv_definations = $this->inv_defObj->get(array('supplier' => $supplier_id));
+										foreach($inv_definations as $inv_def):
+											$selected_def = ($inv_def['id'] == $inv_defn)?"selected":"";
+									?>
+										<option value="<?php echo $inv_def['id']; ?>" <?php echo $selected_def;?>>
+											<?php echo $inv_def['defination'];?>
+										</option>
+									<?php endforeach;?>	
+								</select> 
+							</div>
+						</div>
+						<div class="row">		        
+							<div class="form-group col-lg-3">
+								<label for="quotation_no" class="control-label">Invoice No.</label>
+								<input type="text" class="form-control" name="invoice_no" id="invoice_no" value="<?php echo $invoice_no; ?>" required> 
+							</div>
+						    <div class="form-group col-lg-3">
+								<label for="inv_date" class="control-label">Invoice Date</label>
+								<div class="date input-group" id="inv_date" data-date="<?php echo date('Y-m-d');?>" data-date-format="yyyy-mm-dd" >
+									<input class="form-control span2" name="inv_date" id="inv_date" type="text" value="<?php echo $inv_date; ?>" placeholder="Invoice Date" readonly required>
+									<span class="input-group-addon add-on"><i class="fa fa-calendar"></i></span>
+								</div>
+							</div>
+						    <?php /*<div class="form-group col-lg-3">
+								<label for="inv_due_date" class="control-label">Due Date</label>
+								<div class="date input-group" id="inv_due_date" data-date="<?php echo date('Y-m-d');?>" data-date-format="yyyy-mm-dd" >
+									<input class="form-control span2" name="inv_due_date" id="inv_due_date" type="text" value="<?php echo $inv_due_date;?>" placeholder="Due Date" readonly required>
+									<span class="input-group-addon add-on"><i class="fa fa-calendar"></i></span>
+								</div>
+							</div>*/?>   
+							<div class="form-group col-lg-3">
+								<label for="inv_record_date" class="control-label">Recording Date</label>
+								<div class="date input-group" id="inv_record_date" data-date="<?php echo date('Y-m-d');?>" data-date-format="yyyy-mm-dd" >
+									<input class="form-control span2" name="inv_record_date" id="inv_record_date" value="<?php echo $inv_record_date;?>" type="text" placeholder="Recording Date" readonly required>
+									<span class="input-group-addon add-on"><i class="fa fa-calendar"></i></span>
+								</div>
+							</div>
+							<div class="form-group col-lg-3">
+								<label for="purchase_receipt" class="control-label">Purchase Receipt</label>
+								<select class="form-control" name="purchase_receipt" id="purchase_receipt" data-placeholder="Select" readonly />
+									<option value="<?php echo $purchase_receipt;?>"><?php echo $this->prnObj->getColumn($purchase_receipt,'prn_no');?></option>
+								</select>
+							</div>
+						</div>
+						
+						<div class="row">
+							<div class="col-lg-12"> 
+						    <h5>Supplier Invoice Details</h5>
+								<input type="hidden" value="2" name="uom_task" id="uom_task" />
+								<table id="trdetails_table" class="table small-padding">
+									<thead>
+										<tr>
+											<th>Item</th>
+											<th>UOM</th>
+											<th>Quantity</th>
+											<th>Rate(<?php echo $this->currency_code();?>)</th>
+											<th>Amount(<?php echo $this->currency_code();?>)</th>
+											<th>MRP(<?php echo $this->currency_code();?>)</th>
+											<?php 
+											$inv_def_details = $this->inv_def_detailsObj->get(array('inv_def' => $inv_defn));
+											foreach($inv_def_details as $fields):
+											?>
+												<th class="inv_fields"><?php echo $fields['def_field']; ?></th>
+											<?php endforeach;?>
+										</tr>
+									</thead>
+									<tbody>
+									<?php 
+									$sup_inv_details = $this->sup_inv_detailsObj->get(array('supplier_invoice' => $sup_inv_id));
+									if(sizeof($sup_inv_details) > 0):
+										foreach($sup_inv_details as $inv_details):?>
+										<tr>
+											<td>
+												<div class="form-group">
+													<select class="form-control" name="item[]" id="item" data-placeholder="Select" required>
+														<option value="<?php echo $inv_details['item_id'];?>" selected="selected">
+															<?php echo $inv_details['item'];?>	
+														</option>
+													</select>
+													<input type="hidden" name="sup_inv_details_id[]" id="sup_inv_details_id" value="<?php echo $inv_details['id'];?>"/>
+													<input type="hidden" value="<?php echo $inv_details['prn_details_id'];?>" name="prn_details_id[]" id="prn_details_id" />
+												</div>
+											</td>
+											<td>
+												<div class="form-group">
+													<select class="form-control" name="uom[]" id="uom" data-placeholder="Select" required>
+														<?php 
+														$selected_item = $this->itemObj->get($inv_details['item_id']);
+															foreach($selected_item as $item):
+																$selected = ($item['uom']==$inv_details['uom_id'])?"selected":"";
+														?>
+															<option value="<?php echo $item['uom']?>" <?php echo $selected;?> >
+																<?php echo $this->uomObj->getColumn($item['uom'], 'code');?>
+															</option>
+														<?php endforeach;?>
+														<?php   
+															$itemuoms = $this->itemuomObj->get(array('ui.item' => $inv_details['item_id']));
+															foreach($itemuoms as $uom):
+																$selected = ($uom['uom']==$inv_details['uom_id'])?"selected":"";
+														?>
+															<option value="<?php echo $uom['uom'];?>" <?php echo $selected;?> >
+																<?php echo $uom['uom_code'];?>
+															</option>
+														<?php endforeach;?>
+													</select>
+												</div>
+											</td>
+											<td>
+												<div class="form-group">
+													<input type="text" class="form-control" name="quantity[]" id="quantity" value="<?php echo $inv_details['quantity'];?>" readonly required/>
+												</div>
+											</td>
+											<td>
+												<div class="form-group">
+													<input type="text" class="form-control" name="rate[]" id="rate" value="<?php echo $inv_details['rate'];?>" required/>
+												</div>         
+											</td>
+											<td>
+												<div class="form-group">
+													<input type="text" class="form-control" name="amount[]" id="amount" value="<?php echo $inv_details['quantity']*$inv_details['rate'];?>" readonly required/>
+												</div>         
+											</td>
+											<td>
+												<div class="form-group">
+													<input type="text" class="form-control" name="mrp[]" id="mrp" value="<?php echo $inv_details['mrp']; ?>"/>
+												</div>
+											</td>	
+											<?php
+												$sup_inv_def_data = $this->sup_inv_def_dataObj->get(array('sinv_details' => $inv_details['id'])); 
+												foreach($sup_inv_def_data as $data):?>
+												<td class="inv_fields">
+													<div class="form-group">
+														<input type="text" class="form-control" name="<?php echo $data['def_details']?>[]" id="<?php echo $data['def_details']?>" value="<?php echo $data['data']; ?>" />
+													</div>
+												</td>
+											<?php endforeach;?>										
+										</tr>
+										<?php 
+											endforeach;
+										endif;?>
+									</tbody>
+								</table>
+					   		</div>
+						</div>
+						
+						<div class="row">
+						    <div class="col-lg-12">
+		    					<div class="col-lg-9"></div>
+		    					<div class="form-group col-lg-3">
+									<label for="purchase_amount" class="control-label">Purchase Amount</label>
+									<input type="text" class="form-control" name="purchase_amount" id="purchase_amount" value="<?php echo $purchase_amount;?>" required readonly>
+								</div>
+							</div> 																	
+						</div>	
+						
+						<div class="row">    
+							<div class="col-lg-12">
+								<div class="col-lg-3"></div>
+								<div class="form-group col-lg-2">
+									<label for="freight_charge" class="control-label">Freight Charges</label>
+									<input type="text" class="form-control" name="freight_charge" id="freight_charge"  value="<?php echo $freight_charge;?>" >
+								</div>
+								<div class="form-group col-lg-2">
+									<label for="net_inv_amount" class="control-label">Net Invoice Amount</label>
+									<input type="text" class="form-control" name="net_inv_amount" id="net_inv_amount" value="<?php echo $net_inv_amount;?>" readonly required>
+								</div>
+								<div class="form-group col-lg-2">
+									<label for="deduction_amount" class="control-label">Deduction Amount</label>
+									<input type="text" class="form-control" name="deduction_amount" id="deduction_amount"  value="<?php echo $deduction_amount;?>" >
+								</div> 
+								<div class="form-group col-lg-3">
+									<label for="payable_amount" class="control-label">Payable Amount</label>
+									<input type="text" class="form-control" name="payable_amount" id="payable_amount"  value="<?php echo $payable_amount;?>" readonly required>
+								</div>
+							</div>
+						</div>
+						<div class="row">
+							<div class="form-group col-lg-12">
+								<label class="control-label" for="note">Note: </label>
+								<textarea class="form-control" name="note" id="note" required ><?php echo $note;?></textarea>
+							</div>
+						</div>
+						<div class="space-12"></div>	
+						<div class="row"> 	
+							<div class="col-lg-9"> 
+								<?php if($display == 1):?>
+									<button type="submit" class="btn btn-success"><i class="fa fa-check"></i> Save </button>
+								<?php endif;?>
+								<button type="button" class="btn btn-warning" onclick="javascript:history.back();" ><i class="fa fa-times"></i> Cancel </button> 					
+				        	</div>
+				        </div>
+			  		</form>	
+				</div> <!-- widget-main -->
+			</div> <!-- widget-body -->  
+		</div><!-- widget-box -->
+	</div><!-- col-lg-12 -->
+</div><!-- row -->
+<script type="text/javascript">
+$(function() {
+	/**** Date Picker ****/
+	$('#inv_date').datepicker();
+	$('#inv_record_date').datepicker();
+	$('#inv_due_date').datepicker();
+	$('#inv_date').on('changeDate',function(){
+		$('form').formValidation('revalidateField','inv_date');
+	});
+	$('#inv_record_date').on('changeDate',function(){
+		$('form').formValidation('revalidateField','inv_record_date');
+	});
+	$('#inv_due_date').on('changeDate',function(){
+		$('form').formValidation('revalidateField','inv_due_date');
+	});
+	/**** Append Invoice Defination Fields ****/
+	$("#inv_defn").change(function() { 	
+		$('th.inv_fields').hide();
+		$('td.inv_fields').hide();	
+		$.post("<?php echo $this->url('supplier', array('action' => 'getinvdeffields')); ?>/"+$('#inv_defn').val(), function(data) {
+			var thead = $(data).find('th');
+			$('thead tr').append(thead);
+			$('tbody tr').each(function(){
+				var tbody = $(data).clone();
+				var id = $(this).attr('id');
+				tbody.find('td :input').each(function(){
+					var old_id = $(this).attr('id');
+					$(this).attr('id', old_id+id);
+				});
+				$(this).append(tbody.find('td'));
+			});
+		});
+    });
+	$('#trdetails_table').supplierinvoice({
+		getUomChange:"<?php echo $this->url('supplier',array('action'=>'getuomchange'));?>",
+	});
+});	
+//form validation
+const fv = FormValidation.formValidation(document.getElementById('#form'), {
+    fields: {
+        'location': {
+            validators: {
+                notEmpty: {
+                    message: 'Please select location'
+                }
+            }
+        },
+        'activity': {
+            validators: {
+                notEmpty: {
+                    message: 'Please select activity'
+                }
+            }
+        },
+        'supplier': {
+            validators: {
+                notEmpty: {
+                    message: 'Please select supplier'
+                }
+            }
+        }, 
+        'note': {
+            validators: {
+                notEmpty: {
+                    message: 'Please provide remarks.'
+                }
+            }
+        }, 
+        'invoice_no': {
+            validators: {
+                notEmpty: {
+                    message: 'Please enter invoice no'
+                }
+            }
+        },
+        'inv_date': {
+            validators: {
+                notEmpty: {
+                    message: 'Please select invoice date'
+                }
+            }
+        },
+        /*'inv_due_date': {
+            validators: {
+                notEmpty: {
+                    message: 'Please select invoice due date'
+                }
+            }
+        },*/
+        'inv_record_date': {
+            validators: {
+                notEmpty: {
+                    message: 'Please select invoice record date'
+                }
+            }
+        }, 
+        'purchase_amount': {
+            validators: {
+                notEmpty: {
+                    message: 'Please enter purchase amount'
+                }
+            }
+        }, 
+        'net_inv_amount': {
+            validators: {
+                notEmpty: {
+                    message: 'Please enter net invoice amount'
+                }
+            }
+        },  
+        'payable_amount': {
+            validators: {
+                notEmpty: {
+                    message: 'Please enter payable amount'
+                }
+            }
+        }, 
+        'item[]':{
+            validators: {
+                notEmpty: {
+                    message: 'Please select item'
+                },
+            },
+        },
+        'uom[]':{
+            validators: {
+                notEmpty: {
+                    message: 'Please select uom'
+                },
+            },
+        },
+        'quantity[]':{
+            validators: {
+                notEmpty: {
+                    message: 'Please provide quantity'
+                },
+            },
+        },
+        'rate[]':{
+        	validators: {
+                notEmpty: {
+                    message: 'Please provide rate'
+                },
+            },
+        },
+        'amount[]':{
+        	validators: {
+                notEmpty: {
+                    message: 'Please provide amount'
+                },
+            },
+        },
+    },
+	plugins: {
+		trigger: new FormValidation.plugins.Trigger(),
+		bootstrap3: new FormValidation.plugins.Bootstrap3(),
+		submitButton: new FormValidation.plugins.SubmitButton(),
+		defaultSubmit: new FormValidation.plugins.DefaultSubmit(),
+	},
+}).on('core.element.validated', function (e) {
+	if (e.valid) {
+		$('div#'+ e.field.replace('[]','') +'_chosen').removeClass('is-invalid');
+		$('div#'+ e.field.replace('[]','') +'_chosen').addClass('is-valid');
+	} else {
+		$('div#'+ e.field.replace('[]','') +'_chosen').removeClass('is-valid');
+		$('div#'+ e.field.replace('[]','') +'_chosen').addClass('is-invalid');
+	}
+});
+</script>
+   

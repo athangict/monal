@@ -1,0 +1,273 @@
+<?php
+/**
+ * 
+ * View -- of Accounts/AssetController/editpartyAction
+ * 
+ */
+	$this->headTitle($this->title);
+?>
+<?php 
+    foreach($this->party as $party):
+        extract($party);
+    endforeach;
+?>
+<div class="row">
+	<div class="col-lg-12">
+		<div class="widget widget-box">
+			<div class="widget-header">
+				<h5 class="widget-title lighter smaller">
+					<i class="fa fa-pencil-square-o"></i> Edit Party <strong><?php echo $name;?></strong>
+				</h5>
+			</div>
+			<div class="widget-body">
+				<div class="widget-main">
+					<form id="form" method="post" action="<?php echo $this->url('asset', array('action' => 'editparty', 'id' => $id)); ?>" enctype="multipart/form-data" >
+						<div class="row">
+							<div class="form-group col-lg-4">
+								<label for="code" class="control-label">Code</label>
+								<input type="text" class="form-control" name="code" id="code" value="<?php echo $code; ?>" required>
+							</div>
+							<div class="form-group col-lg-4">
+								<label for="name" class="control-label">Name</label>
+								<input type="text" class="form-control" name="name" id="name" value="<?php echo $name; ?>" required>
+							</div>
+							<div class="form-group col-lg-4">
+								<label for="role" class="control-label">Role</label>
+								<select class="form-control" id="role" name="role" required >
+									<option value=""></option>
+									<?php 
+									   foreach ($roles as $roles):
+										   $selected = ($role_id==$roles['id'])?"selected":"";
+									?>
+										<option value="<?php echo $roles['id'];?>"<?php echo $selected; ?>>
+											<?php echo $roles['role'];?> 
+										</option>
+									<?php
+									endforeach;
+									?>
+								</select>
+							</div>
+						</div>
+						<div class="row">
+							<div class="form-group col-lg-4">
+								<label for="country">Country</label>
+								<input type="text" class="form-control" name="country" id="country" value="<?php echo $country; ?>">
+							</div>
+							<div class="form-group col-lg-4">
+								<label for="region">Region</label>
+								<input type="text" class="form-control" name="region" id="region" value="<?php echo $region; ?>" >
+							</div>					
+							<div class="form-group col-lg-4">
+								<label for="city">City</label>
+								<input type="text" class="form-control" name="city" id="city" value="<?php echo $city; ?>">
+							</div>
+						</div>
+						<div class="row">
+							<div class="form-group col-lg-4">
+								<label for="address1" class="control-label">Address</label>
+								<textarea class="form-control" name="address1" id="address1"><?php echo $address1;?></textarea>
+							</div>	
+							<div class="form-group col-lg-4">
+								<label for="location" class="control-label">Location</label>
+								<select class="form-control" name="location" id="location" data-placeholder="Select Location" >
+									<option value="-1">All</option>
+									<?php foreach($locations as $loc):
+										$selected = ($location == $loc['id'])?"selected":"";
+									?>
+									<option value="<?php echo $loc['id'];?>"<?php echo $selected;?>>
+										<?php echo $loc['location'];?>
+									</option>
+									<?php endforeach;?>
+								</select>
+							</div>
+						</div>
+						<h5 class='header blue'>Contact Details</h5>
+						<div class="row">
+							<div class="form-group col-lg-4">
+								<label for="telephone">Telephone</label>
+								<input type="text" class="form-control" name="telephone" id="telephone" value="<?php echo $telephone; ?>" >
+							</div>
+							<div class="form-group col-lg-4">
+								<label for="tpn">TPN Number</label>
+								<input type="text" class="form-control" name="tpn" id="tpn" value="<?php echo $tpn; ?>" >
+							</div>
+							<div class="form-group col-lg-4">
+								<label for="email">Email</label>
+								<input type="email" class="form-control" name="email" id="email" value="<?php echo $email; ?>" >
+							</div>
+						</div>
+						<div class="row">
+							<div class="form-group col-lg-4">
+								<label for="postal_code">Postal Code</label>
+								<input type="text" class="form-control" name="postal_code" id="postal_code" value="<?php echo $postal_code; ?>">
+							</div>			
+							<div class="form-group col-lg-4">
+								<label for="contact_person">Contact person</label>
+								<input type="text" class="form-control" name="contact_person" id="contact_person" value="<?php echo $contact_person; ?>"  >
+						   </div>	
+						</div>
+						
+						<div class="row">
+							<div class="col-lg-12"> 
+								<h5 class='header blue'>Sub Head Details</h5>
+								<table id="head_table" class="table small-padding">
+									<thead>
+										<tr>
+											<th>Head Type</th>
+											<th>Head</th>
+											<th>&nbsp;</th>
+										</tr>
+									</thead>
+									<tbody>
+										<?php 
+											$count=sizeof($subheads);
+											if($count > 0):
+												foreach($subheads as $subheads):?>
+													<tr>
+														<td>
+															<div class="form-group">
+																<select class="form-control head_type" id="head_type" name="head_type[]" data-placeholder="Select" >
+																	<option value=""></option>
+																	<?php 
+																	foreach ($headtypes as $headtype):
+																		$selected = ($subheads['headtype_id'] == $headtype['id'])? "selected":"";
+																	?>
+																		<option value="<?php echo $headtype['id'];?>" <?php echo $selected	?>>
+																			<?php echo $headtype['head_type'];?>
+																		</option>
+																	<?php endforeach;?>
+																</select>
+															</div>
+															<input type="hidden" id="subhead_id" name="subhead_id[]" value="<?php echo $subheads['id'];?>"/>
+														</td>
+														<td>
+															<div class="form-group">
+																<select class="form-control head" id="head" name="head[]" data-placeholder="Select" >
+																	<option value=""></option>
+																	<?php 
+																	$heads=$headObj->get(array('h.head_type'=> $subheads['headtype_id']));
+																	
+																	foreach ($heads as $headrow):
+																		$selected = ($subheads['head_id'] == $headrow['id'])? "selected":"";
+																	?>
+																		<option value="<?php echo $headrow['id'];?>" <?php echo $selected	?>>
+																			<?php echo $headrow['code'];?>
+																		</option>
+																	<?php endforeach;?>
+																</select>
+															</div>
+														</td>
+														<td></td>
+													</tr>
+												<?php endforeach;?>
+											<?php else:	?>
+												<tr>
+													<td>
+														<div class="form-group">
+															<select class="form-control head_type" id="head_type" name="head_type[]" data-placeholder="Select" >
+																<option value=""></option>
+																<?php foreach ($headtypes as $headtype):?>
+																	<option value="<?php echo $headtype['id'];?>">
+																		<?php echo $headtype['head_type'];?>
+																	</option>
+																<?php endforeach;?>
+															</select>
+														</div>
+													</td>
+													<td>
+														<div class="form-group">
+															<select class="form-control head" id="head" name="head[]" data-placeholder="Select" >
+																<option value=""></option>
+															</select>
+														</div>
+													</td>
+													<td width="30px;"></td>
+												</tr>
+											<?php endif;?>
+									</tbody>
+								</table>
+							</div>
+						</div> 
+						<button type="submit" class="btn btn-success"><i class="fa fa-check"></i> Save </button>
+						<button type="button" class="btn btn-warning" onclick="javascript:history.back();"><i class="fa fa-times"></i> Cancel </button>
+					</form>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+<script>
+	$(function() {		
+		/****** dynamic insertion of table row*******/
+		$('#head_table').subhead({src:'<?php echo $this->url("ajresponse", array("action" => "gethead")); ?>'});	
+	
+		const fv = FormValidation.formValidation(document.getElementById('#form'), {
+			fields: {
+				code: {
+					validators: {
+						notEmpty: {
+							message: 'Please provide code.'
+						},
+					}
+				},
+				name: {
+					validators: {
+						notEmpty: {
+							message: 'Please provide name.'
+						},
+					}
+				},
+				role: {
+					validators: {
+						notEmpty: {
+							message: 'Please select role.'
+						},
+					}
+				},
+				/*
+				email: {
+					validators: {
+						notEmpty: {
+							message: 'Please provide email.'
+						},
+						emailAddress: {
+							message: 'Please provide valid email.'
+						},
+					}
+				},*/
+				
+				'head_type[]': {
+	                validators: {
+	                    notEmpty: {
+	                        message: 'Please select Head Type'
+	                    }
+	                }
+	            },
+	            'head[]': {
+	                validators: {
+	                    notEmpty: {
+	                        message: 'Please select Head'
+	                    }
+	                }
+	            }, 
+			},
+			plugins: {
+				trigger: new FormValidation.plugins.Trigger(),
+				bootstrap3: new FormValidation.plugins.Bootstrap3(),
+				submitButton: new FormValidation.plugins.SubmitButton(),
+				defaultSubmit: new FormValidation.plugins.DefaultSubmit(),
+			},
+	}).on('core.element.validated', function (e) {
+		if (e.valid) {
+			$('div#'+ e.field.replace('[]','') +'_chosen').removeClass('is-invalid');
+			$('div#'+ e.field.replace('[]','') +'_chosen').addClass('is-valid');
+		} else {
+			$('div#'+ e.field.replace('[]','') +'_chosen').removeClass('is-valid');
+			$('div#'+ e.field.replace('[]','') +'_chosen').addClass('is-invalid');
+		}
+	});
+	$('form select').chosen().change(function () {
+		fv.revalidateField($(this).attr('name'));
+	});
+	});
+</script>

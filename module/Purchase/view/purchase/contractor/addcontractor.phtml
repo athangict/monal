@@ -1,0 +1,285 @@
+<?php
+/**
+ * View -- of Purchase/ContractorController/addcontractorAction
+ */
+  $this->headTitle($this->title);
+?>
+<style>
+	table#trdetails_table > thead > tr {
+		background: rgba(179, 174, 174, 0.18);
+		border-top:2px solid #ddd;
+		border-bottom:3px solid #ddd;
+		color: #707070;
+		font-weight: 400;
+	}
+	table#trdetails_table > tbody > tr > td {
+	    padding: 8px;
+	    line-height: 1.8;
+	    vertical-align: top;
+	    font-size: 13.5px;
+    }
+</style>
+<div class="row">
+	<div class="col-lg-12">
+		<div class="widget widget-box">
+			<div class="widget-header">
+				<h5 class="widget-title lighter smaller">
+					<i class="fa fa-asterisk"></i>&nbsp;&nbsp;New Contractor Invoice
+                </h5>	
+              
+			</div>
+			<div class="widget-body">
+				<div class="widget-main">
+					<form id="#form" method="post" action="<?php echo $this->url('contractor', array('action' => 'addcontractor')); ?>" enctype="multipart/form-data">    
+						<div class="row">	
+							<div class="col-lg-4">    
+								<div class="form-group">
+									<label for="invoice_date" class="control-label">Invoice Date</label>
+									<div class="date input-group" id="invoice_date" data-date="<?php echo date('Y-m-d');?>" data-date-format="yyyy-mm-dd" >
+										<input class="form-control span2" name="invoice_date" id="invoice_date" type="text" value="<?php echo date('Y-m-d');?>" placeholder="Invoice Date" readonly required>
+										<span class="input-group-addon add-on"><i class="fa fa-calendar"></i></span>
+									</div>
+								</div>
+							</div>	
+							<div class="col-lg-4">
+								<div class="form-group">
+									<label for="start_date" class="control-label">Start Date</label>
+									<div class="date input-group" id="start_date" data-date="<?php echo date('Y-m-d');?>" data-date-format="yyyy-mm-dd" >
+										<input class="form-control span2" name="start_date" id="start_date" type="text" placeholder="Start Date" readonly required>
+										<span class="input-group-addon add-on"><i class="fa fa-calendar"></i></span>
+									</div>
+								</div>
+							</div>	   				
+							<div class="col-lg-4">
+								<div class="form-group">
+									<label for="end_date" class="control-label">End Date</label>
+									<div class="date input-group" id="end_date" data-date="<?php echo date('Y-m-d');?>" data-date-format="yyyy-mm-dd" >
+										<input class="form-control span2" name="end_date" id="end_date" value="<?php echo date('Y-m-d');?>" type="text" placeholder="End Date" readonly required>
+										<span class="input-group-addon add-on"><i class="fa fa-calendar"></i></span>
+									</div>
+								</div>
+							</div>
+						</div>
+						<div class="row">	
+							<div class="col-lg-4"> 
+								<div class="form-group">
+									<label for="location" class="control-label">Location</label>
+									<select id="location" name="location" class="form-control" data-placeholder="Select" required>
+										<option value=""></option>
+										<?php foreach ($regions as $region): ?>
+										<optgroup label="<?php echo $region['region'];?>">
+											<?php 
+												$locations = $locationObj->get(array('region'=>$region['id']));
+												foreach ($locations as $location):
+												//$selected = ($location['id']==3)?"selected":"";
+											?>
+											 <option value="<?php echo $location['id']; ?>" <?php //echo $selected;?>>
+												<?php echo $location['location']; ?>
+											 </option>
+											<?php endforeach;?>
+										</optgroup>
+										<?php endforeach;?>									
+									</select> 
+								</div>
+							</div>
+							<div class="col-lg-4"> 
+								<div class="form-group">
+									<label for="activity" class="control-label">Activity</label>
+									<select class="form-control" name="activity" id="activity" data-placeholder="Select" required>
+										<option value=""></option>
+										<?php foreach($this->activities as $activity):?>
+											<option value="<?php echo $activity['id'];?>">
+										   		<?php echo $activity['activity']; ?>
+										   	</option>
+										<?php endforeach;?>
+									</select>
+								</div>
+							</div>
+							<div class="col-lg-4"> 
+								<div class="form-group">
+									<label for="contractor" class="control-label">Contractor</label>
+									<select id="contractor" name="contractor" class="form-control" data-placeholder="Select" required>
+										<option value=""></option>								
+									</select> 
+								</div>
+							</div> 				
+						</div>
+						<div class="row">
+							<div class="col-lg-12">
+							<div class="space-12"></div>
+								<div class="page-header">
+									<h1>
+										<div class="col-lg-9">
+											Contractor Invoice Details
+											<small>
+												<i class="ace-icon fa fa-angle-double-right"></i>
+												Loading, Unloading, Shifting &amp; Repacking Charges
+											</small>
+										</div>
+										<div class="col-lg-3">
+											<button type="button" id="refresh_btn" class="btn btn-info pull-right"><i class="fa fa-refresh"></i> Refresh </button>
+										</div>
+									</h1>
+									<div class="space-12"></div>
+									<div class="space-12"></div>
+								</div>
+							</div>
+						</div>
+						
+						<div class="row">
+							<div class="col-lg-12">
+								<div class="alert alert-block alert-info message_box">
+									<i class="ace-icon fa fa-check blue"></i>
+									Please Fill in the details to generate <strong class="blue"> Unloading, Loading, Shifting & Repacking Charges </strong>. 
+								</div>
+								<div class="con_inv_details">
+									<?php /** The Table Data Comes in Here **/?>
+								</div>
+							</div>
+						</div>
+						<div class="row">
+							<div class="col-lg-12">
+								<div class="details">
+								</div>
+							</div>
+						</div>
+						<div class="space-12"></div>
+						<div class="row">
+							<div class="col-lg-12">
+								<label class="control-label" for="note">Note: </label>
+								<textarea class="form-control" name="note" id="note"></textarea>
+							</div>
+						</div>
+						<div class="space-12"></div>
+						<div class="row"> 	
+							<div class="col-lg-9"> 
+								<button type="submit" class="btn btn-success"><i class="fa fa-check"></i> Save </button>
+								<button type="button" class="btn btn-warning" onclick="javascript:history.back();" ><i class="fa fa-times"></i> Cancel </button> 					
+							</div>
+						</div>
+					</form>  
+				</div> <!-- end of widget-main -->  
+	        </div> <!-- end of widget-body -->
+        </div> <!-- end of widget widget-default -->
+    </div> <!-- end of col-lg-12 -->
+</div> <!-- end of row -->
+
+<script type="text/javascript">
+$(function() {
+	$('#invoice_date').datepicker();
+	$('#start_date').datepicker();
+	$('#end_date').datepicker();
+	$('#invoice_date').on('changeDate',function(){
+		$('form').formValidation('revalidateField', $(this).attr('id'));
+	});
+	$('#start_date').on('changeDate',function(){
+		$('form').formValidation('revalidateField', $(this).attr('id'));
+	});
+	$('#end_date').on('changeDate',function(){
+		$('form').formValidation('revalidateField', $(this).attr('id'));
+	});
+
+        $('#location').on('change', function(){
+			$.post(
+			"<?php echo $this->url('contractor', array('action' => 'getloccontractor'));?>",
+			{
+				loc: $(this).val(),
+			},
+			function(data){
+				console.log(data);
+				$("#contractor").html(data.contractors);
+				$('#contractor option:selected').removeAttr('selected');
+				$('#contractor').trigger('chosen:updated');
+			},
+			'json'
+		);
+	});
+
+	$('#refresh_btn').click(function(){
+		$('form').formValidation('revalidateField',$('input#start_date'));
+		$('form').formValidation('revalidateField',$('input#end_date'));
+		$('form').formValidation('revalidateField',$('#location'));
+		$('form').formValidation('revalidateField',$('#activity'));
+		$('form').formValidation('revalidateField',$('#contractor'));
+		var validation = $('form small[data-fv-result = "INVALID"]').length;
+		
+		if(validation <= 0){
+			$.post( 
+				"<?php echo $this->url('contractor', array('action' => 'getconinvdetails'));?>",
+				{	
+					'start_date': $('input#start_date').val(),
+					'end_date': $('input#end_date').val(),
+					'location': $('#location').val(), 
+					'activity': $('#activity').val(),
+					'contractor':$('#contractor').val(),
+				}, 
+				function(data) {
+					$('div.con_inv_details').html( data ); 
+			});	
+			$('div.message_box').hide();
+			$('div.details').empty();
+		}
+	});
+	/******** formValidation *************/
+	const fv = FormValidation.formValidation(document.getElementById('#form'), {
+		fields: {
+			'invoice_date': {
+				validators: {
+					notEmpty: {
+						message: 'Please select invoice date'
+					}
+				}
+			},
+			'location': {
+				validators: {
+					notEmpty: {
+						message: 'Please select location'
+					}
+				}
+			},
+			'activity': {
+				validators: {
+					notEmpty: {
+						message: 'Please select activity'
+					}
+				}
+			},
+			'contractor': {
+				validators: {
+					notEmpty: {
+						message: 'Please select contractor'
+					}
+				}
+			},  
+			'start_date':{
+				validators: {
+					notEmpty:{
+						message: 'Please select start date'
+					},
+				}
+			}, 
+			'end_date':{
+				validators: {
+					notEmpty:{
+						message: 'Please select end date'
+					},
+				}
+			},               
+		},
+		plugins: {
+			trigger: new FormValidation.plugins.Trigger(),
+			bootstrap3: new FormValidation.plugins.Bootstrap3(),
+			submitButton: new FormValidation.plugins.SubmitButton(),
+			defaultSubmit: new FormValidation.plugins.DefaultSubmit(),
+		},
+	}).on('core.element.validated', function (e) {
+		if (e.valid) {
+			$('div#'+ e.field.replace('[]','') +'_chosen').removeClass('is-invalid');
+			$('div#'+ e.field.replace('[]','') +'_chosen').addClass('is-valid');
+		} else {
+			$('div#'+ e.field.replace('[]','') +'_chosen').removeClass('is-valid');
+			$('div#'+ e.field.replace('[]','') +'_chosen').addClass('is-invalid');
+		}
+	});
+});
+</script>

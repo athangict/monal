@@ -1,0 +1,47 @@
+<?php // partial.phtml 
+  $salesrecord = ($this->active == "salesrecord")?"active":"";
+  $slbooking = ($this->active == "slbooking")?"active":"";
+  $slbookingrecord = ($this->active == "eosrecord")?"active":"";
+  $receipt = ($this->active == "receipt")?"active":"";
+  $draftsales = ($this->active == "draftsales")?"active":"";
+  $market = ($this->active == "market")?"active":"";
+?>
+<br/>
+<ul class="nav nav-tabs padding-18" id="myTab">
+	<li class="<?php echo $salesrecord; ?>">
+		<a href="<?php echo $this->url('pos', array('action' => 'salesrecord')); ?>">
+			<i class="green  ace-icon fa fa-shopping-cart bigger-120"> </i>
+			<span class="hidden-xs">Sales Record</span>
+		</a>
+	</li>
+	<li class="<?php echo $slbooking; ?>">
+		<a href="<?php echo $this->url('sales', array('action' => 'slbooking')); ?>">
+			<i class="red ace-icon fa fa-file-text bigger-120"> </i>
+			<span class="hidden-xs">End of Session</span>
+		</a>
+	</li>
+        <li class="<?php echo $slbookingrecord; ?>">
+		<a href="<?php echo $this->url('sales', array('action' => 'eosrecord')); ?>">
+			<i class="gray ace-icon fa fa-reorder bigger-120"> </i>
+			<span class="hidden-xs">End of Session Record</span>
+		</a>
+	</li>
+	<li class="<?php echo $receipt; ?>">
+		<a href="<?php echo $this->url('sales', array('action' => 'receipt')); ?>">
+			<i class="orange ace-icon fa fa-credit-card bigger-120"> </i>
+			<span class="hidden-xs">Credit Receipt</span>
+		</a>
+	</li>
+	<li class="<?php echo $draftsales; ?>">
+		<a href="<?php echo $this->url('pos', array('action' => 'draftsales')); ?>">
+			<i class="blue ace-icon fa fa-shopping-basket bigger-120"> </i>
+			<span class="hidden-xs">Draft Sales</span>
+		</a>
+	</li>
+	<li class="<?php echo $market; ?>">
+		<a href="<?php echo $this->url('sales', array('action' => 'market')); ?>">
+			<i class="blue ace-icon fa fa-book bigger-120"> </i>
+			<span class="hidden-xs">Market Information</span>
+		</a>
+	</li>
+</ul>

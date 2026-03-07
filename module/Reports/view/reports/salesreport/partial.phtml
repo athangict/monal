@@ -1,0 +1,40 @@
+<?php
+  $customeroutstandings = ($this->active == "customeroutstanding")?"active":"";
+  $productwises = ($this->active == "productwise")?"active":"";
+  $salesregisters = ($this->active == "salesregister")?"active":"";
+  $salesstatements = ($this->active == "salesstatement")?"active":"";
+  $slactivity = ($this->active == "slactivity")?"active":"";
+?>
+<br/>
+<ul class="nav nav-tabs padding-18" id="myTab">
+	<li class="<?php echo $customeroutstandings; ?>">
+		<a href="<?php echo $this->url('salesreport', array('action' => 'customeroutstanding')); ?>">
+			<i class="green ace-icon fa fa-money bigger-120"> </i>
+			<span class="hidden-xs">Customer Outstanding</span>
+		</a>
+	</li>
+	<li class="<?php echo $productwises; ?>">
+		<a href="<?php echo $this->url('salesreport', array('action' => 'productwise')); ?>">
+			<i class="green ace-icon fa fa-heartbeat bigger-120"> </i>
+			<span class="hidden-xs">Product Wise Sales</span>
+		</a>
+	</li>
+	<li class="<?php echo $salesregisters; ?>">
+		<a href="<?php echo $this->url('salesreport', array('action' => 'salesregister')); ?>">
+			<i class="green ace-icon fa fa-money bigger-120"> </i>
+			<span class="hidden-xs">Sales Register</span>
+		</a>
+	</li>
+	<li class="<?php echo $salesstatements; ?>">
+		<a href="<?php echo $this->url('salesreport', array('action' => 'salesstatement')); ?>">
+			<i class="blue ace-icon fa fa-credit-card bigger-120"> </i>
+			<span class="hidden-xs">Sales Statement</span>
+		</a>
+	</li>
+        <li class="<?php echo $slactivity; ?>">
+		<a href="<?php echo $this->url('sales', array('action' => 'slactivity')); ?>">
+			<i class="green ace-icon fa fa-sitemap bigger-120"> </i>
+			<span class="hidden-xs">Activity Wise Sales</span>
+		</a>
+	</li>
+</ul>

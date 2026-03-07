@@ -1,0 +1,87 @@
+<?php
+/**
+ * 
+ * View -- of Stock/MsaterController/itemgroupAction
+ * 
+ */
+	$this->headTitle($this->title);
+?>
+
+<?php echo $this->partial('stock/stock/partial.phtml', array('active' => 'itemgroup')); ?>
+<div class="space-12"></div>
+<div class="card">
+	<div class="card-header">
+		<form method="post"> 
+			<div class="row">
+				<div class="form-group col-lg-3">
+					<label for="itemclass" class="label-control">Item Class</label>
+					<select class="form-control" data-placeholder="Select" name="item_class" id="item_class" onchange='this.form.submit()' >
+						<option value="" ></option>
+						<option value="-1" <?php echo ($class_id == '-1')?"selected":"";?> >All</option>
+						<?php 
+							$itemclasses = $this->itemclassObj->getAll();
+							foreach($itemclasses as $itemclass):
+								$selected_class = ($class_id == $itemclass['id'])?"selected":"";
+						?>
+							<option value="<?php echo $itemclass['id'];?>" <?php echo $selected_class;?>>
+								<?php echo $itemclass['item_class'];?>
+							</option>
+						<?php endforeach;?>
+					</select>
+				</div>
+				<div class="clearfix col-lg-9">
+					<div class="pull-right tableTools-container"></div>
+					<a class="red pull-right DTTT_button btn btn-white btn-info btn-bold" data-toggle="modal" data-target="#modal" data-tooltip="tooltip" data-placement="top" title="Add New Item Group" href="<?php echo $this->url('stock', array('action' => 'additemgroup'));?>" >
+						<span class="red"><i class="fa fa-plus"></i> <span class="hidden-sm hidden-xs">&nbsp;Add Item Group</span></span>
+					</a>
+				</div>
+			</div>
+		</form>
+		<div>
+			<table class="table table-bordered table-striped table-hover" id="dataTables">
+				<thead>
+					<tr>
+						<th>#</th>
+						<th>Item Group</th>
+						<th>Description</th>
+						<th>Item Class</th>
+						<th class="no-sort">Action</th>
+					</tr>
+				</thead>
+				<tbody>
+					<?php
+						$i = 1; 
+						foreach ($this->itemgroups as $itemgroup):
+					?>
+							<tr class="<?php echo $class; ?>">
+								<td><?php echo $i++; ?> </td>
+								<td><b><?php echo $itemgroup['item_group']; ?></b></td> 
+								<td><?php echo $itemgroup['description']; ?></td>                               
+								<td><?php echo $this->itemclassObj->getColumn($itemgroup['item_class'],'item_class'); ?></td> 
+								<td>
+									<div class="btn-group">
+										<a class="btn btn-xs btn-info" data-toggle="modal" href="<?php echo $this->url('stock', array('action'=>'edititemgroup', 'id' => $itemgroup['id']));?>" data-target="#modal">
+											<i class="ace-icon fa fa-pencil bigger-120"></i>
+										</a>                                                                    
+									</div>
+								</td>
+							</tr>
+					<?php endforeach;?>
+				</tbody>
+			</table>
+		</div>
+	</div>
+</div>
+<!--for modal -->
+<div id="modal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content"> </div>
+    </div>
+</div>
+<script type="text/javascript">
+$('document').ready(function(){
+	$('#dataTables').DataTable({
+		"paging":   true,
+	});
+});
+</script>

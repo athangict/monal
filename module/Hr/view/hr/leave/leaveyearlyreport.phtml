@@ -1,0 +1,140 @@
+<?php
+/**
+ * 
+ * View -- of Sales/MasterpsController/serviceAction
+ * 
+ */
+
+$this->headTitle($this->title);
+
+?>
+<?php echo $this->partial('hr/leave/partial.phtml', array('active' => 'leaveyearlyreport')); ?>
+
+<div class="card">
+	<div class="card-header">
+		<div class="row">
+			<div class="col-lg-12">
+				<form method="POST" action="<?php echo $this->url('leave', array('action' => 'leaveyearlyreport')); ?>" enctype="multipart/form-data" >    
+						<div class="row">
+							<div class="form-group col-lg-2">
+								<label class="control-label" for="start_date">Start Date</label>
+								<div class="date input-group" id="start_date" data-date="<?php echo $data['start_date'];?>" data-date-format="yyyy-mm-dd" >
+									<input class="form-control span2" name="start_date" id="start_date" type="text" placeholder="Start Date" value="<?php echo $data['start_date'];?>"  required>
+									<span class="input-group-addon add-on"><i class="fa fa-calendar"></i></span>
+								</div>
+							</div>
+							<div class="form-group col-lg-2">
+								<label class="control-label" for="end_date">End Date</label>
+								<div class="date input-group" id="end_date" data-date="<?php echo $data['end_date'];?>" data-date-format="yyyy-mm-dd" >
+									<input class="form-control span2" name="end_date" id="end_date" type="text" placeholder="End Date" value="<?php echo $data['end_date'];?>"  required>
+									<span class="input-group-addon add-on"><i class="fa fa-calendar"></i></span>
+								</div>
+							</div>
+							<div class="form-group col-lg-2">
+								<label for="region" class="control-label">Division/Region</label>
+								<select class="form-control" id="region" name="region" data-placeholder="Select" >
+									<option value="-1">All</option>
+									<?php foreach ($region as $regions):?>
+										<option value="<?php echo $regions['id']?>"<?php echo ($regions['id']==$data['region'])?'selected':'';?>>
+										<?php echo $regions['region'];?>	</option>
+									<?php endforeach; ?>
+								</select>
+							</div>
+							<div class="form-group col-lg-2">
+								<label for="location" class="control-label">Location</label>
+								<select class="form-control" id="location" name="location" data-placeholder="Select">
+									<option value="-1">All</option>
+									<?php foreach ($locations as $location):?>
+										<option value="<?php echo $location['id']?>"<?php echo ($location['id']==$data['location'])?'selected':'';?>>
+										<?php echo $location['location'];?>	</option>
+									<?php endforeach; ?>
+								</select>
+							</div>
+							<div class="form-group col-lg-2">
+								<label for="leave" class="control-label">Leave Type</label>
+								<select class="form-control" id="leave" name="leave" data-placeholder="Select" onchange='this.form.submit()'>
+									<option value="-1">All</option>
+									<?php foreach ($this->leaveObj->getAll() as $leaves):?>
+										<option value="<?php echo $leaves['id']?>"<?php echo ($leaves['id']==$data['leave'])?'selected':'';?>>
+										<?php echo $leaves['type'];?>	</option>
+									<?php endforeach; ?>
+								</select>
+							</div>
+						</div>
+						<div class="form-group col-lg-3"></br>
+								<div class="date input-group" >
+								    <button type = "submit" class="btn btn-sm btn-success pull-right"><i class="fa fa-gear"></i> Generate </button>
+								</div>
+							</div>
+					</form>
+				</div>
+			
+		</div>
+	</div>
+	<div class="table-responsive">
+		<table class="table table-striped table-bordered table-hover" id="dataTables">
+			<thead>
+				<tr>
+					<th>#</th>
+					<th>Name</th>
+					<th>Designation</th>
+					<th>Division/Region</th>
+					<th>Location</th>
+					<th>Leave Type</th>
+					<th>From - To</th>
+					<th>No.of Used Leave Days</th>
+					<th>Action</th>
+				</tr>
+			</thead>
+			<tbody>
+				<?php
+					$i = 1; $total=0;
+					foreach ($paginator as $row):
+					?>
+					<tr>
+						<td><?php echo $i++; ?> </td>
+						<td><?php echo $row['full_name'];?></td>
+						<td><?php echo $row['designation'];?></td>							
+						<td><?php echo $row['region'];?></td>	
+						<td><?php echo $row['location'];?></td>	
+						<td><?php echo $this->leaveObj->getColumn($row['leave_type'],'type');?></td>
+						<td><?php echo $row['start_date'].' - '.$row['end_date'];?></td>	
+						<td><b><?php echo $row['no_of_days'];?><b></td>	
+						<td><a href="<?php echo $this->url('leave', array('action'=>'leavedetail', 'id'=>$row['id']));?>" class="btn btn-info btn-xs"> 
+								<i class="fa fa-eye"></i></a></td>		
+					</tr><?php endforeach;?>
+				</tbody>
+		</table>
+	</div>
+</div>
+<!-- for modal -->
+<div id="modal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+	<div class="modal-dialog">
+		<div class="modal-content">
+		</div>
+	</div>
+</div>
+<script type="text/javascript">
+
+$('document').ready(function(){
+	$('#start_date').datepicker();
+	$('#end_date').datepicker();
+	$('#dataTables').DataTable({
+		"paging":   true,
+	});
+	$('#region').on('change',function(){
+		$.post(
+			"<?php echo $this->url('employee', array('action' => 'getlocation'));?>",
+			{
+				regionId: $(this).val(),
+			},
+			function(data){
+				$('select#location').html(data.location);
+				$('select#location').trigger('chosen:updated');
+			},
+			'json'
+		);
+	});
+});
+
+</script>

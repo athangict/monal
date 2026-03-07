@@ -1,0 +1,75 @@
+<?php
+/**
+ * 
+ * View -- of Stock/GoodsrequestController/indexAction
+ * 
+ */
+	$this->headTitle($this->title);
+?>
+<?php echo $this->partial('stock/sam/partial.phtml', array('active' => 'opening')); ?><br/>
+<?php $minYear = date('Y', strtotime($minYear)); ?>
+<div class="row">
+	<div class="col-lg-12">
+		<div class="row">
+           <div class="form-group col-lg-6">
+		        <h4 class = "red" > Authorwise Dispaly</h4>
+           </div>		   
+			<div class="form-group col-lg-6">					
+				<div class="clearfix">
+					<div class="pull-right tableTools-container"></div>
+					<a class="red pull-right DTTT_button btn btn-white btn-info btn-bold" data-tooltip="tooltip" data-placement="top" title="Add New Opening Stock" href="<?php echo $this->url('sam', array('action'=>'addstockopening'));?>" >
+						<span class="red"><i class="fa fa-plus"></i> <span class="hidden-sm hidden-xs">&nbsp;Add Opening Stock</span></span>
+					</a>
+				</div>
+			</div>
+		</div>
+		<div>
+			<table class="table table-bordered table-striped table-hover" id="dataTables">
+				<thead>
+					<tr>
+					    <th>#</th>
+						<th>Batch No.</th>
+						<th>Item</th>
+						<th>Uom</th>
+						<th>Quantity</th>
+						<th>Landed Cost</th>
+						<th>Author</th>
+						<th>Created/Modified</th>
+					</tr>
+				</thead>
+				<tbody>					
+					<?php $i=1;
+						foreach($openingstocks as $row):							
+							//$batch_id = $this->batchObj->getColumn(array('batch'=>$row['batch']),'id');
+					?>
+						<tr data-href="<?php echo $this->url('sam', array('action'=>'viewstockopening', 'id'=>$row['id']));?>">
+							<td><?php echo $i++;?></td>
+							<td><strong><?php echo $row['batch'];?></strong></td>
+							<td><?php echo $row['item_code']?></td>
+							<td><?php echo $row['uom_code']?></td>
+							<td><?php echo $row['quantity'];?></td>
+							<td><?php echo $row['landed_cost'];?></td>
+							<td><?php echo $this->userObj->getColumn($row['author'],'name');?></td>
+							<td><?php echo $row['created'];?><b> | </b><?php echo $row['modified'];?></td>
+						</tr>
+					<?php endforeach;?>  
+				</tbody>
+			</table>
+		</div>
+	</div>
+</div>
+<script>		
+	$("tr[data-href]").each(function(){
+		$(this).find('td').not('td.action').each(function(){
+			$(this).css('cursor','pointer');
+			$(this).bind('click',function() {
+				window.document.location = $(this).closest('tr').attr("data-href");
+			});
+		});
+	});
+	$('#dataTables').genpdftable({
+		src:"<?php echo $this->url('pdfxls', array('action' => 'pdf'));?>",
+		orentation:"L",//L =landscape, P = potrait
+	});
+</script>
+

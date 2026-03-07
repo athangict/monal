@@ -1,0 +1,56 @@
+<?php 
+/**
+ * View -- of Accounts/ChartaccountController/journalAction
+ * chophel@athang.com -- 2022
+ */
+	$this->headTitle($this->title);
+?>
+<?php echo $this->tabs_helper(array(611,612,613,614,615,630,617,629)); ?>
+<div class="card">
+    <div class="card-header">
+		<div class="btn-group pull-right">
+			<?php echo $this->button(2,$page);?>
+		</div>
+	</div>
+	<div class="table-responsive">
+		<table class="table card-table table-vcenter text-nowrap datatable" id="dataTables">
+			<thead>
+				<tr>
+					<th>#</th>
+					<th>Voucher Types</th>
+					<th>Prefix</th>
+					<th>Parent Voucher</th>
+					<?php if($this->button(1)!=""):?>
+						<th class="no-sort no-printpdf">Action</th>
+					<?php endif;?>	
+				</tr>
+			</thead>
+			<tbody>
+			<?php $i=1+(($page-1)*20); foreach ($paginator as $row):?>
+				<tr>
+					<td><?php  echo $i++; ?></td>								       
+					<td class="fw-bold"><?php echo $row['journal'];?></td>
+					<td><?php echo $row['prefix']; ?></td>
+					<td><?php echo $this->voucherObj->getColumn($row['voucher_main'],'name'); ?></td>
+					<?php if($this->button(1)!=""):?>
+						<td><?php echo $this->button(1, $row['id'].'_'.$page);?></td>
+					<?php endif;?>
+				</tr>
+			<?php endforeach; ?>
+			</tbody>
+		</table>
+	</div>
+</div>
+<div class="modal fade" id="modal" tabindex="-1" role="dialog" aria-hidden="true">
+	<div class="modal-dialog modal-lg" role="document">
+		<div class="modal-content">
+		</div><!-- /.modal-content -->
+	</div><!-- /.modal-dialog -->
+</div><!-- /.modal -->
+<script>
+$('document').ready(function(){
+	$('#dataTables').DataTable({
+		"paging":   true,
+	});
+});
+</script>

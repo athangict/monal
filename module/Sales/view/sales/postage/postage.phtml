@@ -1,0 +1,63 @@
+<?php
+/**
+ * 
+ * View -- of Sales/MasterpsController/serviceAction
+ * 
+ */
+$this->headTitle($this->title);
+?>
+<div class="card">
+	<div class="card-header">
+		<div class="btn-group pull-right">
+			<?php echo $this->button(2);?>
+		</div>
+	</div>
+	<div class="table-responsive">
+		<table class="table table-striped table-bordered table-hover" id="dataTables">
+			<thead>
+				<tr>
+					<th>#</th>
+					<th>Services</th>
+					<th>Country</th>
+					<th>City</th>
+					<th>Date-Time</th>
+					<?php if($this->button(1)!=""):?>
+						<th class="no-sort no-printpdf">Action</th>
+					<?php endif;?>
+				</tr>
+			</thead>
+			<tbody>
+				<?php
+					$i = 1; 
+					foreach ($postage as $postages):
+				?>
+					<tr>
+						<td><?php echo $i++; ?> </td>
+						<td><b><?php echo $this->serviceObj->getColumn($postages['service'],'service');?></b></td>
+						<td><?php echo $this->countryObj->getColumn($postages['country'],'name');?></td>
+						<td><?php echo $this->cityObj->getColumn($postages['city'],'city');?></td>
+						<td><?php echo $postages['created']; ?> </td>
+						<?php if($this->button(1)!=""):?>
+							<td><?php echo $this->button(1, $postages['id']);?></td>
+						<?php endif;?>
+						
+					</tr>
+				<?php endforeach;?>
+			</tbody>
+		</table>
+	</div>
+</div>
+<!-- for modal -->
+<div id="modal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+	<div class="modal-dialog modal-lg">
+		<div class="modal-content">
+		</div>
+	</div>
+</div>
+<script type="text/javascript">
+$('document').ready(function(){
+	$('#dataTables').DataTable({
+		"paging":   true,
+	});
+});
+</script>

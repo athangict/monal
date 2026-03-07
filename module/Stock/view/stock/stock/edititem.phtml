@@ -1,0 +1,137 @@
+<?php
+/**
+ * 
+ * View -- of Stock/MasterController/addscalarAction
+ * 
+ */
+?>
+<?php 
+	foreach($this->items as $item):
+		extract($item);
+		//echo "<pre>";print_r($item);
+		$item_id = $id;
+	endforeach;
+?>
+<form id="#form" method="post" action="<?php echo $this->url('stock', array('action' => 'edititem','id'=>$id)); ?>"  enctype="multipart/form-data" >
+    <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+        <h4 class="modal-title"> <i class="fa fa-asterisk"></i>New Item</h4>
+    </div>  <!-- /modal-header -->
+    <div class="modal-body">
+		<div class="panel panel-default">                       
+			<div class="panel-body"> 
+				<input type="hidden" name="item_id" id="item_id" value="<?php echo $id; ?>">  
+				<div class="form-group col-lg-6">
+					<label class="control-label" for="item_code">Item Code</label>
+					<input class="form-control" type="text" name="item_code" id="item_code" value="<?php echo $code;?>" placeholder="Item Code" /> 
+				</div>
+				<div class="form-group col-lg-6">
+					<label class="control-label" for="item_name">Item Name</label>
+					<input class="form-control" type="text" name="item_name" id="item_name" value="<?php echo $name;?>" placeholder="Item Name" />
+				</div>
+				<div class="form-group col-lg-6">
+					<label class="control-label" for="item_group">Item Sub-Group</label>
+					<select  class="form-control" name="item_subgroup" id="item_subgroup" data-placeholder="Select" required >
+						<option value=""></option>
+						<?php foreach ($itemclasses as $itemclass):  
+								$itemgroups = $itemgroupsObj->get(array('item_class'=>$itemclass['id']));
+								foreach($itemgroups as $itemgroup):
+							?>
+							<optgroup label="<?php echo $itemclass['item_class']." | ".$itemgroup['item_group'];?>">
+								<?php 
+									$itemsubgroups = $this->itemsubgroupsObj->get(array('item_group'=>$itemgroup['id']));
+									foreach($itemsubgroups as $itemsubgroup):
+									$selected = ($itemsubgroup['id']==$item_subgroup)?'selected':'';
+								?>
+									<option value="<?php echo $itemsubgroup['id']; ?>" <?php echo $selected;?>>
+										<?php echo $itemsubgroup['item_subgroup']; ?>
+									</option>
+								<?php endforeach;
+								endforeach; ?>
+							</optgroup>
+						<?php endforeach; ?>
+					</select>
+				</div>
+				<div class="form-group col-lg-6">
+					<label class="control-label" for="unit">Basic Unit of Measurement</label>
+					<select class="form-control" id="unit" name="unit" data-placeholder="Select">
+						<option value=""></option>
+						<?php 
+							$uomtypes = $this->uomtypeObj->getAll();
+							foreach ($uomtypes as $uomtype):?>
+							<optgroup label="<?php echo $uomtype['description'];?>">
+								<?php  
+										// retrive locations under the above region ID
+										$uoms = $uomObj->get(array('uom_type'=>$uomtype['id']));
+										
+										foreach ($uoms as $uom):
+										$selected = ($uom['id'] == $st_uom_id)?"selected":"";
+								?>
+									<option value="<?php echo $uom['id']; ?>" <?php echo $selected;?>>
+									<?php echo $uom['code']; ?>
+									</option>
+									<?php endforeach;?>
+								</optgroup>
+						<?php endforeach;?>
+					</select>
+				</div>
+				<div class="form-group col-lg-6">
+					<label class="control-label" for="barcode">Barcode</label>
+					<input class="form-control" type="text" name="barcode" id="barcode" value="<?php echo $barcode;?>" placeholder="Barcode" />
+				</div>
+			</div>
+		</div>
+    </div> <!-- /modal-body -->
+    <div class="modal-footer">
+        <button type="submit" class="btn btn-success"><i class="fa fa-check"></i> Save </button>
+        <button type="button" class="btn btn-warning" data-dismiss="modal" ><i class="fa fa-times"></i> Cancel </button> 
+    </div>  
+</form>
+<script type="text/javascript">
+$(function(){
+	
+
+/******** formValidation *************/
+const fv = FormValidation.formValidation(document.getElementById('#form'), {
+  	fields: {
+	  	item_code: {
+			validators: {
+				notEmpty: {
+					message: 'Please provide item code.'
+				},
+				/*remote: {
+					data: {
+						type:'item_code',
+					},
+					message: 'This item_code has been already used.',
+					method: 'POST',
+					url: "<?php echo $this->url('stock', array('action' => 'getcheckavailability'));?>",
+				}*/
+			}
+		},
+		
+		item_group: {
+			validators: {
+				notEmpty: {
+					message: 'Please select item group.'
+				}
+			}
+		},
+	},
+	plugins: {
+		trigger: new FormValidation.plugins.Trigger(),
+		bootstrap3: new FormValidation.plugins.Bootstrap3(),
+		submitButton: new FormValidation.plugins.SubmitButton(),
+		defaultSubmit: new FormValidation.plugins.DefaultSubmit(),
+	},
+}).on('core.element.validated', function (e) {
+	if (e.valid) {
+		$('div#'+ e.field.replace('[]','') +'_chosen').removeClass('is-invalid');
+		$('div#'+ e.field.replace('[]','') +'_chosen').addClass('is-valid');
+	} else {
+		$('div#'+ e.field.replace('[]','') +'_chosen').removeClass('is-valid');
+		$('div#'+ e.field.replace('[]','') +'_chosen').addClass('is-invalid');
+	}
+});
+});
+</script>

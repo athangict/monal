@@ -1,0 +1,96 @@
+<?php
+/**
+ * 
+ * View -- of Hr/LeaveController/encashmentAction
+ * 
+ */
+$this->headTitle($this->title); ?>
+<?php
+$employee=$this->userObj->getColumn(array('id'=>$this->userID),'employee');
+$maxEncash=$this->encashObj->getMax('id',array('employee'=>$employee));
+$checkEncash=$this->encashObj->getColumn(array('id'=>$maxEncash),'encash_date');
+$encashYear=date("Y",strtotime($checkEncash));
+$currentYear=date('Y');
+ 
+?>
+<div class="card">
+	<div class="card-header">
+		<div class="btn-group pull-right">
+			<?php  
+			 $userEmp = $this->userObj->getColumn($this->userID, 'employee'); 
+			$leaveEncash = $this->encashObj->get(array('employee'=>$userEmp));
+			foreach ($leaveEncash as $le);
+			if($encashYear!=$currentYear || $le['status']==10):echo $this->button(2);endif;?>
+		</div>
+	</div>
+	<div class="table-responsive">
+			 <?php
+			
+			 //$leaveEncash = $this->encashObj->get(array('employee'=>$userEmp));
+//echo '<pre>';print_r($leaveEncash);exit;			 
+		 // if(sizeof($leaveEncash) > 0): 
+			?>
+			<table class="table card-table text-nowrap" id="dataTables">
+				<thead>
+					<tr>
+						<th>#</th>
+						<th>Employee</th>
+						<th>Encash Date</th>
+						<th>No of Encashed Days</th>
+						<th>Payment Amount</th>
+						<th>Deduction</th>
+						<th>Status</th>
+						<th>Action</th>
+					</tr>
+				</thead>
+				<tbody>
+					<?php
+					  $i = 1; 
+					  foreach ($leaveEncash as $row):?>
+						<tr>
+							<td><?php echo $i; ?>. </td>
+							<td><strong><?php $empdtls = $this->employeeObj->get($row['employee']);
+							foreach($empdtls as $dtl); echo $dtl['full_name'];
+							?></strong> ,&nbsp; <i> <?php echo $dtl['emp_id']; ?> </i> </td>
+							<td><?php echo $row['encash_date']; ?></td>
+							<td><?php echo $row['no_of_encashed_days']; ?></td>							
+							<td><?php echo $row['payment_amount']; ?></td>
+							<td><?php echo $row['deduction']; ?></td>
+							<td ><?php echo $this->status($row['status']); ?></td>
+							<td><?php echo $this->button(1,$row['id']); echo $this->button(6,$row['id'],'','911'); echo $this->button(6,"520-".$row['id'],'','3');?></td>
+						</tr>
+					<?php 
+					$i++;
+					endforeach;  
+					?>
+				</tbody>
+			</table>
+			<?php// else:  ?>
+			   <!--span class="alert alert-warning fade in"> No leave Encashment Application to view. </div-->
+			<?php //endif; ?>
+		</div>
+	</div>
+</div>
+<div id="modal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+	<div class="modal-dialog">
+		<div class="modal-content">
+		</div>
+	</div>
+</div>
+<script type="text/javascript">
+	$("tr[data-href]").each(function(){
+		$(this).find('td').not('td.action').each(function(){
+			$(this).css('cursor','pointer');
+			$(this).bind('click',function() {
+				window.document.location = $(this).closest('tr').attr("data-href");
+			});
+		});
+	});
+
+	$('#dataTables').genpdftable({
+		src:"<?php echo $this->url('pdfxls', array('action' => 'pdf'));?>",
+		orentation:"P",//L =landscape, P = potrait
+	});
+</script>
+
+

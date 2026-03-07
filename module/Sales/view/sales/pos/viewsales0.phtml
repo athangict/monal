@@ -1,0 +1,162 @@
+<?php
+/**
+ * View -- of Stock/BatchController/viewbatchAction
+ */
+ $this->headTitle($this->title);
+?>
+<style>
+	.mytable tr th,.mytable tr td {
+		padding:5px;
+	}
+</style>
+<?php foreach($sales as $sale):
+	extract($sale);
+	$sales_id = $id;
+endforeach;?>
+<div class="row">
+	<div class="col-lg-12">
+		<div class="widget widget-box">
+			<div class="widget-header">
+			<h5 class="widget-title grey lighter">
+				<i class="ace-icon fa fa-shopping-cart green"></i>
+				<?php echo $sales_no;?>&nbsp;&nbsp;<i><?php echo $this->locationObj->getColumn($location,'location');?></i>&nbsp;
+			</h5>
+			<?php if($status==1):?>
+				<span class="label label-danger"> Draft </span>
+			<?php else: $this->status($status); endif;?>
+			<div class="widget-toolbar hidden-xs">
+				<a data-toggle="modal" data-target="#recipt_modal" href="<?php echo $this->url('pos', array('action'=>'salesrecipt', 'id'=>$sales_no));?>" class="cursor:pointer">
+				   <i class="ace-icon fa fa-print fa-lg"></i>
+			    </a>		    
+			</div>
+			<div class="widget-toolbar hidden-xs">
+				<a style='cursor:pointer' id="print">
+					<i class="ace-icon fa fa-file-pdf-o red bigger-120"></i>
+				</a>
+			</div>
+		</div>
+		<div class="widget-body">
+			<div class="widget-main">
+				<div id="report-print">
+					<div class="row" id="convert-tb0">
+						<div class="col-lg-8" id="convert-tb1">
+							<ul class="list-unstyled spaced">
+							<li>
+									<i class="ace-icon fa fa-caret-right blue"></i>Sales No: <b class="red"><?php echo $sales_no; ?> </b>
+								</li>
+								<li>
+									<i class="ace-icon fa fa-caret-right blue"></i>Credit/Avance: <b class="red"><?php if($credit == "y"){echo "YES";}else if($credit == "n"){echo "NO"; }else{echo "Advance";}?></b>
+								</li>
+								<li>
+									<i class="ace-icon fa fa-caret-right blue"></i>Customer: <b class="red"><?php if($customer == 0){echo "NA";}else{echo $this->customerObj->getColumn($customer,'name'); }?></b>
+								</li>
+								<li>
+									<i class="ace-icon fa fa-caret-right blue"></i>Account No: <b class="red"><?php if($payment_type == '1' && $credit=="n"){echo $this->cashObj->getColumn($account_no,'cash_account_name');}
+									else if($payment_type == '2' && $credit=="n"){echo $this->accountObj->getColumn($account_no,'code'); }
+									else{echo "NA";}?></b>
+								</li>
+								<li>
+									<i class="ace-icon fa fa-caret-right blue"></i>Journal No: <b class="red"><?php if($jrnl_no != ""){echo $jrnl_no;}else{echo "NA"; }?></b>
+								</li>
+							</ul>
+						</div>
+						<div class="col-lg-4" id="convert-tb2">
+							<ul class="list-unstyled spaced">
+							<li>
+									<i class="ace-icon fa fa-caret-right blue"></i>Sales Date:	<b class="red"><?php echo $sales_date;?> </b>
+								</li>
+								<li>
+									<i class="ace-icon fa fa-caret-right blue"></i>Payment Type: <b class="red"><?php if($credit == 0){echo ($payment_type == 1)?"Cash":"Bank";}else{echo "NA";}?></b>
+								</li>
+								<li>
+									<i class="ace-icon fa fa-caret-right blue"></i>Due Date: <b class="red"><?php if($credit == "y"){echo $due_date;}else{echo "NA"; }?></b>
+								</li>
+								<li>
+									<i class="ace-icon fa fa-caret-right blue"></i>Phone No: <b class="red"><?php if($phone != 0){echo $phone;}else{echo 'NA'; }?></b>
+								</li>
+							</ul>
+						</div>
+					</div>
+					<div class="row">
+						<div class="col-lg-5" style="text-align: right"></div>
+						<div class="col-lg-7" style="text-align: right">
+							<?php if($status!=4):?>	
+							<a class="btn btn-primary btn-sm"  href="<?php echo $this->url('pos', array('action'=>'editsales', 'id'=>$id));?>"><i class="fa fa-edit"></i> Edit Sales Entry </a>
+							<?php endif;?>
+							
+						</div>
+					</div>
+					<div class="space-12"></div>
+					<div class="row">
+						<div class="col-lg-12" >
+							<table class="table" style="border-top:2px solid #ddd;">
+								<thead>		
+									<th>#</th>																
+									<th>Item</th>
+									<th>UOM</th>
+									<th>Rate</th>
+									<th>Quantity</th>
+									<th>Amount</th>
+								</thead>
+								<tbody>
+								<?php $i=1; $total=0;foreach($saledetails as $saledetail): ?>
+								<tr> 
+									<td><?php echo $i++;?></td>
+									<td><?php echo $this->itemObj->getColumn($saledetail['item'],'name');?></td>
+									<td><?php echo $saledetail['uom'];?></td>
+									<td><?php echo $saledetail['rate'];?></td>
+									<td><?php echo $saledetail['quantity'];?></td>
+									<td><?php $amt = $saledetail['rate'] * $saledetail['quantity'];
+									echo $total_amt = $amt - $saledetail['discount_qty'];?></td>
+								</tr>
+								<?php $total=$total+$amt;?>
+								<?php endforeach;?>
+								<tr>
+									<td colspan="5" style="text-align:right"><b class="red">Total Amount :</b></td>
+									<td colspan="2"><b><?php echo number_format($total, 2, '.', ',');?></b></td>
+								</tr>
+								<tr>
+									<td colspan="5" style="text-align:right"><b class="red">Discount :</b></td>
+
+									<td colspan="2"><b> <?php echo number_format($discount, 2, '.', ',');?>%</b></td>
+								</tr>
+								<tr>
+									<td colspan="5" style="text-align:right"><b class="red">Net Amount :</b></td>
+
+									<td colspan="2"><b> <?php if($discount == 0){echo $total;}else{echo  number_format($total-($total*($discount/100)), 2, '.', ','); }?></b></td>
+								</tr>
+							</tbody>
+							</table>	
+						</div>
+					</div>
+					<div class="row">
+						<div class="col-lg-5" style="text-align: right"></div>
+						<div class="col-lg-7" style="text-align: right">
+							<?php if($status==4):?>	
+							<button type="button" class="btn btn-default btn-sm"  onclick="javascript:history.back();"><i class="fa fa-arrow-left"></i> Back </button>
+							<?php else:?>
+							<?php echo $this->button(2,$sales_no);?>
+							<button type="button" class="btn btn-default btn-sm"  onclick="javascript:history.back();"><i class="fa fa-arrow-left"></i> Back </button> 
+							<?php endif;?>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+<!-- for modal -->
+<!--for modal -->
+<div id="modal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content"> </div>
+    </div>
+</div>
+<script type="text/javascript">
+$('document').ready(function(){
+	$('#dataTables').DataTable({
+		"paging":   true,
+	});
+});
+</script>
+

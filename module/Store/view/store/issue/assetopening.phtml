@@ -1,0 +1,94 @@
+<?php
+/**
+ * 
+ * View -- of Store/IssueController/assetopeningAction
+ * 
+ */
+	$this->headTitle($this->title);
+?>
+<?php echo $this->partial('store/issue/partial.phtml', array('active' => 'assetopening')); ?> <br/>
+<?php $minYear = date('Y', strtotime($minYear)); ?> 
+<div class="row">
+	<div class="col-lg-12">
+		<div class="row">
+			<form id="#form" method="post" action="<?php echo $this->url('inissue',array('action'=>'assetopening')); ?>"  enctype="multipart/form-data" >
+				<div class="form-group col-lg-2">
+					<label class="control-label" for="year">Year</label>
+					<select class="form-control" id="year" name="year" data-placeholder="Select" onchange='this.form.submit()'>
+						<option value=""></option>
+						<?php 
+							for($year=date('Y');$year>=$minYear;$year--):
+								$selected = ($year == $data['year'])?"selected":"";
+						?>
+							<option value="<?php echo $year;?>" <?php echo $selected;?> >
+								<?php echo $year;?> 
+							</option>
+						<?php endfor; ?>
+					</select>
+				</div>
+				<div class="form-group col-lg-2">
+					<label class="control-label" for="month">Month</label>
+					<select class="form-control" id="month" name="month" data-placeholder="Select" onchange='this.form.submit()'>
+						<option value="-1" <?php echo ($data['month'] == '-1')?'selected':'';?>>All</option>
+						<?php for($month=1; $month<=12; $month++):?>
+							<?php $selected = ($month == $data['month'])?'selected':'';?>
+							<option value="<?php echo $month;?>" <?php echo $selected; ?>>
+								<?php echo DateTime::createFromFormat('!m', $month)->format('F');?>
+							</option> 
+						<?php endfor;?>
+					</select>
+				</div>
+			</form>
+			<div class="form-group col-lg-8">					
+				<div class="clearfix">
+					<div class="pull-right tableTools-container"></div>
+					<a class="red pull-right DTTT_button btn btn-white btn-info btn-bold" data-tooltip="tooltip" data-placement="top" title="Add New Opening Asset" href="<?php echo $this->url('inissue', array('action'=>'addassetopening'));?>" >
+						<span class="red"><i class="fa fa-plus"></i> <span class="hidden-sm hidden-xs">&nbsp;Add Asset Opening</span></span>
+					</a>
+				</div>
+			</div>
+		</div>
+		<div>
+			<table class="table card-table text-nowrap" id="dataTables">
+				<thead>
+					<tr>
+					    <th>#</th>
+						<th>Asset No.</th>
+						<th>Item</th>
+						<th>Uom</th>
+						<th>Quantity</th>
+						<th>Status</th>
+						<th class="no-sort no-printpdf">Action</th>
+					</tr>
+				</thead>
+				<tbody>					
+					<?php $i=1;
+						foreach($openingstores as $row):
+					?>
+						<tr>
+							<td><?php echo $i++;?></td>
+							<td><strong><?php echo $row['asset'];?></strong></td>
+							<td><?php echo $this->itemObj->getColumn($row['item'],'code')?></td>
+							<td><?php echo $this->uomObj->getColumn($row['uom'],'code');?></td>
+							<td><?php echo $row['quantity'];?></td>
+							<td><?php echo $this->status($row['status']);?></td>
+							<td class="action">
+								<div class="btn-group">
+									<a class="btn btn-xs btn-primary no-alert" href="<?php echo $this->url('inissue', array('action'=>'viewassetopening', 'id'=>$row['id'])); ?>" title="View">
+										<i class="ace-icon fa fa-eye bigger-120" ></i>
+							  		</a>
+						  		</div>
+							</td>
+						</tr>
+					<?php endforeach;?>  
+				</tbody>
+			</table>
+		</div>
+	</div>
+</div>
+<script>		
+	$('document').ready(function(){
+		$('#dataTables').DataTable({"paging":   true,});
+	});
+</script>
+

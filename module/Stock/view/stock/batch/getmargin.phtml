@@ -1,0 +1,39 @@
+<div class="col-lg-6">
+   <table class="table table-bordered table-striped table-hover">
+   <thead>
+    <tr>   
+     <th>#</th>
+	 <th>Location</th>
+	 <th>Present Margin(%)</th>
+	 <th>New Margin(%)</th>
+    </tr>
+    </thead>
+     <tbody>
+        <?php  $i =1;
+		foreach($locationTypes as $row): 
+		$locations = $this->locationObj->get(array('location_type' =>$row['id']));
+		foreach($locations as $rowset):?>
+        <tr>
+	   <td><?php echo $i++; ?> </td>
+	   <td><?php echo $rowset['location']; ?>
+	    <input type="hidden" name="location[]" class="form-control" value="<?php echo $rowset['id']; ?>">
+	    </td>
+           <?php
+	    $marginDtls = $this->marginObj->get(array('item'=>$itemID,'location_type' =>$row['id'])); 
+	    foreach($marginDtls as $dtl):
+	      $present_margin =  $dtl['margin'];
+	    endforeach;
+	   ?>
+	   <td>
+	     <?php echo ($present_margin > 0 )?$present_margin:"NA"; ?>
+	     <input type="hidden" name="prev_margin[]" class="form-control" value="<?php echo $present_margin; ?>">
+	    </td>
+	   <td>
+	      <input type="text" name="new_margin[]" class="form-control" value="<?php echo $present_margin; ?>">
+	   </td>
+        </tr>
+	<?php endforeach; ?>
+	<?php endforeach; ?>
+   </tbody>
+</table>
+</div>		

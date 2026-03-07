@@ -1,0 +1,104 @@
+<?php
+/**
+ * 
+ * View -- of Sales/MasterpsController/serviceAction
+ * 
+ */
+
+$this->headTitle($this->title);
+?>
+<?php echo $this->partial('sales/masterpos/partial.phtml', array('active' => 'servicetarriff'));
+
+?>
+<div class="card">
+	<div class="card-header">
+		<div class="row">
+			<div class="col-lg-9">
+				<form method="POST" action="<?php echo $this->url('masterpos', array('action' => 'servicetarriff','id'=>$page)); ?>" enctype="multipart/form-data" >    
+					<div class="row">
+						<div class="form-group col-lg-4">
+						   <label for="scope" class="control-label">Scope</label>
+					       <select class="form-control" id="scope" name="scope" data-placeholder="Select" onchange='this.form.submit()'>
+						  	 <option value="-1">All</option>
+						        <?php foreach($this->scopeObj->get(array('status'=>'1')) as $scopes):?>
+							        <option value="<?php echo $scopes['id']?>"<?php echo ($scopes['id']==$data['scope'])?'selected':'';?>>
+									   <?php echo $scopes['scope'];?></option>
+						        <?php endforeach;?>
+					       </select>
+						</div>
+						<div class="form-group col-lg-4">
+						    <label for="service" class="control-label">Service</label>
+					        <select class="form-control" id="service" name="service" data-placeholder="Select"  onchange='this.form.submit()'>
+						         <option value="-1">All</option>
+						         <?php foreach ($this->serviceObj->get(array('scope'=>$data['scope'])) as $service):?>
+							          <option value="<?php echo $service['id']?>"<?php echo ($service['id']==$data['service'])?'selected':'';?>>
+								    <?php echo $service['service'];?>	</option>
+				                 <?php endforeach; ?>
+					       </select>
+						</div>
+					</div>
+				</form>
+			</div>
+			<div class="col-lg-3 ">
+				<div class="space"></div>
+				<div class="btn-group pull-right">
+					<?php echo $this->button(2,$page);?>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	
+	<div class="table-responsive">
+		<table class="table table-striped table-bordered table-hover" id="dataTables">
+			<thead>
+				<tr>
+					<th>#</th>
+					<th>Scope</th>
+					<th>Services</th>
+					<th>Country</th>
+					<th>City</th>
+					<?php if($this->button(1)!=""):
+						
+						?>
+						<th class="no-sort no-printpdf">Action</th>
+						
+					<?php endif;?>
+				</tr>
+			</thead>
+			<tbody>
+				<?php
+					$i = 1; 
+					foreach ($paginator as $row):
+						
+					?>
+					<tr>
+						<td><?php echo $i++; ?> </td>
+						<td><b><?php echo $this->scopeObj->getColumn($row['scope'],'scope') ;?></b></td>
+						<td><b><?php echo $this->serviceObj->getColumn($row['service'],'service') ;?></b></td>
+						<td><b><?php echo $this->countryObj->getColumn($row['country'],'name') ;?></b></td>
+						<td><b><?php if(empty($row['city'])): echo ""; else: echo $this->cityObj->getColumn($row['city'],'city');endif;?></b></td>
+						<?php if($this->button(1)!=""):?>
+						<td><?php echo $this->button(1, $row['id']);?></td>
+						<?php endif;?>
+						
+					</tr>
+				<?php endforeach;?>
+			</tbody>
+		</table>
+	</div>
+</div>
+<!-- for modal -->
+<div id="modal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+	<div class="modal-dialog">
+		<div class="modal-content">
+		</div>
+	</div>
+</div>
+<script type="text/javascript">
+$('document').ready(function(){
+	$('#dataTables').DataTable({
+		"paging":   true,
+	});
+});
+</script>

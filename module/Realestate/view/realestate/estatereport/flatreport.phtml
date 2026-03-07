@@ -1,0 +1,119 @@
+<?php 
+/**
+ * chophel@athang.com -- 2022
+ * View -- of Acl/AclController/permissionAction
+ */
+	$this->headTitle($this->title);
+	//echo '<pre>';print_r($flat);exit;
+					
+?>
+<?php echo $this->partial('realestate/estatereport/partial.phtml',array('active' => 'flatreport'));?>
+<div class="card">
+	<div class="card-header">
+		<div class="row">
+			<div class="col-lg-9">
+				<form method="POST"> 	
+					<div class="form-group col-lg-2">
+						<label for="region" class="control-label">Region</label>
+						<select id="region" name="region" class="form-control" data-placeholder="Select" onchange='this.form.submit()' >
+							<option value="-1" <?php echo ($data['region'] == '-1')?'selected':'';?>>All</option>
+							<?php foreach($this->regionObj->get(array('status'=>'1')) as $region):?>
+								<option value="<?php echo $region['id']?>"<?php echo ($region['id']==$data['region'])?'selected':'';?>>
+									<?php echo $region['region'];?></option>
+							<?php endforeach;?>
+						</select>
+					</div>
+					<div class="form-group col-lg-2">
+						<label for="location" class="control-label">Location</label>
+						<select id="location" name="location" class="form-control" data-placeholder="Select" onchange='this.form.submit()' >
+							<option value="-1" <?php echo ($data['location'] == '-1')?'selected':'';?>>All</option>
+							<?php foreach($this->locationObj->get(array('region'=>$data['region'])) as $location):?>
+								<option value="<?php echo $location['id']?>"<?php echo ($location['id']==$data['location'])?'selected':'';?>>
+									<?php echo $location['location'];?></option>
+							<?php endforeach;?>
+						</select>
+					</div>
+					<div class="form-group col-lg-2">
+						<label for="block" class="control-label">Block</label>
+						<select id="block" name="block" class="form-control" data-placeholder="Select" onchange='this.form.submit()'>
+							<option value="-1" <?php echo ($data['block'] == '-1') ? 'selected' : ''; ?>>All</option>
+							<?php foreach($this->blockObj->get(array('id'=>[6,7])) as $blocks):?>
+								<option value="<?php echo $blocks['id']?>"<?php echo ($blocks['id']==$data['block'])?'selected':'';?>>
+									<?php echo $blocks['name'];?></option>
+							<?php endforeach;?>
+						</select>
+					</div>
+					<div class="form-group col-lg-2">
+						<label for="building" class="control-label">Building</label>
+						<select id="building" name="building" class="form-control" data-placeholder="Select" onchange='this.form.submit()'>
+							<option value="-1" <?php echo ($data['building'] == '-1')?'selected':'';?>>All</option>
+							<?php foreach($this->buildingObj->get(array('block'=>$data['block'])) as $building):?>
+								<option value="<?php echo $building['asset']?>"<?php echo ($building['asset']==$data['building'])?'selected':'';?>>
+									<?php echo $this->buildingnasterObj->getColumn($building['asset'],'name');?></option>
+							<?php endforeach;?>
+						</select>
+					</div>
+					<div class="form-group col-lg-2">
+						<label for="status" class="control-label">Status</label>
+						<select id="status" name="status" class="form-control" data-placeholder="Select" onchange='this.form.submit()'>
+							<option value="-1" <?php echo ($data['status'] == '-1')?'selected':'';?>>All</option>
+							<?php foreach($this->statusObj->getAll() as $sta):?>
+								<option value="<?php echo $sta['id']?>"<?php echo ($sta['id']==$data['status'])?'selected':'';?>>
+									<?php echo $sta['status'];?></option>
+							<?php endforeach;?>
+						</select>
+					</div>
+				</form>
+			</div>	
+		</div>
+	</div>	
+	<div class="table-responsive">
+		<table class="table table-striped table-bordered table-hover" id="dataTables">
+			<thead>
+				<tr>
+					<th>#</th>
+					<th>Flat</th>
+					<th>Floor</th>
+					<th>Building</th>
+					<th>Tenant</th>
+					<th>Rent</th>
+				    <th>Status</th>
+				</tr>
+			</thead>
+			<tbody>
+			<?php 
+				//$totalrent = 0;
+				$i=1;
+				foreach($flat as $rows):
+					//$rent = floatval($rows['rent']); 
+				//$totalrent += $rent; 
+				?>			
+					<tr data-href="<?php echo $this->button(4, $rows['id']); ?>">
+						<td><?php echo $i++; ?> </td>
+						<td><?php echo $rows['flat_no']; ?></td>
+						<td><?php echo $this->floorObj->getColumn($rows['floor'],'floor'); ?></td>
+						<td><?php echo $rows['name']; ?></td>
+						<td><?php echo $this->partyObj->getColumn($rows['tenant'],'name'); ?></td>
+						<td><?php echo $rows['rent']; ?></td>
+						<td><?php echo $this->statusObj->getColumn($rows['flat_status'],'status'); ?></td>
+						
+					</tr>
+				<?php endforeach;?>
+			</tbody>
+		</table>
+	</div>
+</div>
+<div id="modal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+	<div class="modal-dialog">
+		<div class="modal-content">
+		</div>
+	</div>
+</div>
+
+<script>
+$(document).ready(function() {
+	$('#dataTables').DataTable({
+		"paging":   true,
+	});
+});
+</script>

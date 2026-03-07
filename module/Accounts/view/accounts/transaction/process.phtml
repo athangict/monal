@@ -1,0 +1,85 @@
+<?php
+/**
+ * View -- of Protection/ProtectionController/processAction
+ * chophel@athang.com
+ */ 
+	$variables = explode('-', $this->flow_id);
+	$protection_id = $variables['0'];
+	$action_id = $variables['1'];
+	$flow_id = $variables['2'];
+	$protections = $this->transactionObj->get($protection_id); 
+	foreach ($protections as $protection);
+
+	$buttons = $this->flowactionObj->get($action_id);
+	foreach($buttons as $button); 
+?>
+<div class="modal-header">
+	<h4 class="modal-title"><i class="<?php echo $button['icon']; ?>"></i> <b><?php echo $button['action']; ?></b>- Action towards Voucher No : <b><?php echo $protection['voucher_no']; ?></b></h4>
+</div>  <!-- /modal-header -->
+<?php
+$flag = 1;     
+switch($button['condition']):
+	case 1: /** Check Protection Work Details */;
+		$activity_count = $this->protectionObj->getCount(array('id'=>$protection_id));
+		if($activity_count < 1):
+			$flag = 0;
+			$message = "There is no record of protection application. Please add proposed protection work to proceed.";
+		endif;
+		break;
+	default: /** No Condition */
+		$flag = 1;
+	break;
+endswitch;
+if($flag != "1"){ ?>
+	<div class="modal-body">
+		<div class="alert alert-warning">
+			<?php echo $message; ?>
+		</div>
+	</div>
+	<div class="modal-footer">
+        <button type="button" class="btn btn-warning" data-dismiss="modal"><i class="icon ti ti-x"></i>Cancel</button> 
+    </div>
+	<?php }else{ ?>
+	<form id="#form" method="post" action="<?php echo $this->url("transaction", array('action'=>'process')); ?>" enctype="multipart/form-data">					
+		<div class="modal-body">
+			<input type="hidden" value="<?php echo $flow_id; ?>" name="flow">
+			<input type="hidden" value="<?php echo $action_id; ?>" name="action">
+			<input type="hidden" value="<?php echo $protection_id; ?>" name="application">
+			<div class="form-group mb-3">
+				<label class="form-label" for="remarks">Remarks</label>
+				<textarea class="form-control" name="remarks" rows="2" placeholder="Remarks..." required></textarea>
+			</div>
+			<div class="alert alert-primary"> 
+				<b><?php echo ($action_id==5)?'WARNING':'NOTE'?> :</b> <i> <?php echo $button['description']; ?> </i>
+			</div>
+		</div>
+		<div class="modal-footer">
+			<button type="submit" class="btn <?php echo $button['class'];?>"><i class="icon <?php echo $button['icon']; ?>"></i> <?php echo $button['action'];?></button>
+			<button type="button" class="btn btn-warning" data-dismiss="modal"><i class="icon ti ti-x"></i>Cancel</button> 
+		</div>
+	</form>
+<?php } /* End to check for conditions */?>
+<script>
+$(function(){
+	const form = document.getElementById('#form');
+    const fv = FormValidation.formValidation(form, {
+        fields: {
+            remarks: {
+                validators: {
+                    notEmpty: {
+                        message: 'Please provide remarks for the action performed for better activity log.'
+                    }
+                }
+            },
+        },
+        plugins: {
+            trigger: new FormValidation.plugins.Trigger(),
+            bootstrap5: new FormValidation.plugins.Bootstrap5({
+                rowSelector: '.mb-3',
+            }),
+            submitButton: new FormValidation.plugins.SubmitButton(),
+            defaultSubmit: new FormValidation.plugins.DefaultSubmit(),
+        },
+    });
+});
+</script>

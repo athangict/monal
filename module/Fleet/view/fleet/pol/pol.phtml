@@ -1,0 +1,113 @@
+<?php
+/**
+ * 
+ * View -- of Fleet/VehicleController/polAction
+ * 
+ */
+	$this->headTitle($this->title);
+?>
+<div class="space-12"></div>
+<div class="row">
+	<div class="col-lg-12">
+        <form  method="post" action="<?php echo $this->url('pol',array('action'=>'pol')); ?>"  enctype="multipart/form-data" >
+			<div class="form-group col-lg-2">
+				<label class="control-label" for="year">Year</label>
+				<select class="form-control" id="year" name="year" data-placeholder="Select" >
+					<option value=""></option>
+					<?php 
+						for($year=date('Y');$year>=$data['minYear'];$year--):
+							$selected = ($year == $data['year'])?"selected":"";
+					?>
+						<option value="<?php echo $year;?>" <?php echo $selected;?> >
+							<?php echo $year;?> 
+						</option>
+					<?php endfor; ?>
+				</select>
+			</div>
+			<div class="form-group col-lg-2">
+				<label class="control-label" for="month">Month</label>
+				<select class="form-control" id="month" name="month" data-placeholder="Select" >
+					<?php for($month=1; $month<=12; $month++):?>
+						<?php $selected = ($month == $data['month'])?'selected':'';?>
+						<option value="<?php echo $month;?>" <?php echo $selected; ?>>
+							<?php echo DateTime::createFromFormat('!m', $month)->format('F');?>
+						</option> 
+					<?php endfor;?>
+				</select>
+			</div>
+			<div class="col-lg-2">
+				<div class="space-12"></div>
+				<button type="submit" class="btn btn-sm btn-primary pull-left"><i class="fa fa-refresh"></i> Refresh </button>
+			</div>
+		<div class="clearfix">
+			<div class="pull-right tableTools-container"></div>
+			<?php echo $this->button(2);?>
+		</div>
+		<div>
+		<table class="table card-table text-nowrap" id="dataTables">
+				<thead>
+					<tr>
+						<th>#</th>
+						<th>Sanction Order no.</th>
+                        <th>Sanction Order Date</th>
+						<th>Amount</th>
+						<th>Status</th>
+						<th class="no-sort no-printpdf">Action</th>	
+					</tr>
+				</thead>
+				<tbody>
+					<?php  $i = 1; 
+					foreach ($this->tr_sanctions as $tr_sanction):?>
+					 <tr data-href="<?php echo $this->url('pol', array('action'=>'viewpol', 'id'=>$tr_sanction['id']));?>">
+						<td><?php echo $i++;?></td>
+						<td><?php echo $tr_sanction['sanction_order_no'];?> ,
+						    <span style="font-size:11px" class = "blue">
+						        <i>
+									<strong><?php echo $this->locationObj->getColumn($tr_sanction['location'],'location');?></strong>
+								</i>,
+								 <i>
+									<strong><?php echo $this->subheadObj->getColumn($tr_sanction['subhead'],'name');?></strong>
+								</i>,
+                                <i>
+								    <strong><?php echo $this->employeeObj->getColumn($tr_sanction['driver'],'full_name');?></strong>
+								</i> 								
+							</span>	
+						</td>
+                                                <td><?php echo $tr_sanction['sanction_order_date'];?></td>
+						<td><?php echo $tr_sanction['payment_amt'];?></td>
+                        <td><?php echo $this->status($tr_sanction['status']);?></td>
+						<td class="action">
+							<div class="btn-group">
+								<a class="btn btn-xs btn-danger" data-toggle="modal" data-target="#modal" href="<?php echo $this->url('acl', array('action' => 'activitylog', 'id' => "29-".$tr_sanction['id'])); ?>" title="View Activity Logs">
+									<i class="ace-icon fa fa-plus bigger-120" ></i>  
+								</a>
+							</div>
+						</td>		                              
+					</tr>
+					<?php endforeach;?>
+				</tbody>
+			</table>
+		</div>
+	</div>
+</div>
+<div id="modal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+	<div class="modal-dialog">
+		<div class="modal-content">
+		</div>
+	</div>
+</div>
+<script>		
+	$("tr[data-href]").each(function(){
+		$(this).find('td').not('td.action').each(function(){
+			$(this).css('cursor','pointer');
+			$(this).bind('click',function() {
+				window.document.location = $(this).closest('tr').attr("data-href");
+			});
+		});
+	});
+	$('document').ready(function(){
+		$('#dataTables').DataTable();
+	});
+</script>
+
+ 

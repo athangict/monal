@@ -1,0 +1,47 @@
+<?php // partial.phtml 
+  $freeitemclsrps = ($this->active == "freeitemclsrp")?"active":"";
+  $cashclsrps = ($this->active == "cashclsrp")?"active":"";
+  $damageprncl = ($this->active == "damageprncls")?"active":"";
+  $dumpreports = ($this->active == "dumpreport")?"active":"";
+  $freightclsrps = ($this->active == "freightclsrp")?"active":"";
+  $shortageclsrps = ($this->active == "shortageclsrp")?"active":"";
+?>
+<br/>
+<ul class="nav nav-tabs padding-18" id="myTab">
+	<li class="<?php echo $freeitemclsrps; ?>">
+		<a href="<?php echo $this->url('claimsreport', array('action' => 'freeitemclsrp')); ?>">
+			<i class="green ace-icon fa fa-money bigger-120"> </i>
+			<span class="hidden-xs">Free Item Claims</span>
+		</a>
+	</li>
+	<li class="<?php echo $cashclsrps; ?>">
+		<a href="<?php echo $this->url('claimsreport', array('action' => 'cashclsrp')); ?>">
+			<i class="green ace-icon fa fa-heartbeat bigger-120"> </i>
+			<span class="hidden-xs">Cash Discounts Claims</span>
+		</a>
+	</li>
+	<li class="<?php echo $damageprncl; ?>">
+		<a href="<?php echo $this->url('claimsreport', array('action' => 'damageprncls')); ?>">
+			<i class="green ace-icon fa fa-money bigger-120"> </i>
+			<span class="hidden-xs">Damage PRN Claims</span>
+		</a>
+	</li>
+	<li class="<?php echo $dumpreports; ?>">
+		<a href="<?php echo $this->url('claimsreport', array('action' => 'dumpreport')); ?>">
+			<i class="blue ace-icon fa fa-credit-card bigger-120"> </i>
+			<span class="hidden-xs">Dump Report</span>
+		</a>
+	</li>
+	<li class="<?php echo $freightclsrps; ?>">
+		<a href="<?php echo $this->url('claimsreport', array('action' => 'freightclsrp')); ?>">
+			<i class="green ace-icon fa fa-money bigger-120"> </i>
+			<span class="hidden-xs">Freight Claims</span>
+		</a>
+	</li>
+	<li class="<?php echo $shortageclsrps; ?>">
+		<a href="<?php echo $this->url('claimsreport', array('action' => 'shortageclsrp')); ?>">
+			<i class="blue ace-icon fa fa-credit-card bigger-120"> </i>
+			<span class="hidden-xs">Shortage Claims</span>
+		</a>
+	</li>
+</ul>

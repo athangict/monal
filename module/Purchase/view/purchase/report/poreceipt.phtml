@@ -1,0 +1,140 @@
+﻿<?php
+/**
+ * Report -- of Purchase
+ */
+	$this->headTitle($this->title);
+?>
+<?php echo $this->partial('purchase/report/partial.phtml', array('active' => 'poreceipt')); ?><br/>
+<div class="widget-toolbar hidden-xs">
+	<a style='cursor:pointer' id="print">
+		<i class="ace-icon fa fa-file-pdf-o red"></i>
+	</a>
+</div>	
+<div class="card">
+	<div class="card-header">
+		<form id="#form" method="post" action="<?php echo $this->url('purreport', array('action' => 'poreceipt')); ?>"  enctype="multipart/form-data" >    
+			<div class="row">
+				<div class="form-group col-lg-3">
+					<label for="po" class="control-label">Purchase Order No.</label>
+					<input type="text" id="po" name="po" class="form-control" value="<?php echo $po_no;?>" placeholder="PO no." required />
+				</div>
+				
+				<div class="form-group col-lg-1">
+					<div class="space-12"></div>
+					<button type="submit" class="btn btn-sm btn-info"><i class="fa fa-refresh"></i> Refresh</button>
+				</div>
+				<?php if(isset($po_no)):?>
+				<div class="space-6"></div>
+				<div class="col-lg-5 alert alert-success pull-right">
+					The PO no. <?php echo $po_no;?> has been received <?php echo $this->prnObj->getCount('id',array('purchase_order' => $po_id));?> times.
+				</div>
+				<?php endif;?>
+			</div>
+		</form>
+		<?php 
+			$po_details = $this->podtlObj->get(array('purchase_order' => $po_id));
+			if(sizeof($po_details)>0):?>
+		<table class="table-condensed table-striped table-bordered table-hover" id="reportTable">
+			<thead>
+				<tr>
+					<th>#</th>
+					<th>Item</th>
+					<th>Uom</th>
+					<th>Qty</th>
+					<th>Rate(Nu)</th>
+					<?php $pr_receipts = $this->prnObj->get(array('purchase_order' => $po_id));
+						foreach($pr_receipts as $pr_receipt):?>
+						<th><b class="grey"><?php echo $pr_receipt['prn_no'];?><br>
+						<?php echo $pr_receipt['prn_date'];?></b>
+						<?php if($pr_receipt['status']==1){echo "<i class='blue'>I</i>";}elseif($pr_receipt['status']==3){echo "<i class='green'>C</i>";}else{echo "<i class='orange'>cl</i>";}?>
+						<br><b class="red"><?php echo $pr_receipt['challan_no'];?></b></th>
+					<?php endforeach;?>
+					<th>Total<br>PRN Qty</th>
+					<th>Remaining<br>Qty</th>
+				</tr>
+			</thead>
+			<tbody>							
+				<?php $i = 1; 
+				foreach ($po_details as $po_detail):?>
+					<tr>
+						<td><?php echo $i++; ?> </td>
+						<td><?php echo $po_detail['item']; ?></td>
+						<td><?php echo $po_detail['uom']; ?></td>
+						<td><?php echo $po_detail['quantity']; ?></td>
+						<td><?php echo $po_detail['rate']; ?></td>
+						<?php $pr_receipts = $this->prnObj->get(array('purchase_order' => $po_id));
+							$sum_qty = 0;
+							foreach($pr_receipts as $pr_receipt): 
+								$prn_qty = $this->prndtlsObj->getColumn(array('purchase_receipt'=>$pr_receipt['id'],'item'=>$po_detail['item_id'],'po_details_id'=>$po_detail['id']),'challan_qty');
+								$prn_uom = $this->prndtlsObj->getColumn(array('purchase_receipt'=>$pr_receipt['id'],'item'=>$po_detail['item_id'],'po_details_id'=>$po_detail['id']),'uom');
+								$basic_uom = $this->itemObj->getColumn($po_detail['item_id'],'uom');
+								$prn_uom_conversion = $this->itemuomObj->getColumn(array('item'=>$po_detail['item_id'],'uom'=>$prn_uom),'conversion');
+								$prn_uom_conversion = (!is_numeric($prn_uom_conversion))?"1":$prn_uom_conversion;
+								
+								$po_uom_conversion = $this->itemuomObj->getColumn(array('item'=>$po_detail['item_id'],'uom'=>$po_detail['uom_id']),'conversion');
+								$po_uom_conversion = (!is_numeric($po_uom_conversion))?"1":$po_uom_conversion;
+								
+								$basic_prn_qty = ($prn_uom == $basic_uom)?$prn_qty: $prn_qty * $prn_uom_conversion;
+								$converted_qty = ($basic_uom == $po_detail['uom_id'])?$basic_prn_qty: $basic_prn_qty / $po_uom_conversion;
+								$sum_qty += $converted_qty;
+						?>
+							<td><?php echo ($converted_qty == 0)?'-':$converted_qty;?></td>
+						<?php endforeach;?>
+						<td><?php echo $sum_qty;?></td>
+						<td><?php echo $po_detail['quantity'] - $sum_qty;?></td>
+					</tr>
+				<?php endforeach; ?>
+			</tbody>
+		</table>
+	<?php 
+		else:
+		?>
+		<div class="alert alert-warning fade in">  
+			<strong>Please Enter the Purchase Order Number to view the PO Receipt Details.</strong>
+		 </div>	
+		<?php 
+		endif;?>
+	</div>
+</div>
+	
+<script>
+$('document').ready(function(){
+	$('#reportTable').genpdftable({
+		src:"<?php echo $this->url('pdfxls', array('action' => 'pdf'));?>",
+		orentation:"L",//L =landscape, P = potrait
+		caller:"#print"
+	});
+	
+	const fv = FormValidation.formValidation(document.getElementById('#form'), {
+		fields: {
+			po: {
+				validators: {
+					notEmpty: {
+						message: 'Please provide purchase order no.'
+					},
+					stringLength: {
+						min: 12,
+						max: 12,
+						message: 'The purchase order no. must be 12 characters'
+					},
+				}
+			},
+		},
+		plugins: {
+			trigger: new FormValidation.plugins.Trigger(),
+			bootstrap3: new FormValidation.plugins.Bootstrap3(),
+			submitButton: new FormValidation.plugins.SubmitButton(),
+			defaultSubmit: new FormValidation.plugins.DefaultSubmit(),
+		},
+	}).on('core.element.validated', function (e) {
+		if (e.valid) {
+			$('div#'+ e.field.replace('[]','') +'_chosen').removeClass('is-invalid');
+			$('div#'+ e.field.replace('[]','') +'_chosen').addClass('is-valid');
+		} else {
+			$('div#'+ e.field.replace('[]','') +'_chosen').removeClass('is-valid');
+			$('div#'+ e.field.replace('[]','') +'_chosen').addClass('is-invalid');
+		}
+	});
+});
+</script>​
+

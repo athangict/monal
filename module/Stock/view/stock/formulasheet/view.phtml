@@ -1,0 +1,127 @@
+<?php
+/**
+ * 
+ * View -- of Stock/StockController/indexAction
+ * 
+ */
+$this->headTitle($this->title);
+?>
+<?php echo $this->partial('stock/master/partial.phtml', array('active' => 'formula')); ?> <br/>
+<style>
+	.mytable tr th,.mytable tr td {
+		padding:5px;
+	}
+</style>
+<div class="row">
+	<div class="col-lg-12">
+		<div class="widget widget-box">
+			<div class="widget-header">
+				<h5 class="widget-title lighter smaller">
+				   <?php
+						 foreach ($this->formula as $row):
+						    extract($row);
+						 $fs_id = $id; 
+						 endforeach;
+					 ?>
+					# Costing formula Detail : <strong> &nbsp;&nbsp; <?php echo $formula_name; ?>  
+					&nbsp;  &nbsp;  
+					&nbsp;     <?php $this->status($status);?> </strong>
+				</h5>
+				<div class="widget-toolbar hidden-xs">
+					<a style='cursor:pointer' id="print">
+						<i class="ace-icon fa fa-file-pdf-o red"></i>
+					</a>
+				</div>	
+			</div>
+			<div class="widget-body">
+				<div class="widget-main padding-24">
+					<div id="report-print">
+					    <div class="row" id="convert-tb0">
+							<div class="col-lg-7" id="convert-tb1">
+								<ul class="list-unstyled spaced">
+									<li>
+										<i class="ace-icon fa fa-caret-right blue"></i>
+										Formula Name : <b class="red"><?php echo $formula_name; ?></b>
+									</li>
+									<li>
+										<i class="ace-icon fa fa-caret-right blue"></i>
+										Costing Type : <b class="red"><?php echo $this->costingTypeObj->getColumn($costing_type, 'costing_type'); ?></b>
+									</li>
+								</ul>
+							</div>
+							<div class="col-lg-5" id="convert-tb2">
+								<ul class="list-unstyled spaced">
+									<li>
+										<i class="ace-icon fa fa-caret-right blue"></i>
+										Activity :<b class="red"><?php echo $this->activityObj->getColumn($activity, 'activity'); ?></b>
+									</li>
+									<li>
+										<i class="ace-icon fa fa-caret-right blue"></i>
+										Description : <b class="red"><?php echo $description; ?> </b>
+									</li>
+								</ul>
+							</div>
+						</div>
+						<div class="space-12" ></div>
+						<div class="row">
+							<div class="col-lg-12">
+								<table class="table" style="border-top:2px solid #ddd;">
+									<thead>
+										<tr>
+											<th>#</th>
+											<th>Costing Head (S) </th>
+											<th>Formula</th>
+											<th>Order</th>	
+											<th>Est. Landed Cost</th>
+										</tr>
+									</thead>
+									<tbody>
+										<?php 
+										 $i=1;
+										 foreach($this->formula_details as $detail):
+										       ?>
+											 <tr>
+											    <td><?php echo $i++; ?> </td> 
+											    <td><?php
+											     echo $this->costingHeadObj->getColumn($detail['costing_head'], 'costing_head'); 
+											      ?></td>
+											    <td> 
+											      <b><?php echo $detail['formula']; ?></b>
+											    </td>
+											    <td> <?php echo $detail['serial']; ?> </td>
+											    <td> <?php echo ($detail['elc'] == '1')?"Yes":"No"?></td>
+											 </tr>
+										       <?php 
+										 endforeach;
+										 ?>								
+									</tbody>
+								</table>
+							</div>
+						</div>
+					</div>
+					<div class="row">
+        				<div class="col-lg-12" style="text-align: right">
+        					<a href="<?php echo $this->url('formula', array('action'=>'editformula', 'id'=>$fs_id));?>" class="btn btn-info"> <i class="fa fa-pencil"></i> Edit </a>
+        						<?php if($status == '1' || $status == '2'):?>        						
+        							<a href="<?php echo $this->url('formula', array('action'=>'commitformula', 'id'=>$fs_id));?>" class="btn btn-success"> <i class="fa fa-check-square-o"></i>Commit</a>
+        						<?php endif;?>
+        		       </div>
+			       </div>
+			       
+			       <!-- Upload and Download file attachments -->						
+				<?php   
+				 //  echo $this->partial('partial/attachment.phtml', array('process' => '15', 'process_id'=> $sam_id , 'status' => $sam_status));
+				?>					
+			    <!-- End of attachment -->
+			   </div>
+			 </div>		
+		</div>
+	</div>
+</div>
+<script type="text/javascript">
+	$('#print').genpdfinvoice({
+		content: '#report-print',
+		src:"<?php echo $this->url('pdfxls', array('action' => 'pdf'));?>",
+		orentation:"P",//L =landscape, P = potrait
+	});
+</script>

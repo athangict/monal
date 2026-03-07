@@ -1,0 +1,75 @@
+<?php
+/**
+ * 
+ * View -- of Stock/MasterController/edititemgroupAction
+ * 
+ */
+?>
+<?php 
+    foreach($itemclasses as $itemclass):
+        extract($itemclass);        
+    endforeach;
+?>
+
+<form id="#form" method="post" action="<?php echo $this->url('stock', array('action' => 'edititemclass')); ?>"  enctype="multipart/form-data" >                  
+    <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+        <h4 class="modal-title"> <i class="fa fa-pencil-square-o"></i> Edit Item Class</h4>
+    </div>  <!-- /modal-header -->
+    
+    <div class="modal-body">       
+		<div class="panel panel-default">                       
+			<div class="panel-body"> 
+				<input type="hidden" name="itemclass_id" id="itemclass_id" value="<?php echo $id;?>" />
+				<div class="form-group">
+					<label for="itemclass" class="control-label">Item Class</label>
+					<input type="text" class="form-control" name="itemclass" id="itemclass" value="<?php echo $item_class;?>" size="30" required> 
+				</div>
+				<div class="form-group">
+					<label for="description" class="control-label">Description</label>
+					<input type="text" class="form-control" name="description" id="description" value="<?php echo $description;?>" size="30" required> 
+				</div>
+			</div>
+		</div>
+	</div> <!-- /modal-body -->    
+    <div class="modal-footer">
+        <button type="submit" class="btn btn-success"><i class="fa fa-check"></i> Save </button>
+        <button type="button" class="btn btn-warning" data-dismiss="modal" ><i class="fa fa-times"></i> Cancel </button> 
+    </div>
+</form>
+<script>
+$('document').ready(function(){
+	const fv = FormValidation.formValidation(document.getElementById('#form'), {
+		fields: {
+			itemclass: {
+				validators: {
+					notEmpty: {
+						message: 'Please provide item class.'
+					}
+				}
+			},
+			description: {
+				validators: {
+					notEmpty: {
+						message: 'Please provide description for item class.'
+					},
+				}
+			},
+		},
+		plugins: {
+			trigger: new FormValidation.plugins.Trigger(),
+			bootstrap3: new FormValidation.plugins.Bootstrap3(),
+			submitButton: new FormValidation.plugins.SubmitButton(),
+			defaultSubmit: new FormValidation.plugins.DefaultSubmit(),
+		},
+	}).on('core.element.validated', function (e) {
+		if (e.valid) {
+			$('div#'+ e.field.replace('[]','') +'_chosen').removeClass('is-invalid');
+			$('div#'+ e.field.replace('[]','') +'_chosen').addClass('is-valid');
+		} else {
+			$('div#'+ e.field.replace('[]','') +'_chosen').removeClass('is-valid');
+			$('div#'+ e.field.replace('[]','') +'_chosen').addClass('is-invalid');
+		}
+	});
+});
+</script>

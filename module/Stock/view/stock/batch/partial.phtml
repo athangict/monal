@@ -1,0 +1,26 @@
+<?php // partial.phtml --> View Selling Price
+	$sp = ($this->active == "sp")?"active":"";
+	$wmavg = ($this->active == "wmavg")?"active":"";
+	$spupdate = ($this->active == "spupdate")?"active":"";
+?>
+<br/>
+<ul class="nav nav-tabs padding-18 nav-fixed-top" id="myTab">
+	<li class="<?php echo $sp; ?>">
+		<a href="<?php echo $this->url('batch', array('action' => 'sellingprice')); ?>" title="Product Selling Price">
+			<i class="blue ace-icon fa fa-area-chart bigger-120"></i>
+			<span class="hidden-xs">Product Selling Price</span>
+		</a>
+	</li>
+	<li class="<?php echo $wmavg; ?>">
+		<a href="<?php echo $this->url('moving', array('action' => 'movingitem')); ?>" title="Location Selling Price">
+			<i class="blue ace-icon fa fa-line-chart bigger-120"></i>
+			<span class="hidden-xs">Location Selling Price</span>
+		</a>
+	</li>	
+	<li class="<?php echo $spupdate; ?>">
+		<a href="<?php echo $this->url('batch', array('action' => 'spupdate')); ?>" title="Selling Price Updates">
+			<i class="blue ace-icon fa fa-calendar-o bigger-120"></i>
+			<span class="hidden-xs">Selling Price Effect Date</span>
+		</a>
+	</li>	
+</ul>

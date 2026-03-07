@@ -1,0 +1,16 @@
+<?php 
+/** 
+ * fleet/report/partial.phtml 
+**/
+	$stockreport = ($this->active == "stockreport")?"active":"";
+?>
+<br/>
+<ul class="nav nav-tabs padding-18 nav-fixed-top" id="myTab">
+	<li class="<?php echo $stockreport; ?>">
+		<a href="<?php echo $this->url('inreport', array('action' => 'stockreport')); ?>" title="Stock Report">
+			<i class="green ace-icon fa fa-sitemap bigger-120"></i>
+			<span class="hidden-xs">Stock Report</span>
+		</a>
+	</li>
+
+</ul>

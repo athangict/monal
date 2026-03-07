@@ -1,0 +1,22 @@
+<?php 
+/** 
+ * store/master/partial.phtml 
+**/
+	$group = ($this->active == "group")?"active":"";
+	$sub_group = ($this->active == "subgroup")?"active":"";
+?>
+<br/>
+<ul class="nav nav-tabs padding-18 nav-fixed-top" id="myTab">
+	<li class="<?php echo $group; ?>">
+		<a href="<?php echo $this->url('inmaster', array('action' => 'group')); ?>" title="item group">
+			<i class="green ace-icon fa fa-plug bigger-120"></i>
+			<span class="hidden-xs">Item Group</span>
+		</a>
+	</li>
+	<li class="<?php echo $sub_group; ?>">
+		<a href="<?php echo $this->url('inmaster', array('action' => 'subgroup')); ?>" title="item group">
+			<i class="green ace-icon fa fa-plug bigger-120"></i>
+			<span class="hidden-xs">Item Sub Group</span>
+		</a>
+	</li>
+</ul>

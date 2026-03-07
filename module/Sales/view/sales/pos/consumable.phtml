@@ -1,0 +1,124 @@
+<?php
+/**
+ * View -- of Sales/SaleController/indexAction
+ */
+	$this->headTitle($this->title);	
+	//print_r($salesrecord);exit;
+?>
+<div class="card">
+	<div class="card-header">
+		<div class="row">
+			<form id="#form" method="post" action="<?php echo $this->url('pos',array('action'=>'consumable')); ?>"  enctype="multipart/form-data" >
+				<div class="form-group col-lg-2">
+					<label class="control-label" for="year">Year</label>
+					<select class="form-control" id="year" name="year" data-placeholder="Select" >
+						<option value=""></option>
+						<?php 
+							for($year=date('Y');$year>=$data['minYear'];$year--):
+								$selected = ($year == $data['year'])?"selected":"";
+						?>
+							<option value="<?php echo $year;?>" <?php echo $selected;?> >
+								<?php echo $year;?> 
+							</option>
+						<?php endfor; ?>
+					</select>
+				</div>
+				<div class="form-group col-lg-2">
+					<label class="control-label" for="month">Month</label>
+					<select class="form-control" id="month" name="month" data-placeholder="Select" >
+						<option value="-1" <?php echo ($data['month'] == '-1')?'selected':'';?>>All</option>
+						<?php for($month=1; $month<=12; $month++):?>
+							<?php $selected = ($month == $data['month'])?'selected':'';?>
+							<option value="<?php echo $month;?>" <?php echo $selected; ?>>
+								<?php echo DateTime::createFromFormat('!m', $month)->format('F');?>
+							</option> 
+						<?php endfor;?>
+					</select>
+				</div>
+				<div class="form-group col-lg-2">
+					<label for="location" class="control-label">Location </label>
+					<select class="form-control" name="location" id="location" data-placeholder="Select" required >
+						<option value="-1" <?php echo ($data['location'] == '-1')?'selected':'';?>>All</option>
+						<?php foreach($this->locationObj->get(array('location_type'=>array(1,2,3,4,10,11)),$admin_location) as $locations):
+							$selected = ($data['location'] == $locations['id'])?'selected':'';?>
+							<option value="<?php echo $locations['id'];?>" <?php echo $selected;?>>
+								<?php echo $locations['location'];?>
+							</option>
+						<?php endforeach; ?>
+					</select>
+				</div>
+				<div class="col-lg-6">
+					<div class="space-12"></div>
+					<button type="submit" class="btn btn-sm btn-primary "><i class="fa fa-refresh"></i> Refresh </button>
+					<a href="<?php echo $this->url('pos', array('action'=>'addconsumable'));?>" class="btn btn-sm btn-primary pull-right"> <i class="fa fa-plus"></i> Add Consumable Item Out</a>
+				</div>
+
+				<div class="col-lg-2">
+					<div class="clearfix">
+						<div class="pull-right tableTools-container"></div>
+					</div>
+				</div>
+			</form>
+		</div>
+		
+		<div>
+			<table class="table table-bordered table-striped table-hover" id="dataTables">
+				<thead>
+					<tr>
+						<th>#</th>
+						<th>Consumable No</th>
+						<th>Date</th>
+						<th style="text-align:right" >Amount</th>
+						<th>Status</th>
+                        <th>Action</th>
+					</tr>
+				</thead>
+				<tbody>
+				<?php $i=1; foreach($salesrecord as $sale):?>
+					<tr data-href="<?php echo $this->url('pos', array('action'=>'viewconsumable', 'id'=>$sale['sales_no']));?>" >
+						<td><?php echo $i++; ?></td>
+						<td><?php echo $sale['sales_no']; ?></td>
+						<td><?php echo $sale['sales_date']; ?></td>
+						<td style="text-align:right"><?php echo number_format($sale['payment_amount'], 2, '.', ',');?></td>
+						<!-- <td><?php echo ($sale['transaction']==0)?"<i class='red'>NO</i>":"<i class='green'>YES</i>";?></td> -->
+						<td>
+							<?php $this->status($sale['status']);?>
+						</td>
+                                                 <td class="action">
+							<div class="btn-group">
+								<a class="btn btn-xs btn-primary" href="<?php echo $this->url('pos', array('action' => 'viewconsumable', 'id' =>$sale['sales_no'])); ?>" title="View Activity Logs">
+									<i class="ace-icon fa fa-eye bigger-120" ></i>  
+								</a>
+								<?php if($admin_role==99||$admin_role==100):?>
+									<a data-tooltip="tooltip" data-toggle="modal" data-target="#modal"  href="<?php echo $this->url('pos', array('action'=>'deletesale','id' =>$sale['id']));?>" class="btn btn-xs btn-danger pull-right"> <i class="fa fa-trash"></i></a>
+								<?php endif;?>
+							</div>
+						</td>
+					</tr>
+					<?php endforeach; ?>
+				</tbody>	
+			</table>
+		</div>
+	</div>
+</div>
+<div id="modal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+	<div class="modal-dialog">
+		<div class="modal-content">
+		</div>
+	</div>
+</div>
+<script>	
+$('document').ready(function(){
+	$('#dataTables').DataTable({
+		"paging":   true,
+	});
+	$("tr[data-href]").each(function(){
+		$(this).find('td').not('td.action').each(function(){
+			$(this).css('cursor','pointer');
+			$(this).bind('click',function() {
+				window.document.location = $(this).closest('tr').attr("data-href");
+			});
+		});
+	});
+});
+</script>

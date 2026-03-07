@@ -1,0 +1,63 @@
+<!-- chophel@athang.com
+-->
+<style>
+	.paginationControl > a.disabled{
+		background-color: #efecec;
+	}
+	.paginationControl a, .paginationControl span {
+		color: #7b7b7b;
+		/*float: left;*/
+		padding: 5px 13px;
+		text-decoration: none;
+		border: 1px solid #ddd; 
+		border-top-left-radius: 5px;
+		border-bottom-left-radius: 5px;
+		border-top-right-radius: 5px;
+		border-bottom-right-radius: 5px;
+	}
+	.paginationControl a.active {
+		background-color: #005005;
+		color: white;
+	}
+	.paginationControl a:hover:not(.active) {background-color: #ddd;}
+	
+</style>
+<?php //print_r($data);?>
+<?php if ($this->pageCount): ?>
+	<div class="paginationControl">
+		<span>
+			<?php echo $this->firstItemNumber; ?> - <?php echo $this->lastItemNumber; ?>
+			of <?php echo $this->totalItemCount; ?>
+		</span>
+		
+		<!-- Previous page link -->
+		<?php if (isset($this->previous)): ?>
+			<a href="<?php echo $this->url($this->route, array('page' => $this->previous,'id'=>$data['location']."_".$data['activity']."_".$data['start_date']."_".$data['end_date']."_".$data['item'])); ?>" title="Previous Page">
+				&lt;&lt;
+			</a> 
+		<?php else: ?>
+			<a class="disabled">&lt;&lt;</a> 
+		<?php endif; ?>
+
+		<!-- Numbered page links -->
+		<?php foreach ($this->pagesInRange as $page): ?>
+			<?php if ($page != $this->current): ?>
+				<a href="<?php echo $this->url($this->route, array('page' => $page,'id'=>$data['location']."_".$data['activity']."_".$data['start_date']."_".$data['end_date']."_".$data['item'])); ?>" title="Page-<?php echo $page;?>">
+					<?php echo $page; ?>
+				</a> 
+			<?php else: ?>
+				<a class="active"><?php echo $page; ?></a> 
+			<?php endif; ?>
+		<?php endforeach; ?>
+
+		<!-- Next page link -->
+		<?php if (isset($this->next)): ?>
+			<a href="<?php echo $this->url($this->route, array('page' => $this->next,'id'=>$data['location']."_".$data['activity']."_".$data['start_date']."_".$data['end_date']."_".$data['item'])); ?>" title="Next Page">
+				&gt;&gt;
+			</a>
+		<?php else: ?>
+			<a class="disabled">&gt;&gt;</a>
+		<?php endif; ?>
+	</div>
+<?php endif; ?>
+</br></br>

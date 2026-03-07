@@ -1,0 +1,20 @@
+<?php // partial.phtml 
+  $postboxsize = ($this->active == "pomaster")?"active":"";
+  $postboxnumber = ($this->active == "postboxnumber")?"active":"";
+  
+?>
+<br/>
+<ul class="nav nav-tabs padding-18" id="myTab">
+	<li class="<?php echo $postboxsize; ?>">
+		<a href="<?php echo $this->url('postbox', array('action' => 'pomaster')); ?>">
+			<i class="green  ace-icon fa fa-shopping-cart bigger-120"> </i>
+			<span class="hidden-xs">Post Box</span>
+		</a>
+	</li>
+	<li class="<?php echo $postboxnumber; ?>">
+		<a href="<?php echo $this->url('postbox', array('action' => 'postboxnumber')); ?>">
+			<i class="red ace-icon fa fa-file-text bigger-120"> </i>
+			<span class="hidden-xs">Post Box Number</span>
+		</a>
+	</li>
+</ul>

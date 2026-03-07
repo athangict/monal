@@ -1,0 +1,158 @@
+<?php
+/**
+ * 
+ * View -- of Accounts/ChartaccountController/addSubheadAction
+ * 
+ */
+?>
+<form id="#form" method="POST" action="<?php echo $this->url('pchartaccount', array('action' => 'addsubhead')); ?>"  enctype="multipart/form-data" >
+    <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+        <h4 class="modal-title"> <i class="fa fa-asterisk"></i> New Sub Head</h4>
+    </div>  <!-- /modal-header -->
+    <div class="modal-body">
+        <div class="panel panel-default">                       
+            <div class="panel-body"> 
+				<div class="row">
+					<div class="col-lg-6">
+						 <div class="form-group">
+							<label for="shcode" class="control-label">Sub Head Code</label>
+							<input type="text" id="shcode" name="shcode" class="form-control" placeholder="Enter Sub Head Code" required />
+						</div>
+					</div>
+					<div class="col-lg-6">
+						<div class="form-group">
+							<label for="shname" class="control-label">Sub Head Name</label>
+							<input type="text" id="shname" name="shname" class="form-control" placeholder="Enter Sub Head Name" required />
+						</div>
+					</div>	
+					<div class="col-lg-6">
+						<div class="form-group">
+							<label for="head" class="control-label">Head</label>
+							<select id="head" name="head" class="form-control" data-placeholder="Select" required >
+								<option value=""></option>
+								<?php foreach($head as $heads):?>
+									<option value="<?php echo $heads['id'];?>"><?php echo $heads['name'];?></option>
+									<?php endforeach;?>
+							</select>
+						</div>
+					</div>
+				</div>	                
+            </div>
+        </div>
+    </div> <!-- /modal-body -->
+    <div class="modal-footer">
+        <button type="submit" class="btn btn-success"><i class="fa fa-check"></i> Save </button>
+        <button type="button" class="btn btn-warning" data-dismiss="modal" ><i class="fa fa-times"></i> Cancel </button> 
+    </div>  
+</form>
+<script>
+$('document').ready(function(){
+	$("#head_type").change(function() { 
+		//alert($(this).val());
+		$("#head1").load('<?php echo $this->url("ajresponse", array("action" => "gethead")); ?>/'+ $("#head_type").val(), function() {
+			$("#head1").trigger("chosen:updated");
+			$('form').formValidation('revalidateField','head');
+		});
+    });
+	$('#type').change(function(){
+		//alert($(this).val());
+		$.post(
+			'<?php echo $this->url('pchartaccount', array('action' => 'getCodeName')); ?>',
+			{
+				type: $(this).val(),
+			},
+			function(data){
+				//console.log(data);
+				$("#code").html(data.code);
+				$("#code").trigger('chosen:updated');
+			},
+			'json'
+		);
+	});
+	$('#code').on('change',function(){
+		//alert($('#type').val());
+		$.post(
+			'<?php echo $this->url("pchartaccount", array("action" => "getSHCodeName")); ?>',
+			{
+				sub_head: $(this).val(),
+				type : $('#type').val(),
+			},
+			function(data){
+				console.log(data);
+				$('#shcode').val(data.scode);	
+				$('#shname').val(data.shname);				
+			},
+			'json'
+		);
+	});
+	$('#dataTables').DataTable();
+	const fv = FormValidation.formValidation(document.getElementById('#form'), {
+		fields: {
+			type: {
+				validators: {
+					notEmpty: {
+						message: 'Please select Type.'
+					}
+				}
+			},
+			/*code: {
+				validators: {
+					notEmpty: {
+						message: 'Please provide Sub type.'
+					}
+				}
+			},
+			shcode: {
+				validators: {
+					notEmpty: {
+						message: 'Please provide Sub Head Name.'
+					}
+				}
+			},*/
+			head_type: {
+				validators: {
+					notEmpty: {
+						message: 'Please select Head Type.'
+					}
+				}
+			},
+			head: {
+				validators: {
+					notEmpty: {
+						message: 'Please select Head.'
+					}
+				}
+			},
+		},
+		plugins: {
+			trigger: new FormValidation.plugins.Trigger(),
+			bootstrap3: new FormValidation.plugins.Bootstrap3(),
+			submitButton: new FormValidation.plugins.SubmitButton(),
+			defaultSubmit: new FormValidation.plugins.DefaultSubmit(),
+		},
+	}).on('core.element.validated', function (e) {
+		if (e.valid) {
+			$('div#'+ e.field.replace('[]','') +'_chosen').removeClass('is-invalid');
+			$('div#'+ e.field.replace('[]','') +'_chosen').addClass('is-valid');
+		} else {
+			$('div#'+ e.field.replace('[]','') +'_chosen').removeClass('is-valid');
+			$('div#'+ e.field.replace('[]','') +'_chosen').addClass('is-invalid');
+		}
+	});
+	$('form select').chosen().change(function () {
+		fv.revalidateField($(this).attr('name'));
+	});
+});
+</script>
+                
+                    
+
+
+
+
+
+
+
+
+

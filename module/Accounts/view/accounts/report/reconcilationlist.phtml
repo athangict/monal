@@ -1,0 +1,179 @@
+<?php
+/**
+ * 
+ * View -- of Accounts/TransactionController/indexAction
+ * 
+ */
+$this->headTitle($this->title);
+//echo '<pre>';print_r($location);exit;
+?>
+<?php //echo $user;exit;
+$minYear='';
+ $minYear = date('Y', strtotime($minYear)); ?>
+<?php echo $this->tabs_helper(array(695)); ?>
+<div class="card">
+    <div class="card-header">
+		<div class="row">
+			<div class="col-lg-12">
+				<form method="post" action="<?php echo $this->url('report',array('action' => 'reconcilationlist')); ?>"  enctype="multipart/form-data" >
+					<div class="row">	
+						<div class="form-group col-lg-2">
+							<label class="control-label" for="start_date">Start Date</label>
+							<div class="date input-group" id="start_date" data-date="<?php echo $data['start_date'];?>" data-date-format="yyyy-mm-dd" >
+								<input class="form-control span2" name="start_date" id="start_date" type="text" placeholder="Start Date" value="<?php echo $data['start_date'];?>" required>
+								<span class="input-group-addon add-on"><i class="fa fa-calendar"></i></span>
+							</div>
+					    </div>
+						<div class="form-group col-lg-2">
+							<label class="control-label" for="end_date">End Date</label>
+							<div class="date input-group" id="end_date" data-date="<?php echo $data['end_date'];?>" data-date-format="yyyy-mm-dd" >
+								<input class="form-control span2" name="end_date" id="end_date" type="text" placeholder="End Date" value="<?php echo $data['end_date'];?>" required>
+								<span class="input-group-addon add-on"><i class="fa fa-calendar"></i></span>
+							</div>
+						</div>
+						<div class="form-group col-lg-2">
+							<label for="bank" class="contol-label">Bank</label>
+							<select class="form-control" name="bank" id="bank" data-placeholder="Select" >
+								<option value="-1">All</option>
+								<?php if(!empty($data['bank'])):
+									foreach($this->bankObj->get(array('ba.location'=> $location)) as $banks):?>
+									<?php $selected_loc = ($data['bankselected']==$banks['id'])? 'selected':'';?>
+									<option value="<?php echo $banks['id'];?>" <?php echo $selected_loc;?> ><?php echo $banks['code'];?>(<?php echo $banks['account'];?>)</option>
+								<?php endforeach;
+								endif;?>							
+							</select>
+						</div> 
+						<div class="row">
+							<div class="col-lg-12">
+								<button type="submit" class="btn btn-sm btn-success pull-right"><i class="fa fa-gear"></i> Generate </button>
+							</div>
+					</div>
+					</div>
+				</form>
+			</div>
+		</div>
+	</div>
+	<div class="table-responsive">
+		<table class="table table-striped table-bordered table-hover" id="dataTables">
+			<thead>
+				<tr>
+					<th>#</th>
+					<th>Ledger</th>
+					<th>Transaction Date</th>
+					<th>Credit Amount</th>
+					<th>Journal</th>
+					<th>Debit Amount</th>
+					<th>Bank Date</th>
+					<th>Reconcilation</th>
+					<th class="no-sort no-printpdf">Action</th>
+				</tr>
+			</thead>
+			<tbody>
+				<?php $i = 1 + (($page - 1) * 20); 
+				$company_book=0;
+				$reflected_bank=0;
+				$balance=0;
+				$not_reflected_in_bank=0;
+				foreach ($paginator as $row):
+				  $company_book += ($row['debit']-$row['credit']);
+				  if($row['reconcile']==1){
+					$reflected_bank +=($row['debit']-$row['credit']);
+				  }
+				  if($company_book<0){
+					 $not_reflected_in_bank=$company_book+$reflected_bank;
+				  }else{
+					 $not_reflected_in_bank=$company_book-$reflected_bank; 
+				  }
+				 $balance =($company_book - $not_reflected_in_bank); 
+				  
+					?>  
+					<tr data-href="<?php echo $this->button(4, $row['id']); ?>">
+						<td><?php echo $i++; ?></td>
+						<td><?php echo $this->subheadObj->getColumn($row['sub_head'],'code');?>-<?php echo $this->subheadObj->getColumn($row['sub_head'],'name'); ?></td>
+						<td>
+						<b><?php echo $row['voucher_dates']; ?>&nbsp;</b> 
+						</td>
+						<td>
+							<b><?php echo $row['credit']; ?></b>
+							<span style="color:#666;font-size:95%;"></span>
+						</td>
+						<td>
+						<b><?php echo $row['bank_trans_journal']; ?>&nbsp;</b> 
+						</td>
+						<td>
+							<b><?php echo $row['debit'];?></b>
+							<span style="color:#666;font-size:95%;"></span>
+						</td>
+						<td>
+							<b><?php echo ($row['reconcile'] == 1) ? $row['reconcile_date'] : "-On Reconcilation-";?>&nbsp;</b> 
+						</td>
+						<td>
+							<b><?php echo ($row['reconcile'] == 1) ? "Yes" : "No";?>&nbsp;</b> 
+						</td>
+						<td>
+						<?php if($row['reconcile']==0):?>
+						<?php echo $this->button(1, $row['id'].'_'.$page.'_'.$data['start_date'].'_'.$data['end_date'].'_'.$data['bank']);?></td>
+					        <?php endif;?>
+						</td>
+			        </tr>
+		        <?php endforeach;?>
+			</tbody>
+		</table>
+	</div>
+</div>
+<div class="row">
+	<div class="col-lg-12" style="text-align:right;">
+		<p>Balance as per company books: 
+			<strong><?php echo number_format($company_book, 2, '.', ','); ?></strong><br>
+			Amounts not reflected in bank:  
+			<strong><?php echo number_format($not_reflected_in_bank, 2, '.', ','); ?></strong><br>
+			Balance as per bank:  
+			<strong><?php echo number_format($balance, 2, '.', ','); ?></strong>
+		</p>
+	</div>
+</div>
+<div class="modal fade" id="modal" tabindex="-1" role="dialog" aria-hidden="true">
+	<div class="modal-dialog modal-lg" role="document">
+		<div class="modal-content">
+		</div><!-- /.modal-content -->
+	</div><!-- /.modal-dialog -->
+</div><!-- /.modal -->
+<script>
+    $('#dataTables').DataTable({
+		"paging":   true,
+	});		
+	$("tr[data-href]").each(function(){ 
+		if($(this).attr('data-href')!='#'){
+			$(this).css('cursor','pointer');
+			$(this).bind('click',function() {
+				window.document.location = $(this).attr("data-href");
+			});
+		}
+	});
+	$('#start_date').datepicker();
+	$('#end_date').datepicker();
+	$("#region").change(function() { 
+		$.post( "<?php echo $this->url('ajresponse', array('action' => 'getlocation')); ?>/"+ $("#region").val(), function( data ) {
+			var newdata ="<option value='-1'>All</option>"+data
+			$('#location').html( newdata );
+			$("#location").trigger('chosen:updated');
+		});
+	});
+	$("#location").change(function() { 
+	//console.log($("#location").val());
+		$.post( "<?php echo $this->url('ajresponse', array('action' => 'getbanks')); ?>/"+ $("#location").val(), function( data ) {
+			var newdata ="<option value='-1'>All</option>"+data
+			$('#bank').html( newdata );
+			$("#bank").trigger('chosen:updated');
+		});
+	});
+	$('#start_date').datepicker();
+		$('#end_date').datepicker();
+		$('#start_date').on('changeDate',function(){
+			$('form').formValidation('revalidateField', $(this).attr('id'));
+		});
+		$('#end_date').on('changeDate',function(){
+			$('form').formValidation('revalidateField', $(this).attr('id'));
+		});
+</script>
+

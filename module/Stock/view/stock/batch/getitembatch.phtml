@@ -1,0 +1,6 @@
+<option value=""></option>
+<?php foreach ($this->batches as $batch): ?>
+   	<option value="<?php echo $batch['id']; ?>" >
+		<?php echo $batch['batch'];?>
+   	</option>
+<?php endforeach; ?>

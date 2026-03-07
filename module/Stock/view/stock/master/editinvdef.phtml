@@ -1,0 +1,65 @@
+<?php
+/**
+ * 
+ * View -- of Purchase/MasterController/addpurstatusAction
+ * 
+ */
+?>
+<?php
+	foreach($inv_definations as $inv_defn);
+?>
+<form id="#form" method="post" action="<?php echo $this->url('stmaster', array('action' => 'editinvdef')); ?>"  enctype="multipart/form-data" >
+    <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+        <h4 class="modal-title"> <i class="fa fa-asterisk"></i> Edit Name Invoice Defination</h4>
+    </div>  <!-- /modal-header -->
+    <div class="modal-body">
+		<div class="panel panel-default">                       
+			<div class="panel-body">   
+				<div class="form-group">
+					<input type="hidden" name="defn_id" id="defn_id" value="<?php echo $inv_defn['id'];?>" />
+					<input type="hidden" name="supplier_id" id="supplier_id" value="<?php echo $inv_defn['supplier'];?>" />
+					<input type="hidden" name="old_defn" id="old_defn" value="<?php echo $inv_defn['defination'];?>" />
+					<label for="defination" class="control-label">Invoice Defination</label>
+					<input type="text" class="form-control" name="defination" id="defination" size="30" value="<?php echo $inv_defn['defination'];?>" placeholder="Invoice Defination Field" required> 
+				</div>
+			</div>
+		</div>
+    </div> <!-- /modal-body -->
+    <div class="modal-footer">
+        <button type="submit" class="btn btn-success"><i class="fa fa-check"></i> Save </button>
+        <button type="button" class="btn btn-warning" data-dismiss="modal" ><i class="fa fa-times"></i> Cancel </button> 
+    </div>  
+</form>
+<script>
+$('document').ready(function(){
+	$('form select').chosen();
+	const fv = FormValidation.formValidation(document.getElementById('#form'), {
+		excluded: ':disabled',
+		message: 'Please provide a value.',
+		fields: {
+			defination: {
+				validators: {
+					notEmpty: {
+						message: 'Please provide invoice defination.'
+					}
+				}
+			},
+		},
+		plugins: {
+			trigger: new FormValidation.plugins.Trigger(),
+			bootstrap3: new FormValidation.plugins.Bootstrap3(),
+			submitButton: new FormValidation.plugins.SubmitButton(),
+			defaultSubmit: new FormValidation.plugins.DefaultSubmit(),
+		},
+	}).on('core.element.validated', function (e) {
+		if (e.valid) {
+			$('div#'+ e.field.replace('[]','') +'_chosen').removeClass('is-invalid');
+			$('div#'+ e.field.replace('[]','') +'_chosen').addClass('is-valid');
+		} else {
+			$('div#'+ e.field.replace('[]','') +'_chosen').removeClass('is-valid');
+			$('div#'+ e.field.replace('[]','') +'_chosen').addClass('is-invalid');
+		}
+	});
+});
+</script>

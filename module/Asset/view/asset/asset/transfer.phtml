@@ -1,0 +1,154 @@
+
+<?php
+/**
+ * 
+ * View -- of Accounts/ChartaccountController/addclassAction
+ * 
+ */
+//$this->headTitle($this->title);
+foreach($assets as $ast);
+?>
+<form  id="#form" method="post" action="<?php echo $this->url('assets', array('action' => 'transfer','id'=>$ast['id'])); ?>"  enctype="multipart/form-data" >
+    <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+        <h4 class="modal-title"> <i class="fa fa-asterisk"></i> Asset Transfer</h4>
+    </div>  <!-- /modal-header -->
+    <div class="modal-body">
+        <div class="panel panel-default">                       
+            <div class="panel-body"> 
+                <div class="row">
+					<div class="form-group col-lg-6">
+						<label for="region" class="control-label">Region</label>
+						<select class="form-control" id="region" name="region" data-placeholder="Select" required >
+							<option value=""></option>
+							<?php 
+							foreach ($this->regionObj->getAll() as $regionrow):
+							    $selected=($ast['region_id']==$regionrow['id'])?"selected":"";
+							?>
+								<option value="<?php echo $regionrow['id'];?>"<?php echo $selected;?>>
+									<?php echo $regionrow['region'];?>
+								</option>
+							<?php
+							endforeach;
+							?>
+						</select>
+					</div>     
+					<div class="form-group col-lg-6">
+						<label for="location" class="control-label">Location</label>
+						<select class="form-control chosen-widget" id="location" name="location" data-placeholder="Select" required >
+							<option value="<?php echo $ast['location_id'];?>"><?php echo $ast['location'];?></option>
+						</select>
+					</div>
+					<div class="form-group col-lg-6">
+						<label for="custodian">Custodian</label>
+						<select id="custodian" name="custodian" class="form-control" data-placeholder="Select" wrap="off"  >
+							<option value=""></option>
+							<?php 
+								foreach ($this->employeeObj->getAllEmployee() as $emps):
+								    $selected=($ast['custodian']==$emps['id'])?"selected":"";?>
+								<option value="<?php echo $emps['id'];?>"<?php echo $selected;?>>
+									<?php echo $emps['full_name'].'-'.($emps['emp_id'])?>
+								</option>
+							<?php 
+								endforeach;
+							?>
+						</select>
+					</div>
+					<div class="form-group col-lg-6">
+						<label for="transfer" class="control-label">Transfer/Surrender </label>
+						<div class="radio">                                			
+							<label>
+								<input class="ace" type="radio" name="transfer" id="transfer" value="1" >
+								<span class="lbl"> Transfer </span>
+							</label>
+							<label>
+								<input class="ace" type="radio" name="transfer" id="transfer" value="0"  >
+								<span class="lbl"> Surrender </span>
+							</label>	
+						</div>
+					</div> 
+				</div> 
+            </div>
+        </div>
+    </div> <!-- /modal-body -->
+     <div class="modal-footer">
+        <button type="submit" class="btn btn-success"><i class="fa fa-check"></i> Save </button>
+        <button type="button" class="btn btn-warning" data-dismiss="modal"><i class="fa fa-times"></i> Cancel </button>
+    </div>  
+</form>
+<script>
+$(function(){
+	$('#region').on('change',function(){
+		//alert($('#region').val());
+		$.post(
+			'<?php echo $this->url('assets', array('action' => 'getlocation')); ?>',
+			{
+				region: $(this).val(),
+			},
+			function(data){
+				//console.log(data);	
+				$('#location').html(data.location);	
+				$("#location").trigger("chosen:updated");			
+			},
+			'json'
+		);
+	});
+	$('#location').on('change',function(){
+		//alert($('#region').val());
+		$.post(
+			'<?php echo $this->url('assets', array('action' => 'getemployee')); ?>',
+			{
+				loc: $(this).val(),
+			},
+			function(data){
+				console.log(data);	
+				$('#custodian').html(data.emp);	
+				$("#custodian").trigger("chosen:updated");			
+			},
+			'json'
+		);
+	});
+	const fv = FormValidation.formValidation(document.getElementById('#form'), {
+		fields: {
+			disposal_amount: {
+				validators: {
+					notEmpty: {
+						message: 'Please Disposal Amount.'
+					}
+				}
+			},
+			region: {
+				validators: {
+					notEmpty: {
+						message: 'Select Region.'
+					}
+				}
+			},
+			transfer: {
+				validators: {
+					notEmpty: {
+						message: 'Please Select option.'
+					}
+				}
+			},
+		},
+	plugins: {
+			trigger: new FormValidation.plugins.Trigger(),
+			bootstrap3: new FormValidation.plugins.Bootstrap3(),
+			submitButton: new FormValidation.plugins.SubmitButton(),
+			defaultSubmit: new FormValidation.plugins.DefaultSubmit(),
+		},
+	}).on('core.element.validated', function (e) {
+		if (e.valid) {
+			$('div#'+ e.field.replace('[]','') +'_chosen').removeClass('is-invalid');
+			$('div#'+ e.field.replace('[]','') +'_chosen').addClass('is-valid');
+		} else {
+			$('div#'+ e.field.replace('[]','') +'_chosen').removeClass('is-valid');
+			$('div#'+ e.field.replace('[]','') +'_chosen').addClass('is-invalid');
+		}
+	});
+	$('form select').chosen().change(function () {
+		fv.revalidateField($(this).attr('name'));
+	});
+});
+</script>

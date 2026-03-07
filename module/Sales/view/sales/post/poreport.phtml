@@ -1,0 +1,152 @@
+<?php
+/**
+ * 
+ * View -- of Sales/MasterpsController/serviceAction
+ * 
+ */
+
+$this->headTitle($this->title);
+
+
+?>
+<?php //echo $this->partial('sales/masterpos/partial.phtml', array('active' => 'servicetarriff'));
+?>
+<div class="card">
+	<div class="card-header">
+		<div class="row">
+			<div class="col-lg-12">
+				<form method="POST" action="<?php echo $this->url('postbox', array('action' => 'poreport')); ?>" enctype="multipart/form-data" >    
+						<div class="row">
+							<div class="form-group col-lg-2">
+								<label class="control-label" for="start_date">Start Date</label>
+								<div class="date input-group" id="start_date" data-date="<?php echo $data['start_date'];?>" data-date-format="yyyy-mm-dd" >
+									<input class="form-control span2" name="start_date" id="start_date" type="text" placeholder="Start Date" value="<?php echo $data['start_date'];?>"  required>
+									<span class="input-group-addon add-on"><i class="fa fa-calendar"></i></span>
+								</div>
+							</div>
+							<div class="form-group col-lg-2">
+								<label class="control-label" for="end_date">End Date</label>
+								<div class="date input-group" id="end_date" data-date="<?php echo $data['end_date'];?>" data-date-format="yyyy-mm-dd" >
+									<input class="form-control span2" name="end_date" id="end_date" type="text" placeholder="End Date" value="<?php echo $data['end_date'];?>"  required>
+									<span class="input-group-addon add-on"><i class="fa fa-calendar"></i></span>
+								</div>
+							</div>
+							<div class="form-group col-lg-2">
+							<label for="location" class="control-label">Location</label>
+							<select class="form-control" id="location" name="location" data-placeholder="Select" onchange='this.form.submit()'>
+								<option value="-1">All</option>
+									<?php foreach($this->locationObj->get(array('status'=>'1')) as $location):?>
+										<option value="<?php echo $location['id']?>"<?php echo ($location['id']==$data['location'])?'selected':'';?>>
+										<?php echo $location['location'];?></option>
+									<?php endforeach;?>
+							</select>
+							</div>
+							<div class="form-group col-lg-2">
+								<label for="postbox" class="control-label">Post Box Number</label>
+								<select class="form-control" id="postbox" name="postbox" data-placeholder="Select" onchange='this.form.submit()'>
+									<option value="-1">All</option>
+									<?php foreach ($this->ponumberObj->get(array('location'=>$data['location'])) as $postbox):?>
+										<option value="<?php echo $postbox['id']?>"<?php echo ($postbox['id']==$data['postbox'])?'selected':'';?>>
+										<?php echo $postbox['po_number'];?>	</option>
+									<?php endforeach; ?>
+								</select>
+							</div>
+							<div class="form-group col-lg-2">
+								<label for="status" class="control-label">Status</label>
+								<select class="form-control" id="status" name="status" data-placeholder="status" onchange='this.form.submit()'>
+									<option value="-1">All</option>
+										<option value="1"<?php echo ($data['status']=="1")?'selected':'';?>>Active</option>
+										<option value="5"<?php echo ($data['status']=="5")?'selected':'';?>>Cancel</option>
+								
+								</select>
+							</div>
+							
+							<div class="form-group col-lg-1"><br>
+								<button type="submit" class="btn btn-sm btn-success pull-right"><i class="fa fa-gear"></i> Generate </button>
+							</div>
+						</div>
+					</form>
+				</div>
+		</div>
+	</div>
+
+	
+	<div class="table-responsive">
+		<table class="table table-striped table-bordered table-hover" id="dataTables">
+			<thead>
+				<tr>
+					<th>#</th>
+					<th>Location</th>
+					<th>Post Box</th>
+					<th>Postbox Size</th>
+					<th>Renewal Amount</th>
+					<th>Name</th>
+					<th>CID</th>
+					<th>Email</th>
+					<th>Mobile</th>
+					<th>Address</th>
+					<th>Registration year</th>
+					<th>Renewal Date</th>
+					<th>Status</th>
+				</tr>
+			</thead>
+			<tbody>
+				<?php
+					$i = 1; $total_amt = 0;
+					foreach ($paginator as $row):
+						
+					?>
+					<tr>
+						<td><?php echo $i++; ?> </td>
+						<td><?php echo $this->locationObj->getColumn($row['location'],'location');?></td>	
+						<td><b><?php echo $this->ponumberObj->getColumn($row['postbox_no'],'po_number') ;?></b></td>
+						<td><b><?php echo $this->posizeObj->getColumn($row['post_box_size'],'post_box_size') ;?></b></td>
+						<td><b><?php echo $row['renewal_amount'] ;?></b></td>
+						<td><?php echo $row['name'];?></td>	
+						<td><?php echo $row['cid'];?></td>	
+						<td><?php echo $row['email'];?></td>
+						<td><?php echo $row['mobile'];?></td>	
+						<td><?php echo $row['address'];?></td>
+						<td><?php echo $row['year'];?></td>	
+						<td><?php echo $row['renewal_date'];?></td>		
+						<td><?php echo  $this->status($row['status']);?></td>								
+						
+					</tr>
+					
+				<?php $total_amt += $row['renewal_amount'];
+				endforeach;?>
+				<tr>
+					<td> </td>
+					<td></td>	
+					<td></td>
+					<td><b>Total</b></td>
+					<td><b><?php echo $total_amt ;?></b></td>
+					<td></td>	
+					<td></td>	
+					<td></td>
+					<td></td>	
+					<td></td>
+					<td></td>	
+					<td></td>
+					<td></td>			
+				</tr>
+			</tbody>
+		</table>
+	</div>
+</div>
+<!-- for modal -->
+<div id="modal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+	<div class="modal-dialog">
+		<div class="modal-content">
+		</div>
+	</div>
+</div>
+<script type="text/javascript">
+$('document').ready(function(){
+	$('#start_date').datepicker();
+	$('#end_date').datepicker();
+	$('#dataTables').DataTable({
+		"paging":   true,
+	});
+});
+</script>

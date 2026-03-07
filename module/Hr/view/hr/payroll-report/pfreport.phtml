@@ -1,0 +1,250 @@
+<?php
+/**
+ *  pay head report---Hr/ReportController/gisAction  
+ */
+
+	$this->headTitle($this->title);
+	$minYear = ($this->minYear > 0)?$this->minYear:date('Y');
+?>
+<?php echo $this->tabs_helper(array(922,924,925,930,931,932,923,933)); ?>
+<div class="widget widget-box transparent">
+	<div class="widget-header">
+		<h4 class="widget-title"> 	
+			Provident Fund Report
+		</h4>
+	</div>	
+	<div class="widget-body">
+		<div class="widget-main">
+			<form method="post" action="<?php echo $this->url('preport', array('action' => 'pfreport')); ?>" >
+				<div class="row">
+					<div class="form-group col-lg-2">
+						<label for="year" class="control-label">Year</label>
+						<select id="year" name="year" class="form-control" data-placeholder="Select">
+							<?php 
+							for($year=date('Y');$year >= $minYear;$year--):
+							?>
+								<?php $selected = ($year == $data['year'])?"selected":"";?>
+								<option value="<?php echo $year;?>" <?php echo $selected;?>>
+									<?php echo $year;?> 
+								</option>
+							<?php endfor; ?>
+						</select>
+					</div>
+					<div class="form-group col-lg-2">
+						<label for="month" class="control-label">Month</label>
+						<select id="month" name="month" class="form-control" data-placeholder="Select">
+							<?php for($month=1; $month<13; $month++):?>
+								<?php $selected = ($month == $data['month'])?'selected':'';?>
+								<option value="<?php echo $month;?>" <?php echo $selected; ?>>
+									<?php echo DateTime::createFromFormat('!m', $month)->format('F');?>
+								</option> 
+							<?php endfor;?>
+						</select>
+					</div>
+					<div class="col-md-2">
+						<label for="region" class="control-label">Region</label>
+						<select class="form-control" id="region" name="region" data-placeholder="Select"  required >
+							<option value="-1">All</option>
+							<?php 
+							foreach ($regions as $region):
+							?>
+							<?php $selected = ($region['id'] == $data['region'])?'selected':'';?>
+								<option value="<?php echo $region['id'];?>" <?php echo $selected;?>>
+									<?php echo $region['region'];?>
+								</option>
+							<?php
+							endforeach;
+							?>
+						</select>
+					</div>
+					<div class="col-md-2">
+						<label for="location" class="control-label">Location</label>
+						<select class="form-control" id="location" name="location" data-placeholder="Select" required >
+							<option value="-1">All</option>
+							<?php 
+							foreach ($location as $locations):
+							?>
+								<?php $selected = ($locations['id'] == $data['location'])?'selected':'';?>
+								<option value="<?php echo $locations['id'];?>" <?php echo $selected;?>>
+									<?php echo $locations['location'];?>
+								</option>
+							<?php
+							endforeach;
+							?>
+						</select>
+					</div>
+					
+					<div class="col-md-2 pull-right">
+						<div class="space-10"></div>
+						<label for="redirect" class="control-label">&nbsp;</label>
+						<button type="submit" class="btn btn-sm btn-success"><i class="fa fa-refresh"></i> refresh </button>
+					</div>
+				</div>
+			</form>
+			<div class="row"><div class="space-12"></div></div>
+			<div class="row">
+				<div class="col-lg-12">
+				    <input type="hidden" name="pf_date" id="pf_date" value="<?php echo date("F", strtotime(date("d-$month-y"))).','.$data['year'];?>" />
+					<strong>For the Month of : <?php $month = $data['month']; echo date("F", strtotime(date("d-$month-y"))); ?>, <?php echo $data['year']; ?>
+					<?php
+						$filter = array(
+							'year'=>$data['year'], 
+							'month'=>$data['month'], 
+							'pr.status'=>'1'									
+						);
+						if($data['region'] > 0):
+							$filter['l.region'] = $data['region']; 
+						endif;
+						if($data['location'] > 0):
+							$filter['e.location'] = $data['location']; 
+						endif;
+						$payrolls = $this->payrollObj->getforReport($filter);
+						if(sizeof($payrolls) > 0):
+							//Payroll Generated
+						else:
+							$temp_payrolls = $this->temppayrollObj->getforReport($filter);
+							if(sizeof($temp_payrolls) > 0)://Draft?>
+					<span class="label label-danger">DRAFT</span>
+					<?php	else: //Not Generated ?>
+								<span class="label label-warning"><i class="fa fa-exclamation-triangle"></i> NOT PREPARED</span>
+					<?php	endif;
+						endif;
+					?>
+					</strong>
+					<span class="pull-right"> Date:  <?php echo date('d/m/Y');?></span>
+				</div>
+			</div>	
+				<div class="space-6"></div>			
+			<table class="table table-condensed table-bordered" id="example">
+				<thead>
+					<tr>
+						<th>Sl No.</th>
+						<th>NPPF Acc No</th>
+						<th>Emp No.</th>
+						<th>CID</th>
+						<th>Employee</th>
+						<th>Basic Pay</th>
+						<th>CL Employer Contribution</th>
+						<th>CL Employee Contribution</th>
+						<th>Total</th>
+					</tr>
+				</thead>
+				<tbody>
+					<?php 
+					$i =1;$tot_basic=0;$tot_employee_con=0;$tot_employer_con=0;
+					?>
+					<?php foreach($empdata as $row):
+					$employee_con=$this->paydetailObj->getColumn(array('pay_roll'=>$row['pr_id'],'pay_head'=>9),'actual_amount');
+					$employee_con=(!empty($employee_con))?$employee_con:0.00;
+					$employer_con=$this->pepfObj->getColumn(array('employee'=>$row['id'],'month'=>$data['month'],'year'=>$data['year']),'pe_pf');
+					$employer_con=(!empty($employer_con))?$employer_con:0.00;
+					$basic=$this->paydetailObj->getColumn(array('pay_roll'=>$row['pr_id'],'pay_head'=>1),'actual_amount');
+					$basic=(!empty($basic))?$basic:0.00;
+					?>
+					<tr>
+					<td><?php echo $i++;?></td>
+					<td><?php echo $row['pf'];?></td>
+					<td><?php echo $row['emp_id'];?></td>
+					<td><?php echo $row['cid'];?></td>
+					<td><?php echo $row['full_name'];?></td>
+					<td><?php echo number_format((float)$basic,2,'.',',');?></td>
+					<td><?php echo number_format((float)$employer_con,2,'.',',');?></td>
+					<td><?php echo number_format((float)$employee_con,2,'.',',');?></td>
+					<td><?php echo number_format((float)$employee_con+$employer_con,2,'.',',');?></td>
+					</tr>
+					<?php $tot_basic+=$basic;
+					$tot_employee_con += $employee_con;
+					$tot_employer_con +=$employer_con;
+					endforeach;?>
+					<tr>
+						<td></td>
+						<td></td>
+						<td></td>
+						<td></td>
+						<td><b>Total</b></td>
+						<td><b><?php echo number_format((float)$tot_basic,2,'.',',');?></b></td>
+						<td><b><?php echo number_format((float)$tot_employer_con,2,'.',',');?></b></td>
+						<td><b><?php echo number_format((float)$tot_employee_con,2,'.',',');?></b></td>
+						<td><b><?php echo number_format((float)$tot_employer_con+ $tot_employee_con,2,'.',',');?></b></td>
+					</tr>
+				</tbody>
+
+			</table>
+		</div>
+	</div>
+</div>
+<script type="text/javascript">
+	var title_table = 'Pf Deduction for the Month : '+$('#pf_date').val();
+	$('#example').DataTable( {
+		dom: 'Bfrtip',
+		/*buttons: [
+			'copy', 'csv', 'excel', 'pdf', 'print'
+		]*/
+		lengthMenu: [
+			[ 25, 50, -1 ],
+			[ '25 rows', '50 rows', 'Show all' ]
+		],
+		columnDefs: [ {
+			visible: false
+		} ],
+		buttons: [
+			{
+				extend: 'copy',
+				exportOptions: {
+					columns: ':visible'
+				},
+				text: '<i class="fa fa-files-o"></i> Copy',
+				titleAttr: 'Copy'
+			},
+			{
+				extend: 'excel',
+				title: title_table,
+				exportOptions: {
+					columns: ':visible'
+				},
+				text: '<i class="fa fa-file-excel-o"></i> Excel',
+				titleAttr: 'Excel'
+			},
+			{
+				extend: 'pdfHtml5',
+				title: title_table,
+				exportOptions: {
+					columns: ':visible'
+				},
+				orientation: 'landscape',
+				pageSize: 'LEGAL',
+				text: '<i class="fa fa-file-pdf-o"></i> Pdf',
+				titleAttr: 'PDF'
+			},
+			{
+				extend: 'print',
+				title: title_table,
+				exportOptions: {
+					columns: ':visible'
+				},
+				text: '<i class="fa fa-print"></i> Print',
+				titleAttr: 'Print'
+			},
+			'pageLength','colvis'
+		],
+		select:true
+	} );
+	$('select#region').on('change',function(){
+		$.post(
+			"<?php echo $this->url('employee', array('action' => 'getlocation'));?>",
+			{
+				regionId: $(this).val(),
+			},
+			function(data){
+				$('select#location').html(data.location);
+				$('select#location').trigger('chosen:updated');
+			},
+			'json'
+		);
+	});
+	$('form select').chosen({ allow_single_deselect: true });
+	function redirect(){
+		var id = $('#month').val()+'-'+$('#year').val()+'-'+$('#region').val()+'-'+$('#location').val()+'-'+$('#activity').val();
+		location.href="<?php echo $this->url('preport', array('action'=>'pfreport'));?>/"+id;
+	}
+</script>

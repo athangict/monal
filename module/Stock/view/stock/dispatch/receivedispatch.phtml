@@ -1,0 +1,334 @@
+<?php
+/**
+ * View -- of Stock/DispatchController/receivedispatchAction
+ */
+  $this->headTitle($this->title);
+?>
+<?php echo $this->partial('stock/dispatch/partial.phtml', array('active' => 'dispatch')); ?> <br/>
+<?php
+	foreach($dispatchs as $dispatch):
+		//echo "<pre>"; print_r($dispatch);
+		extract($dispatch);
+		$dispatch_id = $id;
+		$dispatch_activity = $activity;
+		$dispatch_party = $party;
+		$dispatch_status = $status;
+	endforeach; //exit;
+
+?>
+<style>
+	.mytable tr th,.mytable tr td {
+		padding:5px;
+		font-size: 14px;
+	}
+</style>
+<?php
+	$depoyManager = $this->userRoleObj->get(array('id'=>$this->userID)); 
+	$admin_locs = $this->usersObj->getColumn($userID,'admin_location');
+	$admin_loc_array = explode(',',$admin_locs);
+	if(($dispatch_status == '3') && in_array($to_location, $admin_loc_array) && sizeof($depoyManager)>0): 
+?>
+<div class="row">
+	<div class="col-lg-12">
+		<div class="widget widget-box">
+			<div class="widget-header">
+				<h5 class="widget-title lighter smaller">
+					<i class="fa fa-pencil"></i>&nbsp;&nbsp;&nbsp;Receive Goods Dispatch : &nbsp;
+					<strong><?php echo $challan_no; ?> | <?php echo $this->activityObj->getColumn($activity,'activity'); ?></strong>&nbsp;
+					<?php echo $this->status($status);?>
+				</h5>
+			</div><!-- end of widget-header -->
+			<div class="widget-body">
+				<div class="widget-main">
+					<form id="#form" method="post" action="<?php echo $this->url('dispatch', array('action' => 'receivedispatch')); ?>"  enctype="multipart/form-data" >    
+						<input type="hidden" name="dispatch_id" id="dispatch_id" value="<?php echo $dispatch_id;?>" />
+						<div class="row" id="convert-tb0">
+							<div class="col-lg-8" id="convert-tb1">
+								<ul class="list-unstyled spaced">
+									<li>
+										<i class="ace-icon fa fa-caret-right blue"></i>
+										Challan No. : <b class="red"><?php echo $challan_no;?></b>
+									</li>
+									<li>
+										<i class="ace-icon fa fa-caret-right blue"></i>
+										Source Location : <b class="red"><?php echo $from=$this->locationObj->getColumn($from_location,'location'); ?></b>
+									</li>
+									<li>
+										<i class="ace-icon fa fa-caret-right blue"></i>
+										Good Request Number : <b class="red"><?php echo $goodrequest_no;?></b>
+									</li>
+								</ul>
+							</div>
+							<div class="col-lg-4" id="convert-tb2">
+								<ul class="list-unstyled spaced">
+									<li>
+										<i class="ace-icon fa fa-caret-right blue"></i>
+										Dispatch Date : <b class="red"><?php echo $dispatch_date; ?></b>
+									</li>
+									<li>
+										<i class="ace-icon fa fa-caret-right blue"></i>
+										Destination Location : <b class="red"><?php echo $to=$this->locationObj->getColumn($to_location,'location');?></b>
+									</li>
+									<li>
+										<i class="ace-icon fa fa-caret-right blue"></i>
+										Tracking Number  :<b class="red"><?php echo $tracking_no; ?></b>
+									</li>
+									<li>
+										<i class="ace-icon fa fa-caret-right blue"></i>
+										Vehicle No : <b class="red"><?php echo $vehicle_no; ?></b>
+									</li>
+								</ul>
+							</div>
+						</div>
+						<div class="row">
+							<div class="form-group col-lg-3">
+								<label for="received_by" class="control-label">Received By</label>
+								<select class="form-control" name="received_by" id="received_by" data-placeholder="Select" required > 
+									<option value=""></option>
+									<?php	$employees = $this->usersObj->get(array('location' => $to_location));
+										foreach($employees as $emp):
+										$selected_emp = ($emp['id'] == $userID)?'selected':'';?>
+										<option value="<?php echo $emp['id'];?>" <?php echo $selected_emp;?>>
+											<?php echo $emp['name'];?> 
+										</option>
+									<?php endforeach;?>
+								</select>
+							</div>
+							<div class="form-group col-lg-3">
+								<label for="received_date" class="control-label">Received Date</label>
+								<?php $received_date = ($received_on == '0000-00-00' || $received_on == '')?date('Y-m-d'):$received_on;?>
+								<div class="date input-group" id="received_date" data-date="<?php echo date('Y-m-d');?>" data-date-format="yyyy-mm-dd" >
+									<input class="form-control span2" name="received_date" id="received_date" value="<?php echo $received_date; ?>" type="text" placeholder="Received Date" readonly required>
+									<span class="input-group-addon add-on"><i class="fa fa-calendar"></i></span>
+								</div>
+							</div>
+						</div>
+						<div class="row">
+							<div class="space-6"></div>
+							<div class="page-header">
+								<h1>
+									Receiving Goods Dispatched
+									<small>
+										<i class="ace-icon fa fa-angle-double-right"></i>
+										from <?php echo $from;?> at <?php echo $to;?>
+									</small>
+								</h1>
+							</div>
+						</div>
+						<div class="row">
+							<div class="col-lg-12"> 
+								<div>
+									<table id="trdetails_table" class="table small-padding">
+										<thead>
+											<tr>
+												<th>Item</th>
+												<th>UOM</th>
+												<th>Dispatched Qty</th>
+												<th>Damage Qty</th>
+												<th>Shortage Qty</th>
+												<th>Accepted Qty</th>
+												<th>Sound Qty</th>
+												<th><?php echo $to=$this->locationObj->getColumn($to_location,'location');?> Stock Balance</th>
+											</tr>
+										</thead>
+										<tbody>
+											<?php 
+												$dispatch_details = $this->dispatch_detailsObj->get(array('dispatch'=>$dispatch_id));
+												if(sizeOf($dispatch_details)>0):
+													foreach($dispatch_details as $details):
+													//echo "<pre>"; print_r($details); 
+											?>
+											<tr>
+												<td>
+													<div class="form-group">
+														<select id="item" name="item[]" class="form-control"  data-placeholder="Select" readonly="readonly" required>
+															<option value="<?php echo $details['item_id'];?>">
+																<?php echo $this->itemObj->getColumn($details['item'],'name');?>
+															</option>		
+														</select>
+													</div>
+													<input type="hidden" name="details_id[]" id="details_id" value="<?php echo $details['id'];?>"/>
+												</td>
+												<td>
+													<div class="form-group">
+														<select id="uom" name="uom[]" class="form-control" data-placeholder="Select" required>
+														<option value="<?php echo $details['uom'];?>">
+																<?php echo $this->uomObj->getColumn($details['uom'],'code');?>
+															</option>		
+														</select>
+														<input type="hidden" name="dispatched_uom[]" id="dispatched_uom" value="<?php echo $details['uom_id'];?>"/>
+														<input type="hidden" name="dispatched_qty[]" id="dispatched_qty" value="<?php echo $details['quantity'];?>"/>
+													</div>
+												</td>
+												<?php
+													
+														$accepted_qty = $details['accepted_qty'];
+														$accepted_qty = ($accepted_qty == 0)?$details['quantity']:$accepted_qty;
+														$sound_qty = $details['sound_qty'];
+														$sound_qty = ($sound_qty == 0)?$details['quantity']:$sound_qty;
+														$damage_qty = $details['damage_qty'];
+														$shortage_qty = $details['shortage_qty'];
+													/*if($received_by == '0' || $received_on == '0000-00-00'):
+														$accepted_qty = $details['quantity'];
+														$sound_qty = $details['quantity'];
+													endif;*/
+												?>
+												<td>
+													<div class="form-group">
+														<input name="challan_qty[]" id="challan_qty" type="text" class="form-control" value="<?php echo $details['quantity'];?>"  readonly required>
+													</div>
+												</td>
+												<td>
+													<div class="form-group">
+														<input type="text" class="form-control" name="damage_qty[]" id="damage_qty" value="<?php echo $damage_qty;?>"/>
+													</div>         
+												</td>
+												<td>
+													<div class="form-group">
+														<input type="text" class="form-control" name="shortage_qty[]" id="shortage_qty" value="<?php echo $shortage_qty;?>" />
+													</div>         
+												</td>
+												<td>
+													<div class="form-group">
+														<input type="text" class="form-control" name="accept_qty[]" id="accept_qty" value="<?php echo $accepted_qty;?>" />
+													</div>         
+												</td>
+												<td>
+													<div class="form-group">
+														<input type="text" class="form-control" name="sound_qty[]" id="sound_qty" value="<?php echo $sound_qty;?>" readonly/>
+													</div>         
+												</td>
+												<?php
+													$selected_item = $this->itemObj->get($details['item']);
+													foreach($selected_item as $item):
+														$opening_id = $this->openingstObj->getColumn(array('item'=>$item),'id');
+														$opening_dtls = $this->openingstdtlsObj->get(array('opening_stock'=>$opening_id));
+														foreach($opening_dtls as $opening_dtl);
+														$from_quantity = $this->openingstdtlsObj->getColumn(array('opening_stock'=>$opening_dtl['opening_stock'],'location'=>$from_location),'quantity');
+															$to_quantity = $this->openingstdtlsObj->getColumn(array('opening_stock'=>$opening_dtl['opening_stock'],'location'=>$to_location),'quantity');?>
+														
+												<td>
+													<div class="form-group">
+														<input name="to_balance[]" id="to_balance" type="text" class="form-control" value="<?php echo $to_quantity;?>" readonly />
+														<input type="hidden" name="to_qty[]" id="to_qty" value="<?php echo $to_quantity;?>" />  
+													</div>
+												</td>				
+											</tr>
+											<?php 
+													endforeach;
+												endforeach;
+											?>
+											<?php endif;?>
+										</tbody>
+									</table>
+								</div>
+							</div>
+						</div>
+						<div class="row">
+							<div class="col-lg-12">
+								<label class="control-label" for="note">Note: </label>
+								<textarea class="form-control" name="note" id="note"><?php echo $note;?></textarea>
+							</div>
+						</div>
+						<div class="space-12"></div>
+						<div class="row"> 	
+							<div class="col-lg-9"> 
+								<button type="submit" class="btn btn-success"><i class="fa fa-check"></i> Save </button>
+								<button type="button" class="btn btn-warning" onclick="javascript:history.back();" >
+									<i class="fa fa-times"></i> Cancel 
+								</button> 					
+							</div>
+						</div>
+					</form>	
+				</div><!-- widget widget-main -->
+			</div>  <!-- widget widget-body -->   
+		</div> <!-- widget widget-box --> 
+	</div><!-- col-lg-12 -->
+</div><!-- row -->
+<?php endif; ?>
+
+<script type="text/javascript">
+$(function() {									
+	$('#received_date').datepicker();
+	$('#received_date').on('changeDate',function(){
+		$('form').formValidation('revalidateField', $(this).attr('id'));
+	});
+	/**** Calculations of Recieve Dispatch ****/
+	$('#trdetails_table').dispatchreceive({
+		getConvReceivedQty:'<?php echo $this->url("dispatch", array("action" => "getconvreceivedqty"));?>',
+	});	
+});
+	
+/*** Form Validation ***/ 
+const fv = FormValidation.formValidation(document.getElementById('#form'), {
+	fields: {
+		'received_date': {
+			validators: {
+				notEmpty: {
+					message: 'Please select received date'
+				}
+			}
+		},
+		'received_by': {
+			validators: {
+				notEmpty: {
+					message: 'Please select received by'
+				}
+			}
+		},
+		'item[]': {
+			validators: {
+				notEmpty: {
+					message: 'Please select item'
+				}
+			}
+		},
+		/*'batch[]': {
+			validators: {
+				notEmpty: {
+					message: 'Please provide batch'
+				}
+			}
+		},*/
+		'uom[]': {
+			validators: {
+				notEmpty: {
+					message: 'Please select uom'
+				}
+			}
+		},
+		'stock_balance[]': {
+			validators: {
+				greaterThan: {
+					message: 'Invalid stock balance',
+					inclusive: false,
+					value: 0.00,
+				}
+			}
+		},
+		'basic_quantity[]': {
+			validators: {
+				greaterThan: {
+					message: 'Invalid basic quantity',
+					inclusive: false,
+					value: '0.00',
+				}
+			}
+		},
+	},
+	plugins: {
+		trigger: new FormValidation.plugins.Trigger(),
+		bootstrap3: new FormValidation.plugins.Bootstrap3(),
+		submitButton: new FormValidation.plugins.SubmitButton(),
+		defaultSubmit: new FormValidation.plugins.DefaultSubmit(),
+	},
+}).on('core.element.validated', function (e) {
+	if (e.valid) {
+		$('div#'+ e.field.replace('[]','') +'_chosen').removeClass('is-invalid');
+		$('div#'+ e.field.replace('[]','') +'_chosen').addClass('is-valid');
+	} else {
+		$('div#'+ e.field.replace('[]','') +'_chosen').removeClass('is-valid');
+		$('div#'+ e.field.replace('[]','') +'_chosen').addClass('is-invalid');
+	}
+});
+</script>

@@ -1,0 +1,311 @@
+<?php
+/**
+ * 
+ * View -- of Accounts/TransactionController/viewtransactionAction
+ * 
+ */
+?>
+<?php 
+	foreach($this->transactionrow as $row ):
+		extract($row);
+		$bank_ref_type_id = $row['bank_ref_type'];
+	endforeach;
+	
+?>
+<?php foreach ($application as $row);
+$max_activity = $this->flowtransactionObj->getMax($column='activity', $where=array('application'=>$row['id']));
+$current_flow = $this->flowtransactionObj->get(array('application'=>$row['id'], 'activity'=>$max_activity));
+$edit_option = 0;
+if(!empty($current_flow)) {
+	foreach($current_flow as $current);
+	$userRolesArray = explode(",", $login_role);
+	$edit_option = (in_array($current['actor'],$userRolesArray))?1:0;
+	//echo '<pre>';print_r($current_flow);
+}//exit;
+?>
+<div class="space"></div>
+<div class="col-lg-12">
+	<div class="widget-box transparent" id="report-print">
+		<div class="widget-header widget-header-large">
+			<h5 class="widget-title grey lighter">
+				<i class="ace-icon fa fa-file-text-o green"></i>
+				<b><?php echo $voucher_type;?> | <?php echo $voucher_no;?> | <?php $this->status($status);?></b>
+			</h5>
+			<div class="widget-toolbar hidden-xs">
+				<a style='cursor:pointer' id="print">
+					<i class="ace-icon fa fa-file-pdf-o red"></i>
+				</a>
+			</div>
+			<div class="widget-toolbar hidden-xs">
+				<a class="btn btn-white btn-warning btn-bold btn-xs" title="Add new Transaction"
+					href="<?php echo $this->url('transaction', array('action'=>'addcredit')); ?>">
+				&nbsp;<i class="fa fa-plus"></i>&nbsp;</a>
+			</div>
+            <?php if($row['status']==4):?>
+			<?php endif;?>
+		</div>
+		<div class="widget-body">
+			<div class="widget-main padding-24">
+				<div class="row" id="convert-tb0">
+					<div class="col-lg-9" id="convert-tb1">
+						<ul class="list-unstyled spaced">
+							<li>
+								<i class="ace-icon fa fa-caret-left blue"></i><b>Journal Name :</b> <?php echo $voucher_type; ?>
+							</li>
+							<li>
+								<i class="ace-icon fa fa-caret-left blue"></i><b>Voucher Date :</b> <?php echo $voucher_date; ?> 
+							</li>
+							<li>
+								<i class="ace-icon fa fa-caret-left blue"></i><b>Document ID : </b> <?php echo $doc_id; ?>
+							</li>
+							<li>
+								<i class="ace-icon fa fa-caret-left blue"><b></i>Document Type :</b> <?php echo $doc_type; ?> 
+							</li>
+						</ul>
+					</div>
+					<div class="col-lg-3" id="convert-tb3">
+						<ul class="list-unstyled spaced">
+							<li>
+								<i class="ace-icon fa fa-caret-left blue"></i><b>Voucher No :</b> <?php echo $voucher_no; ?>
+							</li>
+							<li>
+								<i class="ace-icon fa fa-caret-left blue"></i><b>Voucher Amount :	<?php echo $this->currency($voucher_amount);?> </b>
+							</li>
+							<li>
+								<i class="ace-icon fa fa-caret-left blue"></i><b>Bank Reference Type :</b> <?php echo $this->bank_ref_typeObj->getColumn($bank_ref_type_id,'bank_ref_type'); ?> 
+							</li>
+							<li>
+								<i class="ace-icon fa fa-caret-left blue"></i><b>Cheque No :</b>	 <?php echo $row['cheque_no']?> 
+							</li>
+						</ul>
+					</div>
+				</div>
+				<div class="row">
+					<div class="col-lg-12">
+						<ul class="list-unstyled spaced">
+							<li>
+								<i class="ace-icon fa fa-caret-right blue"><b></i>Naration : </b> <?php echo $remark;?>
+							</li>
+						</ul>
+					</div>
+				</div>
+				<?php if($doc_id=="Travel Authorization"):?>
+					<div class="row">
+							<table class="table table-striped table-hover table-condensed table-bordered" style="width:100%; ">
+								<thead>
+									<tr>
+										<th colspan=2 style="text-align:center;">From</th>
+										<th rowspan=2 style="text-align:center;">Mode of Travel</th>
+										<th colspan=2 style="text-align:center;">To</th>
+										<th rowspan=2 style="text-align:center;">Halt</th>
+										<th rowspan=2 style="text-align:center;">Purpose</th>
+									</tr>
+									<tr>
+										<th >Station</th>
+										<th >Date</th>
+										<th >Station</th>
+										<th >Date</th>
+									</tr>
+								</thead>
+								<tbody>
+									<?php $ta=$this->taObj->getColumn(array('transaction'=>$id),'id');foreach($this->tadetails->get(array('ta'=>$ta)) as $tas):?>
+										<tr>
+											<td><?php echo $tas['from_station'];?></td>
+											<td><?php echo $tas['from_date'];?></td>
+											<td><?php if($tas['travel_mode']==1){echo "Land";}else{echo "Air";};?></td>
+											<td><?php echo $tas['to_station'];?></td>
+											<td><?php echo $tas['to_date'];?></td>
+											<td><?php echo $tas['halt'];?></td>
+											<td><?php echo $tas['purpose'];?></td>
+										</tr>
+									<?php endforeach;?>
+								</tbody>
+							</table>
+						</div>
+				<?php endif;?>
+				<?php if($doc_id=="Travel Claim"):?>
+				<div class="row">
+				<h4>TA Claim Details</h4>
+							<table class="table table-striped table-hover table-condensed table-bordered" style="width:100%; ">
+								<thead>
+								<thead style="border:2px solid #D5D8DC;">
+                                        <tr>
+                                            <th rowspan=2 style="text-align:center;">Date</th>
+                                            <th colspan=3 style="text-align:center;">Place</th>
+                                            <th colspan=2 style="text-align:center;">Time</th>
+                                            <th colspan=5 style="text-align:center;">Claim Details</th>
+                                        </tr>
+                                        <tr>
+                                            <th>From</th>
+                                            <th>To</th>
+                                            <th>Departure</th>
+                                            <th>Arrival</th>
+                                            <th>Daily Allowance</th>
+                                            <th>Mileage Nu.</th>
+                                            <th>Hotel</th>
+                                            <th>Others</th>
+                                            <th>Total</th>
+                                            <th>Remarks</th>
+                                        </tr>
+                                    </thead>
+								<tbody>
+									<?php $claim=$this->claimObj->getColumn(array('transaction'=>$id),'id'); foreach($this->claimdetails->get(array('claim'=>$claim)) as $rows):?>
+										<tr>
+											<td><?php echo $rows['date'];?></td>
+											<td><?php echo $rows['from'];?></td>
+											<td><?php echo $rows['to'];?></td>
+											<td><?php echo $rows['departure'];?></td>
+											<td><?php echo $rows['arrival'];?></td>
+											<td><?php echo number_format((float)$rows['da'], 2, '.', ',');?></td>
+											<td><?php echo number_format((float)$rows['mileage'], 2, '.', ',');?></td>
+											<td><?php echo number_format((float)$rows['hotel'], 2, '.', ',');?></td>
+											<td><?php echo number_format((float)$rows['other'], 2, '.', ',');?></td>
+											<td><?php echo number_format((float)$rows['total'], 2, '.', ',');?></td>
+											<td><?php echo $rows['remarks'];?></td>
+										</tr>
+									<?php endforeach;?>
+									<?php foreach($this->claimObj->get(array('id'=>$remark)) as $claim);?>
+									<tr>
+									
+										<td colspan=5><b>Total</b></td>
+										<td><b><?php echo number_format((float)$claim['tot_da'], 2, '.', ',');?></b></td>
+										<td><b><?php echo number_format((float)$claim['tot_mileage'], 2, '.', ',');?></b></td>
+										<td><b><?php echo number_format((float)$claim['tot_hotel'], 2, '.', ',');?></b></td>
+										<td><b><?php echo number_format((float)$claim['tot_other'], 2, '.', ',');?></b></td>
+										<td></td>
+										<td></td>
+									</tr>
+									<tr>
+										<td colspan=2><b>Actual Expense</b></td>
+										<td colspan=9><b><?php echo number_format((float)$claim['actual_expense'], 2, '.', ',');?></b></td>
+									</tr>
+									<tr>
+										<td colspan=2><b>Advance</b></td>
+										<td colspan=9><b><?php echo number_format((float)$claim['advance'], 2, '.', ',');?></b></td>
+									</tr>
+									<tr>
+										<td colspan=2><b>Amount Claim</b></td>
+										<td colspan=9><b><?php echo number_format((float)$claim['amount_claim'], 2, '.', ',');?></b></td>
+									</tr>
+								</tbody>
+							</table>
+						</div>
+				<?php endif;?>
+				<div class="row">
+					<div class="col-lg-12">
+						<table class="table table-striped table-bordered table-condensed">	
+							<thead>
+								<th style="font-size:14px">Location</th>
+								<th style="font-size:14px">Head Name</th>
+								<th style="font-size:14px">Sub Head Account</th>
+								<th style="font-size:14px">Reference No.</th>
+								<th style="font-size:14px">Amount Dr</th>
+								<th style="font-size:14px">Amount Cr</th>
+							</thead>
+							<tbody>
+								<?php $total_debit =0; $total_credit=0;?>
+								<?php foreach($this->transactiondetails as $tdrow):?>
+									<tr>
+										<td style="font-size:13px; font-famiyl:Times New Roman"><?php echo $tdrow['location'];?></td>
+										<td style="font-size:13px"><?php echo $tdrow['head'];?></td>
+										<td style="font-size:13px"><?php echo $tdrow['sub_head'].'-'.$tdrow['sub_head_name'];?></td>
+										<td style="font-size:13px; text-align:right"><?php echo $tdrow['ref_no'];?></td>
+										<td style="font-size:13px; text-align:right"><?php echo number_format((float)$tdrow['debit'], 2, '.', ',');?></td>
+										<td style="font-size:13px; text-align:right"><?php echo number_format((float)$tdrow['credit'], 2, '.', ',');?></td>
+									</tr>
+									<?php 
+										$total_debit += $tdrow['debit'];
+										$total_credit += $tdrow['credit'];
+									?>
+								<?php endforeach;?>
+								<tr style="border-top:2px solid #ddd;border-bottom:2px solid #ddd;">
+									<th colspan="4" style="font-size:13px"> Total : </th>
+									<th style="font-size:13px; text-align:right"><?php  echo number_format((float)$total_debit, 2, '.', ',');?></th>
+									<th style="font-size:13px; text-align:right"><?php  echo number_format((float)$total_credit, 2, '.', ',');?></th>
+								</tr>
+							</tbody>
+						</table>
+					</div>
+				</div>
+				<br/>
+				<div class="row">
+					<div class="col-lg-3"></div>
+					<div class="col-lg-6">
+					   &nbsp; 
+					</div>
+					<div class="col-lg-3">
+						<?php 
+							if($status < 3)://status 3- pending?>
+								<?php echo $this->button(3, $id);?>
+								<?php 
+							elseif($status==3):
+								if($role==100 || $role==5)://approvr edit option-[role=5 : disabled]?>
+								<?php echo $this->button(3, $id);?>
+								<?php   
+								else:
+								endif;
+							endif;?>
+					</div>
+				</div>
+				<div class="row" id="convert-tb0">
+					<?php echo $this->partial('partial/attachment.phtml', array('process' => '422', 'process_id'=> $row['id'], 'applicationNO'=>$row['voucher_no'], 'login_id' =>$login_id,'status' =>$row['status']));?>
+					<div class="col-lg-4" id="convert-tb1">
+						<ul class="list-unstyled spaced pull-left">
+							<li>
+								<label style="font-size:13px"> Prepared by:<strong> <?php $emp_id=$this->userObj->getColumn($author,'employee'); echo $this->userObj->getColumn($author,'name').'|'.$this->empObj->getColumn($emp_id,'emp_id');?> </strong>on:(<i><?php echo $created?></i>)</label>
+							</li>
+						</ul>
+					</div>
+					<div class="col-lg-4" id="convert-tb2">
+						<?php if($voucher_id == 8):?>
+						<ul class="list-unstyled spaced center"><li><label> Received By Signatory </label></li></ul>
+						<?php endif;?>
+					</div>
+					<div class="col-lg-4" id="convert-tb3">
+						<ul class="list-unstyled spaced pull-right">
+							<li>
+								<label> Authorized Signatory </label>
+							</li>
+						</ul>
+					</div>
+					<div class="col-lg-4" id="convert-tb1"></div>
+					<div class="col-lg-4" id="convert-tb2"></div>
+					<div class="col-lg-4" id="convert-tb3">
+						<div class="col-auto ms-auto d-print-none pull-right">
+							<div class="btn-list">
+								<?php 
+								if(sizeof($current_flow) > 0 && $edit_option==1):
+									foreach($current_flow as $flow);
+									$actions = explode('|', $flow['action']);
+									for($i=0; $i < sizeof($actions); $i++):
+										$buttons = $this->flowactionObj->get($actions[$i]);
+										foreach($buttons as $button):?>
+										<span data-bs-toggle='tooltip' data-bs-placement='top' title='<?php echo $button['action']; ?>'>
+										<a class="btn <?php echo $button['class']; ?>" data-toggle="modal" data-target="#modal" href="<?php echo $this->url('transaction', array('action' => 'process', 'id'=>$row['id'].'-'.$button['id'].'-'.$flow['id'])); ?>">
+											<i class="icon <?php echo $button['icon'];?>"></i><?php echo $button['action']; ?>
+										</a></span>
+										<?php
+										endforeach;
+									endfor;
+								endif;?>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+<div class="modal fade" id="modal" tabindex="-1" role="dialog" aria-hidden="true">
+	<div class="modal-dialog" role="document">
+		<div class="modal-content">
+		</div><!-- /.modal-content -->
+	</div><!-- /.modal-dialog -->
+</div><!-- /.modal -->
+<script type="text/javascript">
+$('#print').genpdfinvoice3({
+	content: '#report-print',
+	src:"<?php echo $this->url('print', array('action' => 'index'));?>",
+	orentation:"P",//L =landscape, P = potrait
+});
+</script>

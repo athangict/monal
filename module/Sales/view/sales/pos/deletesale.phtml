@@ -1,0 +1,27 @@
+<?php 
+/**
+ * View -- of Implementation/ImplementationController/confirmimplementationAction
+ * chophel@athang.com
+ */
+	$this->headTitle($this->title);
+?>
+<?php foreach($salesdetls as $row);?>
+<form id="#form" method="post" action="<?php echo $this->url('pos', array('action' => 'deletesale','id'=>$row['id'])); ?>" enctype="multipart/form-data">                 
+<div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+        <h4 class="modal-title"> <i class="fa fa-checked"></i> Delete Sale</h4>
+    </div>     
+    <div class="modal-body">       
+		<div class="panel panel-default">                       
+			<div class="panel-body">		
+		        <div class="alert alert-primary">
+			        Are you sure you want to DELETE Sales No. <strong><?php echo $row['sales_no'];?></strong>
+		        </div>
+			</div>
+		</div>
+	</div> <!-- /modal-body -->        
+	<div class="modal-footer">
+		<button type="submit" class="btn btn-danger"><i class="icon ti ti-checkbox"></i> Delete </button>
+		<button type="button" class="btn btn-primary" data-dismiss="modal" ><i class="fa fa-times"></i> Cancel </button> 
+    </div>  
+</form>  

@@ -1,0 +1,170 @@
+<?php
+/**
+ * 
+ * View -- of Purchase/PurchaseController/viewporder
+ * 
+ */
+?>
+<?php 
+	foreach($this->purchase_order as $row ):
+		extract($row);
+	    $po_status = $status; 
+	    $po_id = $id; 
+	endforeach;
+?>
+<style>
+	.mytable tr th,.mytable tr td {
+		padding:5px;
+	}
+</style>
+<div class="row">
+	<div class="col-lg-12">
+		<div class="widget widget-box">
+			<form method="post" action="<?php echo $this->url('receipt', array('action' => 'addreceipt')); ?>" >
+				<div class="widget-header">
+					<h5 class="widget-title lighter smaller">
+						# Purchase Order Details:<strong>&nbsp;&nbsp;<?php echo $po_no; ?> | <?php echo $supplier; ?></strong>&nbsp;
+						<?php $this->status($status);?>
+					</h5>
+					<input type="hidden" name="porder" id="porder" value="<?php echo $po_id;?>" />
+					<div class="widget-toolbar hidden-xs">
+						<?php if($status == 2):?> <!--if po qty and received qty not equal-->
+							<button type="submit" class="btn btn-white btn-success btn-bold btn-xs"><i class="fa fa-step-forward"></i> Purchase Receipt </button>
+						<?php endif;?>
+					</div>
+					<div class="widget-toolbar hidden-xs">
+						<div class="btn-list">
+								<?php //if($edit_option){ echo $this->button(2,$row['id']); }?>
+								<span data-bs-toggle='tooltip' data-bs-placement='top' title='PDF Print'>
+									<a class='btn btn-danger btn-xs' id="print">
+									<i class="ace-icon fa fa-file-pdf-o bigger-120"></i></a></span>
+							</div>
+			</div>
+				</div>
+			</form>
+			<div class="widget-body" id="print-content">
+				<div class="widget-main padding-12">
+					<div id="report-print">
+						<div class="row" id="convert-tb0">
+							<div class="col-lg-8" id="convert-tb1">
+								<ul class="list-unstyled spaced">
+									<li>
+										<i class="ace-icon fa fa-caret-right blue"></i>
+										Purchase Order no : <b class="red"><?php echo $po_no; ?></b>
+									</li>
+									<li>
+										<i class="ace-icon fa fa-caret-right blue"></i>
+										Supplier : <b class="red"><?php echo $this->partyObj->getColumn($supplier,'name'); ?> </b>
+									</li>
+									<li>
+										<i class="ace-icon fa fa-caret-right blue"></i>
+										Supplier's Ref/Order No : <b class="red"><?php echo $order_no; ?></b>
+									</li>
+									
+								</ul>
+							</div>
+							<div class="col-lg-4" id="convert-tb2">
+								<ul class="list-unstyled spaced">
+									<li>
+										<i class="ace-icon fa fa-caret-right blue"></i>
+										Purchase Order Date : <b class="red"><?php echo $this->dateformat($po_date); ?></b>
+									</li>
+									<li>
+										<i class="ace-icon fa fa-caret-right blue"></i>
+										 Destination : <b class="red"><?php echo $this->locationObj->getColumn( $destination, 'location'); ?> </b>
+									</li>
+									<li>
+										<i class="ace-icon fa fa-caret-right blue"></i>
+										PO Amount : <b class="purple"><?php echo $po_amount; ?></b>
+									</li>
+									<?php if(isset($ammend_no) && $ammend_no != 0):?>
+										<li>
+											<i class="ace-icon fa fa-caret-right blue"></i>
+											Ammend No. | Ammend Date: <b class="green"><?php echo $ammend_no;?> | <?php echo $this->dateformat($ammend_date);?></b>
+										</li>
+									<?php endif;?>
+								</ul>
+							</div>
+						</div>
+						<div class="row">
+							<div class="col-lg-12">
+								<ul class="list-unstyled spaced">
+									<li>
+										<i class="ace-icon fa fa-caret-right blue"></i>Note: <b class="red"><?php echo $note;?> </b>
+									</li>
+								</ul>
+							</div>
+						</div>
+						<div class="space-6"></div>
+						<div class="row">
+							<div class="col-lg-12" >
+								<table class="table" style="border:2px solid #ddd;">
+									<thead>
+										<tr>
+											<th width=15>#</th>
+											<th>Item Class</th>
+											<th>Item</th>
+											<th>Subhead</th>
+											<th>UOM</th>
+											<th>Quantity</th>
+											<th>Rate(<?php //echo $this->currency_code();?>)</th>
+											<th>Amount (<?php //echo $this->currency_code();?>)</th>
+											<th>Remarks</th>
+										</tr>
+									</thead>
+									<tbody>
+										<?php $sl = 1; 
+											foreach($this->PODObject->get(array('purchase_order' => $po_id)) as $tdrow):
+													$qty = $tdrow['quantity'];
+													$rate = $tdrow['rate'];
+													$amt = $qty * $rate;
+											?>
+											<tr>
+												<td width=15><?php echo $sl++; ?></td>
+												<td><?php echo $this->classObj->getColumn($tdrow['item_class'],'item_class');?></td>
+												<td><?php echo ($tdrow['item_class']==33)?$tdrow['item_name']:$this->itemObj->getColumn($tdrow['item'],'name');?></td>
+												<td><?php echo $this->subheadObj->getColumn($tdrow['subhead'],'name');?></td>
+												<td><?php echo $this->uomObj->getColumn($tdrow['uom'],'code');?></td>
+												<td><?php echo $tdrow['quantity'];?></td>
+												<td><?php echo $tdrow['rate'];?></td>
+												<td><?php echo number_format((float)$amt, 2, '.', '');?></td>
+												<td><?php echo $tdrow['remarks'];?></td>
+											</tr>
+										<?php endforeach;?>
+										<tr style="border-top:2px solid #ddd;border-bottom:2px solid #ddd;">
+											<th colspan="6"></th>
+											<th colspan="2">Total : 
+											<?php echo $po_amount;?></th>
+										</tr>
+									</tbody>
+								</table>
+							</div>
+						</div>
+					</div>
+					<div class="row">
+						<div class="col-lg-7">
+						</div>
+						<div class="col-lg-5" style="text-align: right">
+							<?php if($po_status == '2'): ?>
+								
+								<a href="<?php echo $this->url('purorder', array('action'=>'commitporder', 'id'=>$po_id));?>" class="btn btn-danger"> <i class="fa fa-thumbs-o-up"></i> Commit </a>
+								<a href="<?php echo $this->url('purorder', array('action'=>'editporder', 'id'=>$po_id));?>" class="btn btn-info"> <i class="fa fa-pencil-square-o"></i> Edit </a>
+							<?php endif;?>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+<script type="text/javascript">
+$(document).ready(function () {
+		$('#print').gentcpdf({
+		content: '#print-content',
+		src:"<?php echo $this->url('print', array('action' => 'index'));?>",
+		orentation:"P",
+		size: 'A4',
+	});
+});
+
+</script>

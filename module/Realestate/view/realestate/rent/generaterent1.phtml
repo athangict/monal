@@ -1,0 +1,72 @@
+<?php
+/**
+ * View -- of Administration/MasterController/addbank
+ * chophel@athang.com
+ */
+?>
+<form id="#form" method="post" action="<?php echo $this->url('rent', array('action' => 'generaterent')); ?>" enctype="multipart/form-data">
+	<div class="modal-header">
+		<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+		<h4 class="modal-title"> <i class="ace-icon fa fa-plus-square-o"></i> <?php echo $this->title; ?></h4>
+    </div>  <!-- /modal-header -->
+    <div class="modal-body">
+		<div class="panel panel-default">
+			<div class="panel-body">  
+				<div class="row">
+				<?php $currentYear = (int)date('Y');
+						$currentMonth = (int)date('m');?>
+					<div class="col-lg-12">
+						<div  class="form-group">
+							<label for="year" class="control-label">Year</label>
+							<input class="form-control" type="text" name="year" id="year" value="<?php echo $currentYear?>" required readonly />
+						</div>
+						<div  class="form-group">
+							<label for="month" class="control-label">Month</label>
+							<input class="form-control" type="text" name="month" id="month" value="<?php echo $currentMonth;?>" required readonly />
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+    </div> <!-- /modal-body -->
+    <div class="modal-footer">
+		<button type="submit" class="btn btn-success"><i class="ace-icon fa fa-check"></i>Save</button>
+        <button type="button" class="btn btn-warning" data-dismiss="modal"><i class="ace-icon fa fa-times"></i>Cancel</button> 
+    </div>
+</form>
+<script>
+$('document').ready(function(){
+	const fv = FormValidation.formValidation(document.getElementById('#form'), {
+		fields: {
+			bank: {
+				validators: {
+					notEmpty: {
+						message: 'Please provide Bank Name En.'
+					}
+				}
+			},
+			status: {
+				validators: {
+					notEmpty: {
+						message: 'Please select status.'
+					}
+				}
+			},
+		},
+		plugins: {
+			trigger: new FormValidation.plugins.Trigger(),
+			bootstrap3: new FormValidation.plugins.Bootstrap3(),
+			submitButton: new FormValidation.plugins.SubmitButton(),
+			defaultSubmit: new FormValidation.plugins.DefaultSubmit(),
+		},
+	}).on('core.element.validated', function (e) {
+		if (e.valid) {
+			$('div#'+ e.field.replace('[]','') +'_chosen').removeClass('is-invalid');
+			$('div#'+ e.field.replace('[]','') +'_chosen').addClass('is-valid');
+		} else {
+			$('div#'+ e.field.replace('[]','') +'_chosen').removeClass('is-valid');
+			$('div#'+ e.field.replace('[]','') +'_chosen').addClass('is-invalid');
+		}
+	});
+});
+</script>

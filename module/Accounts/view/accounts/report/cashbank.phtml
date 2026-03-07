@@ -1,0 +1,200 @@
+<?php
+/**
+ * View -- of Report/AccountsreportController/annextureAction
+ */
+   $this->headTitle($this->title);
+?>
+<?php echo $this->tabs_helper(array(684,691,685,686,687,688,689,690,699,700)); ?>
+<div class="card">
+	<div class="card-header">
+		<div class="row">
+			<div class="col-lg-12">
+				<form method="post" action="<?php echo $this->url('report', array('action' => 'cashbank')); ?>"  enctype="multipart/form-data" >    
+					<div class="row">
+						<div class="form-group col-lg-2">
+							<label class="control-label" for="location">Location</label>
+							<select class="form-control" name="location" id="location" data-placeholder="select" >
+								<option value="-1">All</option>
+								<?php foreach($region as $region):?>
+									<optgroup label="<?php echo $region['region'];?>">
+									<?php  
+										$locations = $locationObj->getwithLT(array('l.region'=>$region['id']));
+										foreach ($locations as $location):
+											$selected_loc = ($location['id']==$data['location'])?"selected":"";
+									?>
+										<option value="<?php echo $location['id']; ?>" <?php echo $selected_loc;?>>
+											<?php echo $location['location']; ?>
+										</option>
+									<?php endforeach;?>
+									</optgroup>
+								<?php endforeach;  ?>									
+							</select>
+						</div>
+						<div class="form-group col-lg-2">
+							<label class="control-label" for="start_date">Start Date</label>
+							<div class="date input-group" id="start_date" data-date="<?php echo $data['start_date'];?>" data-date-format="yyyy-mm-dd" >
+								<input class="form-control span2" name="start_date" id="start_date" type="text" placeholder="Start Date" value="<?php echo $data['start_date'];?>" readonly required>
+								<span class="input-group-addon add-on"><i class="fa fa-calendar"></i></span>
+							</div>
+						</div>
+						<div class="form-group col-lg-2">
+							<label class="control-label" for="end_date">End Date</label>
+							<div class="date input-group" id="end_date" data-date="<?php echo $data['end_date'];?>" data-date-format="yyyy-mm-dd" >
+								<input class="form-control span2" name="end_date" id="end_date" type="text" placeholder="End Date" value="<?php echo $data['end_date'];?>" readonly required>
+								<span class="input-group-addon add-on"><i class="fa fa-calendar"></i></span>
+							</div>
+						</div>
+						<div class="col-lg-2">
+							<button type="submit" class="btn btn-sm btn-success pull-right"><i class="fa fa-gear"></i> Generate </button>
+						</div>
+					</div>	
+				</form>
+				<div class="hr hr-dotted"></div>
+				<div class="row col-lg-12">
+					<label><i class="green fa fa-calendar"></i> <strong>Date : </strong></label><span><?php echo (!isset($data['start_date']))?'-select-':$data['start_date'].' to '.$data['end_date'];?></span>
+				</div>
+				<div class="row col-lg-12">
+					<div class="clearfix">
+						<input type="hidden" name="st_date" id="st_date" value="<?php echo $data['start_date']?>">
+						<input type="hidden" name="ed_date" id="ed_date" value="<?php echo $data['end_date'];?>">
+					</div>
+				</div>
+				<div class="row">	
+				<div class="col-lg-12">	
+					<div>
+						<table class="table table-striped table-condensed table-bordered table-hover" id="dataTables">	
+							<thead>
+								<tr>
+									<?php
+									if(!empty($location_details)):?>
+										<th style="text-align:left" rowspan="2">Location</th>
+										<th style="text-align:left" rowspan="2">Particulars</th>
+										<th rowspan="2" style="text-align:right">Opening Balance</th>
+										<th colspan = "2" style="text-align:center">Transactions</th>
+										<th style="text-align:center" rowspan="2">Closing Balance</th>
+									<?php else: ?>
+										<th style="text-align:left" rowspan="2">Particulars</th>
+										<th rowspan="2" style="text-align:right">Opening Balance</th>
+										<th colspan = "2" style="text-align:center">Transactions</th>
+										<th style="text-align:center" rowspan="2">Closing Balance</th>
+									<?php endif; ?>	
+								</tr>
+								<tr>
+									<th>Debit</th>
+									<th>Credit</th>
+								</tr>
+							</thead>
+							<tbody>	
+								<?php
+								$opening_balance=0;$grand_debit = 0; $grand_credit=0; $opening_sum = 0; $closing_sum = 0;$grand_closing_sum=0;
+								foreach($this->subheadObj->getTransactionSubheadforAnnexture($data['start_date'],$data['end_date'], array('type'=>[3,6])) as $subheadrow): // subhead
+									//if($class == '1' || $class == '2'): /* (==) Asset & Expense(Debit-Credit) AND (!=) Income & Liabilities(Credit-Debit) */
+									   $opening_balance = $this->transactiondetailObj->getOpeningBalanceforcashbank($data['start_date'],$subheadrow['id']);
+									//endif;
+									$closing_balance =  $opening_balance;
+									$total_debit = $this->transactiondetailObj->getSumbySubheadforAnnexture($data['location'],$data['start_date'],$data['end_date'], 'debit', $subheadrow['id']);
+									$total_credit = $this->transactiondetailObj->getSumbySubheadforAnnexture($data['location'],$data['start_date'],$data['end_date'], 'credit', $subheadrow['id']);
+									//
+										$closing_balance = ($closing_balance + $total_debit) - $total_credit;
+									?>							
+									<tr>
+										<?php if(!empty($location_details)):
+										$location_detail = $this->transactiondetailObj->getLocation(array('sub_head'=>$subheadrow['id']));
+										foreach($location_detail as $row);?>
+										<td><?php echo $row['location'];?></td> 
+											<?php endif;?>
+										<td><?php echo $subheadrow['name'];?></td>
+										<td class = "red" style="text-align:right"><?php echo number_format((float)$opening_balance, 2, '.', ',');?></td>
+										<td class = "green" style="text-align:right"><?php echo number_format((float)$total_debit, 2, '.', ',');?></td>
+										<td class = "green" style="text-align:right"><?php echo number_format((float)$total_credit, 2, '.', ',');?></td>
+										<td class = "purple" style="text-align:right"><?php echo number_format((float)$closing_balance, 2, '.', ',');?></td>
+									</tr>							
+								<?php
+								$grand_debit += $total_debit;$grand_credit += $total_credit; $closing_sum +=$closing_balance;
+								$opening_sum += $opening_balance;
+								/* (==) Asset & Expense(Debit-Credit) AND (!=) Income & Liabilities(Credit-Debit) */
+								//if($class == '1' || $class == '4'):
+								$grand_closing_sum = ($opening_sum) + ($grand_debit- $grand_credit);
+								
+								endforeach;?>
+							</tbody>
+							<tfoot>
+								<tr style="border-top:3px solid #ddd;border-bottom:3px solid #ddd;">
+									<?php if(!empty($location_details)):?>
+									<td></td>
+									<?php endif;?>
+								    <td style="text-align:center"><strong>Grand Total :</strong></td>
+									<td class = "red" style="text-align:right"><strong><?php echo number_format((float)$opening_sum, 2, '.', ','); ?></strong></td>
+									<td class = "green" style="text-align:right"><strong><?php echo number_format((float)$grand_debit, 2, '.', ','); ?></strong></td>
+									<td class = "green" style="text-align:right"><strong><?php echo number_format((float)$grand_credit, 2, '.', ','); ?></strong></td>
+									<td class = "purple" style="text-align:right"><strong><?php echo number_format((float)$grand_closing_sum, 2, '.', ','); ?></strong></td>
+								</tr>
+							</tfoot>
+						</table>
+					</div>
+				</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+<script type="text/javascript">
+	$(function(){
+		$('#start_date').datepicker();
+		$('#end_date').datepicker();
+		$('#start_date').on('changeDate',function(){
+			$('form').formValidation('revalidateField', $(this).attr('id'));
+		});
+		$('#end_date').on('changeDate',function(){
+			$('form').formValidation('revalidateField', $(this).attr('id'));
+		});
+		var title_table = $('input#head').val()+' from '+$('input#st_date').val()+' to '+$('input#ed_date').val();
+		$('#dataTables').DataTable({
+			"paging":   true,
+		});
+		const fv = FormValidation.formValidation(document.getElementById('#form'), {
+			fields: {
+				'head': {
+							validators: {
+								notEmpty: {
+									message: 'Please select head'
+								}
+							}
+						},
+						'start_date': {
+							validators: {
+								notEmpty: {
+									message: 'Please select start date'
+								}
+							}
+						},
+						'end_date': {
+							validators: {
+								notEmpty: {
+									message: 'Please select end date'
+								}
+							}
+						},
+			},
+			plugins: {
+				trigger: new FormValidation.plugins.Trigger(),
+				bootstrap3: new FormValidation.plugins.Bootstrap3(),
+				submitButton: new FormValidation.plugins.SubmitButton(),
+				defaultSubmit: new FormValidation.plugins.DefaultSubmit(),
+			},
+		}).on('core.element.validated', function (e) {
+			if (e.valid) {
+				$('div#'+ e.field.replace('[]','') +'_chosen').removeClass('is-invalid');
+				$('div#'+ e.field.replace('[]','') +'_chosen').addClass('is-valid');
+			} else {
+				$('div#'+ e.field.replace('[]','') +'_chosen').removeClass('is-valid');
+				$('div#'+ e.field.replace('[]','') +'_chosen').addClass('is-invalid');
+			}
+		});
+		$('form select').chosen().change(function () {
+			fv.revalidateField($(this).attr('name'));
+		});
+	});
+</script>
+
+

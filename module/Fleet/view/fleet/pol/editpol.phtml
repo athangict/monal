@@ -1,0 +1,915 @@
+<?php
+/**
+ * View -- of POL/PolController/addpolAction
+ */
+$this->headTitle($this->title);
+foreach($tr_sanctions as $row):
+    extract($row);
+endforeach;
+?>
+
+<div class="row">
+	<div class="col-lg-12">
+		<div class="widget widget-box">
+			<div class="widget-header">
+				<h5 class="widget-title lighter smaller">
+					<i class="fa fa-asterisk"></i>&nbsp;&nbsp;New Sanction Order
+				</h5>
+			</div><!-- end of widget-header -->
+			<div class="widget-body">
+				<div class="widget-main">
+					<form id="#form" method="post" action="<?php echo $this->url('pol', array('action' => 'editpol')); ?>"  enctype="multipart/form-data" >    
+						<div class="row col-lg-12">	
+						    <input type="hidden" name="sanction_order_id" value="<?php echo $id;?>" id="sanction_order_id">
+						    <div class="row col-lg-12">	
+								<div class="form-group col-lg-3">
+									<label for="sanction_order_date" class="control-label">Sanction Order Date</label>
+									<div class="date input-group" id="sanction_order_date" data-date="<?php echo sanction_order_date;?>" data-date-format="yyyy-mm-dd" >
+										<input class="form-control span2" name="sanction_order_date" id="sanction_order_date" type="text" value="<?php echo $sanction_order_date;?>" placeholder="sanction order date" readonly required>
+										<span class="input-group-addon add-on"><i class="fa fa-calendar"></i></span>
+									</div>
+								</div>
+								<div class="form-group col-lg-3">
+									<label for="location" class="control-label">Location</label>
+									<select id="location" name="location" class="form-control" data-placeholder="Select" required>
+										<option value=""></option>
+										<?php
+											foreach ($this->locationObj->getAll() as $rowset):
+											$selected_locs = ($location_id == $rowset['id'])?"selected":"";
+										?>
+										 <option value="<?php echo $rowset['id']; ?>"<?php echo $selected_locs; ?>>
+											<?php echo $rowset['location']; ?>
+										 </option>
+										<?php endforeach;?>									
+									</select> 
+								</div> 
+								<div class="form-group col-lg-3">
+									<label for="head" class="control-label">Head</label>
+									<select id="head" name="head" class="form-control" data-placeholder="Select" required>
+										<option value=""></option>
+										<?php
+											foreach ($heads as $heads):
+										?>
+										 <option value="<?php echo $heads['id']; ?>" <?php echo ($heads['id']==$head)?'selected':'';?>>
+											<?php echo $heads['code']; ?>
+										 </option>
+										<?php endforeach;?>								
+									</select> 
+								</div>
+								<div class="form-group col-lg-3">
+									<label for="subhead" class="control-label">Subhead</label>
+									<select id="subhead" name="subhead" class="form-control" data-placeholder="Select" required>
+										<option value=""></option>	
+										<?php
+											foreach ($sh as $subheads):
+										?>
+										 <option value="<?php echo $subheads['id']; ?>" <?php echo ($subheads['id']==$subhead)?'selected':'';?>>
+											<?php echo $subheads['name']; ?>
+										 </option>
+										<?php endforeach;?>											
+									</select> 
+								</div>
+								<div class="form-group col-lg-3">
+									<label for="transporter_fcb" class="control-label">Driver</label>
+									<select id="transporter_fcb" name="transporter_fcb" class="form-control" data-placeholder="Select" required>
+										<option value=""></option>
+										<?php
+											foreach ($employee_driver as $rowset):
+											$sel_driver = ($driver_id == $rowset['id'])?"selected":"";
+										?>
+										 <option value="<?php echo $rowset['id']; ?>"<?php echo $sel_driver; ?>>
+											<?php echo $rowset['full_name']; ?>
+										 </option>
+										<?php endforeach;?>										
+									</select> 
+								</div> 
+								
+							</div>
+                            <div class="row col-lg-12"> 
+                                <div class="form-group col-lg-2">
+									<label for="start_date" class="control-label">Start Date</label>
+									<div class="date input-group" id="start_date" data-date="<?php echo date('Y-m-d');?>" data-date-format="yyyy-mm-dd" >
+										<input class="form-control span2" name="start_date" id="start_date" type="text" value="<?php echo $start_date;?>" placeholder="start date" readonly required>
+										<span class="input-group-addon add-on"><i class="fa fa-calendar"></i></span>
+									</div>
+								</div>
+								<div class="form-group col-lg-2">
+									<label for="sanction_order_date" class="control-label">End Date</label>
+									<div class="date input-group" id="end_date" data-date="<?php echo date('Y-m-d');?>" data-date-format="yyyy-mm-dd" >
+										<input class="form-control span2" name="end_date" id="end_date" type="text" value="<?php echo $end_date;?>" placeholder="end date" readonly required>
+										<span class="input-group-addon add-on"><i class="fa fa-calendar"></i></span>
+									</div>
+								</div>	
+								<div class="col-lg-2">  
+                                    <div class="form-group" >
+										<label for="tank_balance" class="control-label">Tank Opening</label>
+										<input type="text" class="form-control" value="<?php echo $opening_tank; ?>" name="tank_balance" id="tank_balance" />
+									</div>
+								</div>
+								<div class="col-lg-2"> 
+									<div class="form-group">
+										<label for="tank_closing" class="control-label">Tank Closing</label>
+										<input type="text" class="form-control" value="<?php echo $closing_tank; ?>" name="tank_closing" id="tank_closing" readonly />
+									</div>
+								</div>
+                                <div class="col-lg-2">      
+									<div class="form-group">
+										<label for="last_km_reading" class="control-label">Last kilometer Reading</label>
+										<input type="text" class="form-control" value="<?php echo $last_reading; ?>" name="last_km_reading" id="last_km_reading" />
+									</div>
+								</div>	
+                                <div class="col-lg-2"> 
+									<div class="form-group">
+										<label for="current_km_reading" class="control-label">Presentt kilometer Reading</label>
+										<input type="text" class="form-control" value="<?php echo $present_reading; ?>" name="current_km_reading" id="current_km_reading" readonly />
+									</div>
+								</div>			
+							</div>							
+						</div>
+						<div class="row">
+						   <div class="col-lg-12"> 
+							  <h5>Vehicle Log</h5>
+								 <div>
+									<table id="trdetails_table" class="table small-padding table-condensed table-striped">
+										<thead>
+											<tr>
+												<th>Initial Reading</th>
+												<th>Final Reading</th>
+												<th>KM Covered</th>
+												<th>Opening Tank Balance</th>
+												<th>Refuelling</th>
+												<th>Total Fuelling</th>
+												<th>Millage</th>
+												<th>Fuel Rate</th>
+												<th>Fuel Consumed</th>
+												<th>Amount</th>
+												<th>Closing Tank Balance</th>
+												<th></th>
+											</tr>
+										</thead>
+										<tbody>
+										    <?php 
+											$vel_count = 1;
+											if(sizeof($this->vel_logObj->get(array('sanction_order'=>$id))) > 0):
+											foreach ($this->vel_logObj->get(array('sanction_order'=>$id)) as $vel_log):  ?>
+											<tr>
+												<td>
+													<div class="form-group">
+													    <input type="hidden" name="vel_log_id[]" value="<?php echo $vel_log['id'];?>" id="vel_log_id">
+														<input name="initial_reading[]" id="initial_reading" type="text" class="form-control" value="<?php echo $vel_log['initial_reading'];?>" readonly required />
+													</div>
+												</td>
+												<td>
+													<div class="form-group">
+														<input name="final_reading[]" id="final_reading" type="text" class="form-control" value="<?php echo $vel_log['final_reading'];?>" required />
+													</div>
+												</td>
+												<td>
+													<div class="form-group">
+														<input name="km_covered[]" id="km_covered" type="text" class="form-control" value="<?php echo $vel_log['km_covered'];?>" readonly required />
+													</div>
+												</td>
+												<td>
+													<div class="form-group">
+														<input name="opening_tank_balance[]" id="opening_tank_balance" type="text" class="form-control" value="<?php echo $vel_log['opening_tank_balance'];?>" readonly required />
+													</div>
+												</td>
+												<td>
+													<div class="form-group">
+														<input name="refuelling[]" id="refuelling" type="text" class="form-control" value="<?php echo $vel_log['refuelling'];?>" required />
+													</div>
+												</td>
+												<td>
+													<div class="form-group">
+														<input name="total_fuelling[]" id="total_fuelling" type="text" class="form-control"  value="<?php echo $vel_log['total_fuel'];?>" readonly required />
+													</div>
+												</td>
+												<td>
+													<div class="form-group">
+														<input name="millage[]" id="millage" type="text" class="form-control" value="<?php echo $vel_log['milage'];?>" required />
+													</div>
+												</td>
+												<td>
+													<div class="form-group">
+														<input name="r_rate[]" id="r_rate" type="text" class="form-control" value="<?php echo $vel_log['rate'];?>" required />
+													</div>
+												</td>
+												<td>
+													<div class="form-group">
+														<input name="fuel_consumed[]" id="fuel_consumed" type="text" class="form-control" value="<?php echo $vel_log['fuel_consumed'];?>"  required />
+													</div>
+												</td>
+												<td>
+													<div class="form-group">
+														<input name="r_amount[]" id="r_amount" type="text" class="form-control" value="<?php echo $vel_log['amount'];?>" readonly required />
+													</div>
+												</td>
+												<td>
+													<div class="form-group">
+														<input name="closing_tank_balance[]" id="closing_tank_balance" type="text" class="form-control" value="<?php echo $vel_log['closing_tank_balance'];?>" readonly required />
+													</div>
+												</td>
+																			
+												<td></td>											
+											</tr>
+											<?php $vel_count++; endforeach; endif; ?>	
+										</tbody>
+									</table>
+								</div>
+							</div>
+							<div class="row col-lg-12"> 	
+								<div class="col-lg-3"> </div>
+								<div class="col-lg-3">
+										<div class="form-group">
+											<label for="patyhead" class="control-label">Head</label>
+												<select class="form-control" name="patyhead" id="patyhead" data-placeholder="patyhead" required>
+													<option value=""></option>
+													<?php $headid=$this->subheadObj->getColumn($party,'head');
+													foreach($head1 as $heads):?>
+														<option value="<?php echo $heads['id']; ?>" <?php echo ($headid==$heads['id'])?'selected':'';?>>
+														<?php echo $heads['name']; ?>
+														</option>
+														<?php endforeach;?>
+												</select>
+										</div>
+									</div>	
+									<div class="col-lg-3">
+										<div class="form-group">
+											<label for="party" class="control-label">Party</label>
+												<select class="form-control" name="party" id="party" data-placeholder="Select" required>
+													<option value=""></option>
+													<?php
+											foreach ($sh as $sh):
+										?>
+										 <option value="<?php echo $sh['id']; ?>" <?php echo ($sh['id']==$party)?'selected':'';?>>
+											<?php echo $sh['name']; ?>
+										 </option>
+										<?php endforeach;?>		
+												</select>
+										</div>
+									</div>
+									<div class="col-lg-3">
+										<div class="form-group">
+											<label for="ref_no" class="control-label">Reference Number</label>
+											<input type="text" class="form-control" name="ref_no" id="ref_no" value ="<?php echo $ref_no?>" placeholder="Reference No" > 
+										</div>
+									</div>
+									
+							</div>
+                            <div class="row col-lg-12"> 	
+                            <div class="col-lg-6"> </div>	
+                                <div class="col-lg-2">    
+									<div class="form-group">
+										<label for="total_refuel" class="control-label">Total Refuelling</label>
+										<input type="text" class="form-control" value="0.00" name="total_refuel" id="total_refuel" readonly />
+									</div>
+								</div>
+								<div class="col-lg-2"> 
+									<div class="form-group">
+										<label for="total_fuel_consumed" class="control-label">Total Fuel Consumed</label>
+										<input type="text" class="form-control" value="0.00" name="total_fuel_consumed" id="total_fuel_consumed" readonly />
+									</div>
+								</div>					
+								<div class="col-lg-2">    
+									<div class="form-group">
+										<label for="total_kilometer" class="control-label">Total Kilometer </label>
+										<input type="text" class="form-control" value="0.00" name="total_kilometer" id="total_kilometer" readonly />
+									</div>
+								</div>				
+							</div>	
+							<div class="row col-lg-12"> 	
+								<div class="col-lg-6"> </div>
+								<div class="col-lg-2"> </div>								
+								<div class="col-lg-2"> 
+									<div class="form-group">
+										<label for="amount" class="control-label">Amount(Nu)</label>
+										<input type="text" class="form-control" value="<?php echo $amount;?>" name="amount" id="amount" readonly />
+									</div>
+								</div>
+															
+							</div>	
+						</div>
+                        <div class ="row">
+                            <div class="col-lg-12">
+								<label class="control-label" for="note">Note: </label>
+								<textarea class="form-control" name="note" id="note"></textarea>
+							</div>				
+						</div>
+						<div class="space-12"></div>
+						<div class="row"> 	
+							<div class="col-lg-9"> 
+								<button type="submit" class="btn btn-success"><i class="fa fa-check"></i> Save </button>
+								<button type="button" class="btn btn-warning" onclick="javascript:history.back();" >
+									<i class="fa fa-times"></i> Cancel 
+								</button> 					
+							</div>
+						</div>
+					</form>	
+				</div><!-- widget widget-main -->
+			</div>  <!-- widget widget-body -->   
+		</div> <!-- widget widget-box --> 
+	</div><!-- col-lg-12 -->
+</div><!-- row -->
+<script type="text/javascript">
+	$(function() {	
+		$('#sanction_order_date').datepicker();
+		$('#start_date').datepicker();
+		$('#end_date').datepicker();
+		$('#sanction_order_date').on('changeDate',function(){
+			$('form').formValidation('revalidateField', $(this).attr('id'));
+		});
+        $('#start_date').on('changeDate',function(){
+			$('form').formValidation('revalidateField', $(this).attr('id'));
+		});
+        $('#end_date').on('changeDate',function(){
+			$('form').formValidation('revalidateField', $(this).attr('id'));
+		});
+		$('#location').on('change',function(){
+		//alert($(this).val()); 
+		$.post(
+				"<?php echo $this->url('pol', array('action' => 'gettransport'));?>",
+				{
+					locationId: $(this).val(),
+				},
+				function(data){
+					$('select#transport').html(data.transport);
+					$(transport).trigger('chosen:updated');
+				   },
+				'json'
+			);
+	    });
+		$('select#patyhead').on('change',function(){
+		//alert($(this).val()); 
+		$.post(
+				"<?php echo $this->url('pol', array('action' => 'getsubhead'));?>",
+				{
+					headId: $(this).val(),
+				},
+				function(data){
+					console.log(data);
+					$('select#party').html(data.subheads);
+					$(party).trigger('chosen:updated');
+
+				   },
+				'json'
+			);
+	    });
+		$('#transport').on('change',function(){
+		//alert($(this).val()); 
+		$.post(
+				"<?php echo $this->url('pol', array('action' => 'gettransportDetails'));?>",
+				{
+					assets_id: $(this).val(),
+				},
+				function(data){
+					console.log(data);
+					if(data.booloan == 1){
+						$('#tank_balance').attr('disabled','disabled');
+						$('#last_km_reading').attr('disabled','disabled');
+					}
+					else{
+						$('#tank_balance').attr('enabled','enabled');
+						$('#last_km_reading').attr('enabled','enabled');
+					}
+					//$('select#transport_loc').html(data.locs);
+					//$('select#transport_loc').trigger('chosen:updated');
+					//$('select#transporter_fcb').html(data.driver);
+					//$('select#transporter_fcb').trigger('chosen:updated');
+					$('#last_km_reading').val(data.final_reading);
+					$('#tank_balance').val(data.closing_tank_balance);
+					$('.tr-initial_reading').val(data.final_reading);
+					$('.tr-opening_tank_balance').val(data.closing_tank_balance);
+					$('.tr-total_fuelling').val(data.closing_tank_balance);
+				   },
+				'json'
+			);
+	    });
+		var tr_id =0;
+		var parentObj = $('#trdetails_table');
+		parentObj.wrap("<div style='overflow-x:scroll;margin-bottom:5px;'> </div>");
+		parentObj.find("tbody tr").each(function(){
+			$(this).attr('id',++tr_id);			
+			$(this).find('div.chosen-search input').each(function(){
+				$(this).addClass('ch-search');
+			});
+			$(this).find('div.chosen-container .chosen-drop').each(function(){
+				$(this).css({'position':'relative'});
+			});
+			$(this).find(':input').not('input.ch-search').each(function(){
+	            var old_id = $(this).attr('id');
+	            var new_id=(old_id.lastIndexOf('-') > 0)? old_id.substr(0, old_id.lastIndexOf('-')): old_id;
+	            $(this).attr('id',new_id+'-'+tr_id);
+	            $(this).addClass('tr-'+new_id);
+	        });
+			$(this).find('input.tr-final_reading').each(function(){
+				$(this).bind('change', function(){
+					var id = $(this).closest('tr').attr('id');
+					
+					var final_reading = parseFloat($('#final_reading-'+id).val()).toFixed(2);
+					var initial_reading = parseFloat($('#initial_reading-'+id).val()).toFixed(2);
+					var km_covered = final_reading - initial_reading;
+					$('#km_covered-'+id).val(parseFloat(km_covered).toFixed(2));
+					
+					var km_covered = parseFloat($('#km_covered-'+id).val()).toFixed(2);
+					var fuel_consumed = parseFloat($('#fuel_consumed-'+id).val()).toFixed(2);
+					var r_rate = parseFloat($('#r_rate-'+id).val()).toFixed(2);
+						
+					if(fuel_consumed > 0){
+						var millage = km_covered / fuel_consumed;
+						$('#millage-'+id).val(parseFloat(millage).toFixed(2));
+						
+
+						var total_fuelling = parseFloat($('#total_fuelling-'+id).val()).toFixed(2);
+						var fuel_consumed = $('#fuel_consumed-'+id).val();
+						var refuelling = $('#refuelling-'+id).val();
+						var closing_tank_balance = total_fuelling - fuel_consumed;
+						$('#closing_tank_balance-'+id).val(parseFloat(closing_tank_balance).toFixed(2));
+						
+						var r_amount = r_rate * refuelling;
+						$('#r_amount-'+id).val(parseFloat(r_amount).toFixed(2));
+					}else{
+						$('#millage-'+id).val('0.00');
+						$('#closing_tank_balance-'+id).val('0.00');
+					}
+					pol_loop_next(parentObj,$(this));
+				});
+			});
+			$(this).find('input.tr-refuelling,input.tr-r_rate').each(function(){
+				$(this).bind('change', function(){
+					var id = $(this).closest('tr').attr('id');
+					
+					var total_fuelling = parseFloat($('#refuelling-'+id).val()) + parseFloat($('#opening_tank_balance-'+id).val());
+					$('#total_fuelling-'+id).val(parseFloat(total_fuelling).toFixed(2));
+					
+					var total_fuelling = parseFloat($('#total_fuelling-'+id).val()).toFixed(2);
+					var fuel_consumed = parseFloat($('#fuel_consumed-'+id).val()).toFixed(2);
+					var closing_tank_balance = total_fuelling - fuel_consumed;
+					$('#closing_tank_balance-'+id).val(parseFloat(closing_tank_balance).toFixed(2));
+					var refuelling = parseFloat($('#refuelling-'+id).val()).toFixed(2);
+					var r_rate = parseFloat($('#r_rate-'+id).val()).toFixed(2);
+					if(refuelling>0){
+					var r_amount = r_rate * refuelling;
+					$('#r_amount-'+id).val(parseFloat(r_amount).toFixed(2));
+					console.log(r_amount);
+					}
+					pol_loop_next(parentObj,$(this));
+				});
+			});
+			$(this).find('input.tr-fuel_consumed').each(function(){
+				$(this).bind('change', function(){
+					var id = $(this).closest('tr').attr('id');
+					
+					var km_covered = parseFloat($('#km_covered-'+id).val()).toFixed(2);
+					var fuel_consumed = parseFloat($(this).val()).toFixed(2);
+					var r_rate = parseFloat($('#r_rate-'+id).val()).toFixed(2);
+						
+					if(fuel_consumed > 0){
+						var millage = km_covered / fuel_consumed;
+						$('#millage-'+id).val(parseFloat(millage).toFixed(2));
+						
+						var total_fuelling = parseFloat($('#total_fuelling-'+id).val()).toFixed(2);
+						var fuel_consumed = $('#fuel_consumed-'+id).val();
+						var closing_tank_balance = total_fuelling - fuel_consumed;
+						$('#closing_tank_balance-'+id).val(parseFloat(closing_tank_balance).toFixed(2));
+						
+						//var r_amount = r_rate * fuel_consumed;
+						//$('#r_amount-'+id).val(parseFloat(r_amount).toFixed(2));
+					}else{
+						$('#milage-'+id).val('0.00');
+						$('#closing_tank_balance-'+id).val('0.00');
+					}
+					
+						
+					
+					pol_loop_next(parentObj,$(this));
+				});
+			});
+			pol_delbtn(parentObj);
+		});
+		var firstRow = parentObj.find("tbody tr:first").attr('id');
+		$('#initial_reading-'+firstRow).val($('#last_km_reading').val());
+		$('#opening_tank_balance-'+firstRow).val($('#tank_balance').val());
+		$('#total_fuelling-'+firstRow).val($('#tank_balance').val());
+		
+		$('#last_km_reading').on('change',function(){
+			var firstRow = parentObj.find("tbody tr:first").attr('id');
+			$('#initial_reading-'+firstRow).val($(this).val());
+			
+			var final_reading = parseFloat($('#final_reading-'+firstRow).val()).toFixed(2);
+			var initial_reading = parseFloat($('#initial_reading-'+firstRow).val()).toFixed(2);
+			var km_covered = final_reading - initial_reading;
+			$('#km_covered-'+firstRow).val(parseFloat(km_covered).toFixed(2));
+			
+			var km_covered = parseFloat($('#km_covered-'+firstRow).val()).toFixed(2);
+			var fuel_consumed = parseFloat($('#fuel_consumed-'+firstRow).val()).toFixed(2);
+			var r_rate = parseFloat($('#r_rate-'+firstRow).val()).toFixed(2);
+						
+			if(fuel_consumed > 0){
+				var millage = km_covered / fuel_consumed;
+				$('#millage-'+firstRow).val(parseFloat(millage).toFixed(2));
+				
+				var total_fuelling = parseFloat($('#total_fuelling-'+firstRow).val()).toFixed(2);
+				var fuel_consumed = parseFloat($('#fuel_consumed-'+firstRow).val()).toFixed(2);//$('#fuel_consumed-'+firstRow).val();
+				var closing_tank_balance = total_fuelling - fuel_consumed;
+				$('#closing_tank_balance-'+firstRow).val(parseFloat(closing_tank_balance).toFixed(2));
+				
+				var r_amount = r_rate * fuel_consumed;
+				$('#r_amount-'+firstRow).val(parseFloat(r_amount).toFixed(2));
+			}else{
+				$('#millage-'+firstRow).val('0.00');
+				$('#closing_tank_balance-'+firstRow).val('0.00');
+			}
+			pol_loop_next(parentObj,$('#final_reading-'+firstRow));
+		});
+		$('#tank_balance').on('change',function(){
+			var firstRow = parentObj.find("tbody tr:first").attr('id');
+			$('#opening_tank_balance-'+firstRow).val($(this).val());
+			var total_fuelling = parseFloat($('#refuelling-'+firstRow).val()) + parseFloat($('#opening_tank_balance-'+firstRow).val());
+			$('#total_fuelling-'+firstRow).val(parseFloat(total_fuelling).toFixed(2));
+			
+			var final_reading = parseFloat($('#final_reading-'+firstRow).val()).toFixed(2);
+			var initial_reading = parseFloat($('#initial_reading-'+firstRow).val()).toFixed(2);
+			var km_covered = final_reading - initial_reading;
+			$('#km_covered-'+firstRow).val(parseFloat(km_covered).toFixed(2));
+			
+			var km_covered = parseFloat($('#km_covered-'+firstRow).val()).toFixed(2);
+			var fuel_consumed = parseFloat($('#fuel_consumed-'+firstRow).val()).toFixed(2);
+			var r_rate = parseFloat($('#r_rate-'+firstRow).val()).toFixed(2);
+			if(fuel_consumed > 0){
+				var millage = km_covered / fuel_consumed;
+				$('#millage-'+firstRow).val(parseFloat(millage).toFixed(2));
+				
+				var total_fuelling = parseFloat($('#total_fuelling-'+firstRow).val()).toFixed(2);
+				var fuel_consumed = parseFloat($('#fuel_consumed-'+firstRow).val()).toFixed(2);//$('#fuel_consumed-'+firstRow).val();
+				var closing_tank_balance = total_fuelling - fuel_consumed;
+				$('#closing_tank_balance-'+firstRow).val(parseFloat(closing_tank_balance).toFixed(2));
+				
+				//var r_amount = r_rate * fuel_consumed;
+				//$('#r_amount-'+firstRow).val(parseFloat(r_amount).toFixed(2));
+			}else{
+				$('#millage-'+firstRow).val('0.00');
+				$('#closing_tank_balance-'+firstRow).val('0.00');
+			}
+			pol_loop_next(parentObj,$('#final_reading-'+firstRow));
+		});
+		if($('#addRow').length == 0){
+			var addbutton = "<div class='row'><div class='col-lg-12'><a value='Add' id='addRow' class='pull-right btn btn-success btn-xs' ><i class='fa fa-plus'></i> Add Row</a>&nbsp;&nbsp;&nbsp;&nbsp;</div></div>";
+			parentObj.parent().parent().parent().append(addbutton);
+		};		
+		$("#addRow").click(function(){
+			pol_addrow(parentObj);			     
+		});
+        pol_calculation(parentObj);				
+	});	
+	function pol_addrow(obj){
+		var lastRow = obj.find("tbody tr:last").attr('id');
+		var tmplt_row = obj.find("tbody tr:last").clone(true);
+		clone = tmplt_row.clone();
+		clone.find('div.chosen-container').each(function(){
+			$(this).remove();
+		});
+		clone.attr('id',++lastRow);
+		clone.find(':input').each(function(){
+			var old_id = $(this).attr('id');
+			var new_id=(old_id.lastIndexOf('-') > 0)? old_id.substr(0, old_id.lastIndexOf('-')): old_id;
+			$(this).attr('id',new_id+'-'+lastRow);
+			$(this).addClass('tr-'+new_id);
+			/*$('form').formValidation('addField', $(this));*/
+		});
+		$('#'+obj.attr('id')+' tbody').append(clone);
+		pol_reset(clone);	        
+		$('form select').chosen();
+		clone.find('div.chosen-container .chosen-drop').each(function(){
+			$(this).css({'position':'relative'});
+		});
+		clone.find('div.chosen-search input').each(function(){
+			$(this).addClass('ch-search');
+		});
+		clone.find('input.tr-final_reading').each(function(){
+			$(this).bind('change', function(){
+				var id = $(this).closest('tr').attr('id');
+				
+				var final_reading = parseFloat($('#final_reading-'+id).val()).toFixed(2);
+				var initial_reading = parseFloat($('#initial_reading-'+id).val()).toFixed(2);
+				var km_covered = final_reading - initial_reading;
+				$('#km_covered-'+id).val(parseFloat(km_covered).toFixed(2));
+				
+				var km_covered = parseFloat($('#km_covered-'+id).val()).toFixed(2);
+				var fuel_consumed = parseFloat($('#fuel_consumed-'+id).val()).toFixed(2);
+				var r_rate = parseFloat($('#r_rate-'+id).val()).toFixed(2);
+				if(fuel_consumed > 0){
+					var millage = km_covered / fuel_consumed;
+					$('#millage-'+id).val(parseFloat(millage).toFixed(2));
+					
+					var total_fuelling = parseFloat($('#total_fuelling-'+id).val()).toFixed(2);
+					var fuel_consumed = $('#fuel_consumed-'+id).val();
+					var refuelling = $('#refuelling-'+id).val();
+					var closing_tank_balance = total_fuelling - fuel_consumed;
+					$('#closing_tank_balance-'+id).val(parseFloat(closing_tank_balance).toFixed(2));
+					
+					//var r_amount = r_rate * fuel_consumed;
+					//$('#r_amount-'+id).val(parseFloat(r_amount).toFixed(2));
+				}else{
+					$('#millage-'+id).val('0.00');
+					$('#closing_tank_balance-'+id).val('0.00');
+				}
+				pol_loop_next(obj,$(this));
+			});
+		});
+		clone.find('input.tr-refuelling,input.tr-r_rate').each(function(){
+			$(this).bind('change', function(){
+				var id = $(this).closest('tr').attr('id');
+				
+				var total_fuelling = parseFloat($('#refuelling-'+id).val()) + parseFloat($('#opening_tank_balance-'+id).val());
+				$('#total_fuelling-'+id).val(parseFloat(total_fuelling).toFixed(2));
+				
+				var total_fuelling = parseFloat($('#total_fuelling-'+id).val()).toFixed(2);
+				var fuel_consumed = $('#fuel_consumed-'+id).val();
+				var refuelling = $('#refuelling-'+id).val();
+				var r_rate = parseFloat($('#r_rate-'+id).val()).toFixed(2);
+				var closing_tank_balance = total_fuelling - fuel_consumed;
+				$('#closing_tank_balance-'+id).val(parseFloat(closing_tank_balance).toFixed(2));
+				if(refuelling>0){
+					var r_amount = r_rate * refuelling;
+					$('#r_amount-'+id).val(parseFloat(r_amount).toFixed(2));
+				}
+				pol_loop_next(obj,$(this));
+			});
+		});
+		clone.find('input.tr-fuel_consumed').each(function(){
+			$(this).bind('change', function(){
+				var id = $(this).closest('tr').attr('id');
+				
+				var km_covered = parseFloat($('#km_covered-'+id).val()).toFixed(2);
+				var fuel_consumed = parseFloat($(this).val()).toFixed(2);
+				var r_rate = parseFloat($('#r_rate-'+id).val()).toFixed(2);
+				if(fuel_consumed > 0){
+					var millage = km_covered / fuel_consumed;
+					$('#millage-'+id).val(parseFloat(millage).toFixed(2));
+					
+					var total_fuelling = parseFloat($('#total_fuelling-'+id).val()).toFixed(2);
+					var fuel_consumed = $('#fuel_consumed-'+id).val();
+					var closing_tank_balance = total_fuelling - fuel_consumed;
+					$('#closing_tank_balance-'+id).val(parseFloat(closing_tank_balance).toFixed(2));
+					
+					//var r_amount = r_rate * fuel_consumed;
+					//$('#r_amount-'+id).val(parseFloat(r_amount).toFixed(2));
+				}else{
+					$('#millage-'+id).val('0.00');
+					$('#closing_tank_balance-'+id).val('0.00');
+				}
+				pol_loop_next(obj,$(this));
+			});
+		});
+		pol_delbtn(obj);
+        pol_calculation(obj);
+	};
+	
+	function pol_loop_next(obj,input_obj){
+		var id = input_obj.closest('tr').attr('id');
+		var lastRow = obj.find("tbody tr:last").attr('id');
+		
+		if(id <= lastRow){
+			var next_id = input_obj.closest('tr').next().attr('id');
+            //alert(lastRow);exit;
+			do{
+				$('#initial_reading-'+next_id).val($('#final_reading-'+id).val());
+				$('#opening_tank_balance-'+next_id).val($('#closing_tank_balance-'+id).val());
+				$('#total_fuelling-'+next_id).val($('#closing_tank_balance-'+id).val());
+				
+				var final_reading = parseFloat($('#final_reading-'+next_id).val()).toFixed(2);
+				var initial_reading = parseFloat($('#initial_reading-'+next_id).val()).toFixed(2);
+				var km_covered = final_reading - initial_reading;
+				$('#km_covered-'+next_id).val(parseFloat(km_covered).toFixed(2));
+				
+				var km_covered = parseFloat($('#km_covered-'+next_id).val()).toFixed(2);
+				var fuel_consumed = parseFloat($('#fuel_consumed-'+next_id).val()).toFixed(2);
+				if(fuel_consumed > 0){
+					var millage = km_covered / fuel_consumed;
+					$('#millage-'+next_id).val(parseFloat(millage).toFixed(2));
+					
+					
+					var total_fuelling = parseFloat($('#total_fuelling-'+next_id).val()).toFixed(2);
+					var fuel_consumed = $('#fuel_consumed-'+next_id).val();
+					var closing_tank_balance = total_fuelling - fuel_consumed;
+					$('#closing_tank_balance-'+next_id).val(parseFloat(closing_tank_balance).toFixed(2));
+				}else{
+					$('#millage-'+next_id).val('0.00');
+					$('#closing_tank_balance-'+next_id).val('0.00');
+				}
+				id = $('#initial_reading-'+next_id).closest('tr').attr('id');
+				next_id = $('#initial_reading-'+next_id).closest('tr').next().attr('id');
+				
+			}while(next_id <= lastRow);
+			
+		}
+	}
+	function pol_loop(obj,input_obj){
+		var id = input_obj.closest('tr').attr('id');
+		var lastRow = obj.find("tbody tr:last").attr('id');
+		var firstRow = obj.find("tbody tr:first").attr('id');
+		if(id <= lastRow){
+          
+			var next_id = input_obj.closest('tr').next().attr('id');
+			var prev_id = input_obj.closest('tr').prev().attr('id');
+			do{
+				if(firstRow == id){
+					$('#initial_reading-'+next_id).val($('#last_km_reading').val());
+					$('#opening_tank_balance-'+next_id).val($('#tank_balance').val());
+					
+					var final_reading = parseFloat($('#final_reading-'+next_id).val()).toFixed(2);
+					var initial_reading = parseFloat($('#last_km_reading').val()).toFixed(2);
+					var km_covered = final_reading - initial_reading;
+					
+					var total_fuelling = parseFloat($('#refuelling-'+next_id).val()) + parseFloat($('#tank_balance').val());
+					
+					$('#km_covered-'+next_id).val(parseFloat(km_covered).toFixed(2));
+					$('#total_fuelling-'+next_id).val(parseFloat(total_fuelling).toFixed(2));
+				}else{
+					//alert(id); exit;
+					$('#initial_reading-'+next_id).val($('#final_reading-'+prev_id).val());
+					$('#opening_tank_balance-'+next_id).val($('#closing_tank_balance-'+prev_id).val());
+					
+					var total_fuelling = parseFloat($('#refuelling-'+next_id).val()) + parseFloat($('#closing_tank_balance-'+prev_id).val());
+					var final_reading = parseFloat($('#final_reading-'+next_id).val()).toFixed(2);
+					var initial_reading = parseFloat($('#final_reading-'+prev_id).val()).toFixed(2);
+					var km_covered = final_reading - initial_reading;
+					$('#km_covered-'+next_id).val(parseFloat(km_covered).toFixed(2));
+					$('#total_fuelling-'+next_id).val(parseFloat(total_fuelling).toFixed(2));
+				}
+				
+				var km_covered = parseFloat($('#km_covered-'+next_id).val()).toFixed(2);
+				var fuel_consumed = parseFloat($('#fuel_consumed-'+next_id).val()).toFixed(2);
+				if(fuel_consumed > 0){
+					var millage = km_covered / fuel_consumed;
+					$('#millage-'+next_id).val(parseFloat(millage).toFixed(2));
+					
+					var total_fuelling = parseFloat($('#total_fuelling-'+next_id).val()).toFixed(2);
+					var fuel_consumed = $('#fuel_consumed-'+next_id).val();
+					var closing_tank_balance = total_fuelling - fuel_consumed;
+					$('#closing_tank_balance-'+next_id).val(parseFloat(closing_tank_balance).toFixed(2));
+				}else{
+					$('#millage-'+next_id).val('0.00');
+					$('#closing_tank_balance-'+next_id).val('0.00');
+				}
+				id = $('#initial_reading-'+next_id).closest('tr').attr('id');
+				next_id = $('#initial_reading-'+next_id).closest('tr').next().attr('id');
+				prev_id = $('#initial_reading-'+next_id).closest('tr').prev().attr('id');
+				
+			}while(next_id <= lastRow);
+		}
+	}
+	function pol_delbtn(obj){
+		if(obj.find("tbody tr").length > 1){
+			delBtn = "<a value='Delete' class='btn btn-warning btn-xs delRow' style='margin-top:5px;' ><i class='fa fa-times'></i></a>";
+			obj.find("tbody tr").each(function(){
+				$(this).find("td:last").html(delBtn);			
+			});
+			obj.find("td a.delRow").each(function(){
+				$(this).click(function(){pol_delrow($(this).closest('tr'));});	
+			});
+		}else{
+			delBtn = "<a value='Delete' class='btn btn-warning btn-xs resetRow' style='margin-top:5px;' ><i class='fa fa-refresh'></i></a>";
+			obj.find("tbody tr").each(function(){
+				var las_td = $(this).find("td:last").html(delBtn);
+			});
+			obj.find("td a.resetRow").each(function(){
+				$(this).click(function(){pol_reset($(this).closest('tr'));});	
+			});
+		}	
+	};	
+	function pol_delrow(obj){
+		obj.find(':input[data-fv-field]').each(function() {
+			$('form').formValidation('removeField', $(this));
+		});	
+		pol_loop(obj.parent().parent().parent().parent(),obj);
+		var tr_length = obj.parent().find('tr').length;
+		var tbody = obj.parent();
+		obj.closest("tr").remove();	
+		if(tr_length == 2){
+			var delBtn = "<a value='Delete' class='btn btn-warning btn-xs resetRow' style='margin-top:5px;' ><i class='fa fa-refresh'></i></a>";
+			tbody.find('tr td:last').html(delBtn);
+			tbody.find('tr td:last a.resetRow').each(function(){
+				$(this).click(function(){pol_reset($(this).closest("tr"));});
+			});
+		}
+        pol_calculation(tbody.parent());
+	}
+	
+    function pol_calculation(obj){
+		obj.find('tbody tr').each(function(){
+			var id = $(this).attr('id');
+			
+			var lastRow = obj.find("tbody tr:last").attr('id');
+			var final_reading = parseFloat($('#final_reading-'+lastRow).val());
+		    var closing_tank_balance = parseFloat($('#closing_tank_balance-'+lastRow).val());
+			
+			$('#current_km_reading').val(parseFloat(final_reading).toFixed(2));
+		    $('#tank_closing').val(parseFloat(closing_tank_balance).toFixed(2));
+			
+			$('#refuelling-'+id).on('change',function(){pol_cal($(this).closest("tr"));});			
+			$('#millage-'+id).on('change',function(){pol_cal($(this).closest("tr"));});					
+			$('#fuel_consumed-'+id).on('change',function(){pol_cal($(this).closest("tr"));});	
+			$('#final_reading-'+id).on('change',function(){pol_cal($(this).closest("tr"));});				
+			$('#r_rate-'+id).on('change',function(){pol_cal($(this).closest("tr"));});				
+		});
+		
+		var net_refuelling = 0;
+		var net_fuel_consumed = 0;
+		var net_km_covered = 0;
+		var net_r_amount = 0;
+		
+		obj.find('tbody tr').each(function(){
+			var id = $(this).attr('id');
+			net_fuel_consumed += parseFloat($('#fuel_consumed-'+id).val());
+			net_refuelling += parseFloat($('#refuelling-'+id).val());
+			net_km_covered += parseFloat($('#km_covered-'+id).val());
+			net_r_amount += parseFloat($('#r_amount-'+id).val());
+		});
+		
+		var net_fuel_consumed = parseFloat(net_fuel_consumed).toFixed(2);
+		var net_refuelling = parseFloat(net_refuelling).toFixed(2);
+		var net_km_covered = parseFloat(net_km_covered).toFixed(2);
+		var net_r_amount = parseFloat(net_r_amount).toFixed(2);
+		
+		$('#total_refuel').val(($.isNumeric(net_refuelling))?net_refuelling:'0.00');
+		$('#total_fuel_consumed').val(($.isNumeric(net_fuel_consumed))?net_fuel_consumed:'0.00');
+		$('#total_kilometer').val(($.isNumeric(net_km_covered))?net_km_covered:'0.00');
+		$('#amount').val(($.isNumeric(net_r_amount))?net_r_amount:'0.00');
+	};
+	function pol_cal(obj){
+		
+		var id = obj.closest("tr").attr('id');
+		var lastRow = obj.parent().parent().parent().find("tbody tr:last").attr('id');
+		
+		var fuel_consumed = parseFloat($('#fuel_consumed-'+id).val());
+		var total_fuelling = parseFloat($('#total_fuelling-'+id).val());
+		var km_covered = parseFloat($('#km_covered-'+id).val());
+		var final_reading = parseFloat($('#final_reading-'+id).val());
+		var closing_tank_balance = parseFloat($('#closing_tank_balance-'+id).val());
+        var r_amount = parseFloat($('#r_amount-'+id).val());
+		
+		$('#total_fuelling-'+id).val(parseFloat(total_fuelling).toFixed(2));
+		$('#fuel_consumed-'+id).val(parseFloat(fuel_consumed).toFixed(2));
+		$('#km_covered-'+id).val(parseFloat(km_covered).toFixed(2));
+		$('#r_amount-'+id).val(parseFloat(r_amount).toFixed(2));
+        
+		var net_refuelling = 0;
+		var net_fuel_consumed = 0;
+		var net_km_covered = 0;
+		var net_r_amount = 0;
+
+		obj.parent().find('tr').each(function(){
+			var id = $(this).attr('id');
+			net_refuelling += parseFloat($('#refuelling-'+id).val());
+			net_fuel_consumed += parseFloat($('#fuel_consumed-'+id).val());
+			net_km_covered += parseFloat($('#km_covered-'+id).val());
+            net_r_amount += parseFloat($('#r_amount-'+id).val());
+		});
+
+		var net_refuelling = parseFloat(net_refuelling).toFixed(2);
+		var net_fuel_consumed = parseFloat(net_fuel_consumed).toFixed(2);
+		var net_km_covered = parseFloat(net_km_covered).toFixed(2);
+		var net_r_amount = parseFloat(net_r_amount).toFixed(2);
+        
+		$('#total_refuel').val(($.isNumeric(net_refuelling))?net_refuelling:'0.00');
+		$('#total_fuel_consumed').val(($.isNumeric(net_fuel_consumed))?net_fuel_consumed:'0.00');
+		$('#total_kilometer').val(($.isNumeric(net_km_covered))?net_km_covered:'0.00');
+		$('#amount').val(($.isNumeric(net_r_amount))?net_r_amount:'0.00');
+		if(lastRow){
+			$('#current_km_reading').val(parseFloat(final_reading).toFixed(2));
+			$('#tank_closing').val(parseFloat(closing_tank_balance).toFixed(2));
+		}
+	}
+	function pol_reset(obj){
+		var id = obj.attr('id');
+		var prev_id = obj.closest('tr').prev().attr('id');
+		var firstRow = obj.parent().parent().parent().find("tbody tr:first").attr('id');
+		var lastRow = obj.parent().parent().parent().find("tbody tr:last").attr('id');
+		if(firstRow != lastRow){
+			$('#initial_reading-'+id).val($('#final_reading-'+prev_id).val());
+			$('#opening_tank_balance-'+id).val($('#closing_tank_balance-'+prev_id).val());
+			$('#total_fuelling-'+id).val($('#closing_tank_balance-'+prev_id).val());
+		}else{
+			$('#initial_reading-'+id).val($('#last_km_reading').val());
+			$('#opening_tank_balance-'+id).val($('#tank_balance').val());
+			$('#total_fuelling-'+id).val($('#tank_balance').val());
+		}
+		$('#final_reading-'+id).val('0.00');
+		$('#km_covered-'+id).val('0.00');
+		$('#refuelling-'+id).val('0.00');
+		$('#millage-'+id).val('0.00');
+		$('#fuel_consumed-'+id).val('0.00');
+		$('#r_rate-'+id).val('0.00');
+		$('#r_amount-'+id).val('0.00');
+		$('#closing_tank_balance-'+id).val('0.00');
+		
+		obj.find(':input:hidden').each(function(){$(this).val('');});
+		obj.find(':input[data-fv-field]').each(function() {
+			$('form').formValidation('resetField',$(this));
+		});	
+	pol_calculation(obj.parent().parent());
+	}
+
+
+</script>

@@ -1,0 +1,71 @@
+<?php
+/**
+ * View -- of Administration/MasterController/addbank
+ * chophel@athang.com
+ */
+ foreach($rent as $rents):
+ extract($rents);
+ endforeach;
+?>
+<form id="#form" method="post" action="<?php echo $this->url('rent', array('action' => 'editrentdetails','id'=>$id)); ?>" enctype="multipart/form-data">
+	<div class="modal-header">
+		<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+		<h4 class="modal-title"> <i class="ace-icon fa fa-plus-square-o"></i> <?php echo $this->title; ?></h4>
+    </div>  <!-- /modal-header -->
+    <div class="modal-body">
+		<div class="panel panel-default">
+			<div class="panel-body">  
+				<div class="row">
+					<div class="col-lg-12">
+						<div  class="form-group">
+							<label for="rent" class="control-label">Rent</label>
+							<input class="form-control" type="text" name="rent" id="rent" value="<?php echo $rent?>" required />
+						</div>
+						<input class="form-control" type="hidden" name="month" id="month" value="<?php echo $month?>" required />
+						<input class="form-control" type="hidden" name="year" id="year" value="<?php echo $year?>" required />
+					</div>
+				</div>
+			</div>
+		</div>
+    </div> <!-- /modal-body -->
+    <div class="modal-footer">
+		<button type="submit" class="btn btn-success"><i class="ace-icon fa fa-check"></i>Save</button>
+        <button type="button" class="btn btn-warning" data-dismiss="modal"><i class="ace-icon fa fa-times"></i>Cancel</button> 
+    </div>
+</form>
+<script>
+$('document').ready(function(){
+	const fv = FormValidation.formValidation(document.getElementById('#form'), {
+		fields: {
+			bank: {
+				validators: {
+					notEmpty: {
+						message: 'Please provide Bank Name En.'
+					}
+				}
+			},
+			status: {
+				validators: {
+					notEmpty: {
+						message: 'Please select status.'
+					}
+				}
+			},
+		},
+		plugins: {
+			trigger: new FormValidation.plugins.Trigger(),
+			bootstrap3: new FormValidation.plugins.Bootstrap3(),
+			submitButton: new FormValidation.plugins.SubmitButton(),
+			defaultSubmit: new FormValidation.plugins.DefaultSubmit(),
+		},
+	}).on('core.element.validated', function (e) {
+		if (e.valid) {
+			$('div#'+ e.field.replace('[]','') +'_chosen').removeClass('is-invalid');
+			$('div#'+ e.field.replace('[]','') +'_chosen').addClass('is-valid');
+		} else {
+			$('div#'+ e.field.replace('[]','') +'_chosen').removeClass('is-valid');
+			$('div#'+ e.field.replace('[]','') +'_chosen').addClass('is-invalid');
+		}
+	});
+});
+</script>

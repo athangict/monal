@@ -1,0 +1,520 @@
+<?php
+/**
+ * 
+ * View -- of Sales/MasterController/addschemetype
+ * 
+ */
+$this->headTitle($this->title);
+?>
+<?php 
+	foreach($this->postage as $row );
+?>
+
+<form id="#form" method="post" action="<?php echo $this->url('postage', array('action' => 'bulkbooking','id'=>$row['id'])); ?>" enctype="multipart/form-data">
+	<div class="form-group col-lg-4">
+		<h3 class="grey">
+			<i class="fa fa-envelope purple"></i>
+			Sales Of Services
+		</h3>
+	</div>
+   <div>
+   <div class="panel panel-default">  
+		<div class="panel-body">
+		<input type="hidden" id="bulk_booking" name="bulk_booking" value="<?php echo $row['id']?>">
+				<div class="form-group col-lg-4">
+					<label for="service" class="control-label">Service</label>
+					<select class="form-control" id="service" name="service" data-placeholder="Select" required >
+						<option value=""></option>
+							<?php foreach ($service as $services):
+							$selected = ($row['service']==$services['id'])?'selected':'';?>
+								<option value="<?php echo $services['id'];?>" <?php echo $selected;?>>
+									<?php echo $services['service'];?>
+								</option>
+							<?php endforeach;?>
+					</select>
+				</div> 
+				<div class="form-group col-lg-4">
+					<label for="subservice" class="control-label">Sub Service</label>
+					<select class="form-control" id="subservice" name="subservice" data-placeholder="Select" required >
+						<option value=""></option>
+							<?php foreach ($subservice as $subservices):
+							$selected = ($row['sub_service']==$subservices['id'])?'selected':'';?>
+								<option value="<?php echo $subservices['id'];?>" <?php echo $selected;?>>
+									<?php echo $subservices['sub_service'];?>
+								</option>
+							<?php endforeach;?>
+					</select>
+				</div>  
+				<div class="form-group col-lg-4">
+					<label for="article_no" class="control-label">Article Number</label>
+					<input type="text" class="form-control" name="article_no" id="article_no"  placeholder="Article Number" required />
+				</div> 
+				<div id="dcountry" class="form-group col-lg-4">
+					<label for="country" class="control-label">Country</label>
+					<select class="form-control" id="country" name="country" data-placeholder="Select" required >
+						<option value=""></option>
+							<?php foreach ($country as $countries):
+							$selected = ($row['country']==$countries['id'])?'selected':'';?>
+								<option value="<?php echo $countries['id'];?>" <?php echo $selected;?>>
+									<?php echo $countries['name'];?>
+								</option>
+							<?php endforeach;?>
+					</select>
+				</div>
+				<div id="dcity" class="form-group col-lg-4">
+					<label for="city" class="control-label">City</label>
+					<select class="form-control" id="city" name="city" data-placeholder="Select" required >
+						<option value=""></option>
+							<?php foreach ($city as $cities):
+							$selected = ($row['city']==$cities['id'])?'selected':'';?>
+								<option value="<?php echo $cities['id'];?>" <?php echo $selected;?>>
+									<?php echo $cities['city'];?>
+								</option>
+							<?php endforeach;?>
+					</select>
+				</div>
+				<div class="form-group col-lg-4">
+					<label for="prepaid_mode" class="control-label">Prepaid Mode</label>
+					<input type="decimal" class="form-control" name="prepaid_mode" id="prepaid_mode" value="<?php echo $row['prepaid_mode'];?>" placeholder="Ngultrum" required />
+				</div> 
+				<div class="form-group col-lg-4">
+					<label for="insurance_amt" class="control-label">Insurance Amount</label>
+					<input type="decimal" class="form-control" name="insurance_amt" id="insurance_amt" value="<?php echo $row['insurance_amount'];?>" placeholder="Insurance Amount" required />
+				</div>
+				<div class="form-group col-lg-4">
+					<label for="weight" class="control-label">Weight</label>
+					<input type="decimal" class="form-control" name="weight" id="weight"   placeholder="Weight" required />
+					<span id="weight-message"></span>
+				</div>
+				<div id="advice" class="form-group col-lg-4">  
+					<label for="btn" class="control-label">Advice of Delivery</label>
+					<div class="radio">
+						<label>
+							<input class="ace" type="radio" name="btn" id="ad" value="1" <?php echo ($row['ad']=='1')?"checked":"";?>/>
+							<span class="lbl">Yes</span>
+						</label>
+						<label>
+							<input class="ace" type="radio" name="btn" id="ad" value="0" <?php echo ($row['ad']=='0')?"checked":"";?>/>
+							<span class="lbl">No</span>
+						</label>
+					</div>
+				</div>
+			</div>
+		</div>
+		<div class="panel panel-default">                       
+			<div class="panel-body">
+				<h5 class="widget-title grey lighter">
+					<i class="ace-icon fa fa-plane fa-x red"></i>
+					<b>From Address</b>
+				</h5>
+				<div class="form-group col-lg-3">
+					<label for="from_name" class="control-label">Name </label>
+					<input type="decimal" class="form-control" name="from_name" id="from_name"  value="<?php echo $row['from_name'];?>" placeholder="Name"  />
+				</div> 
+				<div class="form-group col-lg-3">
+					<label for="from_address" class="control-label">Address</label>
+					<input type="decimal" class="form-control" name="from_address" id="from_address"  value="<?php echo $row['from_address'];?>"placeholder="Address"  />
+				</div>
+				<div class="form-group col-lg-3">
+					<label for="from_email_address" class="control-label">Email Address</label>
+					<input type="decimal" class="form-control" name="from_email_address" id="from_email_address"  value="<?php echo $row['from_email_address'];?>" placeholder="Email Address"  />
+				</div> 
+				<div class="form-group col-lg-3">
+					<label for="mobile_number" class="control-label">Mobile Number</label>
+					<input type="decimal" class="form-control" name="mobile_number" id="mobile_number"  value="<?php echo $row['from_mobile_number'];?>" placeholder="Mobile Number"  />
+				</div> 
+				
+			</div>
+		</div>
+		<div class="panel panel-default">                       
+			<div class="panel-body">
+				<h5 class="widget-title grey lighter">
+					<i class="ace-icon fa fa-home fa-x green"></i>
+					<b>To Address</b>
+				</h5>
+				<div class="form-group col-lg-3">
+					<label for="to_name" class="control-label">Name </label>
+					<input type="decimal" class="form-control" name="to_name" id="to_name"  placeholder="Name"  />
+				</div> 
+				<div class="form-group col-lg-3">
+					<label for="to_address" class="control-label">Address</label>
+					<input type="decimal" class="form-control" name="to_address" id="to_address"   placeholder="Address"  />
+				</div>
+				<div class="form-group col-lg-3">
+					<label for="po_name" class="control-label">Post Name</label>
+					<select class="form-control" id="po_name" name="po_name" data-placeholder="Select" required >
+						<option value=""></option>
+						<?php 
+						foreach ($poffice as $poffices):?>
+							<option value="<?php echo $poffices['id'];?>">
+								<?php echo $poffices['post_office'];?>
+							</option><?php
+						endforeach;	?>
+					</select>
+				</div> 
+				<div class="form-group col-lg-3">
+					<label for="post_code" class="control-label">Post Code</label>
+					<input type="decimal" class="form-control" name="post_code" id="post_code" placeholder="Post Code"  />
+				</div> 
+				
+			</div>
+		</div>
+		<div class="panel panel-default">                       
+			<div class="panel-body">
+			<div class="form-group col-lg-3">
+					<label for="postage_rate" class="control-label">Postage Rate</label>
+					<input type="decimal" class="form-control" name="postage_rate" id="postage_rate" placeholder="Postage Rate"  />
+				</div> 
+				<div id="advice_fee" class="form-group col-lg-3">
+					<label for="advice_delivery_fee" class="control-label">Advice of delivery</label>
+					<input type="decimal" class="form-control" name="advice_delivery_fee" id="advice_delivery_fee" value="<?php echo $row['advice_delivery_fee'];?>" placeholder="Advice of Delivery"  />
+				</div> 
+				<div class="form-group col-lg-3">
+					<label for="registration_fee" class="control-label">Registrayion Fee</label>
+					<input type="decimal" class="form-control" name="registration_fee" id="registration_fee" value="<?php echo $row['registration_fee'];?>" placeholder="Registrayion Fee"  />
+				</div>
+				<div class="form-group col-lg-3">
+					<label for="other_charges" class="control-label">Other Charges</label>
+					<input type="decimal" class="form-control" name="other_charges" id="other_charges"  placeholder="Registrayion Fee" />
+				</div>
+				<div class="form-group col-lg-3">
+					<label for="total_amt" class="control-label">Total Amount</label>
+					<input type="decimal" class="form-control" name="total_amt" id="total_amt"  placeholder="Total Amount"  />
+				</div>
+			</div>
+		</div>
+	</div>
+	
+    <div>
+        <button type="submit" class="btn btn-success"><i class="fa fa-check"></i> Save </button>
+        <button type="button" class="btn btn-warning" data-dismiss="modal" ><i class="fa fa-times"></i> Cancel </button> 
+    </div>  
+</form>
+<script>
+$('document').ready(function(){
+	var initialServiceId = $('select#service').val();
+	$('select#service').on('change',function(){
+		$.post(
+			"<?php echo $this->url('postage', array('action' => 'getfixedfactor'));?>",
+			{
+				service: $(this).val(),
+			},
+			function(data){
+				var $country = data.country;
+				var $city = data.city;
+				var $advice = data.advice;
+				if ($country == '1'){
+					$('div#dcountry').show();
+				} else {
+					$('div#dcountry').hide();
+				}
+				if ($city == '1'){
+					$('div#dcity').show();
+				} else {
+					$('div#dcity').hide();
+				}
+				if ($advice == '1'){
+					$('div#add').show();
+				} else{
+					$('div#add').hide();
+				}
+			},
+			'json'
+		);
+	});
+	$('select#service').trigger('change');
+	/**Show or Hide Advice of delivery fee field */
+	$('input[name="btn"]').on('change', function() {
+		if ($(this).val() === '1') {
+			$('div#advice_fee').show();
+		} else {
+			$('div#advice_fee').hide();
+		}
+	});
+	$('input[name="btn"]').trigger('change');
+	/**End Show or Hide Advice of delivery fee field */
+	$('select#service').on('change', function() {
+			var serviceId = $(this).val();
+
+			$.post(
+				"<?php echo $this->url('masterpos', array('action' => 'getsubservice')); ?>", {
+					serviceId: serviceId,
+				},
+				function(data) {
+					$('select#subservice').html(data.subservice);
+					$('select#subservice').trigger('chosen:updated');
+				},
+				'json'
+			);
+		});
+		$('select#subservice').on('change',function (){
+		$.post(
+			"<?php echo $this->url('postage', array('action' => 'getfees'));?>",
+			{
+				subservice: $(this).val(),
+			},
+			function(data){
+				$('#advice_delivery_fee').val(data.advice_delivery_fee);
+				$('#registration_fee').val(data.registration_fee);
+			},
+			'json'
+		 );
+	});
+	$('select#subservice').trigger('change');
+
+	$('select#country').on('change',function(){
+		$.post(
+			"<?php echo $this->url('masterpos', array('action' => 'getcity'));?>",
+			{
+				countryId: $(this).val(),
+			},
+			function(data){
+				$('select#city').html(data.city);
+				$('select#city').trigger('chosen:updated');
+			},
+			'json'
+		);
+	});
+	$('select#po_name').on('change',function(){
+		$.post(
+			"<?php echo $this->url('postage', array('action' => 'getpostoffice'));?>",
+			{
+				po_name: $(this).val(),
+			},
+			function(data){
+				$('#post_code').val(data.post_code);
+			},
+			'json'
+		);
+	});
+	/**
+	 * Checking the weight limit 
+	 */
+	$('#subservice, #weight, #country,#city').on('change', function() {
+	
+		if ($('#country').val() > 0 && $('#city').val().length === 0){
+		$.post(
+			"<?php echo $this->url('postage', array('action' => 'getchecklimit1'));?>",
+			{
+				subservice: $('#subservice').val(),
+				weight: $('#weight').val(),
+				country: $('#country').val(),
+			},
+			function(data) {
+				$('#weight-message').text(data.message);
+				$('#weight-message').css('color', data.fontColor);
+			},
+			'json'
+		);
+		}else if($('#country').val() > 0 && $('#city').val() > 0){
+			$.post(
+			"<?php echo $this->url('postage', array('action' => 'getchecklimit2'));?>",
+			{
+				subservice: $('#subservice').val(),
+				weight: $('#weight').val(),
+				country: $('#country').val(),
+				city: $('#city').val(),
+			},
+			function(data) {
+				$('#weight-message').text(data.message);
+				$('#weight-message').css('color', data.fontColor);
+			},
+			'json'
+		);
+		}else{   $.post(
+			"<?php echo $this->url('postage', array('action' => 'getchecklimit'));?>",
+			{
+				subservice: $('#subservice').val(),
+				weight: $('#weight').val()
+			},
+			function(data) {
+				$('#weight-message').text(data.message);
+				$('#weight-message').css('color', data.fontColor);
+			},
+			'json'
+		);}
+		
+	});
+	/**
+	 * End to Checking the weight limit 
+	 */
+	/**
+	 * Calculating the postage Rate  
+	 */
+	$('#subservice, #weight, #country,#city').on('change',function(){
+		if ($('#country').val() > 0){
+			$.post(
+				"<?php echo $this->url('postage', array('action' => 'getpostagerate1'));?>",
+				{
+					subservice: $('#subservice').val(),
+					weight: 	$('#weight').val(),
+					country: 	$('#country').val(),
+					
+				},
+				function(data){
+					$('#postage_rate').val(data.postage_rate);
+					// Continue with the calculation using the retrieved postage_rate
+					var postage_rate_val = parseFloat(data.postage_rate);
+					calculateTotal(postage_rate_val);
+				},
+				'json'
+			);
+		}
+		else if($('#city').val() > 0){
+			$.post(
+				"<?php echo $this->url('postage', array('action' => 'getpostagerate2'));?>",
+				{
+					subservice: $('#subservice').val(),
+					weight: 	$('#weight').val(),
+					country: 	$('#country').val(),
+					city: 	$('#city').val(),
+					
+				},
+				function(data){
+					$('#postage_rate').val(data.postage_rate);
+					// Continue with the calculation using the retrieved postage_rate
+					var postage_rate_val = parseFloat(data.postage_rate);
+					calculateTotal(postage_rate_val);
+				},
+				'json'
+			);
+			
+		}
+		else{
+		$.post(
+			"<?php echo $this->url('postage', array('action' => 'getpostagerate'));?>",
+			{
+				subservice: $('#subservice').val(),
+				weight: 	$('#weight').val(),
+				
+			},
+			function(data){
+				$('#postage_rate').val(data.postage_rate);
+				// Continue with the calculation using the retrieved postage_rate
+				var postage_rate_val = parseFloat(data.postage_rate);
+				calculateTotal(postage_rate_val);
+			},
+			'json'
+		);}
+	});
+	$('#subservice, #weight, #country,#city').trigger('change');
+	/**
+	 * End to Calculating the postage Rate  
+	 */
+
+	/**
+	 *  Calculating the Total Amount based on given variables 
+	 */
+	var postage_rate = $('#postage_rate');
+	var advice_delivery_fee = $('#advice_delivery_fee');
+	var registration_fee=$('#registration_fee');
+	var other_charges=$('#other_charges');
+	var insurance_amt=$('#insurance_amt');
+	var prepaid_mode=$('#prepaid_mode');
+	var radio = $('input[name="btn"]');
+	// Add an event listener for changes in the rate and quantity inputs
+	postage_rate.on('input', calculateTotal);
+	advice_delivery_fee.on('input', calculateTotal);
+	registration_fee.on('input', calculateTotal);
+	insurance_amt.on('input', calculateTotal);
+	other_charges.on('input', calculateTotal);
+	prepaid_mode.on('input', calculateTotal);
+	radio.on('input', calculateTotal);
+	
+	// Trigger the calculateTotal function initially when the page loads
+	calculateTotal();
+
+	// Function to calculate the total and update the total input field
+	function calculateTotal(postage_rate_val) {
+		var postage_rate_val = parseFloat(postage_rate.val().replace(',', '')) || 0;
+		var advice_delivery_fee_val = parseFloat(advice_delivery_fee.val().replace(',', '')) || 0;
+		var registration_fee_val = parseFloat(registration_fee.val().replace(',', '')) || 0;
+		var insurance_amt_val = parseFloat(insurance_amt.val().replace(',', '')) || 0;
+		var other_charges_val = parseFloat(other_charges.val().replace(',', '')) || 0;
+		var prepaid_mode_val = parseFloat(prepaid_mode.val().replace(',', '')) || 0;
+		var radio_val = parseFloat(radio.filter(':checked').val());
+		
+	if (isNaN(insurance_amt_val)) {
+		insurance_amt_val = 0;
+	}
+	if (isNaN(other_charges_val)) {
+		other_charges_val = 0;
+	}
+	if (isNaN(radio_val)) {
+		radio_val = 0;
+	}
+	if (isNaN(prepaid_mode_val)) {
+		prepaid_mode_val = 0;
+	}
+	if (isNaN(advice_delivery_fee_val) || radio_val==0) {
+		advice_delivery_fee_val = 0;
+	}
+	if (isNaN(postage_rate_val)) {
+		postage_rate_val = 0;
+	}
+
+	var total = (postage_rate_val + advice_delivery_fee_val + registration_fee_val + insurance_amt_val + other_charges_val)-prepaid_mode_val;
+		// Check if the total is a valid number
+		if (!isNaN(total)) {
+			$('#total_amt').val(total.toFixed(2)); // Display the total with 2 decimal places
+		}
+		
+	}
+	/**
+	 * **************************************************Money Order**********************************************************
+	 */
+	
+	/**
+	 * End to Calculating the postage Rate  
+	 */
+	/**
+	 *  Based on Calculating the Total Amount based on given variables 
+	 */
+ 	const fv = FormValidation.formValidation(document.getElementById('#form'), {
+		fields: {
+			weight: {
+				validators: {
+					notEmpty: {
+						message: 'Please provide weight.'
+					}
+				}
+			},
+			service: {
+				validators: {
+					notEmpty: {
+						message: 'Please select service'
+					}
+				}
+			},
+			subservice: {
+				validators: {
+					notEmpty: {
+						message: 'Please select subservice'
+					}
+				}
+			},
+		},
+		plugins: {
+			trigger: new FormValidation.plugins.Trigger(),
+			bootstrap3: new FormValidation.plugins.Bootstrap3(),
+			submitButton: new FormValidation.plugins.SubmitButton(),
+			defaultSubmit: new FormValidation.plugins.DefaultSubmit(),
+		},
+	}).on('core.element.validated', function (e) {
+		if (e.valid) {
+			$('div#'+ e.field.replace('[]','') +'_chosen').removeClass('is-invalid');
+			$('div#'+ e.field.replace('[]','') +'_chosen').addClass('is-valid');
+		} else {
+			$('div#'+ e.field.replace('[]','') +'_chosen').removeClass('is-valid');
+			$('div#'+ e.field.replace('[]','') +'_chosen').addClass('is-invalid');
+		}
+	});
+});
+</script>
+
+
+
+
+
+
+

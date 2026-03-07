@@ -1,0 +1,39 @@
+<?php // partial.phtml 
+	$po = ($this->active == "po")?"active":"";
+	//$prn = ($this->active == "prn")?"active":"";
+	//$poreceipt = ($this->active == "poreceipt")?"active":"";
+	//$invoice = ($this->active == "invoice")?"active":"";
+	//$purchasesummary = ($this->active == "purchasesummary")?"active":"";
+?>
+<ul class="nav nav-tabs padding-18 nav-fixed-top" id="myTab">
+	<li class="<?php echo $po; ?>">
+		<a href="<?php echo $this->url('purreport', array('action' => 'podetails')); ?>" title="Purchase Order reports">
+			<i class="orange ace-icon fa fa-cubes bigger-120"></i>
+			<span class="hidden-xs">Purchase Order</span>
+		</a>
+	</li>
+	<!--<li class="<?php echo $prn; ?>">
+		<a href="<?php echo $this->url('purreport', array('action' => 'prdetails')); ?>" title="Purchase Receipt Note Report">
+			<i class="green ace-icon fa fa-filter bigger-120"></i>
+			<span class="hidden-xs">Purchase Receipt</span>
+		</a>
+	</li>	
+	<li class="<?php echo $poreceipt; ?>">
+		<a href="<?php echo $this->url('purreport', array('action' => 'poreceipt')); ?>" title="Purchase Order Receipt Details">
+			<i class="red ace-icon fa fa-file-text-o bigger-120"></i>
+			<span class="hidden-xs">PO Receipt Details</span>
+		</a>
+	</li>
+	<li class="<?php echo $invoice; ?>">
+		<a href="<?php echo $this->url('purreport', array('action' => 'invoice')); ?>" title="Supplier Invoice Details">
+			<i class="green ace-icon fa fa-file-text-o bigger-120"></i>
+			<span class="hidden-xs">Invoice Details</span>
+		</a>
+	</li>	
+	<li class="<?php echo $purchasesummary; ?>">
+		<a href="<?php echo $this->url('purreport', array('action' => 'purchasesummary')); ?>" title="Purchase Summary">
+			<i class="blue ace-icon fa fa-file-text-o bigger-120"></i>
+			<span class="hidden-xs">Purchase Summary</span>
+		</a>
+	</li>	-->	
+</ul>

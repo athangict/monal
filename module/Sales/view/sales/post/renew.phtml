@@ -1,0 +1,106 @@
+<?php
+/**
+ * View -- of Hr/MasterController/apptypeAction
+ */
+$this->headTitle($this->title);
+?>
+
+<div class="card">
+    <div class="card-header">
+        <div class="col-lg-12">
+            <?php
+            // Get the current year
+            $currentYear = (int)date('Y');
+            // If $this->minYear is not set, default to the current year; otherwise, use the provided minYear
+            $minYear = ($this->minYear == 0) ? $currentYear : $this->minYear;
+
+            // Assuming $this->year is a variable representing the selected year
+            $selectedYear = isset($_GET['year']) ? (int)$_GET['year'] : $currentYear;
+
+            // Ensure the selected year is not less than the minimum year
+            if ($selectedYear < $minYear) {
+                $selectedYear = $minYear;
+            }
+
+            // Get selected region and location from the query parameters
+            $selectedRegion = isset($_GET['region']) ? $_GET['region'] : 'all';
+            $selectedLocation = isset($_GET['location']) ? $_GET['location'] : 'all';
+            ?>
+
+            <div class="row">
+                <form method="get" action="">
+                    <div class="form-group col-lg-2">
+                        <label for="year" class="control-label">Year</label>
+                        <select name="year" id="year" class="form-control">
+                            <option value="-1" <?php echo ($selectedYear == -1) ? 'selected' : ''; ?>>All</option>
+                            <?php for ($year = 2023; $year <= 2030; $year++) :
+                                $selected = ($selectedYear == $year) ? 'selected' : ''; ?>
+                                <option value="<?php echo $year; ?>" <?php echo $selected; ?>><?php echo $year; ?></option>
+                            <?php endfor; ?>
+                        </select>
+                    </div>
+
+                    <div class="col-lg-2">
+                        <div class="space-12"></div>
+                        <button type="submit" class="btn btn-sm btn-primary pull-left"><i class="fa fa-refresh"></i> Refresh </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div class="btn-group pull-right">
+            <?php echo $this->button(2); ?>
+        </div>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table card-table text-nowrap" id="dataTables">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Renewal Year</th>
+                    <!-- <th>Status</th> -->
+                    <th class="no-sort no-printpdf">Action</th>
+                </tr>
+            </thead>
+            <tbody>
+            <?php  $i=1; foreach ($this->postboxsObj->getDistinct('year') as $postbox) :  ?>
+                    <tr data-href="<?php echo $this->url('postbox', array('action' => 'viewrenew', 'id' => $postbox)); ?>">
+
+                            <td><?php echo $i++; ?></td>
+                            <td><?php echo $postbox;?></td>
+                            <td class="action"></td>
+                        </tr>
+                <?php
+        
+                endforeach;
+                ?>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div class="modal fade" id="modal" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <!-- Add modal content here if needed -->
+        </div><!-- /.modal-content -->
+    </div><!-- /.modal-dialog -->
+</div><!-- /.modal -->
+
+<script>
+    $(document).ready(function () {
+        $('#dataTables').DataTable({
+            "paging": true,
+        });
+
+        // Add click event to table rows
+        $('#dataTables tbody tr').click(function () {
+    var url = $(this).data('href');
+    if (url) {
+        window.location.href = url;
+    }
+});
+
+    });
+</script>

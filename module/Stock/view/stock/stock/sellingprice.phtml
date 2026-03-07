@@ -1,0 +1,106 @@
+<?php
+/**
+ * 
+ * View -- of Stock/StockController/itemAction
+ * 
+ */
+	$this->headTitle($this->title);
+?>
+<div class="card">
+	<div class="card-header">
+		<div class="space-4"></div>
+		<form method="post"> 
+			<div class="row">
+				<div class="form-group col-lg-3">
+					<label for="item_subgroup" class="label-control">Item Sub-Group</label>
+					<select class="form-control" data-placeholder="Select" name="item_subgroup" id="item_subgroup" onchange='this.form.submit()' >
+						<option value=""></option>
+						<option value="-1" <?php echo ($subgroup_id == '-1')?"selected":""; ?>>All</option>
+						<?php 
+							$itemclasses = $this->itemclassObj->getAll();
+							foreach ($itemclasses as $itemclass):  
+								$itemgroups = $itemgroupObj->get(array('item_class'=>$itemclass['id']));
+								foreach($itemgroups as $itemgroup):
+							?>
+							<optgroup label="<?php echo $itemclass['item_class']." | ".$itemgroup['item_group'];?>">
+								<?php 
+									$itemsubgroups = $this->itemsubgroupObj->get(array('item_group'=>$itemgroup['id']));
+									foreach($itemsubgroups as $itemsubgroup):
+										$selected_subgrp = ($itemsubgroup['id'] == $subgroup_id)?'selected':'';
+								?>
+									<option value="<?php echo $itemsubgroup['id']; ?>" <?php echo $selected_subgrp;?>>
+										<?php echo $itemsubgroup['item_subgroup']; ?>
+									</option>
+								<?php endforeach;
+								endforeach; ?>
+							</optgroup>
+						<?php endforeach; ?>			
+					</select>		
+				</div> 
+				<div class="form-group col-lg-6">
+					<div class="clearfix">
+						<div class="pull-right tableTools-container"></div>
+						<?php echo $this->button(2);?>
+					</div>
+				</div>
+			</div>
+		</form>	
+		<div class="space-4"></div>
+		<table class="table table-bordered table-striped table-hover" id="dataTables">
+			<thead>
+				<tr>
+					<th>#</th>
+					<th>Stock Items</th>
+					<th>Specifications</th>
+					<th>Unit</th>
+					<th>Quantity</th>
+					<th>Rate</th>
+					<th>Cost Per Item</th>
+					<th>Selling Price</th>
+				</tr>
+			</thead>
+			<tbody>
+				<?php  $i = 1; 
+				foreach ($pricing as $row):?>
+				 <tr data-href="<?php echo $this->url('stock', array('action'=>'viewitem', 'id'=>$item['id']));?>">
+					<td><?php echo $i++;?></td>
+					<td><?php echo $this->itemObj->getColumn($row['item'],'name');?></td>
+					<td><?php echo $row['specification'];?></td>
+					<td><?php echo $this->uomObj->getColumn($row['uom'],'code');?></td>
+					<td><?php echo $row['quantity'];?></td>
+					<td><?php echo $row['rate_nu'];?></td>
+					<td><?php echo $row['cost_price'];?></td>
+					<td><?php echo $row['selling_price'];?></td>
+				</tr>
+				<?php endforeach;?>
+			</tbody>
+		</table>
+	</div>
+</div>
+<div id="modal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+	<div class="modal-dialog">
+		<div class="modal-content">
+		</div>
+	</div>
+</div>
+<script type="text/javascript">
+$('document').ready(function(){
+	$('#dataTables').DataTable({
+		"paging":   true,
+	});
+	$("tr[data-href]").each(function(){
+		$(this).find('td').not('td.action').each(function(){
+			$(this).css('cursor','pointer');
+			$(this).bind('click',function() {
+				window.document.location = $(this).closest('tr').attr("data-href");
+			});
+		});
+	});
+	$('#dataTables').genpdftable({
+		src:"<?php echo $this->url('pdfxls', array('action' => 'pdf'));?>",
+		orentation:"P",//L =landscape, P = potrait
+	});
+});
+</script>
+
+ 

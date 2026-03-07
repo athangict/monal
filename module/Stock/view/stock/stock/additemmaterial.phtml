@@ -1,0 +1,176 @@
+<?php
+/**
+ * 
+ * View -- of Stock/MasterController/addscalarAction
+ * 
+ */
+?>
+<?php foreach($item as $row);?>
+<form id="#form" method="post" action="<?php echo $this->url('stock', array('action' => 'additemmaterial')); ?>"  enctype="multipart/form-data" >
+    <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+        <h4 class="modal-title"> <i class="fa fa-asterisk"></i>New Item Material(Stamps)</h4>
+    </div>  <!-- /modal-header -->
+	<input  type="hidden" name="item_id" id="item_id" value="<?php echo $row['id']?>"/>
+	<div class="modal-body">
+		<div class="panel panel-default">                       
+			<div class="panel-body"> 
+				<div class="form-group col-lg-6">
+					<label class="control-label" for="location">Location</label>
+					<select class="form-control ace" name="location" id="location" data-placeholder="Select" required>
+						<option value=""></option><?php 
+							foreach($userid as $userids);
+							$admin_locs = $this->locationObj->getAll();
+							foreach($admin_locs as $admin_loc):?>
+							<option value="<?php echo $admin_loc['id'];?>">
+								<?php echo $admin_loc['location'];?>
+							</option>
+						<?php endforeach;?>	
+					</select>
+				</div>			
+				<div class="form-group col-lg-6">
+					<label class="control-label" for="item_group">Item Group</label>
+					<select  class="form-control" name="item_subgroup" id="item_subgroup" data-placeholder="Select" required >
+						<option value=""></option>
+						<?php foreach ($itemclasses as $itemclass):  
+								$itemgroups = $itemgroupsObj->get(array('item_class'=>$itemclass['id']));
+								foreach($itemgroups as $itemgroup):
+							?>
+							<optgroup label="<?php echo $itemclass['item_class']." | ".$itemgroup['item_group'];?>">
+								<?php 
+									$itemsubgroups = $this->itemsubgroupsObj->get(array('item_group'=>$itemgroup['id']));
+									foreach($itemsubgroups as $itemsubgroup):
+								?>
+									<option value="<?php echo $itemsubgroup['id']; ?>">
+										<?php echo $itemsubgroup['item_subgroup']; ?>
+									</option>
+								<?php endforeach;
+								endforeach; ?>
+							</optgroup>
+						<?php endforeach; ?>
+					</select>
+				</div>
+				<div class="form-group col-lg-6">
+					<label class="control-label" for="item_name">Item Name</label>
+					<select  class="form-control" name="item_name" id="item_name" data-placeholder="Select">
+						<option value=""></option>
+					</select>
+				</div>
+				<div class="form-group col-lg-6">
+					<label class="control-label" for="uom">Basic Unit of Measurement</label>
+					<input class="form-control" type="text" name="uom" id="uom" placeholder="unit"/>
+				</div>
+				<div class="form-group col-lg-6">
+					<label class="control-label" for="st_quantity">Stock Quantity</label>
+					<input class="form-control" type="text" name="st_quantity" id="st_quantity" placeholder="st_quantity"/>
+				</div>
+				<div class="form-group col-lg-6">
+					<label class="control-label" for="quantity">Quantity</label>
+					<input class="form-control" type="text" name="quantity" id="quantity" placeholder="quantity"/>
+				</div>
+				<div class="form-group col-lg-6">
+					<label class="control-label" for="rate">Rate</label>
+					<input class="form-control" type="text" name="rate" id="rate" placeholder="rate"/>
+				</div>
+				<div class="form-group col-lg-6">
+					<label class="control-label" for="value">Value(Nu)</label>
+					<input class="form-control" type="text" name="value" id="value" placeholder="Total"/>
+				</div>
+			</div>
+		</div>
+    </div> <!-- /modal-body -->
+    <div class="modal-footer">
+        <button type="submit" class="btn btn-success"><i class="fa fa-check"></i> Save </button>
+        <button type="button" class="btn btn-warning" data-dismiss="modal" ><i class="fa fa-times"></i> Cancel </button> 
+    </div>  
+</form>
+<script>
+$(function(){
+	$('#item_subgroup').on('change', function () {
+		//alert($('#item_subgroup').val());
+			$.post(
+				"<?php echo $this->url('stock', array('action' => 'getitembysubgroup'));?>",
+				{
+					subgroupId: $('#item_subgroup').val(),
+					
+				},
+				function(data){
+					$('select#item_name').html(data.item);
+					$('select#item_name').trigger('chosen:updated');
+				},
+				'json'
+			);
+		});
+		$('select#location,#item_name').on('change', function () {
+			$.post(
+				"<?php echo $this->url('stock', array('action' => 'getuomquantityrate'));?>",
+				{
+					itemId: $('#item_name').val(),
+					locationId: $('#location').val(),
+					
+				},
+				function(data){
+					console.log(data);
+					$('#uom').val(data.uom);
+					$('#st_quantity').val(data.st_quantity);
+					$('#rate').val(data.rate);
+				},
+				'json'
+			);
+		});
+		/**calculation of total amount based on the given variables**/
+
+		var rate = $('#rate');
+		var quantity = $('#quantity');
+	
+		// Add an event listener for changes in the rate and quantity inputs
+		rate.on('input', calculateTotal);
+		quantity.on('input', calculateTotal);
+		
+
+		// Trigger the calculateTotal function initially when the page loads
+		calculateTotal();
+		// Function to calculate the total and update the total input field
+		function calculateTotal() {
+			var rate_val = parseFloat(rate.val().replace(',', '')) || 0;
+			var quantity_val = parseFloat(quantity.val().replace(',', '')) || 0;
+			//console.log("Postage Rate:", postage_rate_val);
+
+			var total = (rate_val * quantity_val);
+			// Check if the total is a valid number
+			if (!isNaN(total)) {
+				$('#value').val(total.toFixed(2)); // Display the total with 2 decimal places
+			}
+		}
+		
+const fv = FormValidation.formValidation(document.getElementById('#form'), {
+		fields: {
+			item_subgroup: {
+				validators: {
+					notEmpty: {
+						message: 'Please select item name.'
+					}
+				}
+			},
+		},
+		plugins: {
+			trigger: new FormValidation.plugins.Trigger(),
+			bootstrap3: new FormValidation.plugins.Bootstrap3(),
+			submitButton: new FormValidation.plugins.SubmitButton(),
+			defaultSubmit: new FormValidation.plugins.DefaultSubmit(),
+		},
+	}).on('core.element.validated', function (e) {
+		if (e.valid) {
+			$('div#'+ e.field.replace('[]','') +'_chosen').removeClass('is-invalid');
+			$('div#'+ e.field.replace('[]','') +'_chosen').addClass('is-valid');
+		} else {
+			$('div#'+ e.field.replace('[]','') +'_chosen').removeClass('is-valid');
+			$('div#'+ e.field.replace('[]','') +'_chosen').addClass('is-invalid');
+		}
+	});
+	$('form select').chosen().change(function () {
+		fv.revalidateField($(this).attr('name'));
+	});
+		
+	});
+</script>

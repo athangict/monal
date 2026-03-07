@@ -1,0 +1,470 @@
+<?php
+/**
+ * View -- of Stock/CostingController/editelccostingAction
+ */
+$this->headTitle($this->title);
+foreach ($this->sheetRecords as $sheetRecord):
+   extract($sheetRecord);
+   $costing_sheet_id = $id;
+   $location_id = $location;
+endforeach;
+?>
+<div class="row">
+	<div class="col-lg-12">
+		<div class="widget widget-box">
+			<div class="widget-header">
+				<h5 class="widget-title lighter smaller">
+					<i class="fa fa-asterisk"></i>&nbsp;&nbsp; ELC Costing Sheet | <?php echo $costing_no; ?> <?php echo $this->status($status);?>
+				</h5>
+                    <a data-toggle="modal" data-target = "#modal" class="btn btn-xs btn-danger pull-right" href="<?php echo $this->url('acl', array('action' => 'activitylog', 'id' => "9-".$costing_sheet_id)); ?>" title="View Activity Logs">
+					<i class="ace-icon fa fa-plus bigger-120" ></i>  
+				</a>		
+			</div>
+			<div class="widget-body">
+				<div class="widget-main">
+					<form  id="#form" method="post" action="<?php echo $this->url('cost', array('action' => 'elccosting')); ?>"  enctype="multipart/form-data" >    
+						<div class="row">	
+							<div class="col-lg-4">    
+								<div class="form-group">
+									<label for="sheet_date" class="control-label">Date of Costing</label>
+									<div class="date input-group" id="sheet_date" data-date="<?php echo date('Y-m-d');?>" data-date-format="yyyy-mm-dd" >
+										<input class="form-control span2" name="sheet_date" id="sheet_date" type="text" value="<?php echo $sheet_date;?>" readonly>
+										<span class="input-group-addon add-on"><i class="fa fa-calendar"></i></span>
+									</div>
+								</div>
+							</div>
+							<input type="hidden" name="costing_sheet_id" value="<?php echo $costing_sheet_id;?>">
+							<div class="col-lg-4"> 
+								<div class="form-group">
+									<label for="activity" class="control-label">Location</label>
+									<select id="location" name="location" class="form-control" data-placeholder="Select" required>
+										<option value=""></option>
+										<?php
+										$regions = $this->regionObj->getAll();
+										foreach ($regions as $region): ?>
+										<optgroup label="<?php echo $region['region'];?>">
+											<?php  
+												 // retrive locations under the above region ID
+												//$locations = $locationObj->get(array('region'=>$region['id'], 'lt.sales'=>'1'));
+												$locations = $locationObj->get(array('region'=>$region['id']));
+												foreach ($locations as $location):
+												$selected = ($location_id == $location['id'])?"selected":"";
+											?>
+												 <option value="<?php echo $location['id']; ?>" <?php echo $selected; ?>>
+													<?php echo $location['location']; ?>
+												 </option>
+											<?php 
+											 endforeach;
+											?>
+										</optgroup>
+										<?php endforeach;  ?>									
+									</select> 
+								</div>
+							</div>
+							<div class="col-lg-4"> 
+								<div class="form-group">
+									<label for="activity" class="control-label">Costing Sheet No.</label>
+									<input type="text" class="form-control" name="costing_no" id="costing_no" value="<?php echo $costing_no;?>" readonly required/>
+								</div>
+							</div>	
+						</div>
+						
+						<div class="row">	
+							<div class="col-lg-4">
+								<div class="form-group">
+									<label for="supplier_invoice" class="control-label">Supplier Invoice No.</label>
+									
+									<select class="form-control" name="supplier_invoice" id="supplier_invoice"> 
+								       <?php 
+								       if($po_invoice == "1"){
+											$invoices = $this->porderObj->get($po_invoice_no);
+											foreach ($invoices as $invoice):											   
+												?>
+										        <option value="<?php echo $invoice['id']; ?>"><?php echo $invoice['po_no']; ?></option>
+										       <?php   
+									        endforeach;
+								       	
+								       }else{
+									     $invoices = $this->invoiceObj->get($po_invoice_no);
+									     foreach ($invoices as $invoice):
+									       ?>  
+									       <option value="<?php echo $invoice['id']; ?>"><?php echo $invoice['invoice_no']; ?></option>
+									       <?php   
+									     endforeach;
+									   }
+								        ?>
+								    </select>
+								</div>
+							</div>
+							<div class="col-lg-4">
+								<div class="form-group">
+								  <label for="activity_id" class="control-label">Activity</label>
+									<select class="form-control" name="activity" id="activity_id">
+									   <?php
+									    $activities = $this->activityObj->get($activity); 
+									    foreach ($activities as $activity):
+									       ?>
+									         <option value="<?php echo $activity['id']; ?>"><?php echo $activity['activity']; ?></option>
+									       <?php 
+									    endforeach; 
+									    ?>
+									</select>
+								</div>
+							</div> 
+							<div class="col-lg-4"> 
+								<div class="form-group">
+									<label for="supplier" class="control-label">Supplier</label>
+									<select  class="form-control" name="supplier" id="supplier">
+									    <?php
+									    $parties = $this->partyObj->get($supplier); 
+									    foreach ($parties as $party):
+									       ?>
+									         <option value="<?php echo $party['id']; ?>"><?php echo $party['name']; ?></option>
+									       <?php 
+									    endforeach; 
+									    ?>
+									</select>
+								</div>
+							</div>
+					    </div>
+					    
+					    <div id="row">
+							<?php 
+								if($po_invoice == "1"){
+									$po_sinv = "Purchase Order";	
+									$route = "purorder"; $action = "viewporder"; 		
+									$po_sinv_no = $this->porderObj->getColumn($po_invoice_no, 'po_no');							
+									$invDtls = $this->podtlsObj->get(array('purchase_order' =>$po_invoice_no));
+								}
+								else{
+									$po_sinv = "Supplier Invoice";
+									$route = "supplier"; $action = "viewsupplierinv"; 
+									$po_sinv_no = $this->invoiceObj->getColumn($po_invoice_no, 'invoice_no');	
+									$invDtls = $this->invDtlsObj->get(array('supplier_invoice' =>$po_invoice_no));
+								} 
+								//check if any of the item is wt. moving avg
+								$check_array = array();
+								foreach ($invDtls as $invdtl):
+									$item_valuation = $this->itemObj->getColumn($invdtl['item_id'],'valuation');
+									$costItemDtls = $this->costItemObj->get(array('costing_sheet'=>$costing_sheet_id, 'po_sinv_dtl'=>$invdtl['id']));
+									if($item_valuation == '1' && sizeof($costItemDtls)==0):
+										array_push($check_array,$invdtl['id']);
+									endif;
+								endforeach;
+							?>
+						  
+							<?php if(sizeof($invDtls) > 0): ?>
+								<input type="hidden" value="<?php echo $po_invoice; ?>" name="elc_source" id="elc_source">
+								<?php if($status != 3):?>
+									<a class="pull-right" data-toggle="modal" data-target = "#modal" href="<?php echo $this->url('cost', array('action' => 'speffectdate', 'id'=>$costing_sheet_id)); ?>"><i class="fa fa-calendar"></i> Change SP Effect Date</a>
+								<?php endif;?>
+								<h4>
+									List of Items in <?php echo $po_sinv; ?> No. <a href="<?php echo $this->url($route, array('action'=>$action, 'id'=>$po_invoice_no));?>" target="_blank"><?php echo $po_sinv_no;?></a>
+								</h4>
+								
+								<table class="table table-striped table-bordered table-hover" id="trdetails_table">
+									<thead>
+										<tr>
+											<th>#</th>
+											<th>Item</th>
+											<th>Batch No</th>
+											<th>Status</th>
+											<?php if(sizeof($check_array)>0):?>
+											<th>Current Stock Rate</th>
+											<th>New Purchase Rate</th>
+											<th>Weighted Moving Avg</th>
+											<?php endif;?>
+											<th>Action  &nbsp;
+												<label class="ace bolder blue">
+													<input type="checkbox" id="checkAll" class="ace" />
+													&nbsp;<span class="lbl"> Select All</span>
+												</label>
+											</th>
+										</tr>
+									</thead>
+									<tbody>
+										<?php 
+											$sl = 1;
+											$i=0;
+											$itemCount = sizeof($invDtls);
+											foreach ($invDtls as $invdtl):
+												extract($invdtl);
+												$given_uom = $invdtl['uom_id'];
+												$sinv_detail = $invdtl['id'];
+												$basic_uom = $this->itemObj->getColumn($invdtl['item_id'], "uom");
+												if($basic_uom == $given_uom)
+												{  
+												  $c_rate = $invdtl['rate']; $basicQty = $invdtl['quantity']; 
+												}
+												else
+												{ 
+												  $conversion = $this->uomitemObj->getColumn(array('item'=>$invdtl['item_id'], 'uom'=>$given_uom), "conversion");
+												  $conversion = ($conversion > 0)?$conversion:1;
+												  $c_rate = $invdtl['rate'] / $conversion;  
+												  $basicQty = $invdtl['quantity'] * $conversion;							
+												}		
+												$c_rate = round($c_rate,3);
+												$c_qty = $invdtl['quantity'];							
+												$challan_unit = $invdtl['uom'];
+													
+												$item_valuation = $this->itemObj->getColumn($invdtl['item_id'],'valuation');
+												if($item_valuation == "1"): 
+													$prevDtls = $this->costItemObj->getLatestCostingDtls($invdtl['item_id']); 
+											
+													if(sizeof($prevDtls) > 0):
+														foreach ($prevDtls as $dtl): 
+															$ref_rate = $dtl['rate'];
+															$batch_id = $dtl['batch'];
+															$rate_taken = $dtl['rate_taken'];
+														endforeach;
+														$actual_rate_taken = $dtl['rate_taken_value'];
+														if($actual_rate_taken == ''):
+															if($rate_taken == 1){
+																$actual_rate_taken = $dtl['ref_rate'];
+															}elseif($rate_taken == 2){
+																$actual_rate_taken = $dtl['rate'];
+															}elseif($rate_taken == 3){
+																$actual_rate_taken = $dtl['avg_rate'];
+															}else{
+																$actual_rate_taken = $dtl['rate'];
+															}
+														else:
+															$actual_rate_taken = $actual_rate_taken;
+														endif;
+														
+														$stock_balance = $this->movingItemTableObj->getStockBalance($column='quantity', $where=array('item'=>$invdtl['item_id']));
+														$stock_balance = round($stock_balance,3);
+														$X1 = $c_rate ; $X2 = $actual_rate_taken; $Y1 = $basicQty; $Y2 = $stock_balance;
+														$X = round(($X1 * $Y1 + $X2 * $Y2) / ( $Y1 + $Y2 ),3);
+													endif;
+												endif;
+									   ?>
+										<tr>
+							                <td><?php echo $sl++; ?></td>
+							                <td>
+												<a href="<?php echo $this->url('stock', array('action' => 'viewitem', 'id' => $invdtl['item_id'])); ?>" target="_blank">									
+													<?php echo $this->itemObj->getColumn($invdtl['item_id'],'code'); ?>
+												</a>
+											</td>
+							                <?php							                 
+												$costItemDtls = $this->costItemObj->get(array('costing_sheet'=>$costing_sheet_id, 'po_sinv_dtl'=>$invdtl['id']));
+												if(sizeof($costItemDtls)){
+													foreach ($costItemDtls as $costItemDtl): 
+											?>
+											<td>
+												<?php
+												if($costItemDtl['batch'] > 0){ 
+													$batchDtls = $this->batchObj->get($costItemDtl['batch']); 
+													foreach ($batchDtls as $dtl):
+														$batch_status = $dtl['status'];
+														$batch_no = $dtl['batch'];
+													endforeach;
+													
+													if($batch_status == "1"){
+														$text ="init"; $link = "costingsp"; $color="text-warning";
+													}elseif($batch_status == "2"){
+														$text ="pend"; $link = "costingsp"; $color="text-danger";
+													}else{
+														$text = "Comt"; $link = "viewbatch"; $color="text-success";
+													}
+													if($costItemDtl['top_up'] == 1){
+														$batch_text = 'old'; $b_color="danger";
+													}else{
+														$batch_text = 'new'; $b_color="info";
+													}
+												?>
+													<a class="<?php echo $color;?>" href="<?php echo $this->url('batch', array('action'=>$link,'id'=>$costItemDtl['batch']));?>" target="_blank">
+														<?php echo $batch = $this->batchObj->getColumn($costItemDtl['batch'],'batch'); ?> 
+													</a>
+													<i class="fa fa-shield <?php echo $color;?>">&nbsp;<?php echo $text; ?></i>
+													<span class="label label-sm label-<?php echo $b_color;?> label-white middle"><i><?php echo $batch_text; ?></i></span>
+												<?php }else{ ?>
+													<a href="<?php echo $this->url('cost', array('action'=>'generatebatch','id'=>$costItemDtl['id']));?>" target="_blank">
+														Batching
+													</a>
+												<?php } ?>
+											</td>
+											<td><?php 
+												if($costItemDtl['status'] == "1"){ 
+													$label = "primary"; $sign = "init";
+												}elseif($costItemDtl['status'] == "2"){ 
+													$label = "danger"; $sign = "pend";
+												}else{
+													$label = "success"; $sign = "comt";
+												}?>
+												<span class="label label-sm label-<?php echo $label;?>"><i><?php echo $sign;?></i></span>
+											</td>
+											<?php if(sizeof($check_array)>0):?>
+											<td>-</td>
+											<td>-</td>
+											<td>-</td>
+											<?php endif;?>
+											<td>
+                                                <a data-toggle="modal" data-target = "#modal" class="pull-right blue" title="View Activity Logs"
+													href="<?php echo $this->url('acl', array('action' => 'activitylog', 'id' => "10-".$costItemDtl['id'])); ?>">
+														<i class="fa fa-plus"></i></a>
+												<?php
+												if($costItemDtl['status'] == "1"){ ?>													
+													<input type="checkbox" name="view_dtls[]" value="<?php echo $costItemDtl['id']; ?>">
+												<?php } ?>
+												<a data-toggle="modal" data-target = "#modal" 
+													href="<?php echo $this->url('cost', array('action' => 'viewcostdtls', 'id'=>$costItemDtl['id'])); ?>">
+														ELC Costing Details</a>
+												<?php if ($costItemDtl['status'] > "1" && $status !='3'):?>
+													<a data-toggle="modal" data-target = "#modal" class="pull-right red"
+													href="<?php echo $this->url('cost', array('action' => 'rectifycosting', 'id'=>$costItemDtl['id'])); ?>">
+														<i class="fa fa-pencil"></i></a>
+												<?php endif;?>
+											</td>
+											<?php 	
+												endforeach;
+											}else{?>
+											<td></td>
+											<td></td>
+											<?php if(sizeof($check_array)>0):
+												if(sizeof($prevDtls) > 0):?>
+											<td><input type="radio" class="tr-rate" name="rate-<?php echo $invdtl['id'];?>" id="rate-<?php echo $invdtl['id'];?>" value="<?php echo $actual_rate_taken; ?>" <?php echo ($ref_rate == $c_rate)?'checked':'';?> /> <?php echo $this->decimal($ref_rate); ?></td>
+											<?php else:?>
+											<td>-</td>
+											<?php endif;?>
+											
+											<td><input type="radio" class="tr-rate" name="rate-<?php echo $invdtl['id'];?>" id="rate-<?php echo $invdtl['id'];?>" value="<?php echo $c_rate; ?>" <?php echo ($ref_rate <  $c_rate)?'checked':'';?>/> <?php echo $this->decimal($c_rate); ?></td>
+											
+											<?php if(sizeof($prevDtls) > 0): ?>
+											<td><input type="radio" class="tr-rate" name="rate-<?php echo $invdtl['id'];?>" id="rate-<?php echo $invdtl['id'];?>" value="<?php echo $X; ?>" <?php echo ($ref_rate >  $c_rate)?'checked':'';?>/> <?php echo $this->decimal($X); ?></td>
+											<?php else:?>
+											<td>-</td>
+											<?php endif; 
+											endif;?>
+											<td class="form-group">									               
+												<?php $valuation = $this->itemObj->getColumn($invdtl['item_id'],'valuation'); ?> 
+												<input type="hidden" name="itemvaluation" id="itemvaluation" value="<?php echo $valuation;?>" />
+												<input type="hidden" name="sinvid[]" id="sinvid" value="<?php echo $invdtl['id']; ?>" class="sinvid">	                		              
+												<input class="valuation" type="checkbox" name="valuation[]" id="valuation" value="<?php echo $invdtl['id']; ?>" > 
+												<?php if($valuation == "0"){ ?> FIFO (First In First Out)&nbsp;	<?php } 
+												elseif($valuation == "1"){ ?>  Weighted Moving Average <?php } ?>														
+											</td>
+											<?php }?>
+										</tr>
+										<?php 
+											endforeach;
+										?>
+									</tbody>
+								</table>
+								<strong>* Confirm and be sure about the Item valuation [FIFO or Weighted Moving Average] before costing</strong>
+							<?php endif; ?>				
+					    </div>					    
+					    <div id="row">
+					       <div id="costingdtls"></div>
+					    </div>					   
+					    <div id="row">
+						  <div id="costdtls"></div>
+						</div>
+						<div id="row">
+						<?php						
+						$costItemCheck1 = $this->costItemObj->get(array('costing_sheet'=>$costing_sheet_id, 'status'=> array('1','2','3')));
+						$costItemCheck2 = $this->costItemObj->get(array('costing_sheet'=>$costing_sheet_id, 'status'=>'1'));
+						$costItemCheck3 = $this->costItemObj->get(array('costing_sheet'=>$costing_sheet_id, 'status'=>'3'));?>
+						
+						<?php if(sizeof($costItemCheck1) != $itemCount){?> 
+							<button type="submit" class="btn btn-success"  name="btn" value="save_costing" onclick="return confirm('Are you sure to proceed further?')">
+								<i class="fa fa-save"></i> Save Costing Details</button>
+                        <?php } ?> 
+						
+						<?php if(sizeof($costItemCheck2)>0){?>
+							<a href="<?php echo $this->url("cost", array('action'=>'resetelc', 'id'=>$costing_sheet_id.'-0')); ?>" class="btn btn-danger"><i class="fa fa-undo"></i> Redo Costing for All</a>
+							<button type="submit" class="btn btn-primary"  name="btn" value="commit" onclick="return confirm('Are you sure to proceed further?')"><i class="fa fa-gears"></i> Generate Batch </button>
+						<?php } ?>
+						
+						<?php if(sizeof($costItemCheck1) == $itemCount){?> 
+						    <a href="<?php echo $this->url("cost", array('action'=>'sheetdetail', 'id'=>$costing_sheet_id)); ?>" class="btn btn-info"><i class="fa fa-eye"></i> View Sheet Details</a>	
+                        <?php } ?>  
+						<button type="button" class="btn btn-warning" onclick="window.location.href='<?php echo $this->url('cost');?>'" ><i class="fa fa-times"></i> Cancel</button>
+						<?php if(sizeof($costItemCheck3) == $itemCount && $status != '3'){?> 
+							<a href="<?php echo $this->url("cost", array('action'=>'commitcs', 'id'=>$costing_sheet_id)); ?>" class="btn btn-success"><i class="fa fa-check"></i> Commit Costing Sheet</a>
+                        <?php } ?> 
+						</div>
+							
+						
+					</form>  
+				</div> <!-- end of widget-main -->  
+	        </div> <!-- end of widget-body -->
+        </div> <!-- end of widget widget-default -->
+    </div> <!-- end of col-lg-12 -->
+</div> <!-- end of row -->
+
+<div id="modal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+	<div class="modal-dialog">
+		<div class="modal-content">
+		</div>
+	</div>
+</div>
+
+<script type="text/javascript">  
+    var i = 0;
+    $('tbody tr').each(function(){
+   	    $(this).attr('id', ++i); 
+	    var oldid = $(this).find('input:hidden.sinvid').attr('id');
+	    $(this).find('input:hidden.sinvid').attr('id', oldid + '-' + i);  
+
+        var old = $(this).find('input#valuation').attr('id');
+		$(this).find('input#valuation').attr('id', old + '-' + i);
+		
+		var old1 = $(this).find('input#itemvaluation').attr('id');
+		$(this).find('input#itemvaluation').attr('id', old1 + '-' + i);
+    }); 
+
+	$( "input:checkbox.valuation" ).on( "click", function() {
+		var id = $(this).closest('tr').attr('id');
+		if ( $('#valuation-'+ id).prop( "checked" ) ) { 
+			$.post(
+				"<?php echo $this->url('cost', array('action' => 'calculatecost')); ?>",
+				{
+					sinvid: $('#sinvid-'+ id).val(),
+					itemvaluation: $('#itemvaluation-'+ id).val(),
+					elc_source: $("#elc_source").val(),
+					selling_price: $("input[name=rate-"+$('#sinvid-'+id).val()+"]:checked").val(),
+				},
+				function(data){
+					//console.log(data);
+					$("#costdtls").html(data);
+				}
+			);
+		}
+		else{
+			$( "#costdtls" ).empty(); 
+		};	
+	});  
+	
+	$( ".tr-rate" ).on( "change", function() {
+		var id = $(this).closest('tr').attr('id');
+		if ( $('#valuation-'+ id).prop( "checked" ) ) { 
+			$.post(
+				"<?php echo $this->url('cost', array('action' => 'calculatecost')); ?>",
+				{
+					sinvid: $('#sinvid-'+ id).val(),
+					itemvaluation: $('#itemvaluation-'+ id).val(),
+					elc_source: $("#elc_source").val(),
+					selling_price: $("input[name=rate-"+$('#sinvid-'+id).val()+"]:checked").val(),
+				},
+				function(data){
+					//console.log(data);
+					$("#costdtls").html(data);
+				}
+			);
+		}
+		else{
+			$( "#costdtls" ).empty(); 
+		};	
+	});  
+    
+	$("#checkAll").change(function () {
+		$("input:checkbox").prop('checked', $(this).prop("checked"));
+		$( "#costdtls" ).empty();
+    });
+
+    $( "input:checkbox" ).on( "click", function() {
+		$( "#costdtls" ).empty();         
+    });  	 	 
+	
+</script>

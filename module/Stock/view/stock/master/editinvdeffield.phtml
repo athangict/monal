@@ -1,0 +1,75 @@
+<?php
+/**
+ * 
+ * View -- of Purchase/MasterController/editpurstatusAction
+ * 
+ */
+?>
+<?php 
+    foreach($inv_def_fields as $row):
+        extract($row);        
+    endforeach;
+?>
+
+<form id="#form" method="post" action="<?php echo $this->url('stmaster', array('action' => 'editinvdeffield', 'id' => $id)); ?>"  enctype="multipart/form-data" >                  
+    <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+        <h4 class="modal-title"> <i class="fa fa-pencil-square-o"></i> Edit Invoice Defination Field</h4>
+    </div>  <!-- /modal-header -->
+    
+    <div class="modal-body">       
+		<div class="panel panel-default">                       
+			<div class="panel-body"> 
+				<div class="form-group">
+					<label for="def_field" class="control-label">Invoice Defination Field</label>
+					<input type="text" class="form-control" value="<?php echo $def_field;?>" name="def_field" id="def_field" size="30" required> 
+				</div>
+				<div class="form-group">
+					<label for="description" class="control-label">Field Description</label>
+					<input type="text" class="form-control" value="<?php echo $description;?>" name="description" id="description" size="30" required> 
+				</div>
+			</div>
+		</div>
+	</div> <!-- /modal-body -->    
+    <div class="modal-footer">
+        <button type="submit" class="btn btn-success"><i class="fa fa-check"></i> Save </button>
+        <button type="button" class="btn btn-warning" data-dismiss="modal" ><i class="fa fa-times"></i> Cancel </button> 
+    </div>
+</form>
+<script>
+$('document').ready(function(){
+	$('form select').chosen();
+	const fv = FormValidation.formValidation(document.getElementById('#form'), {
+		fields: {
+			def_field: {
+				validators: {
+					notEmpty: {
+						message: 'Please provide invoice defination field.'
+					}
+				}
+			},
+			description: {
+				validators: {
+					notEmpty: {
+						message: 'Please provide description for field.'
+					},
+				}
+			},
+		},
+		plugins: {
+			trigger: new FormValidation.plugins.Trigger(),
+			bootstrap3: new FormValidation.plugins.Bootstrap3(),
+			submitButton: new FormValidation.plugins.SubmitButton(),
+			defaultSubmit: new FormValidation.plugins.DefaultSubmit(),
+		},
+	}).on('core.element.validated', function (e) {
+		if (e.valid) {
+			$('div#'+ e.field.replace('[]','') +'_chosen').removeClass('is-invalid');
+			$('div#'+ e.field.replace('[]','') +'_chosen').addClass('is-valid');
+		} else {
+			$('div#'+ e.field.replace('[]','') +'_chosen').removeClass('is-valid');
+			$('div#'+ e.field.replace('[]','') +'_chosen').addClass('is-invalid');
+		}
+	});
+});
+</script>

@@ -1,0 +1,206 @@
+﻿<?php
+/**
+ * Report -- of purchase summary
+ */
+	$this->headTitle($this->title);	
+?>
+<?php echo $this->partial('purchase/report/partial.phtml', array('active' => 'purchasesummary')); ?><br/>
+<div class="card">
+	<div class="card-header">			
+		<form id="#form" method="post" action="<?php echo $this->url('purreport', array('action' => 'purchasesummary')); ?>"  enctype="multipart/form-data" >    
+			<div class="row">						
+				<div class="form-group col-lg-2">
+					<label class="control-label" for="activity">Activity</label>
+					<select class="form-control" name="activity" id="activity" data-placeholder="Select" >
+						<option value="-1">All</option>
+						<?php 
+							$activities = $this->activityObj->getAll();
+							foreach ($activities as $activity):	
+							 $act_selected = ($activity['id'] == $data['activity'])?"selected":"";									
+						?>
+							<option value="<?php echo $activity['id']; ?>" <?php echo $act_selected; ?>>
+								<?php echo $activity['activity']; ?>
+							</option>
+						<?php endforeach;?>
+					</select>
+				</div>			
+				<div class="form-group col-lg-2">
+					<label class="control-label" for="supplier">Suppliers</label>
+					<select class="form-control" name="supplier" id="supplier" data-placeholder="Select" >
+						<option value="-1">All</option>
+						<?php  
+							$suppliers = $this->partyObj->get(array('p.role'=>1));
+							foreach ($suppliers as $supplier):	
+                            $sup_selected = ($supplier['id'] == $data['supplier'])?"selected":"";							
+						?>  <option value="<?php echo $supplier['id']; ?>" <?php echo $sup_selected; ?>>
+								<?php echo $supplier['name']; ?>
+							</option>
+						<?php endforeach;?>
+					</select>
+				</div>		
+				<div class="col-lg-2">
+					<div class="form-group">
+						<label for="start_date" class="control-label">Start Date</label>
+						<div class="date input-group" id="start_date" data-date-format="yyyy-mm-dd" >
+							<input class="form-control span2" name="start_date" id="start_date" value="<?php echo $data['start_date'];?>" type="text" placeholder="Start Date" readonly required>
+							<span class="input-group-addon add-on"><i class="fa fa-calendar"></i></span>
+						</div>
+					</div>
+				</div>
+				<div class="col-lg-2">
+					<div class="form-group">
+						<label for="end_date" class="control-label">End Date</label>
+						<div class="date input-group" id="end_date" data-date-format="yyyy-mm-dd" >
+							<input class="form-control span2" name="end_date" id="end_date" value="<?php echo $data['end_date'];?>" type="text" placeholder="End Date" readonly required>
+							<span class="input-group-addon add-on"><i class="fa fa-calendar"></i></span>
+						</div>
+					</div>
+				</div>
+				<div class="col-lg-2">
+					<div class="space-8"></div>
+					<button type="submit" class="btn btn-primary pull-right"><i class="fa fa-refresh"></i>Refresh</button>
+				</div>
+				<div class="col-lg-2"></div>
+			</div>
+		</form>
+	</div>
+</div>
+<div class="hr hr-dotted"></div>
+<div id="report-print">
+	<div class="row">
+		<div class="col-lg-12">
+			<div class="table-header clearfix">
+				<label><i class="red fa fa-file-text-o"></i> <strong>Activity:</strong></label> <span><?php echo ($data["activity"] == -1 || !isset($data['activity']))? "All Activities": $this->activityObj->getColumn($data["activity"], 'activity');?></span>.&nbsp;&nbsp;
+				<label><i class="red fa fa-file-text-o"></i> <strong>Suppliers:</strong></label> <span><?php echo ($data["supplier"] == -1 || !isset($data['supplier']))? "All Supplier": $this->partyObj->getColumn($data["supplier"], 'code');?></span>.&nbsp;&nbsp;
+				<label><i class="red fa fa-calendar"></i> <strong>Date:</strong></label> <span><?php echo (!isset($data['start_date']))?'-select-':$data['start_date'].' to '.$data['end_date'];?></span>
+				<div class="pull-right">
+					<a title="Export to Excel" id="excel">
+						<i class="ace-icon fa fa-file-excel-o fa-lg white"></i>
+					</a>&nbsp;&nbsp;
+					<a title="Print PDF" id="print">
+						<i class="ace-icon fa fa-file-pdf-o fa-lg white"></i>
+					</a>&nbsp;&nbsp;
+				</div>
+				<input type="hidden" id="activity" name="activity" value="<?php echo ($data["activity"] == -1 || !isset($data['activity']))? "All Activities": $this->activityObj->getColumn($data["activity"], 'activity');?>"/>
+				<input type="hidden" id="supplier" name="supplier" value="<?php echo ($data["supplier"] == -1 || !isset($data['supplier']))? "All Suppliers": $this->partyObj->getColumn($data["supplier"], 'code');?>"/>			
+				<input type="hidden" id="start_date" name="start_date" value="<?php echo $data['start_date'];?>"/>
+				<input type="hidden" id="end_date" name="end_date" value="<?php echo $data['end_date'];?>"/>
+			</div>
+			<table class="table table-hover" id="table2excel">
+				<thead>
+					<tr>
+						<th>#</th>
+						<th>Supplier Name</th>
+						<th style="text-align:right">Value</th>
+					</tr>
+				</thead>
+				<tbody>
+				<?php $i = 1; 
+					$suppliers = $this->supinvObj->getSupplierValue($data['activity'],$data['supplier'],$data['start_date'],$data['end_date']); 
+					$total_value = 0;
+					foreach($suppliers as $row):
+						$total_value += $row['payable_amount'];
+				?>	
+					<tr style="border-top:2px solid #ddd;border-bottom:2px solid #ddd;background-color:#F9F9F9;">
+						<td><?php echo $i++; ?></td>
+						<td><?php echo $row['code']; ?></td>
+						<td style="text-align:right"><?php echo number_format($row['payable_amount'], 3, '.', ','); ?></td>
+					  </tr>
+				<?php endforeach; ?>
+				</tbody>
+				<tfoot>
+					<tr style="border-top:3px solid #ddd;border-bottom:3px solid #ddd;">
+						<th></th>
+						<th style="text-align:right">Total</th>
+						<th style="text-align:right"><?php echo number_format($total_value, 3, '.', ',');?></th>
+					</tr>
+				</tfoot>
+			</table>
+		</div>
+	</div>
+</div>
+<script type="text/javascript">
+$(function() {
+	$('#print').genpdfinvoice({
+		content: '#report-print',
+		src:"<?php echo $this->url('pdfxls', array('action' => 'pdf'));?>",
+		orentation:"L",//L =landscape, P = potrait
+	});
+	
+	var doc_loc = $('input#activity').val() +','+ $('input#supplier').val() + '(from: '+$('input#start_date').val()+' to: '+$('input#end_date').val()+')';
+	$("#excel").click(function(){
+		$("#table2excel").table2excel({
+			// exclude CSS class
+			exclude: ".noExl",
+			name: "Purchase Summary",
+			filename: "Purchase Summary - "+doc_loc, //do not include extension
+		}); 
+	});
+	
+	
+	$('#start_date').datepicker();
+	$('#start_date').on('changeDate', function(){
+		$('form').formValidation('revalidateField', $(this).attr('id'));
+	});
+	$('#end_date').datepicker();
+	$('#end_date').on('changeDate', function(){
+		$('form').formValidation('revalidateField', $(this).attr('id'));
+	});
+	
+	/*** Form Validation ***/
+	const fv = FormValidation.formValidation(document.getElementById('#form'), {
+		fields: {
+			'supplier': {
+				validators: {
+					notEmpty: {
+						message: 'Please select supplier'
+					}
+				}
+			},
+			'from_location': {
+				validators: {
+					notEmpty: {
+						message: 'Please select source location'
+					}
+				}
+			},
+			'to_location': {
+				validators: {
+					notEmpty: {
+						message: 'Please select destination location'
+					}
+				}
+			},
+			'start_date': {
+				validators: {
+					notEmpty: {
+						message: 'Please select start date'
+					}
+				}
+			},
+			'end_date': {
+				validators: {
+					notEmpty: {
+						message: 'Please select end date'
+					}
+				}
+			},
+		},
+		plugins: {
+			trigger: new FormValidation.plugins.Trigger(),
+			bootstrap3: new FormValidation.plugins.Bootstrap3(),
+			submitButton: new FormValidation.plugins.SubmitButton(),
+			defaultSubmit: new FormValidation.plugins.DefaultSubmit(),
+		},
+	}).on('core.element.validated', function (e) {
+		if (e.valid) {
+			$('div#'+ e.field.replace('[]','') +'_chosen').removeClass('is-invalid');
+			$('div#'+ e.field.replace('[]','') +'_chosen').addClass('is-valid');
+		} else {
+			$('div#'+ e.field.replace('[]','') +'_chosen').removeClass('is-valid');
+			$('div#'+ e.field.replace('[]','') +'_chosen').addClass('is-invalid');
+		}
+	});
+});
+</script>
+

@@ -1,0 +1,67 @@
+
+
+
+<div class="row">
+	<div class="col-lg-12">
+		<?php $currentYear = (int)date('Y');
+                $minYear = ($this->minYear == 0)? date('Y'):$this->minYear;?>
+	            <div class="row">
+			<form>
+				<div class="form-group col-lg-2">
+					<label for="year" class="control-label">Year</label>
+					<select name="year" id="year" class="form-control">
+						<option value="-1">All</option>
+						<?php for($year = $currentYear; $year >= $minYear; $year--):
+							$selected = ($this->year == $year)?'selected':''; ?>
+							<option value="<?php echo $year;?>" <?php echo $selected;?>> <?php echo $year; ?> </option>
+						<?php endfor;?>
+					</select>
+				</div>
+			</form>
+			<div class="clearfix">
+				<?php echo $this->button(2);?>
+			</div>
+		</div>
+		<table class="table card-table text-nowrap" id="dataTables">
+			<thead>
+				<tr>
+					<th>#</th>
+					<th>Month</th>
+					<th>Total rent</th>
+					<th class="no-sort no-printpdf">Action</th>
+				</tr>
+			</thead>
+			<tbody>
+			<?php 
+				$i = 1;  	
+					foreach ($this->tenantsdtls as $row):
+						$my=$row['year']."-".$row['month'];
+						if(!$this->rent->isPresent(array('month'=>$row['month'], 'year'=>$row['year']))):
+				?>
+						<tr data-href="<?php echo $this->button(4, $my); ?>" >
+							<td><?php echo $i++; ?> </td>
+							<td><strong><?php echo "jan" //date("F, Y", strtotime("1-".$row['month']."-".$row['year'])); ?></strong> </td>
+							<td style="text-align:right"><?php echo "100"//$this->currency($this->payrollObj->getSum(array('month'=>$row['month'], 'year'=>$row['year']),'net_pay'));?></td>
+							<td><?php echo $this->button(1, $my);?></td>    
+						</tr>
+				<?php 
+						endif;
+					endforeach;  
+				?>
+			</tbody>
+		</table>
+	<script type="text/javascript">
+$('document').ready(function(){
+	$('#dataTables').DataTable({
+		"paging":   true,
+	});
+	$("tr[data-href]").each(function(){
+		$(this).find('td').not('td.action').each(function(){
+			$(this).css('cursor','pointer');
+			$(this).bind('click',function() {
+				window.document.location = $(this).closest('tr').attr("data-href");
+			});
+		});
+	});
+});
+</script>

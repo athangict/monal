@@ -1,0 +1,424 @@
+<?php
+/**
+ * 
+ * View -- of Store/ReceiptController/addreceiptAction
+ * 
+ */
+  $this->headTitle($this->title);
+?>
+<?php
+	if(sizeof($pur_orders)>0):
+		foreach($pur_orders as $pur_order):
+			extract($pur_order);
+			$po_id = $id;
+			$po_location = $delivery_location;
+			$po_activity = $cost_center_id;
+		endforeach;
+	endif;
+?>
+
+<div class="row">
+	<div class="col-lg-12">
+		<div class="widget widget-box">
+			<div class="widget-header">
+				<h5 class="widget-title lighter smaller">
+					<i class="fa fa-asterisk"></i>&nbsp;&nbsp;New Purchase Receipt
+                </h5>
+				<div class="widget-toolbar hidden-xs">
+					<!-- Button trigger modal -->
+					<a data-toggle="modal" class="btn btn-white btn-primary btn-bold btn-xs" href="<?php echo $this->url('inpurreceipt', array('action' => 'getporder')); ?>" data-target="#modal1">
+						&nbsp;<i class="fa fa-share"></i>&nbsp;Get Purchase Order&nbsp;
+					</a>
+					<!--for modal -->
+					<div id="modal1" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+						<div class="modal-dialog">
+							<div class="modal-content"> </div>
+						</div>
+					</div>
+				</div>
+			</div>
+			<div class="widget-body">
+				<div class="widget-main">
+					<?php if(sizeof($pur_orders)==0):?>
+						<div class="row">
+							<div class="col-lg-12">
+								<div class="alert alert-block alert-info">
+									<div class="row">
+										<div class="col-lg-9">
+											<i class="ace-icon fa fa-check blue"></i>
+											Please Select the <strong class="blue"> Purchase Order </strong> (PO) to create New Purchase Receipt (PRN).
+										</div>
+										<div class="col-lg-3">
+											<!-- Button trigger modal -->
+											<a data-toggle="modal" class="btn btn-primary" href="<?php echo $this->url('inpurreceipt', array('action' => 'getporder')); ?>" data-target="#modal">
+												<i class="fa fa-share"></i> &nbsp;Get Purchase Order
+											</a>
+											<!--for modal -->
+											<div id="modal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+												<div class="modal-dialog">
+													<div class="modal-content"> </div>
+												</div>
+											</div>
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+						<div class="space-12"></div>
+					<?php endif;?>
+					<form  id="#form" method="post" action="<?php echo $this->url('inpurreceipt', array('action' => 'addreceipt')); ?>"  enctype="multipart/form-data" >    
+						<div class="row">	
+							<div class="col-lg-3">    
+								<div class="form-group">
+									<label for="purchase_receipt_date" class="control-label">Purchase Receipt Date</label>
+									<div class="date input-group" id="purchase_receipt_date" data-date="<?php echo date('Y-m-d');?>" data-date-format="yyyy-mm-dd" >
+										<input class="form-control span2" name="purchase_receipt_date" id="purchase_receipt_date" type="text" placeholder="PRN Date" value="<?php echo date('Y-m-d');?>" readonly required>
+										<span class="input-group-addon add-on"><i class="fa fa-calendar"></i></span>
+									</div>
+								</div>
+							</div>	
+							<div class="col-lg-3"> 
+								<div class="form-group">
+									<label for="activity" class="control-label">Location</label>
+									<select id="location" name="location" class="form-control" data-placeholder="Select" required>
+										<option value=""></option>
+										<?php foreach ($regions as $region): ?>
+										<optgroup label="<?php echo $region['region'];?>">
+											<?php  
+												 // retrive locations under the above region ID
+												$locations = $locationObj->get(array('l.region'=>$region['id']));
+												 foreach ($locations as $location):
+												 $selected = ($location['id']==$po_location)?"selected":"";
+											?>
+											 <option value="<?php echo $location['id']; ?>" <?php echo $selected;?>>
+												<?php echo $location['location']; ?>
+											 </option>
+											<?php endforeach;?>
+										</optgroup>
+										<?php endforeach;?>									
+									</select> 
+								</div>
+							</div>
+							<div class="col-lg-3"> 
+								<div class="form-group">
+									<label for="item_group" class="control-label">Item Group</label>
+									<select id="item_group" name="item_group" class="form-control" data-placeholder="Select" readonly="readonly" required>
+										<option value=""></option>
+										<?php foreach ($this->groupObj->getAll() as $group):
+										    $slted = ($group['id'] == $item_group_id)?"selected":"";?>
+											<option value="<?php echo $group['id'];?>"<?php echo  $slted;?>><?php echo $group['name']; ?></option>
+										<?php endforeach; ?>								
+									</select> 
+								</div>
+							</div>
+							<div class="col-lg-3"> 
+								<div class="form-group">
+									<label for="cost_center" class="control-label">Cost Center</label>
+									<select class="form-control" name="cost_center" id="cost_center" data-placeholder="Select" readonly="readonly" required>
+										<option value=""></option>
+									<?php foreach($this->activities as $activity):
+										$selected=($activity['id']==$po_activity)?'selected':'';?>
+											<option value="<?php echo $activity['id'];?>" <?php echo $selected;?>>
+										   		<?php echo $activity['activity']; ?>
+										   	</option>
+										<?php endforeach; ?>
+									</select>
+								</div>
+							</div>
+						</div>
+						<div class="row">	
+							<div class="col-lg-3"> 
+								<div class="form-group">
+									<label for="supplier" class="control-label">Supplier</label>
+									<input type="text" class="form-control" name="supplier" id="supplier" value ="<?php echo $supplier?>" placeholder="Enter supplier" readonly="readonly" /> 
+								</div>
+							</div>
+							 <div class="col-lg-3">
+								<div class="form-group">
+									<label for="custom_declaration" class="control-label">Custom Declaration</label>
+									<input type="text" class="form-control" name="custom_declaration" id="custom_declaration" placeholder="Custom Declaration" /> 
+								</div>
+							</div> 
+							<div class="col-lg-3">
+								<div class="form-group">
+									<label for="challan_no" class="control-label">Challan No.</label>
+									<input type="text" class="form-control" name="challan_no" id="challan_no" placeholder="Challan no." > 
+								</div>
+							</div>
+							<div class="col-lg-3">
+								<div class="form-group">
+									<label for="invoice_no" class="control-label">Invoice No.</label>
+									<input type="text" class="form-control" name="invoice_no" id="invoice_no" placeholder="invoice no." > 
+								</div>
+							</div>
+						</div>
+                        <div class="row">
+                            <div class="col-lg-3">
+								<div class="form-group">
+									<label for="challan_date" class="control-label">Challan Date</label>
+									<div class="date input-group" id="challan_date" data-date="<?php echo date('Y-m-d');?>" data-date-format="yyyy-mm-dd" >
+										<input class="form-control span2" name="challan_date" id="challan_date" type="text" placeholder="Challan Date" readonly required>
+										<span class="input-group-addon add-on"><i class="fa fa-calendar"></i></span>
+									</div>
+								</div>
+							</div>							
+							<div class="col-lg-3">
+								<div class="form-group">
+									<label for="purchase_order_no" class="control-label">Purchase Order No.</label>
+									<select class="form-control" name="purchase_order_no" id="purchase_order_no" data-placeholder="Select" readonly >
+										<option value=""></option>
+										<option value="<?php echo $po_id;?>" selected="selected">
+											<?php if($po_id != ""){echo $this->pur_ordersObj->getColumn($po_id,'purchase_order_no');}?>
+										</option>	
+									</select> 
+								</div>
+							</div>							
+						</div>
+						<div class="row">
+							<div class="col-lg-12"> 
+							    <h5>Purchase Receipt Details</h5>
+								<div>
+									<table id="trdetails_table" class="table small-padding">
+										<thead>
+											<tr>
+												<th>Item</th>
+												<th>UOM</th>
+												<th>PO Qty</th>
+												<th>Qty Rate</th>
+												<th>Challan Qty</th>
+												<th>Damage Qty</th>
+												<th>Shortage Qty</th>
+												<th>Accepted Qty</th>
+												<th>Sound Qty</th>
+												<th>&nbsp;</th>
+											</tr>
+										</thead>
+										<tbody>
+											<tr>
+												<td>
+													<div class="form-group">
+														<select id="item" name="item[]" class="form-control" data-placeholder="Select" >
+															<option value=""></option>
+															<?php
+															foreach ($items as $item):
+																$selected = ($item['id']==$pur_details['item_id'])?"selected":"";
+															  ?>
+																 <option value="<?php echo $item['id']; ?>" <?php echo $selected;?>>
+																	<?php echo $item['code']; ?>
+																 </option>
+															 <?php endforeach; ?>														
+														</select>
+														<input type="hidden" name="po_details_id[]" id="po_details_id" value="<?php echo $pur_details['id']; ?>"/>
+													</div>
+												</td>
+												
+												<td>
+													<div class="form-group">
+														<select id="uom" name="uom[]" class="form-control" data-placeholder="Select" >
+														    <option value=""></option>
+														</select>
+													</div>      
+												</td>
+												
+												<td>
+													<div class="form-group">
+														<input type="text" class="form-control" name="po_qty[]" id="po_qty" value="<?php echo number_format($pur_details['quantity'], 2, '.', '');?>" readonly />
+														<input type="hidden" class="form-control" name="amount[]" id="amount" value="0.00" />
+													</div>
+												</td>
+												
+												<td>
+													<div class="form-group">
+														<input type="text" class="form-control" name="rate[]" id="rate" value="<?php echo number_format($pur_details['rate'], 2, '.', '');?>" readonly />
+													</div>
+												</td>
+												
+												<td>
+													<div class="form-group">
+														<input type="text" class="form-control" name="challan_qty[]" id="challan_qty" value="0.00" required />
+													</div>         
+												</td>
+												
+												<td>
+													<div class="form-group">
+														<input type="text" class="form-control" name="damage_qty[]" id="damage_qty" value="0.00"/>
+													</div>         
+												</td>
+												
+												<td>
+													<div class="form-group">
+														<input type="text" class="form-control" name="shortage_qty[]" id="shortage_qty" value="0.00"/>
+													</div>         
+												</td>
+												
+												<td>
+													<div class="form-group">
+														<input type="text" class="form-control" name="accept_qty[]" id="accept_qty" value="0.00" readonly />
+													</div>         
+												</td>
+												
+												<td>
+													<div class="form-group">
+														<input type="text" class="form-control" name="sound_qty[]" id="sound_qty" value="0.00" readonly />
+													</div>         
+												</td>
+												
+												<td></td>
+											</tr>
+										</tbody>
+									</table>
+								</div> <!-- end of div -->
+							</div> <!-- end of col-lg-12 -->
+						</div>	<!-- end of row -->
+						<div class="row">    
+							<div class="col-lg-12">
+								<div class="col-lg-6"></div>
+								<div class="form-group col-lg-3">
+									<label for="net_po_amount" class="control-label">Net PO Amount</label>
+									<input type="text" class="form-control" name="net_po_amount" id="net_po_amount" value="<?php echo $total_amount?>" readonly required>
+								</div> 
+								<div class="form-group col-lg-3">
+									<label for="payable_amount" class="control-label">Payable Amount</label>
+									<input type="text" class="form-control" name="payable_amount" id="payable_amount"  value="0.00" readonly required>
+								</div>
+							</div>
+						</div>
+						<div class="row">
+							<div class="col-lg-12">
+								<label class="control-label" for="note">Note: </label>
+								<textarea class="form-control" name="note" id="note"></textarea>
+							</div>
+						</div>
+						<div class="space-12"></div>
+						<div class="row"> 	
+							<div class="col-lg-9"> 
+								<button type="submit" class="btn btn-success"><i class="fa fa-check"></i> Save </button>
+								<button type="button" class="btn btn-warning" onclick="window.location.href='<?php echo $this->url('inpurreceipt');?>'" ><i class="fa fa-times"></i> Cancel </button> 					
+							</div>
+						</div>
+					</form>  
+				</div> <!-- end of widget-main -->  
+	        </div> <!-- end of widget-body -->
+        </div> <!-- end of widget widget-default -->
+    </div> <!-- end of col-lg-12 -->
+</div> <!-- end of row -->
+<script type="text/javascript">
+$(function(){
+		$('form select').chosen({ allow_single_deselect:true});
+		$('#purchase_receipt_date').datepicker();
+		$('#challan_date').datepicker();
+		$('#prn_date').on('changeDate',function(){
+		  $('form').formValidation('revalidateField', $(this).attr('id'));
+		});
+		$('#challan_date').on('changeDate',function(){
+		  $('form').formValidation('revalidateField', $(this).attr('id'));
+		});
+		$('#trdetails_table').inreceipt({
+			getpodetail:"<?php echo $this->url('inpurreceipt', array('action'=>'getpodetail'));?>",
+		});	
+    });	
+	/******** formValidation *************/
+const fv = FormValidation.formValidation(document.getElementById('#form'), {
+		fields: {
+			purhase_receipt_date: {
+			  validators: {
+				  notEmpty: {
+					  message: 'Please select date'
+				  }
+			  }
+		  },
+	
+		  location: {
+			  validators: {
+				  notEmpty: {
+					  message: 'Please select location'
+				  }
+			  }
+		  },
+		  cost_center: {
+			  validators: {
+				  notEmpty: {
+					  message: 'Please select activity'
+				  }
+			  }
+		  },
+		  supplier: {
+			  validators: {
+				  notEmpty: {
+					  message: 'Please enter supplier'
+				  }
+			  }
+		  },
+		  challan_no: {
+			  validators: {
+				  notEmpty: {
+					  message: 'Please provide challan no.'
+				  }
+			  }
+		  },  
+		  challan_date:{
+			  validators: {
+				  notEmpty:{
+					  message: 'Please select challan date'
+				  },
+			  }
+		  }, 
+		  po_no:{
+			  validators: {
+				  notEmpty:{
+					  message: 'Please select PO No.'
+				  },
+			  }
+		  },      
+		  item[]:{
+			  validators: {
+				  notEmpty:{
+					  message: 'Please select item'
+				  },
+			  }
+		  },  
+		challan_qty[]:{
+			  validators: {
+				  notEmpty:{
+					  message: 'Enter Challan Quantity'
+				  },
+			  }
+		  }, 
+		  uom[]:{
+			  validators: {
+				  notEmpty:{
+					  message: 'Please select uom'
+				  },
+			  }
+		  }, 
+		  po_qty[]:{
+			  validators: {
+				  notEmpty:{
+					  message: 'Please provide PO Qty'
+				  },
+			  }
+		  },  
+		  challan_qty[]:{
+			  validators: {
+				  notEmpty:{
+					  message: 'Please provide challan_qty'
+				  },
+			  }
+		  },
+		},
+		plugins: {
+			trigger: new FormValidation.plugins.Trigger(),
+			bootstrap3: new FormValidation.plugins.Bootstrap3(),
+			submitButton: new FormValidation.plugins.SubmitButton(),
+			defaultSubmit: new FormValidation.plugins.DefaultSubmit(),
+		},
+	}).on('core.element.validated', function (e) {
+		if (e.valid) {
+			$('div#'+ e.field.replace('[]','') +'_chosen').removeClass('is-invalid');
+			$('div#'+ e.field.replace('[]','') +'_chosen').addClass('is-valid');
+		} else {
+			$('div#'+ e.field.replace('[]','') +'_chosen').removeClass('is-valid');
+			$('div#'+ e.field.replace('[]','') +'_chosen').addClass('is-invalid');
+		}
+	});
+</script>

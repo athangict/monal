@@ -1,0 +1,418 @@
+<?php
+/**
+ * 
+ * View -- of Accounts/AssetController/editassetAction
+ * 
+ */
+	$this->headTitle($this->title);
+?>
+<?php 
+    foreach($this->asset as $asset):
+        extract($asset);
+    endforeach;
+?>   
+<div class="space-12"></div>
+<div class="row">
+	<div class="col-lg-12">
+		<div class="widget widget-box">
+			<div class="widget-header">
+				<h5 class="widget-title lighter smaller">
+					<i class="fa fa-pencil-square-o"></i> Edit Asset
+				</h5>
+			</div>
+			<div class="widget-body">
+				<div class="widget-main">
+					<form id="form" method="post" action="<?php echo $this->url('asset', array('action' => 'editasset', 'id' => $id)); ?>" enctype="multipart/form-data" >
+						<div class="row">  								
+							<div class="form-group col-lg-4">
+								<label for="fund" class="control-label">Fund</label>
+								<select class="form-control" id="fund" name="fund" required >
+									<option value=""></option>
+									<?php 
+									foreach ($funds as $funds):
+										$selected=($fund_id==$funds['id'])?"selected":"";
+									?>
+										<option value="<?php echo $funds['id'];?>"<?php echo $selected;?>>
+											<?php echo $funds['code'];?> 
+										</option>
+									<?php
+									endforeach;
+									?>
+								</select>
+							</div>
+							<div class="form-group col-lg-4">
+								<label for="activity" class="control-label">Activity</label>
+								<select class="form-control" id="activity" name="activity" data-placeholder="Select" required >
+									<option value=""></option>
+									<?php 
+									foreach ($activities as $activityrow):
+										$selected=($activity_id==$activityrow['id'])?"selected":"";
+									?>
+										<option value="<?php echo $activityrow['id'];?>"<?php echo $selected;?>>
+											<?php echo $activityrow['activity'];?>
+										</option>
+									<?php
+									endforeach;
+									?>
+								</select>
+							</div>
+							<div class="form-group col-lg-4">
+								<label for="assetcode" class="control-label">Asset Code</label>
+								<input type="text" class="form-control" name="code" id="code" value="<?php echo $code ?>" size="30" required> 
+							</div>
+						</div>
+						<div class="row">
+							<div class="form-group col-lg-4">
+								<label for="name" class="control-label">Asset Name</label>
+								<input type="text" class="form-control" name="name" id="name" value="<?php echo $name?>" >
+							</div>  
+							<div class="form-group col-lg-4">
+								<label for="region" class="control-label">Region</label>
+								<select class="form-control" id="region" name="region" data-placeholder="Select" required >
+									<option value=""></option>
+									<?php 
+									foreach ($regions as $regionrow):
+										$selected=($region_id==$regionrow['id'])?"selected":"";
+									?>
+										<option value="<?php echo $regionrow['id'];?>"<?php echo $selected;?>>
+											<?php echo $regionrow['region'];?>
+										</option>
+									<?php
+									endforeach;
+									?>
+								</select>
+							</div>  
+							<div class="form-group col-lg-4">
+								<label for="location" class="control-label">Location</label>
+								<select class="form-control chosen-widget" id="location" name="location" data-placeholder="Select" required >
+									<option value=""></option>
+									<?php 
+									foreach ($this->locationObj->get(array('l.region'=>$region_id)) as $locationrow):
+										$selected=($location_id==$locationrow['id'])?"selected":"";
+									?>
+										<option value="<?php echo $locationrow['id'];?>"<?php echo $selected;?>>
+											<?php echo $locationrow['location'];?>
+										</option>
+									<?php
+									endforeach;
+									?>
+								</select>
+							</div>                         
+						</div>
+						<div class="row">                        
+							<div class="form-group col-lg-4">
+								<label for="purchase_date" class="control-label">Purchase Date</label>
+								<div class="date input-group" id="purchase_date" data-date="<?php echo date('Y-m-d', strtotime($purchase_date));?>" data-date-format="yyyy-mm-dd" data-date-viewmode="years">
+									<input class="form-control span2" name="purchase_date" id="purchase_date" type="text" value="<?php echo $purchase_date ?>" readonly required>
+									<span class="input-group-addon add-on"><i class="fa fa-calendar"></i></span>
+								</div>
+							</div>  
+							<div class="form-group col-lg-4">
+								<label for="asset_value" class="control-label">Purchase Value</label>
+								<input type="money" class="form-control" name="asset_value" id="asset_value" value="<?php echo $asset_value ?>" required>
+							</div> 
+							<div class="form-group col-lg-4">
+								<label for="salvage" class="control-label">Salvage </label>
+								<?php 
+									$yes = ($salvage =='1')? 'checked':'';
+									$no = ($salvage =='0')? 'checked':'';
+									$disabled = ($salvage =='0')? 'disabled':'';
+									  
+								?>
+								<div class="radio">                                			
+									<label>
+										<input class="ace" type="radio" name="salvage" id="salvage" value="1" <?php echo $yes; ?>>
+										<span class="lbl"> Yes </span>
+									</label>
+									<label>
+										<input class="ace" type="radio" name="salvage" id="salvage" value="0" <?php echo $no; ?> >
+										<span class="lbl"> No </span>
+									</label>	
+								</div>
+							</div>                                              
+						</div>
+						<div class="row"> 
+							<div class="form-group col-lg-4">
+								<label for="depreciation" class="control-label">Depreciation </label>
+								<?php 
+									$yes = ($depreciation=='1')? 'checked':'';
+									$no = ($depreciation=='0')? 'checked':'';
+									$disabled = ($depreciation=='0')? 'disabled':'';
+									  
+								?>
+								<div class="radio">                                			
+									<label>
+										<input class="ace" type="radio" name="depreciation" id="depreciation" value="1" <?php echo $yes; ?>>
+										<span class="lbl"> Yes </span>
+									</label>
+									<label>
+										<input class="ace" type="radio" name="depreciation" id="depreciation" value="0" <?php echo $no; ?> >
+										<span class="lbl"> No </span>
+									</label>	
+								</div>
+							</div>                                            
+							<div class="form-group col-lg-4">
+								<label for="rate" class="control-label">Depreciation Rate</label>
+								<input type="money" class="form-control" name="rate" id="rate" value="<?php echo $rate ?>" <?php echo $disabled;?> >
+							</div>  
+							<div class="form-group col-lg-4">
+								<label for="method" class="control-label">Method </label>
+								<?php 
+									$wvd = ($method == '1')?'checked':'';
+									$sl = ($method == '2')?'checked':'';  
+								?>
+								<div class="radio">                                			
+									<label>
+										<input class="ace" type="radio" name="method" id="method" value="1" <?php echo $wvd; ?> <?php echo $disabled;?> >
+										<span class="lbl"> W.D.V </span>
+									</label>
+									<label>
+										<input class="ace" type="radio"  name="method" id="method" value="2" <?php echo $sl; ?> <?php echo $disabled;?> >
+										<span class="lbl"> S.L </span>
+									</label>	
+								</div>
+							</div>  
+						</div>
+						<div class="row">
+							<div class="col-lg-12"> 
+								<h5 class='header blue'>Sub Head Details</h5>
+								<table id="head_table" class="table small-padding">
+									<thead>
+										<tr>
+											<th>Head Type</th>
+											<th>Head</th>
+											<th>&nbsp;</th>
+										</tr>
+									</thead>
+									<tbody>
+										<?php 
+											$count=sizeof($subheads);
+											if($count > 0):
+												foreach($subheads as $subheads):?>
+													<tr>
+														<td>
+															<div class="form-group">
+																<select class="form-control head_type" id="head_type" name="head_type[]" data-placeholder="Select" >
+																	<option value=""></option>
+																	<?php 
+																	foreach ($headtypes as $headtype):
+																		$selected = ($subheads['headtype_id'] == $headtype['id'])? "selected":"";
+																	?>
+																		<option value="<?php echo $headtype['id'];?>" <?php echo $selected	?>>
+																			<?php echo $headtype['head_type'];?>
+																		</option>
+																	<?php endforeach;?>
+																</select>
+															</div>
+															<input type="hidden" id="subhead_id" name="subhead_id[]" value="<?php echo $subheads['id'];?>"/>
+														</td>
+														<td>
+															<div class="form-group">
+																<select class="form-control head" id="head" name="head[]" data-placeholder="Select" >
+																	<option value=""></option>
+																	<?php 
+																	$heads=$headObj->get(array('h.head_type'=> $subheads['headtype_id']));
+																	
+																	foreach ($heads as $headrow):
+																		$selected = ($subheads['head_id'] == $headrow['id'])? "selected":"";
+																	?>
+																		<option value="<?php echo $headrow['id'];?>" <?php echo $selected	?>>
+																			<?php echo $headrow['code'];?>
+																		</option>
+																	<?php endforeach;?>
+																</select>
+															</div>
+														</td>
+														<td></td>
+													</tr>
+												<?php endforeach;?>
+											<?php else:	?>
+												<tr>
+													<td>
+														<div class="form-group">
+															<select class="form-control head_type" id="head_type" name="head_type[]" data-placeholder="Select" >
+																<option value=""></option>
+																<?php foreach ($headtypes as $headtype):?>
+																	<option value="<?php echo $headtype['id'];?>">
+																		<?php echo $headtype['head_type'];?>
+																	</option>
+																<?php endforeach;?>
+															</select>
+														</div>
+													</td>
+													<td>
+														<div class="form-group">
+															<select class="form-control head" id="head" name="head[]" data-placeholder="Select" >
+																<option value=""></option>
+															</select>
+														</div>
+													</td>
+													<td width="30px;"></td>
+												</tr>
+											<?php endif;?>
+									</tbody>
+								</table>
+							</div>
+						</div> 
+						<div class="row">
+							<div class="col-lg-12">				
+								<button type="submit" class="btn btn-success"><i class="fa fa-check"></i> Save </button>
+								<button type="button" class="btn btn-warning" onclick="javascript:history.back();" ><i class="fa fa-times"></i> Cancel </button>
+							</div>
+						</div>
+					</form>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+<script>
+	$(function() {
+		$("#region").change(function() { 
+			$('#location').load("<?php echo $this->url('ajresponse', array('action' => 'getlocation')); ?>/"+ $("#region").val(), function() {
+				$("#location").trigger('chosen:updated');
+				$('form').formValidation('revalidateField','location');
+			});
+		});		
+		$('#purchase_date').datepicker();		
+		$("input[name=depreciation]:radio").change(function () {
+			if($("input:radio[name='depreciation']:checked").val()=='1'){
+				$("#rate").removeAttr("disabled");
+				$("input[name=method]:radio").removeAttr("disabled");
+			}else{
+				$("#rate").val("");
+				$("#rate").attr("disabled", "disabled");
+				$("input[name=method]:radio").removeAttr("checked");
+				$("input[name=method]:radio").attr("disabled","disabled");
+			}
+		});
+		if($.isNumeric($("#asset_value").val())){
+			$("#asset_value").val(parseFloat($("#asset_value").val().replace(/,/g, ""))
+							.toFixed(3)
+							.toString()
+							.replace(/\B(?=(\d{3})+(?!\d))/g, ",")
+						);
+		}else{
+			$("#asset_value").val("0.000");
+		}
+		
+		$("#asset_value").blur(function (){ 
+			if($.isNumeric($(this).val())){
+				$(this).val(parseFloat($(this).val().replace(/,/g, ""))
+							.toFixed(3)
+							.toString()
+							.replace(/\B(?=(\d{3})+(?!\d))/g, ",")
+						);
+			}else{
+				$(this).val("0.000");
+			}
+		});
+		/****** dynamic insertion of table row*******/
+		$('#head_table').subhead({src:'<?php echo $this->url("ajresponse", array("action" => "gethead")); ?>'});
+		
+		const fv = FormValidation.formValidation(document.getElementById('#form'), {
+			fields: {
+				fund: {
+					validators: {
+						notEmpty: {
+							message: 'Please select fund.'
+						},
+					}
+				},
+				activity: {
+					validators: {
+						notEmpty: {
+							message: 'Please select activity.'
+						},
+					}
+				},
+				code: {
+					validators: {
+						notEmpty: {
+							message: 'Please provide assert code.'
+						},
+					}
+				},
+				name: {
+					validators: {
+						notEmpty: {
+							message: 'Please provide assert name.'
+						},
+					}
+				},
+				region: {
+					validators: {
+						notEmpty: {
+							message: 'Please select region.'
+						},
+					}
+				},
+				location: {
+					validators: {
+						notEmpty: {
+							message: 'Please select location.'
+						},
+					}
+				},
+				purchase_date: {
+					validators: {
+						notEmpty: {
+							message: 'Please select purchase date.'
+						},
+					}
+				},
+				asset_value: {
+					validators: {
+						notEmpty: {
+							message: 'Please provide purchase value.'
+						},
+					}
+				},
+				salvage: {
+					validators: {
+						notEmpty: {
+							message: 'Please provide salvage value.'
+						},
+					}
+				},
+				/*'head_type[]': {
+	                validators: {
+	                    notEmpty: {
+	                        message: 'Please select Head Type'
+	                    }
+	                }
+	            },
+	            'head[]': {
+	                validators: {
+	                    notEmpty: {
+	                        message: 'Please select Head'
+	                    }
+	                }
+	            }, */
+			},
+			plugins: {
+				trigger: new FormValidation.plugins.Trigger(),
+				bootstrap3: new FormValidation.plugins.Bootstrap3(),
+				submitButton: new FormValidation.plugins.SubmitButton(),
+				defaultSubmit: new FormValidation.plugins.DefaultSubmit(),
+			},
+		}).on('core.element.validated', function (e) {
+			if (e.valid) {
+				$('div#'+ e.field.replace('[]','') +'_chosen').removeClass('is-invalid');
+				$('div#'+ e.field.replace('[]','') +'_chosen').addClass('is-valid');
+			} else {
+				$('div#'+ e.field.replace('[]','') +'_chosen').removeClass('is-valid');
+				$('div#'+ e.field.replace('[]','') +'_chosen').addClass('is-invalid');
+			}
+		});
+		$('form select').chosen().change(function () {
+			fv.revalidateField($(this).attr('name'));
+		});
+		
+		$('#purchase_date').on('changeDate',function(){
+			$('form').formValidation('revalidateField','purchase_date');
+		});
+	});
+</script>
+	
+	

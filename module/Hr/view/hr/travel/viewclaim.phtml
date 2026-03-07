@@ -1,0 +1,209 @@
+<?php
+/**
+ * 
+ * View -- of Hr/EmployeeController/addemployeeAction
+ * 
+ */
+    $this->headTitle($this->title);
+?>
+<?php foreach($claim as $claims);
+foreach($this->employeeObj->get($claims['employee']) as $emp);
+$employeeUser = $this->userObj->getColumn(array('employee'=>$emp['id']), 'id');
+	?>
+<div class="space-12"></div>
+
+	<div class="row">
+		<div class="col-lg-12"> 
+			<div class="widget-box transparent">
+				<div class="widget-header widget-header-smaller">
+					<h4 class="widget-title blue bolder smaller"> Travel Claim </h4>
+				</div>
+				<div class="widget-toolbar hidden-xs">
+					<div class="btn-list">
+						<?php //if($edit_option){ echo $this->button(2,$row['id']); }?>
+						<span data-bs-toggle='tooltip' data-bs-placement='top' title='PDF Print'>
+							<a class='btn btn-danger btn-xs' id="print">
+							<i class="ace-icon fa fa-file-pdf-o bigger-120"></i></a></span>
+					</div>
+				</div>
+				<div class="widget-body" id="print-content">
+					<div class="widget-main padding-12">
+					<div id="report-print">
+						<div class="row" id="convert-tb0">
+							<div class="col-lg-8" id="convert-tb1">
+								<ul class="list-unstyled spaced">
+                                <li>
+										<i class="ace-icon fa fa-caret-right blue"></i>
+										Transaction No. : <b class="red"><?php foreach($this->taObj->get($claims['ta']) as $tas);
+										echo $tas['ta_no']."(".$tas['date'].")"; ?> </b>
+									</li>
+									<li>
+										<i class="ace-icon fa fa-caret-right blue"></i>
+										Applicant Details: <b class="red"><?php echo $this->employeeObj->getColumn($claims['employee'],'full_name') ; ?></b>
+									</li>
+								</ul>
+							</div>
+							<div class="col-lg-4" id="convert-tb2">
+								<ul class="list-unstyled spaced">
+								<li>	
+                                <i class="ace-icon fa fa-caret-right blue"></i>
+										Date: <b class="red"><?php echo $claims['date']; ?></b>
+									</li>
+									<li>
+										<i class="ace-icon fa fa-caret-right blue"></i>
+										Actual Expense: <b class="red"><?php echo $claims['actual_expense']; ?></b>
+									</li>
+									<li>
+										<i class="ace-icon fa fa-caret-right blue"></i>
+										Estimated Travel Expense: <b class="red"><?php echo $claims['estimated_expense']; ?></b>
+									</li>
+									<li>
+										<i class="ace-icon fa fa-caret-right blue"></i>
+										Advance Requested : <b class="red"><?php echo $claims['advance']; ?></b>
+									</li>
+									<li>
+										<i class="ace-icon fa fa-caret-right blue"></i>
+										Amount Claim : <b class="red"><?php echo $claims['amount_claim']; ?></b>
+									</li>
+								</ul>
+							</div>
+						</div>
+						<div class="row">
+							<table class="table table-striped table-hover table-condensed table-bordered" style="width:100%; ">
+								<thead>
+								<thead style="border:2px solid #D5D8DC;">
+                                        <tr>
+                                            <th rowspan=2>Date</th>
+                                            <th colspan=3>Place</th>
+                                            <th colspan=2 >Time</th>
+                                            <th colspan=5>Claim Details</th>
+                                        </tr>
+                                        <tr>
+                                            <th>From</th>
+                                            <th>To</th>
+                                            <th >Departure</th>
+                                            <th>Arrival</th>
+                                            <th>Daily Allowance</th>
+                                            <th>Mileage Nu.</th>
+                                            <th>Hotel</th>
+											<th>Others</th>
+                                            <th>Total</th>
+                                            <th>Remarks</th>
+                                        </tr>
+                                    </thead>
+								<tbody>
+									<?php foreach($this->claimdetails->get(array('claim'=>$claims['id'])) as $row):?>
+										<tr>
+											<td><?php echo $row['date'];?></td>
+											<td><?php echo $row['from'];?></td>
+											<td><?php echo $row['to'];?></td>
+											<td><?php echo $row['departure'];?></td>
+											<td><?php echo $row['arrival'];?></td>
+											<td><?php echo $row['da'];?></td>
+											<td><?php echo $row['mileage'];?></td>
+											<td><?php echo $row['hotel'];?></td>
+											<td><?php echo $row['other'];?></td>
+											<td><?php echo $row['total'];?></td>
+											<td><?php echo $row['remarks'];?></td>
+										</tr>
+									<?php endforeach;?>
+								</tbody>
+							</table>
+						</div>
+						<div class="row">
+							<table class="table table-striped table-hover table-condensed table-bordered" style="width:100%; ">
+								<thead>
+								<thead style="border:2px solid #D5D8DC;">
+                                        <tr>
+                                            <th>Head</th>
+                                            <th>Subhead</th>
+                                            <th>Debit</th>
+                                            <th>Credit</th>
+                                            <th>Reference</th>
+                                        </tr>
+                                    </thead>
+								<tbody>
+									<?php foreach($this->claimshObj->get(array('claim'=>$claims['id'])) as $row1):?>
+										<tr>
+											<td><?php echo $this->headObj->getColumn($row1['head'],'name');?></td>
+											<td><?php echo $this->subheadObj->getCOlumn($row1['subhead'],'name');?></td>
+											<td><?php echo $row1['debit'];?></td>
+											<td><?php echo $row1['credit'];?></td>
+											<td><?php echo $row1['ref_no'];?></td>
+										</tr>
+									<?php endforeach;?>
+								</tbody>
+							</table>
+						</div>
+							<div class="col-lg-12" id="convert-tb2"><?php foreach($this->activityObj->get(array('process'=>524,'process_id'=>$claims['id'])) as $actvity):?>	
+							<div class='underlined'>
+									<b class="black"><?php echo $this->userObj->getColumn($actvity['author'],'name');?></b>&nbsp;<?php echo $this->status($actvity['status']);?> to: <b class="black"><?php echo strtoupper($this->userObj->getColumn($actvity['send_to'],'name'));?> on</b>&nbsp;<?php echo date('d-m-Y', strtotime($actvity['created'])); ?>
+									<br>Remarks: <b class="black"><?php echo $actvity['remarks'];?></b>
+							</div>
+								<style>
+									.underlined {
+										border-bottom: 0.5px solid #000; /* Black underline */
+										padding-bottom: 10px; /* Adjust spacing as needed */
+										margin-bottom: 10px; /* Adjust spacing as needed */
+									}
+								</style>
+							<?php endforeach;?></div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+	<?php $user=$this->userObj->getColumn(array('employee'=>$claims['employee']),'id');
+	 echo $this->partial('partial/attachment.phtml', array('process' => '524', 'process_id'=>$claims['id'], 'applicationNO'=>$claims['ta'], 'login_id' =>$login_id,'status'=>$claims['status']));?>
+</div>
+	
+	<div class="row">
+		<div class="col-lg-7">
+		</div>
+		<div class="col-lg-5" style="text-align: right"><?php
+		$employeeUser = $this->userObj->getColumn(array('employee'=>$emp['id']), 'id');	
+		$max_activity = $this->flowtransactionObj->getMax($column='activity', $where=array('application'=>$claims['id'],'flow'=>8));
+	//	echo'<pre>';print_r($current_flow);
+		$current_flow = $this->flowtransactionObj->get(array('application'=>$claims['id'], 'activity'=>$max_activity,'flow'=>8));
+	//	echo'<pre>';print_r($current_flow);
+		foreach($current_flow as $flow);
+						if($login_id  == $employeeUser && $claims['status']!=8 && $claims['status']!=6 && $claims['status']!=17 && $claims['status']!=21):?>
+						<a data-toggle="modal" data-target="#modal" href="<?php echo $this->url('travel', array('action'=>'processclaim', 'id'=>$claims['id'].'-'.'1'.'-'.$flow['id']));?>" class="btn btn-success"> 
+						<i class="fa fa-check-square-o"></i> Apply  </a>								
+						<button type="submit" value="1" name="cancel" class="btn btn-danger" onClick="return confirm('Are you sure to Cancel this note sheet?')"> 
+						<i class="fa fa-times"></i> Cancel  </button>
+						<a href="<?php echo $this->url('travel', array('action'=>'editclaim', 'id'=>$claims['id']));?>" class="btn btn-info"> 
+						<i class="fa fa-pencil"></i> Edit </a>									
+					<?php 
+				
+					elseif($login_id == $flow['role_id']):	
+						$actions = explode('|', $flow['action']);
+						for($i=0; $i < sizeof($actions); $i++):
+							$buttons = $this->flowactionObj->get($actions[$i]);
+							foreach($buttons as $button):?>
+							<span data-bs-toggle='tooltip' data-bs-placement='top' title='<?php echo $button['action']; ?>'>
+							<a data-toggle="modal" data-target="#modal" class="btn <?php echo $button['class']; ?>" href="<?php echo $this->url('travel', array('action' => 'processclaim', 'id'=>$claims['id'].'-'.$button['id'].'-'.$flow['id'])); ?>">
+								<i class="icon <?php echo $button['icon'];?>"></i><?php echo $button['action']; ?>
+							</a></span>
+						<?php
+							endforeach;
+						endfor;
+					endif;													
+			?>						
+		</div>
+	</div>
+
+<script type="text/javascript">	   
+$(function(){
+	 $('#print').gentcpdf({
+		content: '#print-content',
+		src:"<?php echo $this->url('print', array('action' => 'index'));?>",
+		orentation:"P",
+		size: 'A4',
+	});
+	
+});
+</script>
+
+

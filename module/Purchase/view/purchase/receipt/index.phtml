@@ -1,0 +1,122 @@
+<?php
+/**
+ * View -- of Purchase/PaymentController/indexAction
+ */
+$this->headTitle($this->title);
+?>
+<?php $minYear = date('Y', strtotime($minYear)); ?> 
+<div class="card">
+	<div class="card-header">
+		<div class="row">
+			<form method="post" action="<?php echo $this->url('receipt'); ?>"  enctype="multipart/form-data" >
+			<div class="form-group col-lg-2">
+					<label class="control-label" for="year">Year</label>
+					<select class="form-control" id="year" name="year" data-placeholder="Select" onchange='this.form.submit()'>
+						<option value=""></option>
+						<?php 
+							for($year=date('Y');$year>=$minYear;$year--):
+								$selected = ($year == $data['year'])?"selected":"";
+						?>
+							<option value="<?php echo $year;?>" <?php echo $selected;?> >
+								<?php echo $year;?> 
+							</option>
+						<?php endfor; ?>
+					</select>
+				</div>
+				<div class="form-group col-lg-2">
+					<label class="control-label" for="month">Month</label>
+					<select class="form-control" id="month" name="month" data-placeholder="Select" onchange='this.form.submit()'>
+						<option value="-1" <?php echo ($data['month'] == '-1')?'selected':'';?>>All</option>
+						<?php for($month=1; $month<=12; $month++):?>
+							<?php $selected = ($month == $data['month'])?'selected':'';?>
+							<option value="<?php echo $month;?>" <?php echo $selected; ?>>
+								<?php echo DateTime::createFromFormat('!m', $month)->format('F');?>
+							</option> 
+						<?php endfor;?>
+					</select>
+				</div>
+				<div class="form-group col-lg-2">
+					<label class="control-label" for="location">Location</label>
+					<select class="form-control" id="location" name="location" data-placeholder="location" onchange='this.form.submit()'>
+						<option value="-1" <?php echo ($data['location'] == '-1')?'selected':'';?>>All</option>
+						<?php 
+							$location = $this->locationObj->getAll();
+							foreach($location as $location):
+								$selected_act = ($location['id'] == $data['location'])?'selected':'';
+						?>
+							<option value="<?php echo $location['id']?>" <?php echo $selected_act;?>>
+								<?php echo $location['location'];?>
+							</option>
+						<?php endforeach;?>
+					</select>
+				</div>
+			</form>
+			<div class="col-lg-6">
+				<div class="clearfix">
+					<div class="pull-right tableTools-container"></div>
+					<a class="red pull-right DTTT_button btn btn-white btn-info btn-bold" data-tooltip="tooltip" data-placement="top" title="Add New Purchase Receipt" href="<?php echo $this->url('receipt', array('action'=>'addreceipt'));?>" >
+						<span class="red"><i class="fa fa-plus"></i> <span class="hidden-sm hidden-xs">&nbsp;Add PR</span></span>
+					</a>
+				</div>
+			</div>
+		</div>
+		<div class="row">
+			<table class="table table-striped table-bordered table-hover" id="dataTables">
+				<thead>
+					<tr>
+						<th>#</th>
+						<th>PRN No.</th>
+						<th>PRN Date</th>
+						<th>PO No.</th>
+						<th class="no-sort no-printpdf">Actions</th>
+					</tr>
+				</thead>
+				<tbody>
+				<?php $sl = 1;?>
+					<?php foreach($this->receipts_results as $row):?>
+						<tr class="tr-clickable" data-href="<?php echo $this->url('receipt', array('action'=>'viewreceipt', 'id'=>$row['id']));?>">
+							<td><?php echo $sl++;?></td>
+							<td>
+								<b><?php echo $row['prn_no'];?></b> &nbsp;&nbsp;&nbsp;
+								<i>
+									<?php echo $this->partyObj->getColumn($row['supplier'],'name'); ?> &nbsp;&nbsp;&nbsp;
+								</i>
+								&nbsp;<?php $this->status($row['status']);?>
+							</td>
+							<td><?php echo $row['prn_date'];?></td>
+							<td><?php echo $this->poObj->getColumn($row['purchase_order'],'po_no')?></td>
+							<td class="action">
+								<div class="btn-group">
+									<a class="btn btn-xs btn-primary" href="<?php echo $this->url('receipt', array('action' => 'editreceipt', 'id' => $row['id'])); ?>">
+										<i class="ace-icon fa fa-edit bigger-120" ></i>  
+							  		</a>
+							  	</div>
+							</td>	
+						</tr>
+					<?php endforeach;?>
+				</tbody>
+			</table>
+		</div>
+	</div>
+</div>
+<div id="modal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+	<div class="modal-dialog">
+		<div class="modal-content">
+		</div>
+	</div>
+</div>
+<script>	
+ $('document').ready(function(){
+	$('#dataTables').DataTable({
+		"paging":   true,
+	});
+});
+$("tr[data-href]").each(function(){
+		$(this).find('td').not('td.action').each(function(){
+			$(this).css('cursor','pointer');
+			$(this).bind('click',function() {
+				window.document.location = $(this).closest('tr').attr("data-href");
+			});
+		});
+	});
+</script>

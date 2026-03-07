@@ -1,0 +1,205 @@
+<style>
+  .highlighted-row {
+    background-color: #daf0d3; /* Set your desired background color here */
+  }
+</style>
+<?php
+/**
+ * 
+ * View -- of Accounts/TransactionController/viewtransactionAction
+ * 
+ */
+?>
+<?php 
+	foreach($this->postage as $row ):
+		extract($row);
+	endforeach;
+//if($row['service'] != 7 AND $row['service'] != 12):
+// Generate HTML markup
+$htmlContent = '<p><b>' . $po_name . ' &lt;' . $post_code . '&gt;</b></p>';
+$htmlContent .= '<p>' . $article_no . ' | ' . $service . '</p>';
+$htmlContent .= '<p><b>To:</b> ' . $to_name . ', ' . $to_address . '</p>';
+$htmlContent .= '<p>' . $city . ', <b>zip-C:</b> ' . $zip_code . '</p>';
+$htmlContent .= '<p><b>From: </b>' . $from_name . ', ' . $from_address . '</p>';
+$htmlContent .= '<p>' . $from_email_address . '</p>';
+$htmlContent .= '<p><b>M/number : </b>' . $from_mobile_number . '</p>';?>
+<div class="space"></div>
+<div class="col-lg-12">
+	<div class="widget-box transparent">
+		<div class="widget-header widget-header-large">
+			<h5 class="widget-title grey lighter">
+			<i class="ace-icon fa fa-file-text-o fa-2x blue"></i>
+				<b><?php echo $article_no;?> | <?php echo $this->serviceObj->getColumn($service,'service');?></b>
+			</h5>
+			<div class="widget-toolbar hidden-xs">
+				<?php //echo $this->button(2,$id);?>
+			</div>
+		</div>
+		<div class="widget-body">
+			<div class="widget-main padding-24">
+				<div id="report-print">
+			    	<div class="col-auto ms-auto no-print">
+						<div class="btn-list">
+							<span data-bs-toggle='tooltip' data-bs-placement='top' title='PDF Print'>
+								<a class='btn btn-light btn-sm' id="print">
+								<i class="icon ti ti-printer"></i>PDF</a></span>
+						</div>
+					</div>
+					<div class="row" id="convert-tb0">
+						<div class="col-lg-9" id="convert-tb1">
+						<h5 class="widget-title grey lighter">
+							<i class="ace-icon fa fa-plane fa-2x purple"></i>
+							<b>From Address</b>
+						</h5>
+							<ul class="list-unstyled spaced">
+								<li>
+									<i class="ace-icon fa fa-caret-right blue"><b></i>Name : </b> <?php echo $from_name;?>
+								</li>
+								<li>
+									<i class="ace-icon fa fa-caret-right blue"><b></i>Address : </b> <?php echo $to_name;?>
+								</li>
+								<li>
+									<i class="ace-icon fa fa-caret-right blue"><b></i>Email : </b> <?php echo $from_email_address;?>
+								</li>
+								<li>
+									<i class="ace-icon fa fa-caret-right blue"><b></i>Mobile Number : </b> <?php echo $from_mobile_number;?>
+								</li>
+							</ul>
+						</div>
+						<div class="col-lg-3" id="convert-tb3">
+							<h5 class="widget-title grey lighter">
+								<i class="ace-icon fa fa-home fa-2x blue"></i>
+								<b>To Address</b>
+							</h5>
+							<ul class="list-unstyled spaced">
+								<li>
+									<i class="ace-icon fa fa-caret-right blue"><b></i>Name : </b> <?php echo $to_name;?>
+								</li>
+								<li>
+									<i class="ace-icon fa fa-caret-right blue"><b></i>Address : </b> <?php echo $to_address;?>
+								</li>
+								<?php if($scope!=1):?>
+								<li>
+									<i class="ace-icon fa fa-caret-right blue"><b></i>Country : </b> <?php echo $this->countryObj->getColumn($country,'name');?>
+								</li>
+								<li>
+									<i class="ace-icon fa fa-caret-right blue"><b></i>City: </b> <?php if(empty($city)): echo " ";else:echo $this->cityObj->getColumn($city,'city');endif;?>
+								</li>
+								<?php endif;?>
+								<li>
+									<i class="ace-icon fa fa-caret-right blue"><b></i>Post Office : </b> <?php if(empty($po_name)): echo " ";else: echo $this->postofficeObj->getColumn($po_name,'post_office');endif;?>
+								</li>
+								<li>
+									<i class="ace-icon fa fa-caret-right blue"><b></i>Post Code : </b> <?php echo $post_code;?>
+								</li>
+								<?php if($scope!=1):?>
+								<li>
+									<i class="ace-icon fa fa-caret-right blue"><b></i>zip Code : </b> <?php echo $zip_code;?>
+								</li>
+								<?php endif;?>
+								<li>
+									<i class="ace-icon fa fa-caret-right blue"><b></i>Mobile Number : </b> <?php echo $to_mobile_number;?>
+								</li>
+							</ul>
+						</div>
+					</div>
+					<div class="row">
+					    <div class="col-lg-12">
+							<h5 class="widget-title grey lighter">
+								<i class="ace-icon fa fa-balance-scale  fa-2x red"></i>
+								<b>Charges for Weight of <?php echo $weight;?> Grams</b>
+							</h5> 
+							<table class="table">
+								<thead>
+									<th style="font-size:14px">Heading</th>
+									<th style="font-size:14px">Rate</th>
+								</thead>
+								<tbody>
+									<tr>
+										<td style="font-size:13px">Postage Rate</td>
+										<td style="font-size:13px"><?php echo $postage_rate;?></td>
+									</tr>
+									<tr>
+										<td style="font-size:13px">Registration Fee</td>
+										<td style="font-size:13px"><?php echo $registration_fee;?></td>
+									</tr>
+									<?php if($ad==1):?>
+									<tr>
+										<td style="font-size:13px">Advice of delivery</td>
+										<td style="font-size:13px"><?php echo $advice_delivery_fee;?></td>
+									</tr>
+									<?php endif;
+									 if($in==1):?>
+									<tr>
+										<td style="font-size:13px">Insurance Amount</td>
+										<td style="font-size:13px"><?php echo $insurance_amount;?></td>
+									</tr>
+									<?php endif;
+									 if($pm==1):?>
+									<tr>
+										<td style="font-size:13px">Stamp Pasted</td>
+										<td style="font-size:13px"><?php echo $prepaid_mode;?></td>
+									</tr>
+									<?php endif;?>
+									<tr>
+										<td style="font-size:13px">Other Charges</td>
+										<td style="font-size:13px"><?php echo $other_charges;?></td>
+									</tr>
+									<tr>
+										<td style="font-size:13px"><b>Total Amount</b></td>
+										<td style="font-size:13px"><b><?php echo $total_amt;?></b></td>
+									</tr>
+								</tbody>
+							</table>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</div><div class="modal fade" id="modal" tabindex="-1" role="dialog" aria-hidden="true">
+	<div class="modal-dialog" role="document">
+		<div class="modal-content">
+		</div><!-- /.modal-content -->
+	</div><!-- /.modal-dialog -->
+</div><!-- /.modal -->
+<script>
+$('document').ready(function(){
+    $('#print').click(function() {
+    // Hide elements you don't want to print
+    $('.widget-toolbar').hide();
+    $('.bulk-data-container').hide();
+    $('.space').hide();
+
+    // Create a print window
+    var printWindow = window.open('', '', 'width=600,height=600');
+
+    // Add CSS for smaller text size and reduced spacing
+    // ... (your existing CSS code)
+
+    printWindow.document.write('</head><body>');
+
+    // Insert the HTML content generated by PHP
+    printWindow.document.write('<?php echo $htmlContent; ?>');
+
+    printWindow.document.write('</body></html>');
+    printWindow.document.close();
+
+    // Trigger printing
+    printWindow.print();
+
+    // Restore hidden elements
+    $('.widget-toolbar').show();
+    $('.bulk-data-container').show();
+    $('.space').show();
+});
+
+});
+  // Add the 'highlighted-row' class to odd rows using JavaScript
+  var rows = document.querySelectorAll('tbody tr');
+  for (var i = 0; i < rows.length; i++) {
+    if (i % 2 === 0) {
+      rows[i].classList.add('highlighted-row');
+    }
+  }
+</script>

@@ -1,0 +1,147 @@
+ales details
+*
+*/
+	$this->headTitle($this->title);
+?>
+<?php
+foreach($receipts as $receipt):
+    $receipt_ID = $receipt['id'];
+	extract($receipt);
+endforeach; 
+?>
+<style>
+	.mytable tr th,.mytable tr td {
+		padding:5px;
+	}
+</style>
+<div class="row">
+	<div class="col-lg-12">
+		<div class="widget widget-box">
+			<div class="widget-header">
+				<h5 class="widget-title lighter smaller">
+					Party Adjustment &nbsp; &nbsp;<strong><?php echo $receipt_no;?> | <?php echo $this->partyObj->getColumn($customer,'name');?></strong>&nbsp;
+					<?php $this->status($status);?>
+				</h5>
+				<div class="widget-toolbar hidden-xs">
+					<a style='cursor:pointer' id="print">
+						<i class="ace-icon fa fa-file-pdf-o red"></i>
+					</a>
+				</div>	
+			</div>
+			<div class="widget-body">
+				<div class="widget-main padding-12">
+					<div id="report-print">
+					    <h4 class="widget-title lighter smaller center">
+							<b>Party Adjustment</b>
+						</h4>
+						<div class="row" id="convert-tb0">
+							<div class="col-lg-8" id="convert-tb1">
+								<ul class="list-unstyled spaced">
+									<li>
+										<i class="ace-icon fa fa-caret-right blue"></i><b>Party Adjustment No:</b> <?php echo $receipt_no; ?> 
+									</li>
+									<li>
+										<i class="ace-icon fa fa-caret-right blue"></i><b>Date : </b> <?php echo $receipt_date; ?>
+									</li>
+									<li>
+										<i class="ace-icon fa fa-caret-right blue"></i><b>Location : </b><?php echo $this->locationObj->getColumn($location,'location'); ?>
+									</li>
+								</ul>
+							</div>		
+							<div class="col-lg-4" id="convert-tb2">
+								<ul class="list-unstyled spaced">
+									<li>
+										<i class="ace-icon fa fa-caret-right blue"></i><b>Customer : </b><?php echo $this->partyObj->getColumn($customer,'name');?> 
+									</li>	
+								</ul>
+							</div>							
+						</div>
+						<div class="row">
+							<div class="col-lg-12">
+								<ul class="list-unstyled spaced">
+									<li>
+										<i class="ace-icon fa fa-caret-right blue"></i><b>Note : </b> <?php echo $note;?> 
+									</li>
+								</ul>
+							</div>
+						</div>
+						<div class="space-6"></div>
+						<div class="row">
+						    <div class="col-lg-12">
+						        <table class="table">
+									<thead >
+										<tr >
+											<th>#</th>										
+											<th>Sales Memo</th>
+											<th>Memo Date</th>
+											<th>Invoice Amount</th>
+											<th>Due Amount</th>
+											<th>Penalty Amount</th>
+											<th>TDS Amount</th>
+											<th>Received Amount</th>											
+										</tr>
+									</thead>
+									<tbody>
+									  <?php $sl= 1;
+									   foreach ($this->receiptDtls as $row):   ?>
+										<tr>
+											<td><?php echo $sl++; ?></td>
+											<td ><?php echo $this->salesObj->getColumn($row['sales'],'sales_no'); ?></td>
+											<td ><?php echo $this->salesObj->getColumn($row['sales'],'sales_date'); ?></td>
+											<td><?php echo number_format($row['credit_amount'], 2, '.', ',');?></td>
+											<td><?php  echo number_format($row['due_amount'], 2, '.', ','); ?></td>
+											<td><?php echo number_format($row['penalty'], 2, '.', ',');?></td>
+											<td><?php echo  number_format($row['tds'], 2, '.', ','); ?></td>
+											<td ><?php echo number_format($row['received_amount'], 2, '.', ',');?></td>											
+										</tr>
+									  <?php endforeach;?>
+									    <tr> 
+									       <td></td>
+									       <td colspan ="4" ><b>Total:</b></td>
+										   <td><b><?php echo number_format($penalty, 2, '.', ','); ?></b></td>
+										   <td><b><?php echo number_format($total_tds, 2, '.', ',');?> </b></td>
+										   <td><b>
+										   <?php echo number_format($amount, 2, '.', ',');?></b></td>
+									    </tr>
+                                           <?php $grand_amount = $amount?>									   	
+                                        <tr>
+										    <td></td>
+                                            <td colspan = "7">
+                                                <b> Received Amount In Words : </b>
+							                    <b><?php echo $this->numtoWords(ceil($grand_amount)); ?></b> 											
+											</td>									
+                                        </tr>
+                                        <tr>							   
+									        <td colspan ="8"></td>
+									    </tr>											
+									</tbody>
+							    </table>
+						  </div>
+						</div>
+						<div class="row" id="convert-tb1">
+							<div class="col-lg-9" id="convert-tb1">
+								<i>Prepared by: <?php echo $this->userObj->getColumn($receipt['author'],'name');?></i>
+							</div>		
+						</div>
+				    </div>
+					<div class="space-12"></div>
+					<div class="row">
+						<div class="col-lg-12" style="text-align: right">
+							<?php if($status == '1'):?>
+							    <a href="<?php echo $this->url('partyadjustment', array('action'=>'editpartyadjustment', 'id'=>$receipt_ID));?>" class="btn btn-warning"> <i class="fa fa-pencil-square-o"></i> Edit</a>
+								<a href="<?php echo $this->url('partyadjustment', array('action'=>'commitpartyadjustment', 'id'=>$receipt_ID));?>" class="btn btn-success"> <i class="fa fa-check-square-o"></i>Commit</a>
+					         <?php endif; ?>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+<script type="text/javascript">
+	$('#print').genpdfinvoice({
+		content: '#report-print',
+		src:"<?php echo $this->url('pdfxls', array('action' => 'pdf'));?>",
+		orentation:"P",//L =landscape, P = potrait
+	});
+</script>

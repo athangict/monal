@@ -1,0 +1,56 @@
+<?php
+/**
+ * 
+ * View -- of Fleet/MsaterController/makeAction
+ * 
+ */
+	$this->headTitle($this->title);
+?>
+<?php echo $this->partial('fleet/master/partial.phtml', array('active' => 'make')); ?>
+<div class="card">
+	<div class="card-header">
+		<div class="btn-group pull-right">
+			<?php echo $this->button(2,$page);?>
+		</div>
+	</div>
+	<div class="table-responsive">
+		<table class="table card-table text-nowrap" id="dataTables">
+			<thead>
+				<tr>
+					<th>#</th>
+					<th>Make</th>
+					<th>Description</th>
+					<th class="no-sort">Action</th>
+				</tr>
+			</thead>
+			<tbody>
+				<?php
+					$i = 1; 
+					foreach ($this->makes as $row):
+				?>
+						<tr>
+							<td><?php echo $i++; ?> </td> 
+							<td><b><?php echo $row['make']; ?></b></td> 
+							<td><?php echo $row['description']; ?></td>                               
+							<td>
+								<a class="btn btn-xs btn-info" data-toggle="modal" href="<?php echo $this->url('ftmaster', array('action'=>'editmake', 'id' => $row['id']));?>" data-target="#modal">
+									<i class="ace-icon fa fa-pencil bigger-120"></i>
+								</a>                                                                    
+							</td>
+						</tr>
+				<?php endforeach;?>
+			</tbody>
+		</table>
+	</div>
+</div>
+<!--for modal -->
+<div id="modal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content"> </div>
+    </div>
+</div>
+<script>
+$('document').ready(function(){
+	$('#dataTables').DataTable();
+});
+</script>

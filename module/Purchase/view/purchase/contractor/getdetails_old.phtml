@@ -1,0 +1,911 @@
+<?php
+/**
+ * View --> Purchase/ContractorController/getdetails.pthml
+ * ajax response
+ */
+?>
+<style>
+	.report-table > thead > tr > th {
+    background-color: #f0efef;
+	border-color: #ddd;
+	font-weight: 700;
+}
+</style>
+<?php 
+	$id = $data['id'];
+	$start_date = $data['start_date'];
+	$end_date = $data['end_date'];
+	$location = $data['location'];
+	$activity = $data['activity'];
+	$contractor = $data['contractor'];
+?>	
+<div class="space-12">
+        <input type="hidden" name="con" id="con" value="<?php echo $this->partyObj->getColumn($contractor,'code'); ?>" />
+	<input type="hidden" name="loc" id="loc" value="<?php echo $this->locationObj->getColumn($location,'location');?>" />
+	<input type="hidden" name="act" id="act" value="<?php echo $this->activityObj->getColumn($activity, 'activity');?>" />
+	<input type="hidden" name="start_date" id="start_date" value="<?php echo $start_date;?>" />
+	<input type="hidden" name="end_date" id="end_date" value="<?php echo $end_date;?>" />
+</div>
+<div class="row">
+	<div class="col-lg-12">
+		<div>
+			<table class="table table-striped table-bordered table-hover table-condensed report-table" id="example">
+				<thead>
+					<tr>
+						<th>#</th>
+						<th>Challan no.</th>
+						<th>Challan Date</th>
+						<th>Doc Type</th>
+						<th>Type of Process</th>
+						<th>Item Name</th>
+						<th>Quantity Processed <br>CASE/MT</th>
+						<th>Rate per Case/MT</th>
+						<th>Amount (<?php echo $this->currency_code();?>)</th>
+					</tr>
+				</thead>
+				<tbody>
+					<?php 
+						$i = 1;
+						switch ($id){
+							case 2: ?>
+								<h4>Details of Unloading MT Charges</h4>
+								<?php
+								/*************** Purchase Receipt *****************/
+								$i = 1;
+								$Grand_Total_Unloading_MT_Qty = 0;
+								$Grand_Total_Unloading_MT_Rate = 0;
+								$Grand_Total_Unloading_MT_Amount = 0;
+								$pur_receipt = $this->prnObj->getByDate($start_date, $end_date, array('location'=>$location,'activity'=>$activity,'status'=>'3'));
+								foreach($pur_receipt as $prn):
+									$prn_details = $this->prn_detailsObj->get(array('d.purchase_receipt'=>$prn['id']));
+									foreach($prn_details as $pr_detail):
+										$prn_item = $pr_detail['item_id'];
+										$prn_uom = $pr_detail['uom_id'];
+										$prn_qty = $pr_detail['accept_qty'];
+										$prn_uom_conversion = $this->itemuomObj->getColumn(array('item'=>$prn_item, 'uom'=>$prn_uom),'conversion');
+										$basic_uom = $this->itemObj->getColumn($prn_item,'uom');
+										$standard_uom = $this->itemuomObj->getColumn(array('item'=>$prn_item,'costing_uom'=>'1'),'uom');
+										
+										if($standard_uom == '84'): //METRIC TONES
+											if($prn_uom == $standard_uom):
+												$prn_MT_qty = $prn_qty;
+											else:
+												$prn_basic_qty = ($prn_uom == $basic_uom)?$prn_qty:$prn_qty*$prn_uom_conversion;
+												$prn_MT_conversion = $this->scalarconversionObj->getColumn(array('from_uom'=>$basic_uom,'to_uom'=>'84'),'conversion');
+												$prn_MT_qty = ($basic_uom == $standard_uom)?$prn_basic_qty:$prn_basic_qty/$prn_MT_conversion;
+											endif;
+										?>
+										<tr>
+											<td><?php echo $i++; ?></td>
+											<td><?php echo $prn['prn_no'];?></td>
+											<td><?php echo $prn['prn_date'];?></td>
+											<td>PRN</td>
+											<td>
+												<?php
+													$wt_work_type = 2; //unload MT
+													echo $wt_charge_tax = $this->worktypeObj->getColumn($wt_work_type,'work_type');
+												?>
+											</td>
+											<td><?php echo $pr_detail['item']; ?></td>
+											<td><?php echo number_format((float)$prn_MT_qty, 2, '.', '');?></td>
+											<td>
+												<?php 
+													$wt_charge_tax = $this->worktypeObj->getColumn($wt_work_type,'charge_tax');
+													$wt_charge_tax_value = $this->chargetaxObj->getColumn($wt_charge_tax,'value');
+													echo number_format((float)$wt_charge_tax_value,2,'.','');
+												?>
+											</td>
+											<td>
+												<?php 
+													$MT_unloading_prn = $prn_MT_qty*$wt_charge_tax_value;
+													echo number_format((float)$MT_unloading_prn, 2, '.', ''); 
+													$Grand_Total_Unloading_MT_Qty += $prn_MT_qty;
+													$Grand_Total_Unloading_MT_Rate += $wt_charge_tax_value;
+													$Grand_Total_Unloading_MT_Amount += $MT_unloading_prn;
+												?>
+											</td>
+										</tr>
+									<?php
+										endif;
+									endforeach;
+								endforeach;
+								
+								/*************** Dispatch InReceipt *****************/
+								$intreceipt = $this->dispatchObj->getByDate($start_date, $end_date, array('to_location'=>$location,'activity'=>$activity,'status'=>'3'));
+								foreach($intreceipt as $recdisp):
+									$rec_details = $this->disp_detailsObj->get(array('d.dispatch'=>$recdisp['id']));
+									foreach($rec_details as $rec_detail):
+										//echo "<pre>"; print_r($rec_detail); 
+										$rec_item = $rec_detail['item_id'];
+										$rec_uom = $rec_detail['basic_uom'];
+										$rec_qty = $rec_detail['accepted_qty'];
+										$rec_uom_conversion = $this->itemuomObj->getColumn(array('item'=>$rec_item, 'uom'=>$rec_uom),'conversion');
+										$basic_uom = $this->itemObj->getColumn($rec_item,'uom');
+										$standard_uom = $this->itemuomObj->getColumn(array('item'=>$rec_item,'costing_uom'=>'1'),'uom');
+										
+										if($standard_uom == '84'): //METRIC TONES
+											if($rec_uom == $standard_uom):
+												$rec_MT_qty = $rec_qty;
+											else:
+												$rec_basic_qty = ($rec_uom == $basic_uom)?$rec_qty:$rec_qty*$rec_uom_conversion;
+												$rec_MT_conversion = $this->scalarconversionObj->getColumn(array('from_uom'=>$basic_uom,'to_uom'=>'84'),'conversion');
+												$rec_MT_qty = ($basic_uom == $standard_uom)?$rec_basic_qty:$rec_basic_qty/$rec_MT_conversion;
+											endif;
+										?>
+										<tr>
+											<td><?php echo $i++; ?></td>
+											<td><?php echo $recdisp['challan_no'];?></td>
+											<td><?php echo $recdisp['dispatch_date'];?></td>
+											<td>Receipt</td>
+											<td>
+												<?php
+													$wt_work_type = 2; //unload MT
+													echo $wt_charge_tax = $this->worktypeObj->getColumn($wt_work_type,'work_type');
+												?>
+											</td>
+											<td><?php echo $recdisp['item']; ?></td>
+											<td><?php echo number_format((float)$rec_MT_qty, 2, '.', '');?></td>
+											<td>
+												<?php 
+													$wt_charge_tax = $this->worktypeObj->getColumn($wt_work_type,'charge_tax');
+													$wt_charge_tax_value = $this->chargetaxObj->getColumn($wt_charge_tax,'value');
+													echo number_format((float)$wt_charge_tax_value,2,'.','');
+												?>
+											</td>
+											<td>
+												<?php 
+													$MT_unloading_rec = $rec_MT_qty*$wt_charge_tax_value;
+													echo number_format((float)$MT_unloading_rec, 2, '.', ''); 
+													$Grand_Total_Unloading_MT_Qty += $rec_MT_qty;
+													$Grand_Total_Unloading_MT_Rate += $wt_charge_tax_value;
+													$Grand_Total_Unloading_MT_Amount += $MT_unloading_rec;
+												?>
+											</td>
+										</tr>
+									<?php
+										endif;
+									endforeach;
+								endforeach;?>
+									<tfoot>
+										<tr>
+											<th style="text-align:right" colspan="6">Grand Total</th>
+											<th><?php echo number_format((float)$Grand_Total_Unloading_MT_Qty, 2, '.', '');?></th>
+											<th><?php echo number_format((float)$Grand_Total_Unloading_MT_Rate, 2, '.', '');?></th>
+											<th><?php echo number_format((float)$Grand_Total_Unloading_MT_Amount, 2, '.', '');?></th>
+										</tr>
+									</tfoot>
+								<?php
+								break;
+							case 4:		
+							?>
+							<h4>Details of Unloading CASE Charges</h4>
+							<?php 
+								/*************** Purchase Receipt *****************/
+								$Grand_Total_Unloading_CASE_Qty = 0;
+								$Grand_Total_Unloading_CASE_Rate = 0;
+								$Grand_Total_Unloading_CASE_Amount = 0;
+								$pur_receipt = $this->prnObj->getByDate($start_date, $end_date, array('location'=>$location,'activity'=>$activity,'status'=>'3'));
+								foreach($pur_receipt as $prn):
+									$prn_details = $this->prn_detailsObj->get(array('d.purchase_receipt'=>$prn['id']));
+									foreach($prn_details as $pr_detail):
+										//echo "<pre>"; print_r($pr_detail);
+										$prn_item = $pr_detail['item_id'];
+										$prn_uom = $pr_detail['uom_id'];
+										$prn_qty = $pr_detail['accept_qty'];
+										$prn_uom_conversion = $this->itemuomObj->getColumn(array('item'=>$prn_item, 'uom'=>$prn_uom),'conversion');
+										$basic_uom = $this->itemObj->getColumn($prn_item,'uom');
+										$standard_uom = $this->itemuomObj->getColumn(array('item'=>$prn_item,'costing_uom'=>'1'),'uom');
+										
+										if($standard_uom != '84'): //CASES
+											if($prn_uom == $standard_uom):
+												$prn_CASE_qty = $prn_qty;
+											else:
+												$prn_basic_qty = ($prn_uom == $basic_uom)?$prn_qty:$prn_qty*$prn_uom_conversion;
+												$prn_CASE_conversion = $this->itemuomObj->getColumn(array('item'=>$prn_item, 'uom'=>$standard_uom),'conversion');
+												$prn_CASE_qty = ($basic_uom == $standard_uom)?$prn_basic_qty:$prn_basic_qty/$prn_CASE_conversion;
+											endif;
+										?>
+										<tr>
+											<td><?php echo $i++; ?></td>
+											<td><?php echo $prn['prn_no'];?></td>
+											<td><?php echo $prn['prn_date'];?></td>
+											<td>PRN</td>
+											<td>
+												<?php
+													$case_work_type = 4; //unload CASE
+													echo $case_charge_tax = $this->worktypeObj->getColumn($case_work_type,'work_type');
+												?>
+											</td>
+											<td><?php echo $pr_detail['item']; ?></td>
+											<td><?php echo number_format((float)$prn_CASE_qty, 2, '.', '');?></td>
+											<td>
+												<?php 
+													$case_charge_tax = $this->worktypeObj->getColumn($case_work_type,'charge_tax');
+													$case_charge_tax_value = $this->chargetaxObj->getColumn($case_charge_tax,'value');
+													echo number_format((float)$case_charge_tax_value,2,'.','');
+												?>
+											</td>
+											<td>
+												<?php 
+													$CASE_unloading_prn = $prn_CASE_qty*$case_charge_tax_value;
+													echo number_format((float)$CASE_unloading_prn, 2, '.', ''); 
+													$Grand_Total_Unloading_CASE_Qty += $prn_CASE_qty;
+													$Grand_Total_Unloading_CASE_Rate += $case_charge_tax_value;
+													$Grand_Total_Unloading_CASE_Amount += $CASE_unloading_prn;
+												?>
+											</td>
+										</tr>
+									<?php
+										endif;
+									endforeach;
+								endforeach;
+								/*************** Dispatch InReceipt *****************/
+								$intreceipt = $this->dispatchObj->getByDate($start_date, $end_date, array('to_location'=>$location,'activity'=>$activity,'status'=>'3'));
+								foreach($intreceipt as $recdisp):
+									$rec_details = $this->disp_detailsObj->get(array('d.dispatch'=>$recdisp['id']));
+									foreach($rec_details as $rec_detail):
+										//echo "<pre>"; print_r($rec_detail); 
+										$rec_item = $rec_detail['item_id'];
+										$rec_uom = $rec_detail['basic_uom'];
+										$rec_qty = $rec_detail['accepted_qty'];
+										$rec_uom_conversion = $this->itemuomObj->getColumn(array('item'=>$rec_item, 'uom'=>$rec_uom),'conversion');
+										$basic_uom = $this->itemObj->getColumn($rec_item,'uom');
+										$standard_uom = $this->itemuomObj->getColumn(array('item'=>$rec_item,'costing_uom'=>'1'),'uom');
+										
+										if($standard_uom != '84'): //CASES
+											if($rec_uom == $standard_uom):
+												$rec_CASE_qty = $rec_qty;
+											else:
+												$rec_basic_qty = ($rec_uom == $basic_uom)?$rec_qty:$rec_qty*$rec_uom_conversion;
+												$rec_CASE_conversion = $this->itemuomObj->getColumn(array('item'=>$rec_item, 'uom'=>$standard_uom),'conversion');
+												$rec_CASE_qty = ($basic_uom == $standard_uom)?$rec_basic_qty:$rec_basic_qty/$rec_CASE_conversion;
+											endif;
+										?>
+										<tr>
+											<td><?php echo $i++; ?></td>
+											<td><?php echo $recdisp['challan_no'];?></td>
+											<td><?php echo $recdisp['dispatch_date'];?></td>
+											<td>Receipt</td>
+											<td>
+												<?php
+													$case_work_type = 4; //unload CASE
+													echo $case_charge_tax = $this->worktypeObj->getColumn($case_work_type,'work_type');
+												?>
+											</td>
+											<td><?php echo $rec_detail['item']; ?></td>
+											<td><?php echo number_format((float)$rec_CASE_qty, 2, '.', '');?></td>
+											<td>
+												<?php 
+													$case_charge_tax = $this->worktypeObj->getColumn($case_work_type,'charge_tax');
+													$case_charge_tax_value = $this->chargetaxObj->getColumn($case_charge_tax,'value');
+													echo number_format((float)$case_charge_tax_value,2,'.','');
+												?>
+											</td>
+											<td>
+												<?php 
+													$CASE_unloading_rec = $rec_CASE_qty*$case_charge_tax_value;
+													echo number_format((float)$rec_CASE_qty, 2, '.', '');
+													$Grand_Total_Unloading_CASE_Qty += $prn_CASE_qty;
+													$Grand_Total_Unloading_CASE_Rate += $case_charge_tax_value;
+													$Grand_Total_Unloading_CASE_Amount += $CASE_unloading_rec;
+												?>
+											</td>
+										</tr>
+									<?php
+										endif;
+									endforeach;
+								endforeach;
+								?>
+									<tfoot>
+										<tr>
+											<th style="text-align:right" colspan="6">Grand Total</th>
+											<th><?php echo number_format((float)$Grand_Total_Unloading_CASE_Qty, 2, '.', '');?></th>
+											<th><?php echo number_format((float)$Grand_Total_Unloading_CASE_Rate, 2, '.', '');?></th>
+											<th><?php echo number_format((float)$Grand_Total_Unloading_CASE_Amount, 2, '.', '');?></th>
+										</tr>
+									</tfoot>
+								<?php
+								break;
+							case 1:		
+							?>
+							<h4>Details of Loading MT Charges</h4>
+							<?php
+								/*************** Goods Dispatch *****************/
+								$Grand_Total_loading_MT_Qty = 0;
+								$Grand_Total_loading_MT_Rate = 0;
+								$Grand_Total_loading_MT_Amount = 0;
+								$dispatch = $this->dispatchObj->getByDate($start_date, $end_date, array('from_location'=>$location,'activity'=>$activity,'status'=>array('2','3')));
+								foreach($dispatch as $disp):
+									$disp_details = $this->disp_detailsObj->get(array('d.dispatch'=>$disp['id']));
+									foreach($disp_details as $disp_detail):
+										//echo "<pre>"; print_r($disp_detail); 
+										$disp_item = $disp_detail['item_id'];
+										$disp_uom = $disp_detail['uom_id'];
+										$disp_qty = $disp_detail['quantity'];
+										$disp_uom_conversion = $this->itemuomObj->getColumn(array('item'=>$disp_item, 'uom'=>$disp_uom),'conversion');
+										$basic_uom = $this->itemObj->getColumn($disp_item,'uom');
+										$standard_uom = $this->itemuomObj->getColumn(array('item'=>$disp_item,'costing_uom'=>'1'),'uom');
+										
+										if($standard_uom == '84'): //METRIC TONES
+											if($disp_uom == $standard_uom):
+												$disp_MT_qty = $disp_qty;
+											else:
+												$disp_basic_qty = ($disp_uom == $basic_uom)?$disp_qty:$disp_qty*$disp_uom_conversion;
+												$disp_MT_conversion = $this->scalarconversionObj->getColumn(array('from_uom'=>$basic_uom,'to_uom'=>'84'),'conversion');
+												$disp_MT_qty = ($basic_uom == $standard_uom)?$disp_basic_qty:$disp_basic_qty/$disp_MT_conversion;
+											endif;
+										?>
+										<tr>
+											<td><?php echo $i++; ?></td>
+											<td><?php echo $disp['challan_no'];?></td>
+											<td><?php echo $disp['dispatch_date'];?></td>
+											<td>Dispatch</td>
+											<td>
+												<?php
+													$wt_work_type = 1; //load MT
+													echo $wt_charge_tax = $this->worktypeObj->getColumn($wt_work_type,'work_type');
+												?>
+											</td>
+											<td><?php echo $disp_detail['item']; ?></td>
+											<td><?php echo number_format((float)$disp_MT_qty, 2, '.', '');?></td>
+											<td>
+												<?php 
+													$wt_charge_tax = $this->worktypeObj->getColumn($wt_work_type,'charge_tax');
+													$wt_charge_tax_value = $this->chargetaxObj->getColumn($wt_charge_tax,'value');
+													echo number_format((float)$wt_charge_tax_value,2,'.','');
+												?>
+											</td>
+											<td>
+												<?php 
+													$MT_loading_disp = $disp_MT_qty*$wt_charge_tax_value;
+													echo number_format((float)$MT_loading_disp, 2, '.', ''); 
+													$Grand_Total_loading_MT_Qty += $disp_MT_qty;
+													$Grand_Total_loading_MT_Rate += $wt_charge_tax_value;
+													$Grand_Total_loading_MT_Amount += $MT_loading_disp;
+												?>
+											</td>
+										</tr>
+									<?php
+										endif;
+									endforeach;
+								endforeach;
+								/*************** Sales *****************/
+								$sales = $this->salesObj->getByDate($start_date, $end_date, array('s.location'=>$location,'i.activity'=>$activity,'s.status'=>'3'));
+								//print_r($sales);
+								foreach($sales as $sale):
+									//echo "<pre>"; print_r($sale); 
+									$sale_item = $sale['item'];
+									$sale_uom = $sale['uom'];
+									$sale_qty = $sale['quantity'];
+									$sale_uom_conversion = $this->itemuomObj->getColumn(array('item'=>$sale_item, 'uom'=>$sale_uom),'conversion');
+									$basic_uom = $sale['basic_uom'];
+									$standard_uom = $this->itemuomObj->getColumn(array('item'=>$sale_item,'costing_uom'=>'1'),'uom');
+									
+									if($standard_uom == '84'): //METRIC TONES
+										if($sale_uom == $standard_uom):
+											$sale_MT_qty = $sale_qty;
+										else:
+											$sale_basic_qty = ($sale_uom == $basic_uom)?$sale_qty:$sale_qty*$sale_uom_conversion;
+											$sale_MT_conversion = $this->scalarconversionObj->getColumn(array('from_uom'=>$basic_uom,'to_uom'=>'84'),'conversion');
+											$sale_MT_qty = ($basic_uom == $standard_uom)?$sale_basic_qty:$sale_basic_qty/$sale_MT_conversion;
+										endif;
+									?>
+										<tr>
+											<td><?php echo $i++; ?></td>
+											<td><?php echo $sale['sales_no'];?></td>
+											<td><?php echo $sale['sales_date'];?></td>
+											<td>Sales</td>
+											<td>
+												<?php
+													$wt_work_type = 1; //load MT
+													echo $wt_charge_tax = $this->worktypeObj->getColumn($wt_work_type,'work_type');
+												?>
+											</td>
+											<td><?php echo $sale['item']; ?></td>
+											<td><?php echo number_format((float)$sale_MT_qty, 2, '.', '');?></td>
+											<td>
+												<?php 
+													$wt_charge_tax = $this->worktypeObj->getColumn($wt_work_type,'charge_tax');
+													$wt_charge_tax_value = $this->chargetaxObj->getColumn($wt_charge_tax,'value');
+													echo number_format((float)$wt_charge_tax_value,2,'.','');
+												?>
+											</td>
+											<td>
+												<?php 
+													$MT_loading_sale = $sale_MT_qty*$wt_charge_tax_value;
+													echo number_format((float)$MT_loading_sale, 2, '.', '');
+													$Grand_Total_loading_MT_Qty += $sale_MT_qty;
+													$Grand_Total_loading_MT_Rate += $wt_charge_tax_value;
+													$Grand_Total_loading_MT_Amount += $MT_loading_sale;
+												?>
+											</td>
+										</tr>
+									<?php
+									endif;
+								endforeach;
+								?>
+									<tfoot>
+										<tr>
+											<th style="text-align:right" colspan="6">Grand Total</th>
+											<th><?php echo number_format((float)$Grand_Total_loading_MT_Qty, 2, '.', '');?></th>
+											<th><?php echo number_format((float)$Grand_Total_loading_MT_Rate, 2, '.', '');?></th>
+											<th><?php echo number_format((float)$Grand_Total_loading_MT_Amount, 2, '.', '');?></th>
+										</tr>
+									</tfoot>
+								<?php
+								break;
+							case 3:		
+							?>
+							<h4>Details of Loading CASE Charges</h4>
+							<?php
+								/*************** Goods Dispatch *****************/
+								$Grand_Total_loading_CASE_Qty = 0;
+								$Grand_Total_loading_CASE_Rate = 0;
+								$Grand_Total_loading_CASE_Amount = 0;
+								$dispatch = $this->dispatchObj->getByDate($start_date, $end_date, array('from_location'=>$location,'activity'=>$activity,'status'=>array('2','3')));
+								foreach($dispatch as $disp):
+									$disp_details = $this->disp_detailsObj->get(array('d.dispatch'=>$disp['id']));
+									foreach($disp_details as $disp_detail):
+										//echo "<pre>"; print_r($disp_detail); 
+										$disp_item = $disp_detail['item_id'];
+										$disp_uom = $disp_detail['uom_id'];
+										$disp_qty = $disp_detail['quantity'];
+										$disp_uom_conversion = $this->itemuomObj->getColumn(array('item'=>$disp_item, 'uom'=>$disp_uom),'conversion');
+										$basic_uom = $this->itemObj->getColumn($disp_item,'uom');
+										$standard_uom = $this->itemuomObj->getColumn(array('item'=>$disp_item,'costing_uom'=>'1'),'uom');
+										
+										if($standard_uom != '84'): //CASES
+											if($disp_uom == $standard_uom):
+												$disp_CASE_qty = $disp_qty;
+											else:
+												$disp_basic_qty = ($disp_uom == $basic_uom)?$disp_qty:$disp_qty*$disp_uom_conversion;
+												$disp_CASE_conversion = $this->itemuomObj->getColumn(array('item'=>$disp_item, 'uom'=>$standard_uom),'conversion');
+												$disp_CASE_qty = ($basic_uom == $standard_uom)?$disp_basic_qty:$disp_basic_qty/$disp_CASE_conversion;
+											endif;
+										?>
+										<tr>
+											<td><?php echo $i++; ?></td>
+											<td><?php echo $disp['challan_no'];?></td>
+											<td><?php echo $disp['dispatch_date'];?></td>
+											<td>Dispatch</td>
+											<td>
+												<?php
+													$case_work_type = 3; //load MT
+													echo $case_charge_tax = $this->worktypeObj->getColumn($case_work_type,'work_type');
+												?>
+											</td>
+											<td><?php echo $disp_detail['item']; ?></td>
+											<td><?php echo number_format((float)$disp_CASE_qty, 2, '.', '');?></td>
+											<td>
+												<?php 
+													$case_charge_tax = $this->worktypeObj->getColumn($case_work_type,'charge_tax');
+													$case_charge_tax_value = $this->chargetaxObj->getColumn($case_charge_tax,'value');
+													echo number_format((float)$case_charge_tax_value,2,'.','');
+												?>
+											</td>
+											<td>
+												<?php 
+													$CASE_loading_disp = $disp_CASE_qty*$case_charge_tax_value;
+													echo number_format((float)$disp_CASE_qty, 2, '.', ''); 
+													$Grand_Total_loading_CASE_Qty += $disp_CASE_qty;
+													$Grand_Total_loading_CASE_Rate += $case_charge_tax_value;
+													$Grand_Total_loading_CASE_Amount += $CASE_loading_disp;
+												?>
+											</td>
+										</tr>
+									<?php
+										endif;
+									endforeach;
+								endforeach;
+								/*************** Sales *****************/
+								$sales = $this->salesObj->getByDate($start_date, $end_date, array('s.location'=>$location,'i.activity'=>$activity,'s.status'=>'3'));
+								foreach($sales as $sale):
+									//echo "<pre>"; print_r($sale); 
+									$sale_item = $sale['item'];
+									$sale_uom = $sale['uom'];
+									$sale_qty = $sale['quantity'];
+									$sale_uom_conversion = $this->itemuomObj->getColumn(array('item'=>$sale_item, 'uom'=>$sale_uom),'conversion');
+									$basic_uom = $sale['basic_uom'];
+									$standard_uom = $this->itemuomObj->getColumn(array('item'=>$sale_item,'costing_uom'=>'1'),'uom');
+									
+									if($standard_uom != '84'): //CASES
+										if($sale_uom == $standard_uom):
+											$sale_CASE_qty = $sale_qty;
+										else:
+											$sale_basic_qty = ($sale_uom == $basic_uom)?$sale_qty:$sale_qty*$sale_uom_conversion;
+											$sale_CASE_conversion = $this->itemuomObj->getColumn(array('item'=>$sale_item, 'uom'=>$standard_uom),'conversion');
+											$sale_CASE_qty = ($basic_uom == $standard_uom)?$sale_basic_qty:$sale_basic_qty/$sale_CASE_conversion;
+										endif;
+									?>
+									<tr>
+										<td><?php echo $i++; ?></td>
+										<td><?php echo $sale['sales_no'];?></td>
+										<td><?php echo $sale['sales_date'];?></td>
+										<td>Sales</td>
+										<td>
+											<?php
+												$case_work_type = 3; //load MT
+												echo $case_charge_tax = $this->worktypeObj->getColumn($case_work_type,'work_type');
+											?>
+										</td>
+										<td><?php echo $sale['item_code']; ?></td>
+										<td><?php echo number_format((float)$sale_CASE_qty, 2, '.', '');?></td>
+										<td>
+											<?php 
+												$case_charge_tax = $this->worktypeObj->getColumn($case_work_type,'charge_tax');
+												$case_charge_tax_value = $this->chargetaxObj->getColumn($case_charge_tax,'value');
+												echo number_format((float)$case_charge_tax_value,2,'.','');
+											?>
+										</td>
+										<td>
+											<?php 
+												$CASE_loading_sale = $sale_CASE_qty*$case_charge_tax_value;
+												echo number_format((float)$CASE_loading_sale, 2, '.', ''); 
+												$Grand_Total_loading_CASE_Qty += $sale_CASE_qty;
+												$Grand_Total_loading_CASE_Rate += $case_charge_tax_value;
+												$Grand_Total_loading_CASE_Amount += $CASE_loading_sale;
+											?>
+										</td>
+									</tr>
+									<?php
+									endif;
+								endforeach;
+								?>
+									<tfoot>
+										<tr>
+											<th style="text-align:right" colspan="6">Grand Total</th>
+											<th><?php echo number_format((float)$Grand_Total_loading_CASE_Qty, 2, '.', '');?></th>
+											<th><?php echo number_format((float)$Grand_Total_loading_CASE_Rate, 2, '.', '');?></th>
+											<th><?php echo number_format((float)$Grand_Total_loading_CASE_Amount, 2, '.', '');?></th>
+										</tr>
+									</tfoot>
+								<?php
+								break;
+							case 5:		
+							?>
+							<h4>Details of Repacking MT Charges</h4>
+							<?php
+								/*************** Repacking *****************/
+								$Grand_Total_repacking_MT_Qty = 0;
+								$Grand_Total_repacking_MT_Rate = 0;
+								$Grand_Total_repacking_MT_Amount = 0;
+								$repackings = $this->repackingObj->getByDate($start_date, $end_date, array('location'=>$location,'activity'=>$activity,'status'=>'3'));
+								foreach($repackings as $repacking):
+									$pack_item = $repacking['item'];
+									$pack_uom = $repacking['uom'];
+									$pack_qty = $repacking['quantity'];
+									$pack_rate = $repacking['rate'];
+									$pack_uom_conversion = $this->itemuomObj->getColumn(array('item'=>$pack_item, 'uom'=>$pack_uom),'conversion');
+									$basic_uom = $this->itemObj->getColumn($pack_item,'uom');
+									$standard_uom = $this->itemuomObj->getColumn(array('item'=>$pack_item,'costing_uom'=>'1'),'uom');
+									if($repacking['work_type'] == 1): //Repacking
+										if($standard_uom == '84'): //METRIC TONES
+											if($pack_uom == $standard_uom):
+												$repacking_MT_qty = $pack_qty;
+												$repacking_MT_rate = $pack_rate;
+											else:
+												$repacking_basic_qty = ($pack_uom == $basic_uom)?$pack_qty:$pack_qty*$pack_uom_conversion;
+												$repacking_MT_conversion = $this->scalarconversionObj->getColumn(array('from_uom'=>$basic_uom,'to_uom'=>'84'),'conversion');
+												$repacking_MT_qty = ($basic_uom == $standard_uom)?$repacking_basic_qty:$repacking_basic_qty/$repacking_MT_conversion;
+												
+												$repacking_basic_rate = ($pack_uom == $basic_uom)?$pack_rate:$pack_rate/$pack_uom_conversion;
+												$repacking_MT_rate = ($basic_uom == $standard_uom)?$repacking_basic_rate:$repacking_basic_rate*$repacking_MT_conversion;
+											endif;
+										?>
+										<tr>
+											<td><?php echo $i++; ?></td>
+											<td><?php echo $repacking['repacking_no'];?></td>
+											<td><?php echo $repacking['repacking_date'];?></td>
+											<td>Repacking</td>
+											<td>
+												<?php
+													$repacking_MT_work_type = 5; //repacking MT
+													echo $this->worktypeObj->getColumn($repacking_MT_work_type,'work_type');
+												?>
+											</td>
+											<td><?php echo $this->itemObj->getColumn($repacking['item'],'code'); ?></td>
+											<td><?php echo number_format((float)$repacking_MT_qty, 2, '.', '');?></td>
+											<td>
+												<?php
+													echo number_format((float)$repacking_MT_rate,2,'.','');
+												?>
+											</td>
+											<td>
+												<?php 
+													$MT_repacking_amount = $repacking_MT_qty*$repacking_MT_rate;
+													echo number_format((float)$MT_repacking_amount, 2, '.', ''); 
+													$Grand_Total_repacking_MT_Qty += $repacking_MT_qty;
+													$Grand_Total_repacking_MT_Rate += $repacking_MT_rate;
+													$Grand_Total_repacking_MT_Amount += $MT_repacking_amount;
+												?>
+											</td>
+										</tr>
+									<?php
+										endif;
+									endif;
+								endforeach;
+								?>
+									<tfoot>
+										<tr>
+											<th style="text-align:right" colspan="6">Grand Total</th>
+											<th><?php echo number_format((float)$Grand_Total_repacking_MT_Qty, 2, '.', '');?></th>
+											<th><?php echo number_format((float)$Grand_Total_repacking_MT_Rate, 2, '.', '');?></th>
+											<th><?php echo number_format((float)$Grand_Total_repacking_MT_Amount, 2, '.', '');?></th>
+										</tr>
+									</tfoot>
+								<?php
+							break;
+							case 7:		
+							?>
+							<h4>Details of Repacking CASE Charges</h4>
+							<?php
+								/*************** Repacking *****************/
+								$Grand_Total_repacking_CASE_Qty = 0;
+								$Grand_Total_repacking_CASE_Rate = 0;
+								$Grand_Total_repacking_CASE_Amount = 0;
+								$repackings = $this->repackingObj->getByDate($start_date, $end_date, array('location'=>$location,'activity'=>$activity,'status'=>'3'));
+								foreach($repackings as $repacking):
+									$pack_item = $repacking['item'];
+									$pack_uom = $repacking['uom'];
+									$pack_qty = $repacking['quantity'];
+									$pack_rate = $repacking['rate'];
+									$pack_uom_conversion = $this->itemuomObj->getColumn(array('item'=>$pack_item, 'uom'=>$pack_uom),'conversion');
+									$basic_uom = $this->itemObj->getColumn($pack_item,'uom');
+									$standard_uom = $this->itemuomObj->getColumn(array('item'=>$pack_item,'costing_uom'=>'1'),'uom');
+									if($repacking['work_type'] == 1): //Repacking
+										if($standard_uom != '84'): //CASES
+											if($pack_uom == $standard_uom):
+												$repacking_CASE_qty = $pack_qty;
+												$repacking_CASE_rate = $pack_rate;
+											else:
+												$repacking_basic_qty = ($pack_uom == $basic_uom)?$pack_qty:$pack_qty*$pack_uom_conversion;
+												$repacking_CASE_conversion = $this->itemuomObj->getColumn(array('item'=>$pack_item, 'uom'=>$standard_uom),'conversion');
+												$repacking_CASE_qty = ($basic_uom == $standard_uom)?$repacking_basic_qty:$repacking_basic_qty/$repacking_CASE_conversion;
+												
+												$repacking_basic_rate = ($pack_uom == $basic_uom)?$pack_rate:$pack_rate/$pack_uom_conversion;
+												$repacking_CASE_rate = ($basic_uom == $standard_uom)?$repacking_basic_rate:$repacking_basic_rate*$repacking_CASE_conversion;
+											endif;
+										?>
+										<tr>
+											<td><?php echo $i++; ?></td>
+											<td><?php echo $repacking['repacking_no'];?></td>
+											<td><?php echo $repacking['repacking_date'];?></td>
+											<td>Repacking</td>
+											<td>
+												<?php
+													$repacking_MT_work_type = 7; //repacking MT
+													echo $this->worktypeObj->getColumn($repacking_MT_work_type,'work_type');
+												?>
+											</td>
+											<td><?php echo $this->itemObj->getColumn($repacking['item'],'code'); ?></td>
+											<td><?php echo number_format((float)$repacking_CASE_qty, 2, '.', '');?></td>
+											<td>
+												<?php
+													echo number_format((float)$repacking_CASE_rate,2,'.','');
+												?>
+											</td>
+											<td>
+												<?php 
+													$CASE_repacking_amount = $repacking_CASE_qty*$repacking_CASE_rate;
+													echo number_format((float)$CASE_repacking_amount, 2, '.', ''); 
+													$Grand_Total_repacking_CASE_Qty += $repacking_CASE_qty;
+													$Grand_Total_repacking_CASE_Rate += $repacking_CASE_rate;
+													$Grand_Total_repacking_CASE_Amount += $CASE_repacking_amount;
+												?>
+											</td>
+										</tr>
+									<?php
+										endif;
+									endif;
+								endforeach;
+								?>
+									<tfoot>
+										<tr>
+											<th style="text-align:right" colspan="6">Grand Total</th>
+											<th><?php echo number_format((float)$Grand_Total_repacking_CASE_Qty, 2, '.', '');?></th>
+											<th><?php echo number_format((float)$Grand_Total_repacking_CASE_Rate, 2, '.', '');?></th>
+											<th><?php echo number_format((float)$Grand_Total_repacking_CASE_Amount, 2, '.', '');?></th>
+										</tr>
+									</tfoot>
+								<?php
+							break;
+							case 6:		
+							?>
+							<h4>Details of Shifting MT Charges</h4>
+							<?php
+								/*************** Shifting *****************/
+								$Grand_Total_shifting_MT_Qty = 0;
+								$Grand_Total_shifting_MT_Rate = 0;
+								$Grand_Total_shifting_MT_Amount = 0;
+								$repackings = $this->repackingObj->getByDate($start_date, $end_date, array('location'=>$location,'activity'=>$activity,'status'=>'3'));
+								//echo "<pre>";print_r($repackings);
+								foreach($repackings as $repacking):
+									$pack_item = $repacking['item'];
+									$pack_uom = $repacking['uom'];
+									$pack_qty = $repacking['quantity'];
+									$pack_rate = $repacking['rate'];
+									$pack_uom_conversion = $this->itemuomObj->getColumn(array('item'=>$pack_item, 'uom'=>$pack_uom),'conversion');
+									$basic_uom = $this->itemObj->getColumn($pack_item,'uom');
+									$standard_uom = $this->itemuomObj->getColumn(array('item'=>$pack_item,'costing_uom'=>'1'),'uom');
+									if($repacking['work_type'] == 2): //Shifting
+										if($standard_uom == '84'): //MT
+											if($pack_uom == $standard_uom):
+												$shifting_MT_qty = $pack_qty;
+												$shifting_MT_rate = $pack_rate;
+											else:
+												$shifting_basic_qty = ($pack_uom == $basic_uom)?$pack_qty:$pack_qty*$pack_uom_conversion;
+												$shifting_MT_conversion = $this->scalarconversionObj->getColumn(array('from_uom'=>$basic_uom,'to_uom'=>'84'),'conversion');
+												$shifting_MT_qty = ($basic_uom == $standard_uom)?$shifting_basic_qty:$shifting_basic_qty/$shifting_MT_conversion;
+												
+												$shifting_basic_rate = ($pack_uom == $basic_uom)?$pack_rate:$pack_rate/$pack_uom_conversion;
+												$shifting_MT_rate = ($basic_uom == $standard_uom)?$shifting_basic_rate:$shifting_basic_rate*$shifting_MT_conversion;
+											endif;
+										?>
+										<tr>
+											<td><?php echo $i++; ?></td>
+											<td><?php echo $repacking['repacking_no'];?></td>
+											<td><?php echo $repacking['repacking_date'];?></td>
+											<td>Shifting</td>
+											<td>
+												<?php
+													$shifting_MT_work_type = 6; //shifting MT
+													echo $this->worktypeObj->getColumn($shifting_MT_work_type,'work_type');
+												?>
+											</td>
+											<td><?php echo $this->itemObj->getColumn($repacking['item'],'code'); ?></td>
+											<td><?php echo number_format((float)$shifting_MT_qty, 2, '.', '');?></td>
+											<td>
+												<?php
+													echo number_format((float)$shifting_MT_rate,2,'.','');
+												?>
+											</td>
+											<td>
+												<?php 
+													$MT_shifting_amount = $shifting_MT_qty*$shifting_MT_rate;
+													echo number_format((float)$MT_shifting_amount, 2, '.', ''); 
+													$Grand_Total_shifting_MT_Qty += $shifting_MT_qty;
+													$Grand_Total_shifting_MT_Rate += $shifting_MT_rate;
+													$Grand_Total_shifting_MT_Amount += $MT_shifting_amount;
+												?>
+											</td>
+										</tr>
+									<?php
+										endif;
+									endif;
+								endforeach;
+								?>
+									<tfoot>
+										<tr>
+											<th style="text-align:right" colspan="6">Grand Total</th>
+											<th><?php echo number_format((float)$Grand_Total_shifting_MT_Qty, 2, '.', '');?></th>
+											<th><?php echo number_format((float)$Grand_Total_shifting_MT_Rate, 2, '.', '');?></th>
+											<th><?php echo number_format((float)$Grand_Total_shifting_MT_Amount, 2, '.', '');?></th>
+										</tr>
+									</tfoot>
+								<?php
+							break;
+							case 8:		
+							?>
+							<h4>Details of Shifting CASE Charges</h4>
+							<?php
+								/*************** Shifting *****************/
+								$Grand_Total_shifting_CASE_Qty = 0;
+								$Grand_Total_shifting_CASE_Rate = 0;
+								$Grand_Total_shifting_CASE_Amount = 0;
+								$repackings = $this->repackingObj->getByDate($start_date, $end_date, array('location'=>$location,'activity'=>$activity,'status'=>'3'));
+								//echo "<pre>";print_r($repackings);
+								foreach($repackings as $repacking):
+									$pack_item = $repacking['item'];
+									$pack_uom = $repacking['uom'];
+									$pack_qty = $repacking['quantity'];
+									$pack_rate = $repacking['rate'];
+									$pack_uom_conversion = $this->itemuomObj->getColumn(array('item'=>$pack_item, 'uom'=>$pack_uom),'conversion');
+									$basic_uom = $this->itemObj->getColumn($pack_item,'uom');
+									$standard_uom = $this->itemuomObj->getColumn(array('item'=>$pack_item,'costing_uom'=>'1'),'uom');
+									if($repacking['work_type'] == 2): //Shifting
+										if($standard_uom != '84'): //CASE
+											if($pack_uom == $standard_uom):
+												$shifting_CASE_qty = $pack_qty;
+												$shifting_CASE_rate = $pack_rate;
+											else:
+												$shifting_basic_qty = ($pack_uom == $basic_uom)?$pack_qty:$pack_qty*$pack_uom_conversion;
+												$shifting_CASE_conversion = $this->itemuomObj->getColumn(array('item'=>$pack_item, 'uom'=>$standard_uom),'conversion');
+												$shifting_CASE_qty = ($basic_uom == $standard_uom)?$shifting_basic_qty:$shifting_basic_qty/$shifting_CASE_conversion;
+												
+												$shifting_basic_rate = ($pack_uom == $basic_uom)?$pack_rate:$pack_rate/$pack_uom_conversion;
+												$shifting_CASE_rate = ($basic_uom == $standard_uom)?$shifting_basic_rate:$shifting_basic_rate*$shifting_CASE_conversion;
+											endif;
+										?>
+										<tr>
+											<td><?php echo $i++; ?></td>
+											<td><?php echo $repacking['repacking_no'];?></td>
+											<td><?php echo $repacking['repacking_date'];?></td>
+											<td>Shifting</td>
+											<td>
+												<?php
+													$shifting_CASE_work_type = 8; //shifting CASE
+													echo $this->worktypeObj->getColumn($shifting_CASE_work_type,'work_type');
+												?>
+											</td>
+											<td><?php echo $this->itemObj->getColumn($repacking['item'],'code'); ?></td>
+											<td><?php echo number_format((float)$shifting_CASE_qty, 2, '.', '');?></td>
+											<td>
+												<?php
+													echo number_format((float)$shifting_CASE_rate,2,'.','');
+												?>
+											</td>
+											<td>
+												<?php 
+													$CASE_shifting_amount = $shifting_CASE_qty*$shifting_CASE_rate;
+													echo number_format((float)$CASE_shifting_amount, 2, '.', ''); 
+													$Grand_Total_shifting_CASE_Qty += $shifting_CASE_qty;
+													$Grand_Total_shifting_CASE_Rate += $shifting_CASE_rate;
+													$Grand_Total_shifting_CASE_Amount += $CASE_shifting_amount;
+												?>
+											</td>
+										</tr>
+									<?php
+										endif;
+									endif;
+								endforeach;
+								?>
+									<tfoot>
+										<tr>
+											<th style="text-align:right" colspan="6">Grand Total</th>
+											<th><?php echo number_format((float)$Grand_Total_shifting_CASE_Qty, 2, '.', '');?></th>
+											<th><?php echo number_format((float)$Grand_Total_shifting_CASE_Rate, 2, '.', '');?></th>
+											<th><?php echo number_format((float)$Grand_Total_shifting_CASE_Amount, 2, '.', '');?></th>
+										</tr>
+									</tfoot>
+								<?php
+							break;	
+							?>
+					<?php
+						}	
+					?>
+				</tbody>
+			</table>
+		</div>
+	</div>
+</div>
+<script>
+               var title_table = $('input#con').val()+'('+$('input#act').val()+')'+'('+$('input#loc').val()+') from '+$('input#start_date').val()+' to '+$('input#end_date').val();
+	
+		$('#example').DataTable( {
+			dom: 'Bfrtip',
+			/*buttons: [
+				'copy', 'csv', 'excel', 'pdf', 'print'
+			]*/
+			lengthMenu: [
+				[ 25, 50, -1 ],
+				[ '25 rows', '50 rows', 'Show all' ]
+			],
+			columnDefs: [ {
+				visible: true
+			} ],
+			buttons: [
+				{
+					extend: 'excel',
+					title: title_table,
+					exportOptions: {
+						columns: ':visible'
+					},
+					text: '<i class="fa fa-file-excel-o"></i> Excel',
+					titleAttr: 'Excel'
+				},
+				{
+					extend: 'pdfHtml5',
+					title: title_table,
+					exportOptions: {
+						columns: ':visible'
+					},
+					orientation: 'landscape',
+					pageSize: 'LEGAL',
+					text: '<i class="fa fa-file-pdf-o"></i> Pdf',
+					titleAttr: 'PDF'
+				},
+				'pageLength'
+			],
+			select:true
+		} );
+</script>	

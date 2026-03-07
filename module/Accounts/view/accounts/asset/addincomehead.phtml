@@ -1,0 +1,166 @@
+<?php
+/**
+ * 
+ * View -- of Accounts/AssetController/addincomeheadAction
+ * 
+ */
+	$this->headTitle($this->title);
+?>
+<?php echo $this->partial('accounts/asset/partial.phtml', array('active' => 'incomehead')); ?>
+<div class="space-12"></div>
+<div class="row">
+	<div class="col-lg-12">
+		<div class="widget widget-box">
+			<div class="widget-header">
+				<h5 class="widget-title lighter smaller">
+					<i class="fa fa-asterisk"></i> New Income Head
+				</h5>
+			</div>
+			<div class="widget-body">
+				<div class="widget-main">
+					<form id="form" method="post" action="<?php echo $this->url('asset', array('action' => 'addincomehead')); ?>" enctype="multipart/form-data" >
+						<div class="row">
+							<div class="form-group col-lg-3">
+								<label for="location" class="control-label">Location</label>
+								<select class="form-control" id="location" name="location" data-placeholder="Select" required >
+									<option value="-1">All</option>
+									<?php 
+									foreach ($locations as $location):
+									?>
+										<option value="<?php echo $location['id'];?>">
+											<?php echo $location['location'];?>
+										</option>
+									<?php
+									endforeach;
+									?>
+								</select>
+							</div>   
+							<div class="form-group col-lg-3">
+								<label for="income_head" class="control-label">Income Head</label>
+								<input type="text" class="form-control" name="income_head" id="income_head" placeholder="Income Head" required>
+							</div>
+							<div class="form-group col-lg-3">
+								<div class="checkbox">Counter Sale
+									<label for="countersale" class="checkbox-label"></label>
+									<input type="checkbox" value="1" class="checkbox-control" name="countersale" id="countersale">
+								</div>
+							</div> 
+						</div>
+						<div class="row">
+							<div class="col-lg-12">  
+								<h5 class='header blue'>Sub Head Details</h5>
+								<table id="head_table" class="table small-padding">
+									<thead>
+										<tr>
+											<th>Head Type</th>
+											<th>Head</th>
+											<th>&nbsp;</th>
+										</tr>
+									</thead>
+									<tbody>
+										<tr>
+											<td>
+												<div class="form-group">
+													<select class="form-control head_type" id="head_type" name="head_type[]" data-placeholder="Select" required>
+														<option value=""></option>
+														<?php 
+														foreach ($headtypes as $headtype):
+														?>
+															<option value="<?php echo $headtype['id'];?>">
+																<?php echo $headtype['head_type'];?>
+															</option>
+														<?php
+														endforeach;
+														?>
+													</select>
+												</div>
+											</td>
+											<td>
+												<div class="form-group">
+													<select class="form-control" id="head" name="head[]" data-placeholder="Select" required>
+														<option value=""></option>
+													</select>
+												</div>
+											</td>
+											<td width="30px;"></td>
+										</tr>
+									</tbody>
+								</table>
+							</div>
+						</div>
+						<div class="row">
+							<div class="col-lg-12">
+								<button type="submit" class="btn btn-success"><i class="fa fa-check"></i> Save </button>
+								<button type="button" class="btn btn-warning" onclick="javascript:history.back();" ><i class="fa fa-times"></i> Cancel </button>
+							</div>
+						</div> 
+					</form>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+<script>
+	$(function() {	
+		/****** dynamic insertion of table row*******/
+		$('#head_table').subhead({src:'<?php echo $this->url("ajresponse", array("action" => "gethead")); ?>'});	
+
+		const fv = FormValidation.formValidation(document.getElementById('#form'), {
+		fields: {
+			    income_head: {
+					validators: {
+						notEmpty: {
+							message: 'Please provide Income Head.'
+						}
+					}
+				},
+				location: {
+					validators: {
+						notEmpty: {
+							message: 'Please select location.'
+						}
+					}
+				},
+				credit_sales: {
+					validators: {
+						notEmpty: {
+							message: 'Please select credit Sales.'
+						}
+					}
+				},
+				'head_type[]': {
+	                validators: {
+	                    notEmpty: {
+	                        message: 'Please select Head Type'
+	                    }
+	                }
+	            },
+	            'head[]': {
+	                validators: {
+	                    notEmpty: {
+	                        message: 'Please select Head'
+	                    }
+	                }
+	            },
+		},
+		plugins: {
+			trigger: new FormValidation.plugins.Trigger(),
+			bootstrap3: new FormValidation.plugins.Bootstrap3(),
+			submitButton: new FormValidation.plugins.SubmitButton(),
+			defaultSubmit: new FormValidation.plugins.DefaultSubmit(),
+		},
+	}).on('core.element.validated', function (e) {
+		if (e.valid) {
+			$('div#'+ e.field.replace('[]','') +'_chosen').removeClass('is-invalid');
+			$('div#'+ e.field.replace('[]','') +'_chosen').addClass('is-valid');
+		} else {
+			$('div#'+ e.field.replace('[]','') +'_chosen').removeClass('is-valid');
+			$('div#'+ e.field.replace('[]','') +'_chosen').addClass('is-invalid');
+		}
+	});
+	$('form select').chosen().change(function () {
+		fv.revalidateField($(this).attr('name'));
+	});
+});
+</script>
+	

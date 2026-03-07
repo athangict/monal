@@ -1,0 +1,154 @@
+<?php
+/**
+ * 
+ * View -- of Purchase/PurchaseController/addreceiptAction
+ * 
+ */
+  $this->headTitle($this->title);
+?>
+<div class="row">
+	<div class="col-lg-12">
+		<div class="widget widget-box">
+			<div class="widget-header">
+				<h5 class="widget-title lighter smaller">
+					<i class="fa fa-asterisk"></i>&nbsp;&nbsp;New Purchase Receipt
+                </h5>
+			</div>
+			<div class="widget-body">
+				<div class="widget-main">
+					<form  id="#form" method="post" action="<?php echo $this->url('receipt', array('action' => 'addreceipt')); ?>"  enctype="multipart/form-data" >    
+						<div class="row">	
+							<div class="col-lg-3">    
+								<div class="form-group">
+									<label for="po_date" class="control-label">PRN Date</label>
+									<div class="date input-group" id="prn_date" data-date="<?php echo date('Y-m-d');?>" data-date-format="yyyy-mm-dd" >
+										<input class="form-control span2" name="prn_date" id="prn_date" type="text" placeholder="PRN Date" value="<?php echo date('Y-m-d');?>" readonly required>
+										<span class="input-group-addon add-on"><i class="fa fa-calendar"></i></span>
+									</div>
+								</div>
+							</div>	
+							<div class="col-lg-3">
+								<div class="form-group">
+									<label for="po_no" class="control-label">PO No.</label>
+									<select class="form-control" name="po_no" id="po_no" data-placeholder="Select" >
+										<option value=""></option>	
+										<?php foreach ($purorder as $po): 
+											print_r($po['id']);?>
+											<option value="<?php echo $po['id'];?>">
+												<?php echo $po['po_no']; ?>
+											</option>
+										<?php endforeach; ?>
+									</select> 
+								</div>
+							</div>   	
+							<div class="col-lg-3"> 
+								<div class="form-group">
+									<label for="location" class="control-label">Location</label>
+									<select class="form-control" name="location" id="location" data-placeholder="Select" required >
+										<option value=""></option>
+										<?php foreach($this->locationObj->get(array('id'=>$source_locs)) as $location):?>
+											<option value="<?php echo $location['id'];?>" <?php echo ($source_locs == $location['id'])?'selected':'';?>>
+												<?php echo $location['location'];?>
+											</option>
+										<?php endforeach; ?>						
+									</select> 
+								</div>
+							</div>
+							<div class="col-lg-3"> 
+								<div class="form-group">
+									<label for="supplier" class="control-label">Supplier</label>
+									<select id="supplier" name="supplier" class="form-control" data-placeholder="Select" readonly="readonly" required>
+										<option value=""></option>							
+									</select> 
+								</div>
+							</div>	
+										
+						</div>
+						<div class="row">
+							<div class="col-lg-12">
+								<label class="control-label" for="note">Note: </label>
+								<textarea class="form-control" name="note" id="note"></textarea>
+							</div>
+						</div>
+						<div class="space-12"></div>
+						<div class="row"> 	
+							<div class="col-lg-9"> 
+								<button type="submit" class="btn btn-success"><i class="fa fa-check"></i> Save </button>
+								<button type="button" class="btn btn-warning" onclick="window.location.href='<?php echo $this->url('receipt');?>'" ><i class="fa fa-times"></i> Cancel </button> 					
+							</div>
+						</div>
+					</form>  
+				</div> <!-- end of widget-main -->  
+	        </div> <!-- end of widget-body -->
+        </div> <!-- end of widget widget-default -->
+    </div> <!-- end of col-lg-12 -->
+</div> <!-- end of row -->
+<script type="text/javascript">
+$(document).ready(function (){
+	$('#prn_date').datepicker();
+	$('#po_no').on('change', function(){
+		//alert($(this).val());
+		$.post(
+			"<?php echo $this->url('receipt', array('action' => 'getsupplier')); ?>",
+			{
+				po_no: $(this).val(),
+			},
+			function(data){
+				console.log(data);
+				$("#supplier").html(data.supplier);	
+				$("#supplier").trigger('chosen:updated');
+			},
+			'json'
+		);	
+	});
+	/******** formValidation *************/
+	const fv = FormValidation.formValidation(document.getElementById('#form'), {
+	    fields: {
+			'po_no':{
+				validators: {
+					notEmpty:{
+						message: 'Please select PO No.'
+					},
+				}
+			},      
+			'prn_date': {
+				validators: {
+					notEmpty: {
+						message: 'Please select voucher date'
+					}
+				}
+			},
+		
+			'location': {
+				validators: {
+					notEmpty: {
+						message: 'Please select location'
+					}
+				}
+			},
+			'supplier': {
+				validators: {
+					notEmpty: {
+						message: 'Please select supplier'
+					}
+				}
+			},
+			
+		},
+		plugins: {
+			trigger: new FormValidation.plugins.Trigger(),
+			bootstrap3: new FormValidation.plugins.Bootstrap3(),
+			submitButton: new FormValidation.plugins.SubmitButton(),
+			defaultSubmit: new FormValidation.plugins.DefaultSubmit(),
+		},
+	}).on('core.element.validated', function (e) {
+		if (e.valid) {
+			$('div#'+ e.field.replace('[]','') +'_chosen').removeClass('is-invalid');
+			$('div#'+ e.field.replace('[]','') +'_chosen').addClass('is-valid');
+		} else {
+			$('div#'+ e.field.replace('[]','') +'_chosen').removeClass('is-valid');
+			$('div#'+ e.field.replace('[]','') +'_chosen').addClass('is-invalid');
+		}
+	});
+});
+</script>

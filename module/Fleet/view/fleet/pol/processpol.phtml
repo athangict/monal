@@ -1,0 +1,62 @@
+
+<form id="#form" method="post" action="<?php echo $this->url('pol', array('action' => 'processpol')); ?>">
+<div class="modal-header">
+	<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+	<h4 class="modal-title"> <i class="fa fa-asterisk"></i> Action </h4>
+</div>  <!-- /modal-header -->
+
+<div class="modal-body">
+	<div class="panel panel-default">
+		<div class="panel-body">      
+		<input type="hidden" value="<?php echo $id; ?>" name="tp_id" id="tp_id">
+		<div class="form-group">
+			<label for="remarks" class="control-label">Remarks</label>
+			<textarea class="form-control" rows="3" name="remarks" id="remarks" required>
+			</textarea>
+		</div>
+	  </div>
+	</div>	
+</div>
+<div class="modal-footer">
+		<button type="submit" class="btn btn-success"><i class="icon ti ti-checkbox"></i> Apply </button>
+		<button type="button" class="btn btn-warning" data-dismiss="modal" ><i class="fa fa-times"></i> Cancel </button> 
+    </div>  
+	</form>
+<script>
+$('#reporting_date').datepicker();
+$('document').ready(function(){
+	$('form select').chosen({ allow_single_deselect: true });
+	const fv = FormValidation.formValidation(document.getElementById('#form'), {
+		fields: {
+			remarks: {
+				validators: {
+					notEmpty: {
+						message: 'Please provide remarks.'
+					}
+				}
+			},
+			routing: {
+				validators: {
+					notEmpty: {
+						message: 'Please select person to route.'
+					}
+				}
+			},
+		},
+		plugins: {
+			trigger: new FormValidation.plugins.Trigger(),
+			bootstrap3: new FormValidation.plugins.Bootstrap3(),
+			submitButton: new FormValidation.plugins.SubmitButton(),
+			defaultSubmit: new FormValidation.plugins.DefaultSubmit(),
+		},
+	}).on('core.element.validated', function (e) {
+		if (e.valid) {
+			$('div#'+ e.field.replace('[]','') +'_chosen').removeClass('is-invalid');
+			$('div#'+ e.field.replace('[]','') +'_chosen').addClass('is-valid');
+		} else {
+			$('div#'+ e.field.replace('[]','') +'_chosen').removeClass('is-valid');
+			$('div#'+ e.field.replace('[]','') +'_chosen').addClass('is-invalid');
+		}
+	});
+});
+</script>

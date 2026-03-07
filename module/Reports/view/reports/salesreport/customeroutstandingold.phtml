@@ -1,0 +1,232 @@
+<?php
+/**
+ * 
+ * View -- of Stock/StockmovementController/customeroutstandingAction
+ * 
+ */
+	$this->headTitle($this->title);
+?>
+<?php echo $this->partial('reports/salesreport/partial.phtml', array('active' => 'customeroutstanding')); ?>
+<div class="row">
+	<div class="col-lg-12">
+		<div class="widget widget-box transparent">
+			<div class="widget-header">
+				<div class="col-lg-12">
+					<h5 class="widget-title lighter smaller">
+						<i class="fa fa-gears"></i> Generate Customer Outstanding Report
+					</h5>
+				</div>
+			</div>
+			<div class="widget-body">
+				<div class="widget-main padding-12">
+					<form method="post" action="<?php echo $this->url('salesreport', array('action' => 'customeroutstanding')); ?>"  enctype="multipart/form-data" >    
+						<div class="row">
+							<div class="form-group col-lg-4">
+								<label class="control-label" for="location">Location</label>
+								<select class="form-control" name="location" id="location" data-placeholder="select" >
+									<option value=""></option>
+									<?php foreach($regions as $region):?>
+										<optgroup label="<?php echo $region['region'];?>">
+										<?php  
+											$locations = $locationObj->get(array('l.region'=>$region['id']));
+											foreach ($locations as $location):
+												$selected_loc = ($location['id']==$data['location'])?"selected":"";
+										?>
+											<option value="<?php echo $location['id']; ?>" <?php echo $selected_loc;?>>
+												<?php echo $location['location']; ?>
+											</option>
+										<?php endforeach;?>
+										</optgroup>
+									<?php endforeach;  ?>									
+								</select>
+							</div>
+							<div class="form-group col-lg-4">
+								<label class="control-label" for="customer">Customer</label>
+								<select class="form-control" name="customer" id="customer" data-placeholder="select" >
+									<option value="-1" <?php echo ($data['customer']=='-1')?'selected':'';?>>All</option>
+									<?php  
+										$customers = $this->customerObj->get(array('p.role'=>8));
+										foreach ($customers as $customer):
+											$selected_cus = ($customer['id']==$data['customer'])?"selected":"";
+									?>
+										<option value="<?php echo $customer['id']; ?>" <?php echo $selected_cus;?>>
+											<?php echo $customer['code']; ?>
+										</option>
+									<?php endforeach;?>
+								</select>
+							</div>
+							<div class="col-lg-4">
+								<div class="space-12"></div>
+								<button type="submit" class="btn btn-sm btn-success pull-right"><i class="fa fa-gear"></i> Generate </button>
+							</div>
+						</div>
+					</form>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+<div class="hr hr-dotted"></div>
+<div id="report-print">
+	<div class="row">
+		<div class="col-lg-12">
+			<div class="table-header  clearfix">
+				<label><i class="red fa fa-map-marker"></i> <strong>Location:</strong></label> <span><?php echo ($data["location"] == -1 || !isset($data['location']))? "All Locations": $this->locationObj->getColumn($data["location"], 'location');?></span>.&nbsp;&nbsp;
+				<label><i class="green fa fa-users"></i> <strong>Customer:</strong></label> <span><?php echo ($data["customer"] == -1 || !isset($data['customer']))? "All Customer": $this->customerObj->getColumn($data["customer"], 'code');?></span>.&nbsp;&nbsp;
+				<input type="hidden" id="location" name="location" value="<?php echo ($data["location"] == -1 || !isset($data['location']))? "all Locations": $this->locationObj->getColumn($data["location"], 'location');?>"/>
+				<input type="hidden" id="customer" name="customer" value="<?php echo ($data["customer"] == -1 || !isset($data['customer']))? "all Customer": $this->customerObj->getColumn($data["customer"], 'code');?>"/>
+				<div class="pull-right">
+					<a title="Export to Excel" id="excel">
+						<i class="ace-icon fa fa-file-excel-o fa-lg white"></i>
+					</a>&nbsp;&nbsp;
+					<a title="Print PDF" id="print">
+						<i class="ace-icon fa fa-file-pdf-o fa-lg white"></i>
+					</a>&nbsp;&nbsp;
+				</div>
+			</div>					
+		
+			    <table class="table table-hover" id="table2excel">
+					<thead>
+						<tr>
+							<th>#</th>
+							<th>Sales No</th>
+							<th>Sales Date</th>
+							<th>Net Amount</th>
+							<th>Received Amount</th>
+							<th>Due Amount</th>
+							<th>Bill Aging | Penalty</th>
+						</tr>
+					</thead>
+					<tbody>					
+						<?php 
+							$sl = 1; 
+							$grand_due_amt = 0;
+							if(sizeof($credit_customers)>0):
+							foreach($credit_customers as $credit_customer):
+						?>
+							<tr style="border-top:2px solid #ddd;border-bottom:2px solid #ddd;background-color:#F9F9F9;">
+								<td></td>
+								<td>
+									<i>Customer Name : </i>
+									<strong><?php echo $credit_customer['cus_code'];?></strong>
+								</td>
+								<td colspan=5></td>
+							</tr>
+							<?php 
+								$total_due_amt = 0;
+								$total_penalty = 0;
+							 $sales = $this->salesObj->get(array('location'=>$data['location'], 'credit'=>1, 'customer'=>$credit_customer['customer'], 'status'=>array(3,5)));
+							foreach($sales as $sale):
+                                                            if($sale['payment_amount']> $sale['received_amount']):
+							    $due_amt =  $sale['payment_amount'] - $sale['received_amount']; 
+								if($sale['customer_type'] == 1): //Government Agency, customer type = 1 and private 
+									$total_due_amt += $due_amt;
+									$timestamp_start = strtotime($sale['sales_date']);
+									$timestamp_end = strtotime(date('Y-m-d'));
+									$difference = abs($timestamp_end - $timestamp_start); // that's it!								
+									$ageing = floor($difference/(60*60*24));								
+									if($ageing > 40){
+										$pen_value = ((24/100) * $due_amt)/365;									
+										$penalty = $pen_value * ($ageing - 40); 
+									}else{
+										$penalty = "0.00";
+									}		
+									$total_penalty += $penalty; 
+                                else:
+								    $total_due_amt += $due_amt;
+									$timestamp_start = strtotime($sale['sales_date']);
+									$timestamp_end = strtotime(date('Y-m-d'));
+									$difference = abs($timestamp_end - $timestamp_start); // that's it!								
+									$ageing = floor($difference/(60*60*24));								
+									if($ageing > 30){
+										$pen_value = ((24/100) * $due_amt)/365;									
+										$penalty = $pen_value * ($ageing - 30); 
+									}else{
+										$penalty = "0.00";
+									}		
+									$total_penalty += $penalty; 
+                                endif;?>
+								<tr>
+									<td><?php echo $sl++;?>
+									<td><?php echo $sale['sales_no'];?></td>
+									<td><?php echo $sale['sales_date'];?></td>
+									<td><?php echo $sale['payment_amount'];?></td>
+									<td><?php echo isset($sale['received_amount'])?$sale['received_amount']:'0.00';?></td>
+									<td><?php echo number_format($due_amt,2, '.', ','); ?></td>
+									<td><?php echo $ageing;?> | <?php echo number_format($penalty,2, '.', ','); ?></td>
+								</tr>
+							<?php endif; endforeach;?>
+							<tr>
+								<td colspan=4></td>
+								<td><strong>Total Outsanding</strong></td>
+								<td><strong><?php echo number_format($total_due_amt, 2,'.',',');?></strong></td> 
+								<td><strong><?php echo number_format($total_penalty, 2,'.',','); ?></strong></td>
+							</tr>
+						<?php
+							$grand_due_amt += $total_due_amt;
+							endforeach; 
+							else:
+						?>
+						<tr>
+							<td colspan=7>
+									<center>No <strong>Credit Sales</strong> made for this particular the location :</center> <?php echo $this->locationObj->getColumn($data["location"], 'location');?>
+							</td>
+						</tr>
+						<?php endif;?>
+						<tr style="border-top:3px solid #ddd;border-bottom:3px solid #ddd;">
+							<td colspan=4></td>
+							<td><strong>GRAND TOTAL</strong></td>
+							<td colspan=2><strong><?php echo number_format($grand_due_amt,2,'.',',');?></strong></td>
+						</tr>
+					</tbody>
+				</table>
+		</div>
+	</div>
+</div>
+				
+<script type="text/javascript">
+		$(function() {
+			$('#print').genpdfinvoice({
+		content: '#report-print',
+		src:"<?php echo $this->url('pdfxls', array('action' => 'pdf'));?>",
+		orentation:"P",//L =landscape, P = potrait
+	});
+	
+	var doc_loc = $('input#location').val() + ',' +$('input#customer').val();
+		$("#excel").click(function(){
+		  $("#table2excel").table2excel({
+			// exclude CSS class
+			exclude: ".noExl",
+			name: "Worksheet Name",
+			filename: "Customer Outsanding_"+doc_loc, //do not include extension
+		  }); 
+		});
+		/*** Form Validation ***/
+		$('form').formValidation({
+				framework: 'bootstrap',
+				excluded: ':disabled',
+				message: 'This value is not valid',
+				fields: {
+					'location': {
+					 	validators: {
+							notEmpty: {
+								message: 'Please select location'
+						  	}
+					  	}
+				  	},
+					'customer': {
+						validators: {
+							notEmpty: {
+								message: 'Please select customer'
+							}
+						}
+					},
+				}
+			}).on('success.field.fv', function(e, data) {
+				if (data.fv.getInvalidFields().length > 0) {    // There is invalid field
+					data.fv.disableSubmitButtons(true);
+			}
+		});
+	});
+</script>
+

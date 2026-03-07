@@ -1,0 +1,184 @@
+<?php
+/**
+ * 
+ * View -- of Purchase/CostingController/sheetdetails
+ * 
+ */
+ $this->headTitle($this->title);
+?>
+<?php 
+   foreach($this->sheet as $sheet):
+        //echo"<pre>"; print_r($sheet);   
+        extract($sheet); 
+	    $costing_id = $id; 
+	    $creator = $author; 
+	endforeach;
+?>
+<style>
+	.table tr th,.table tr td {
+		padding:2px;
+		font-size:12px;
+	}
+</style>
+<div class="row">
+	<div class="col-lg-12">
+		<div class="widget widget-box">
+			<div class="widget-header">
+				<h5 class="widget-title lighter smaller">
+					# Costing Sheet Detail:<strong> &nbsp;&nbsp; <?php echo $costing_no; ?> | <?php echo $supplier_name; ?> | <?php echo $activity_name ?></strong>					
+				</h5>
+				<div class="widget-toolbar hidden-xs">
+					<a style='cursor:pointer' id="print">
+						<i class="ace-icon fa fa-file-pdf-o red"></i>
+					</a>
+				</div>
+			</div>
+			<div class="widget-body">
+				<div class="widget-main padding-24">
+					<div id="report-print">
+					<h4 align="center">Costing Sheet</h4>
+						<div class="row" id="convert-tb0">						
+							<div class="col-lg-8" id="convert-tb1">							
+								<ul class="list-unstyled spaced">
+									<li>
+										<i class="ace-icon fa fa-caret-right blue"></i>
+										Location | Activity : <b class="red">
+										<?php echo $this->locationObj->getColumn($location,'location'); ?> | <?php echo $activity_name; ?></b>
+									</li>
+									<li>
+										<i class="ace-icon fa fa-caret-right blue"></i>
+										Invoice No. | Date : <b class="red">
+									  <?php if($po_invoice == "1"): ?>				                 	
+										 <?php echo $this->POObj->getColumn($po_invoice_no,'po_no'); ?> |
+										 <?php echo $this->POObj->getColumn($po_invoice_no, 'po_date'); ?>				                 	
+									  <?php elseif($po_invoice == "2"): ?>				           			 
+										<?php echo $this->invoiceObj->getColumn($po_invoice_no,'invoice_no'); ?> |
+										<?php echo $this->invoiceObj->getColumn($po_invoice_no, 'inv_date'); ?>				           			
+									  <?php endif; ?></b>
+									</li>
+								</ul>
+							</div>
+							<div class="col-lg-4" id="convert-tb2">
+								<ul class="list-unstyled spaced">
+									<li>
+										<i class="ace-icon fa fa-caret-right blue"></i>
+										Costing No. | Date: &nbsp;<b class="red"><?php echo $costing_no ." | ".$sheet_date; ?></b>
+									</li>	
+									<li>
+										<i class="ace-icon fa fa-caret-right blue"></i>
+										Supplier : &nbsp;&nbsp; <b class="red"><?php echo $supplier_name; ?> </b>
+									</li>
+								</ul>
+							</div>
+						</div>
+						<div class="space-12" ></div>
+						<div class="row">
+							<div class="col-lg-12">
+								<div style="overflow-x:scroll;">
+								<?php 
+									$costingHead_array = array();
+									$sheetItems = $this->sheetItemObj->get(array('costing_sheet'=>$costing_id));	
+									foreach ($sheetItems as $items):
+									    $sheetDtls = $this->sheetdtlsObj->get(array('costing_item'=>$items['id']));
+										foreach($sheetDtls as $dtl):
+										    if(!in_array($dtl['costing_head'], $costingHead_array )):
+										       array_push($costingHead_array, $dtl['costing_head']);	
+											endif;			
+										endforeach;
+									endforeach;  
+								?>
+									<table class="table" style="border-top:2px solid #ddd;">
+										<thead>
+											<tr>
+												<th>Sl</th>
+												<th>Item</th>
+												<th>Batch</th>																							
+												<?php 
+												for($i=0; $i<sizeof($costingHead_array); $i++):										
+												   ?><th><?php echo $this->costingHeadObj->getColumn($costingHead_array[$i],'costing_head'); ?></th><?php 
+												endfor;
+												?>
+												
+											</tr>
+										</thead>
+										<tbody>
+										   <?php 
+											 $sl= 1;
+											 $sheetItems = $this->sheetItemObj->get(array('costing_sheet'=>$costing_id));	
+											 foreach ($sheetItems as $items):								   
+											 ?>
+											   <tr>
+												  <td><?php echo $sl++; ?></td>
+												  <td>
+													 <?php echo $this->itemObj->getColumn($items['item'],'code'); ?>
+												  </td>
+												  <td>
+												     <?php echo $this->batchObj->getColumn($items['batch'],'batch');?>
+												  </td>												 										 
+												  <?php
+												  for($i=0; $i<sizeof($costingHead_array); $i++):
+													  echo "<td>";	
+													  $sheetValues = $this->sheetdtlsObj->getHeadSheet($items['id'], $costingHead_array[$i]);
+													  if(sizeof($sheetValues)>0):
+													    foreach ($sheetValues as $value):														  
+														  if($value['elc'] == "1"){ echo "<b>".$value['value']."</b>"; }
+														  else{ echo $value['value'];}
+													    endforeach; 
+													  else:
+													       echo"-";
+													  endif; 
+													  echo"</td>";
+												  endfor;												
+												   ?>												  
+											   </tr>
+											 <?php 
+											 endforeach;							     
+										   ?>
+										   <tr>
+										        <th colspan="3">Grand Total:</th>
+										        <?php
+												  for($i=0; $i<sizeof($costingHead_array); $i++):		
+												       $costHeadDtls = $this->costingHeadObj->get($costingHead_array[$i]);
+													   foreach($costHeadDtls as $dtl):
+															if($dtl['display_sum']=="0"){
+																echo"<th>&nbsp;</th>";
+															}
+															else{
+															   $sum = 0;
+														       foreach($sheetItems as $sheet):
+   															    $sheetValues = $this->sheetdtlsObj->get(array('d.costing_item'=>$sheet['id'],'d.costing_head'=>$costingHead_array[$i]));
+															     foreach($sheetValues as $val):
+																    $sum = $sum + $val['value'];
+																 endforeach;
+															   endforeach;
+															   echo "<th><u>".number_format($sum, 2, '.', ',')."</u></th>";  															   
+															}
+													   endforeach;
+												  endfor; 
+												?>
+										   </tr>
+										   <tr style="border-top:2px solid #ddd;border-bottom:2px solid #ddd;">
+											</tr>												
+										</tbody>
+									</table>
+								</div>
+							</div>
+						</div>
+						<div class="row">
+							<div class="col-lg-3">
+								 <i>Prepared by: <?php echo $this->userTable->getColumn($creator,'name');?></i>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+<script type="text/javascript">
+	$('#print').genpdfinvoice({
+		content: '#report-print',
+		src:"<?php echo $this->url('pdfxls', array('action' => 'pdf'));?>",
+		orentation:"L",//L =landscape, P = potrait
+	});
+</script>

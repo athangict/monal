@@ -1,0 +1,252 @@
+<?php
+/**
+ * 
+ * View -- of Sales/MasterpsController/serviceAction
+ * 
+ */
+
+$this->headTitle($this->title);
+
+?>
+<div class="card">
+	<div class="card-header">
+		<div class="row">
+			<div class="col-lg-12">
+				<form method="POST" action="<?php echo $this->url('pos', array('action' => 'salesreport')); ?>" enctype="multipart/form-data" >    
+						<div class="row">
+							<div class="form-group col-lg-2">
+								<label class="control-label" for="start_date">Start Date</label>
+								<div class="date input-group" id="start_date" data-date="<?php echo $data['start_date'];?>" data-date-format="yyyy-mm-dd" >
+									<input class="form-control span2" name="start_date" id="start_date" type="text" placeholder="Start Date" value="<?php echo $data['start_date'];?>"  required>
+									<span class="input-group-addon add-on"><i class="fa fa-calendar"></i></span>
+								</div>
+							</div>
+							<div class="form-group col-lg-2">
+								<label class="control-label" for="end_date">End Date</label>
+								<div class="date input-group" id="end_date" data-date="<?php echo $data['end_date'];?>" data-date-format="yyyy-mm-dd" >
+									<input class="form-control span2" name="end_date" id="end_date" type="text" placeholder="End Date" value="<?php echo $data['end_date'];?>"  required>
+									<span class="input-group-addon add-on"><i class="fa fa-calendar"></i></span>
+								</div>
+							</div>
+							<div class="form-group col-lg-2">
+								<label for="location" class="control-label">Location</label>
+								<select class="form-control" id="location" name="location" data-placeholder="Select" >
+									<option value="-1">All</option>
+									<?php foreach ($locations as $location):?>
+										<option value="<?php echo $location['id']?>"<?php echo ($location['id']==$data['location'])?'selected':'';?>>
+										<?php echo $location['location'];?>	</option>
+									<?php endforeach; ?>
+								</select>
+							</div>
+							<div class="form-group col-lg-2">
+								<label class="control-label" for="item_class">Item Class</label>
+								<select  class="form-control" name="item_class" id="item_class" data-placeholder="Select" required >
+									<option value="-1">All</option>
+									<?php foreach($itemclass as $itemclass):
+										?>
+										<option value="<?php echo $itemclass['id']; ?>" <?php echo ($itemclass['id']==$data['item_class']?'selected':'');?>>
+										<?php echo $itemclass['item_class']; ?>
+										</option>
+									<?php endforeach; ?>
+								</select>
+							</div>
+							<div class="form-group col-lg-2">
+								<label class="control-label" for="item_group">Item Group</label>
+								<select  class="form-control" name="item_subgroup" id="item_subgroup" data-placeholder="Select" required >
+									<option value="-1">All</option>
+									<?php foreach($itemgroups as $itemgroup):
+										?>
+										<option value="<?php echo $itemgroup['id']; ?>" <?php echo ($itemgroup['id']==$data['item_subgroup']?'selected':'');?>>
+										<?php echo $itemgroup['item_group']; ?>
+										</option>
+									<?php endforeach; ?>
+								</select>
+							</div>
+							<div class="form-group col-lg-2">
+								<label for="item" class="control-label">Item</label>
+								<select class="form-control" id="item" name="item" data-placeholder="Select" >
+									<option value="-1">All</option>
+									<?php foreach ($items as $items):?>
+										<option value="<?php echo $items['id']?>"<?php echo ($items['id']==$data['item'])?'selected':'';?>>
+										<?php echo $items['name'];?>	</option>
+									<?php endforeach; ?>
+								</select>
+							</div>
+							<div class="form-group col-lg-2">
+								<label for="user" class="control-label">User</label>
+								<select class="form-control" id="user" name="user" data-placeholder="Select" >
+									<option value="-1">All</option>
+									<?php foreach ($users as $users):?>
+										<option value="<?php echo $users['id']?>"<?php echo ($users['id']==$data['user'])?'selected':'';?>>
+										<?php echo $users['name'];?></option>
+									<?php endforeach; ?>
+								</select>
+							</div>
+							<div class="form-group col-lg-1"><br>
+								<button type="submit" class="btn btn-sm btn-success pull-right"><i class="fa fa-gear"></i> Generate </button>
+							</div>
+						</div>
+					</form>
+				</div>
+		</div>
+	</div>
+	<div class="table-responsive" style="overflow: auto;">
+		<table class="table table-striped table-bordered table-hover" id="dataTables">
+			<thead>
+				<tr>
+					<th>#</th>
+					<th>Sales No</th>
+					<th>Sales Date</th>
+					<th>Location</th>
+					<th>Due Date</th>
+					<th>Item</th>
+					<th>Rate</th>
+					<th>Quantity</th>
+					<th>Bank</th>
+					<th>Cash</th>
+					<th>Credit</th>
+					<th>Advance</th>
+					<th>User</th>
+				</tr>
+			</thead>
+			<tbody>
+				<?php
+					$i = 1; $total_cash = 0;$total_qty=0;$total_credit = 0;$total_bank = 0;$total_adv = 0;$total = 0;
+					
+					foreach ($paginator as $row)://print_r($row['author']);exit;
+					$item_group=$this->item->getCOlumn($row['item'],'item_group');
+						
+					?>
+					<tr>
+						<td><?php echo $i++; ?> </td>
+						<td><?php echo $row['sales_no'];?></td>	
+						<td><b><?php echo $row['sales_date'];?></b></td>
+						<td><b><?php echo $this->locationObj->getColumn($row['location'],'location');?></b></td>
+						<td><?php echo $row['due_date'];?></td>	
+						<td><?php echo $this->item->getColumn($row['item'],'name');?></td>	
+						<td><?php echo $row['rate'];?></td>
+						<td><?php echo $row['quantity'];?></td>
+						<?php if($item_group==67):?>
+							<td>0</td>
+							<td>0</td>
+							<td>0</td>
+							<td>0</td>
+						<?php else: 
+						if($row['payment_type']==2):?>
+						<td><?php echo $row['rate']*$row['quantity'];?></td>
+						<td>0</td>
+						<td>0</td>
+						<td>0</td>
+						<?php elseif($row['payment_type']==1):?>
+						<td>0</td>
+						<td><?php echo $row['rate']*$row['quantity'];?></td>
+						<td>0</td>
+						<td>0</td>
+						<?php elseif($row['credit']=="y"):?>
+						<td>0</td>
+						<td>0</td>
+						<td><?php echo $row['rate']*$row['quantity'];?></td>
+						<td>0</td>
+						<?php elseif($row['credit']==1):?>
+						<td>0</td>
+						<td>0</td>
+						<td>0</td>
+						<td><?php echo $row['rate']*$row['quantity'];?></td>
+						<?php endif;endif;?>
+						<td><?php echo $this->userObj->getColumn($row['salesperson'],'name');?></td>	
+					</tr>
+				<?php  $total_qty+=$row['quantity'];
+				if($row['payment_type']==2):
+				$total_bank += ($row['rate']*$row['quantity']);
+				elseif($row['payment_type']==1):
+				$total_cash += ($row['rate']*$row['quantity']);
+				elseif($row['credit']=='y'):
+				$total_credit += ($row['rate']*$row['quantity']);
+				elseif($row['credit']==1):
+				$total_adv += ($row['rate']*$row['quantity']);
+				endif;
+				$total+=($row['rate']*$row['quantity']);endforeach;?>
+					<tr>
+						<td></td>
+						<td></td>
+						<td></td>
+						<td></td>
+						<td></td>
+						<td><b>Total</b></td>
+						<td></td>
+						<td><b><?php echo number_format((float)$total_qty,2,'.',',');?><b></td>
+						<td><b><?php echo number_format((float)$total_bank,2,'.',',');?><b></td>
+						<td><b><?php echo number_format((float)$total_cash,2,'.',',');?><b></td>
+						<td><b><?php echo number_format((float)$total_credit,2,'.',',');?><b></td>
+						<td><b><?php echo number_format((float)$total_adv,2,'.',',');?><b></td>
+						<td><b><?php echo number_format((float)$total,2,'.',',');?><b></td>
+											
+					</tr>
+			</tbody>
+		</table>
+	</div>
+</div>
+<!-- for modal -->
+<div id="modal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+	<div class="modal-dialog">
+		<div class="modal-content">
+		</div>
+	</div>
+</div>
+<script type="text/javascript">
+$('document').ready(function(){
+	$('#start_date').datepicker();
+	$('#end_date').datepicker();
+	$('#dataTables').DataTable({
+		"paging":   true,
+	});
+	
+	$('#item_class').on('change', function(){
+		//alert($(this).val());
+		$.post(
+			"<?php echo $this->url('pos', array('action' => 'getItemgroup')); ?>",
+			{
+				item_class: $(this).val(),
+			},
+			function(data){
+				console.log(data);
+				$("#item_subgroup").html(data.subgroup);	
+				$("#item_subgroup").trigger('chosen:updated');
+			},
+			'json'
+		);	
+	});
+	$('#item_subgroup,#location').on('change', function(){
+		//alert($(this).val());
+		$.post(
+			"<?php echo $this->url('pos', array('action' => 'getItemChange')); ?>",
+			{
+				locationId: $("#location").val(),
+				item_subgroup: $("#item_subgroup").val(),
+			},
+			function(data){
+				console.log(data);
+				$("#item").html(data.items);	
+				$("#item").trigger('chosen:updated');
+			},
+			'json'
+		);	
+	});
+	//$('#item_subgroup,#location,#item_class').trigger('change');
+	$('#location').on('change', function(){
+		//alert($(this).val());
+		$.post(
+			"<?php echo $this->url('pos', array('action' => 'getUsers')); ?>",
+			{
+				locationId: $("#location").val(),
+			},
+			function(data){
+				console.log(data);
+				$("#user").html(data.users);	
+				$("#user").trigger('chosen:updated');
+			},
+			'json'
+		);	
+	});
+});
+</script>

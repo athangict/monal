@@ -1,0 +1,53 @@
+<?php
+/**
+ * View -- of Stock/SamController/deletestockopeningdetailAction
+ */
+?>
+<?php foreach($openingdtls as $detail);?>
+<form method="post" action="<?php echo $this->url('sam', array('action' => 'deletestockopeningdetail')); ?>"  enctype="multipart/form-data" >
+    <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+        <h4 class="modal-title"> 
+			<i class="fa fa-trash"></i> Remove Opening Details : <strong> <?php echo $this->locationObj->getColumn($detail['location'],'location');?>
+		</strong><?php echo $this->status($detail['status']);?></h4>
+    </div>  <!-- /modal-header -->
+    <div class="modal-body">
+		<div class="panel panel-default">                       
+			<div class="panel-body">  
+				<input type="hidden" name="openingdtl_id" id="openingdtl_id" value="<?php echo $detail['id'];?>" />
+				<ul class="list-unstyled spaced">									
+					<li>
+						<i class="ace-icon fa fa-caret-right blue"></i>
+						Quantity : <b class="red"> <?php echo $detail['quantity'];?></b>
+					</li>
+					<li>
+						<i class="ace-icon fa fa-caret-right blue"></i>
+						Selling Price : <b class="red"><?php echo $detail['selling_price'];?></b>
+					</li>
+				</ul>
+			</div>
+		</div>
+    </div> <!-- /modal-body -->
+    <div class="modal-footer">
+        <button type="submit" class="btn btn-danger btn-sm"><i class="fa fa-check"></i> Remove </button>
+        <button type="button" class="btn btn-warning btn-sm" data-dismiss="modal" ><i class="fa fa-times"></i> Cancel </button> 
+    </div>  
+</form>
+<script>
+	$('document').ready(function(){
+		$('select').chosen({ allow_single_deselect: true });
+		/*$('form').formValidation({
+			excluded: ':disabled',
+			message: 'Please provide a value.',
+			fields: {
+				quantity: {
+					validators: {
+						notEmpty: {
+							message: 'Please provide quantity in basic uom'
+						},
+					}
+				},
+			}
+		});*/
+	});
+</script>

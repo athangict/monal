@@ -1,0 +1,98 @@
+<?php
+/**
+ * 
+ * View -- of Hr/LeaveController/encashmentAction
+ * 
+ */
+$this->headTitle($this->title); ?>
+
+<div class="card">
+	<div class="card-header">
+		<div class="row">
+			<form id="#form" method="post" action="<?php echo $this->url('payroll',array('action'=>'pbvi')); ?>"  enctype="multipart/form-data" >
+				<div class="col-lg-2">
+					<label for="year" class="control-label">Year </label>
+					<select name="year" id="year" class="form-control" onchange='this.form.submit()'>
+						<option value=""></option>
+						<?php for($y=date('Y');$y >2022;$y--):
+							$selected = ($this->year == $y)?'selected':'';?>
+							<option value="<?php echo $y;?>" <?php echo $selected;?>>
+								<?php echo $y; ?>
+							</option>
+						<?php endfor; ?>
+					</select>
+				</div>
+			</form>
+			
+			<div class="btn-group pull-right">
+			<div class="space-12"></div>
+			<?php //if(sizeof($this->pbviObj->get(array('year'=>$year)))==0):?>
+				<div class="col-lg-2">
+					<div class="clearfix">
+						<div class="pull-right tableTools-container">
+						<a href="<?php echo $this->url('payroll', array('action'=>'generatepbvi','id'=>$year));?>"  class="btn btn-primary" onclick="confirmSubmit(this);" >
+						Generate PBVI for the Year <?php echo $year;?>
+					</a>
+					</div>
+				</div>
+				<?php //endif;?>
+			</div>
+		</div>
+	</div>
+	<div>
+	<table class="table table-bordered table-striped table-hover" id="dataTables">
+				<thead>
+					<tr>
+						<th>#</th>
+						<th>Year</th>
+						<th>Total Annual BP</th>
+						<th>Total Gross</th>
+						<th>Total TDS</th>
+						<th>Total Other Deduction</th>
+						<th>Total Net</th>
+						<th>Status</th>
+						<th>Action</th>
+					</tr>
+				</thead>
+				<tbody>
+					<?php
+					  $i = 1; 
+					  foreach ($pbvi as $row):?>
+						<tr>
+							<td><?php echo $i; ?>. </td>
+							<td><?php echo $row['year']; ?></td>	
+							<td><?php echo $row['total_salary']; ?></td>	
+							<td><?php echo $row['total_gross']; ?></td>	
+							<td><?php echo $row['total_tds']; ?></td>	
+							<td><?php echo $row['total_other_ded']; ?></td>	
+							<td><?php echo $row['total_net']; ?></td>						
+							<td><?php echo $this->status($row['status']); ?></td>
+							<td><?php echo $this->button(1,$row['id']);?></td>
+						</tr>
+					<?php 
+					$i++;
+					endforeach;  
+					?>
+				</tbody>
+			</table>
+		</div>
+	</div>
+</div>
+<div id="modal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+	<div class="modal-dialog">
+		<div class="modal-content">
+		</div>
+	</div>
+</div>
+<script type="text/javascript">
+	$('document').ready(function(){
+		$('#dataTables').DataTable({"paging":   true,});
+	});
+
+	$('#dataTables').genpdftable({
+		src:"<?php echo $this->url('pdfxls', array('action' => 'pdf'));?>",
+		orentation:"P",//L =landscape, P = potrait
+	});
+</script>
+
+

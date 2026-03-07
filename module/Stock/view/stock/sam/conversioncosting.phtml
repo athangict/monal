@@ -1,0 +1,171 @@
+<?php
+/**
+ * Costing of Item Conversion -- of Stock/SamController/conversioncosting
+ */
+$this->headTitle($this->title);
+foreach($this->itemDtls as $item);
+$costformuladtls = $this->formulaDtlObj->get(array('costing_formula' => $item['elc_formula']));
+?>
+<form method="post" action="<?php echo $this->url('sam', array('action' => 'conversioncosting')); ?>"  enctype="multipart/form-data" >
+ <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+        <h5 class="modal-title"> <i class="fa fa-asterisk"></i>ELC Costing for Converted Item <?php echo $item['name']; ?></h5>
+    </div>  <!-- /modal-header -->
+     <div class="modal-body">
+		<div class="panel panel-default">
+			<div class="panel-body">
+	 <table class="table table-striped table-bordered table-hover" id="dataTables">
+		<thead>
+			<tr>
+				<th>#</th>
+				<th>Costing Head</th>
+				<th>Value</th>
+				<th>Calculation</th>
+				<th>Formula</th>
+			</tr>
+		</thead>
+		<tbody>
+		<?php
+		$sl = 1;
+		$sheetValue = array();
+    	foreach ($costformuladtls as $formuladtl):
+    	?>
+	       <tr>
+				<td><?php echo $sl++; ?></td>
+				<td><b><?php echo $formuladtl['description']; ?></b>
+                <input type="hidden" name="costing_head[]" value="<?php echo $formuladtl['costing_head'];?>">
+                </td>
+                <td>
+				<?php
+				    // calculation
+					$string = $formuladtl['formula'];
+					$needle1 = "[";
+					$needle2 = "]";
+					$lastPos = 0;
+					$Pos = 0;
+					$start_pos = array();
+					$end_pos = array();
+
+					while (($lastPos = strpos($string, $needle1, $lastPos))!== false) {
+						$start_pos[] = $lastPos;
+						$lastPos = $lastPos + strlen($needle1);
+					}
+
+					while (($Pos = strpos($string, $needle2, $Pos))!== false) {
+						$end_pos[] = $Pos;
+						$Pos = $Pos + strlen($needle2);
+					}
+
+                    $variables = array();
+					if($start_pos[0] > 0 ){
+							$opt = substr($string, 0, 1);
+							array_push($variables, $opt);
+					}
+
+				    for($i = 0; $i < sizeof($start_pos); $i++){
+                        $len = $end_pos[$i] - $start_pos[$i];
+						$var = substr($string, $start_pos[$i] + 1, $len - 1);
+				    	if(strlen($var) > 0) { array_push($variables, $var ); }
+
+						$j = $i + 1;
+
+						$diff = $start_pos[$j] - $end_pos[$i];
+						if($diff > 2){
+							 for($k = $len+1; $k < ($len+$diff); $k++){
+								  $opt = substr($string, $start_pos[$i]+$k, 1);
+							      array_push($variables, $opt);
+								}
+						}
+					    else{
+						  $operPos = $start_pos[$i] + $len + 1 ;
+						  $operator = substr($string, $operPos, 1);
+						  if(strlen($operator) > 0 ) { array_push($variables, $operator); }
+					    }
+				     }
+
+				     $formula = "";
+
+				     foreach($variables as $var):
+
+				        $stored_operators = array("/","*","-","+", "(", ")");
+				        //Check whether the variable is operator or not
+				        if( in_array($var, $stored_operators)){
+				        	$formula =  $formula.$var;
+				        }
+				        else
+ 						{
+ 							$table = substr($var, 0, 1); // get the table name to fetch data
+ 							switch($table)
+ 							{
+ 								case "I":// get the supplier Invoice columns value
+ 										  $field = substr($var, 2);
+									      if($field == "unit_uom"):
+									          $c_units = $this->batchObj->getColumn($this->batch, $field);
+                                              $value   = $c_units;
+                						  endif;
+									      $formula = $formula.$value;
+ 									      break;
+ 								case "S": //get values from formula sheet
+ 									      $field = substr($var, 2);
+ 									      $formula = $formula.$sheetValue[$field];
+ 									      break;
+ 								case "C": // get values from charge tax
+ 									      $field = substr($var, 2);
+ 									      $chargeDtls = $this->chargeObj->get(array('charge_tax'=>$field));
+ 									      foreach ($chargeDtls as $charge):
+ 									        if($charge['percentage'] == "1"){
+ 									        	$chargeValue = $charge['value']/100;
+ 									        }
+ 									        else {
+ 									        	$chargeValue = $charge['value'];
+ 									        }
+ 									      //echo "<i>[".$field.":".$chargeValue."]</i>&nbsp;";
+ 									      $formula = $formula . $chargeValue;
+ 									      endforeach;
+ 									    //  echo  $chargeValue;
+ 									      break;
+ 								case "B": // get values from Item table
+ 								          $field = substr($var, 2);
+                                          $elc = $this->itemConversionObj->getColumn($this->id,'landed_cost');
+                                          $formula = $formula.$elc;
+										  break;
+ 							}
+ 						}
+				     endforeach;
+
+				     $sheetValue[$formuladtl['description']] = eval('return '.$formula.";");
+				     if($formuladtl['elc'] == '1'){
+					   echo "<b>".round($sheetValue[$formuladtl['description']], 3)."<i>&nbsp;[elc]</i></b>";
+					 }
+				     else{ echo round($sheetValue[$formuladtl['description']], 3); }
+				?>
+	       <input type="hidden" name="value[]" value="<?php echo $sheetValue[$formuladtl['description']]; ?>">
+			</td>
+			<td> <?php echo $formula."&nbsp;"; ?></td>
+			<td><span style="font-size:12px;">   <?php echo $formuladtl['formula']; ?></span>
+			<input type="hidden" name="elc[]" value="<?php echo $formuladtl['elc']; ?>">
+            <input type="hidden" name="formula[]" value="<?php echo $formuladtl['formula']; ?>">
+            <?php
+            $converted_item_elc = $this->itemConversionObj->getColumn($this->id,'converted_item_elc');
+            if($converted_item_elc > "0"){
+            ?>
+               <input type="hidden" name="elc_recalculate" value="1">
+            <?php
+            }
+            ?>
+            </td>
+		  </tr>
+		<?php
+		endforeach;
+		?>
+		</tbody>
+	  </table>
+	  <input type="hidden" name="conversion_id" value="<?php echo $this->id; ?>">
+	*Make sure <b><i>[elc]</i></b> is placed against the standard costing UOM instead of Basic UOM, Otherwise please contact Administrator.
+    </div>
+</div>
+<div class="modal-footer">
+    <button type="submit" class="btn btn-success"><i class="fa fa-check"></i> Save </button>
+    <button type="button" class="btn btn-warning" data-dismiss="modal" ><i class="fa fa-times"></i> Cancel </button>
+</div>
+</form>

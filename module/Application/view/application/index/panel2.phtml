@@ -1,0 +1,159 @@
+<?php
+/**
+ * View -- of Application/IndexController/panel2Action
+ * chophel@athang.com
+ */
+	$this->headTitle($title);
+?>
+<div class="container-xl">
+	<!-- Page title -->
+	<div class="page-header d-print-none">
+		<div class="row align-items-center">
+			<div class="col">
+				<!-- Page pre-title -->
+                <div class="page-pretitle">Overview</div>
+                <h2 class="page-title">Dashboard</h2>
+			</div>
+		</div>
+	</div>
+</div>
+<div class="page-body">
+	<div class="container-xl">
+		<div class="row row-deck row-cards">
+			<div class="col-lg-6">
+                <div class="card">
+                  	<div class="card-body">
+						<?php
+							$total_space = disk_total_space(".");
+							$free_space = disk_free_space(".");
+							$si_prefix = array( 'B', 'KB', 'MB', 'GB', 'TB', 'EB', 'ZB', 'YB' );
+							$base = 1024;
+							$total_space_class = min((int)log($total_space , $base) , count($si_prefix) - 1);
+							$total_space = sprintf('%1.2f' , $total_space / pow($base,$total_space_class));
+							$free_space = sprintf('%1.2f' , $free_space / pow($base,$total_space_class));
+							$used_space = $total_space - $free_space;
+							$free_space_percent = round(($free_space*100)/$total_space,2);
+							$used_space_percent = round(($used_space*100)/$total_space,2);
+							$storage_uom = $si_prefix[$total_space_class];
+						?>
+						<p class="mb-3">Using Storage <strong><?php echo $used_space." ".$storage_uom;?></strong>of <?php echo $total_space." ".$storage_uom;?></p>
+                        <div class="progress progress-separated mb-3">
+							<div class="progress-bar bg-primary" role="progressbar" style="width: <?php echo $used_space_percent;?>%"></div>
+                          	<div class="progress-bar bg-success" role="progressbar" style="width: <?php echo $free_space_percent;?>%"></div>
+                        </div>
+                        <div class="row">
+							<div class="col-auto d-flex align-items-center pe-2">
+								<span class="legend me-2 bg-info"></span>
+								<span>Total Space: <?php echo $total_space." ".$storage_uom;?></span>
+                          	</div>
+                          	<div class="col-auto d-flex align-items-center pe-2">
+								<span class="legend me-2 bg-primary"></span>
+								<span>Used Space: <?php echo $used_space." ".$storage_uom;?></span>
+                          	</div>
+							<div class="col-auto d-flex align-items-center px-2">
+								<span class="legend me-2 bg-success"></span>
+								<span>Free Space: <?php echo $free_space." ".$storage_uom;?></span>
+							</div>
+                        </div>
+						<div class="mt-3">
+						<table class="table card-table table-vcenter table-bordered">
+							<thead>
+								<tr>
+									<th style="width:25%">Server Name</th>
+									<td><?php echo $_SERVER['SERVER_NAME'];?></td>
+								</tr>
+								<tr>
+									<th style="width:25%">HTTP Host</th>
+									<td><?php echo $_SERVER['HTTP_HOST'];?></td>
+								</tr>
+								<tr>
+									<th style="width:25%">User Agent</th>
+									<td><?php echo $_SERVER['HTTP_USER_AGENT'];?></td>
+								</tr>
+								<tr>
+									<th style="width:25%">Remote Client Address</th>
+									<td><?php echo $_SERVER['REMOTE_ADDR'];?></td>
+								</tr>
+							</thead>
+						</table>	
+						</div>
+					</div>
+                </div>
+			</div>
+			<div class="col-lg-6">
+                <div class="card">
+                  	<div class="card-body">
+                    	<h3 class="card-title">Active Users in each PIU</h3>
+						<div id="chart5" class="canvas-chart"></div>
+						<?php
+							$Total_Active_Users = array();
+							$Total_Logins = array();
+							foreach($this->locationObj->get(array('l.status'=>'1')) as $location):
+								$users_in_location = $this->userObj->getCount(array('location'=> $location['id'],'status'=>'1'));
+								$user_logins_in_location = $this->userObj->getSum('logins',array('location'=> $location['id'],'status'=>'1'));
+								$user_logins_in_location = round($user_logins_in_location/1000,2);
+								array_push($Total_Active_Users,array("y"=>$users_in_location,"label"=>$location['location']));
+								array_push($Total_Logins,array("y"=>$user_logins_in_location,"label"=>$location['location']));
+							endforeach;
+						?>
+					</div>
+                </div>
+			</div>
+		</div>
+		<div class="row row-cards mt-1">
+			<?php foreach($this->menus as $menu):?>
+			<div class="col-sm-4">
+				<div class="card card-sm">
+					<div class="card-body">
+						<a href="<?php echo $this->url($menu['route'],array('action'=>$menu['action']));?>" style="text-decoration:none">
+                        <div class="row align-items-center">
+                          	<div class="col-auto">
+								<span class="bg-blue text-white avatar">
+									<i class="icon <?php echo $menu['icon'];?>"></i>
+								</span>
+                          	</div>
+                          	<div class="col">
+                            	<div class="font-weight-medium">
+									<?php echo $menu['menu'];?>
+                            	</div>
+								<div class="text-muted">
+									<?php echo $menu['description'];?>
+								</div>
+                          	</div>
+						</div>
+						</a>
+					</div>
+				</div>
+			</div>
+			<?php endforeach;?>
+		</div>
+	</div>
+</div>
+<script type="text/javascript">
+    $(function () {
+		var chart5 = new CanvasJS.Chart("chart5", {
+            animationEnabled: true,
+			exportFileName: "Active Users in each PIU",
+            exportEnabled: true,
+            legend: {
+                verticalAlign: "center",
+                horizontalAlign: "right",
+            },
+            theme: "light2",
+            data: [
+				{
+					type: "line",
+					name: "Active Users",
+					showInLegend: true,
+					dataPoints: <?php echo json_encode($Total_Active_Users, JSON_NUMERIC_CHECK); ?>
+				},{
+					type: "line",
+					name: "Login Traffic (Thousand)",
+					showInLegend: true,
+					dataPoints: <?php echo json_encode($Total_Logins, JSON_NUMERIC_CHECK); ?>
+				},
+            ]
+        });
+        chart5.render();
+	});
+</script>

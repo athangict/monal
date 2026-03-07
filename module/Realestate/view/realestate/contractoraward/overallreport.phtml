@@ -1,0 +1,271 @@
+<?php
+/*
+*	 View -- of Realestate/ContractorawardController/overallreportAction
+*
+*/?>
+<?php 
+	foreach($cont_award as $cont_aw):
+		extract($cont_aw);
+	endforeach;
+?>
+<div class="space-12"></div>
+<div class="row">
+	<div class="col-lg-12">
+		<div class="widget-box">
+			<div class="widget-header widget-header-smaller">
+				<h4 class="widget-title blue bolder smaller"> Bill Details </h4>
+				<div class="widget-toolbar hidden-xs">
+					<a  style='cursor:pointer' title="Export to Excel" id="excel">
+						<i class="fa fa-file-excel-o fa-lg blue"></i>
+					</a>&nbsp;&nbsp;
+					<a  style='cursor:pointer' title="Print PDF" id="print">
+						<i class="ace-icon fa fa-file-pdf-o fa-lg red"></i>
+					</a>&nbsp;&nbsp;
+				</div>
+			</div>
+			<div class="widget-body">
+				<div class="widget-main padding-24">
+				<div id="report-print">
+				<div class="row">
+					<input type="hidden" id="firm_name" value="<?php echo $this->partyObj->getColumn($contractor,'name').'<br>'; ?>" />
+					<strong>Name of Work: </strong><?php echo $project.'<br>'; ?>
+					<strong>Location: </strong><?php echo $location.'<br>'; ?>
+					<strong>Name of Firm: </strong><?php echo $this->partyObj->getColumn($contractor,'name').'<br>'; ?>
+					<strong>Sub-Title: </strong>Final Bill Details
+					</br>
+					</br>
+					<table class="table table-responsive table-bordered table-striped" id="table2excel">
+						<thead>
+							<tr>
+								<th>Sl.No.</th>
+								<th>Dated</th>
+								<th>Particular</th>
+								<th>Amount(Nu.)</th>
+							</tr>
+						</thead>
+						<tbody>
+						<?php $i=1; $j = 'A';
+							foreach($cont_advance as $adv):
+						?>
+							<tr>
+								<td><?php echo $i++;?></td>
+								<td><?php echo $adv['date'];?></td>
+								<td><?php if($adv['advance_type'] == 1){
+											echo 'Mobilization Advance';
+										}elseif($adv['advance_type'] == 2){
+											echo 'Secured Advance';
+										}else{
+											echo 'Anyother Advance';
+										}?></td>
+								<td><?php echo $adv['advance_amt'];?></td>
+							</tr>
+						<?php endforeach;?>
+						
+						<?php
+							//Work For Running Bill	
+							$cont_running_bill = $this->cont_runningObj->get(array('contractor_award' => $contractor_award,'bill_type' => 1));
+							foreach($cont_running_bill as $run):
+						?>
+							<tr>
+								<td><?php echo $i++;?></td>
+								<td><?php echo $run['bill_date'];?></td>
+								<td><?php echo $run['bill_no'];?></td>
+								<td><?php echo $run['running_amt'];?></td>
+							</tr>
+							<?php $run_tds = 0; $run_rm = 0;
+							$rows = $this->cont_runningObj->get(array('id'=>$run['id']));
+								foreach($rows as $row):extract($row);
+									$run_tds += $tds;
+									$run_rm += $retaining_amt;
+							?>
+								<tr>
+									<td></td> <td><?php echo $j++;?></td>
+									<td>2% TDS</td> <td><?php echo '('.$tds.')';?></td>
+								</tr>
+								<tr>
+									<td></td> <td><?php echo $j++;?></td>
+									<td>10% Retention Money Deducted</td> <td><?php echo '('.$retaining_amt.')';?></td>
+								</tr>
+								<?php if($adjustment_amt != '0'):?>
+								<tr>
+									<td></td> <td><?php echo $j++;?></td>
+									<td><?php if($adjustment_against == 1){echo 'Mobilization Advance';}elseif($adjustment_against == 2){echo 'Secured Advance';}?></td> <td><?php echo '('.$adjustment_amt.')';?></td>
+								</tr>
+								<?php endif;?>
+								<tr>
+									<td></td> <td><?php echo $j++;?></td>
+									<td><?php echo 'Net Payable Amount';?></td> <td><?php echo $payable_amt;?></td>
+								</tr>
+							<?php endforeach;?>
+						<?php endforeach;?>
+						
+						<?php
+							//Work For Final Bill	
+							$cont_final_bill = $this->cont_runningObj->get(array('contractor_award' => $contractor_award,'bill_type' => 2));
+							foreach($cont_final_bill as $run):
+						?>
+							<tr>
+								<td><?php echo $i++;?></td>
+								<td><?php echo $run['bill_date'];?></td>
+								<td><?php echo $run['bill_no'];?></td>
+								<td><?php echo $run['running_amt'];?></td>
+							</tr>
+							
+							<?php 
+							$rows = $this->cont_runningObj->get(array('id'=>$run['id']));
+								foreach($rows as $row):extract($row);
+									$adj_tds = $tds - $run_tds;
+									$adj_rm = $retaining_amt - $run_rm;
+							?>
+								<?php if(sizeof($cont_running_bill) > 0):
+									$running_amount=0;
+									foreach($cont_running_bill as $run_bill):
+									$running_amount += $run_bill['running_amt'];
+								?>
+									<tr>
+										<td></td> <td><?php echo $j++;?></td>
+										<td><?php echo $run_bill['bill_no'];?></td> <td><?php echo '('.$run_bill['running_amt'].')';?></td>
+									</tr>
+								<?php endforeach; endif;?>
+								
+								<?php if(sizeof($cont_running_bill) > 0):?>
+									<tr>
+										<td></td> <td><?php echo $j++;?></td>
+										<td>TDS Adjustment</td> <td><?php echo '('.$adj_tds.')';?></td>
+									</tr>
+									<tr>
+										<td></td> <td><?php echo $j++;?></td>
+										<td>Retaining Money Adjustment</td> <td><?php echo '('.$adj_rm.')';?></td>
+									</tr>
+									<tr>
+										<td></td> <td><?php echo $j++;?></td>
+										<td>10% Retention Money Deducted</td> <td><?php echo '('.$retaining_amt.')';?></td>
+									</tr>
+									<?php //calc total deduction and payable amount
+										$total_deduction = $running_amount + $adj_tds + $adj_rm + $retaining_amt;
+										$payable_amount = $run['running_amt'] - $total_deduction;
+									?>
+									<tr>
+										<td></td> <td><?php echo $j++;?></td>
+										<td>Total Deduction </td> <td><?php echo '('.$total_deduction.')';?></td>
+									</tr>
+									<tr>
+										<td></td> <td><?php echo $j++;?></td>
+										<td>Net Payable Amount </td> <td><?php echo $payable_amount;?></td>
+									</tr>
+								<?php endif;?>
+								
+								<?php //compare tds and retaining amount
+									if(sizeof($cont_running_bill) > 0):
+								?>
+									<tr>
+										<td><?php echo $i++;?></td>
+										<td colspan="2">Note: Calculation on the Deduction of TDS & R.M </td> <td></td>
+									</tr>
+									<tr>
+										<td></td> <td>1</td>
+										<td>2% TDS of Final Bill</td> <td><?php echo '('.$tds.')';?></td>
+									</tr>
+									<tr>
+										<td></td> <td>2</td>
+										<td>10% Retention Money of Final Bill</td> <td><?php echo '('.$retaining_amt.')';?></td>
+									</tr>
+									<!-- compare 2% TDS Work -->
+									<tr>
+										<td></td> <td>Compare</td>
+										<td>2% TDS</td> <td></td>
+									</tr>
+									<?php $k='a';
+									$total_tds = 0;
+									foreach($cont_running_bill as $run_bill):
+									$total_tds += $run_bill['tds'];
+									?>
+										<tr>
+											<td></td> <td><?php echo $k++;?></td>
+											<td><?php echo $run_bill['bill_no'];?></td> <td><?php echo '('.$run_bill['tds'].')';?></td>
+										</tr>
+									<?php endforeach;?>
+									<tr>
+										<td></td> <td><?php echo $k++;?></td>
+										<td>Adjusted TDS from Final Bill</td> <td><?php echo '('.$adj_tds.')';?></td>
+									</tr>
+									<tr>
+										<td></td> <td></td>
+										<td>Total TDS = 2% TDS of Final Bill</td> <td><?php $total_tds=$total_tds + $adj_tds; echo '('.$total_tds.')';?></td>
+									</tr>
+									<!-- compare 10% Retaining Money Work -->
+									<tr>
+										<td></td> <td>Compare</td>
+										<td>10% Retention Money</td> <td></td>
+									</tr>
+									<?php $l='a';
+									$total_rm = 0;
+									foreach($cont_running_bill as $run_bill):
+									$total_rm += $run_bill['retaining_amt'];
+									?>
+										<tr>
+											<td></td> <td><?php echo $l++;?></td>
+											<td><?php echo $run_bill['bill_no'];?></td> <td><?php echo '('.$run_bill['retaining_amt'].')';?></td>
+										</tr>
+									<?php endforeach;?>
+									<tr>
+										<td></td> <td><?php echo $l++;?></td>
+										<td>Adjusted R.M from Final Bill</td> <td><?php echo '('.$adj_tds.')';?></td>
+									</tr>
+									<tr>
+										<td></td> <td></td>
+										<td>Total R.M = 10% R.M of Final Bill</td> <td><?php $total_rm=$total_rm + $adj_tds; echo '('.$total_rm.')';?></td>
+									</tr>
+								<?php endif;?>
+								
+								<?php 
+								//if no running bill, and only final bill is produced
+								if(sizeof($cont_running_bill) == 0):?>
+									<tr>
+										<td></td> <td><?php echo $j++;?></td>
+										<td>2% TDS</td> <td><?php echo '('.$tds.')';?></td>
+									</tr>
+									<tr>
+										<td></td> <td><?php echo $j++;?></td>
+										<td>10% Retention Money Deducted</td> <td><?php echo '('.$retaining_amt.')';?></td>
+									</tr>
+									<?php if($adjustment_amt != '0'):?>
+									<tr>
+										<td></td> <td><?php echo $j++;?></td>
+										<td><?php if($adjustment_against == 1){echo 'Mobilization Advance';}elseif($adjustment_against == 2){echo 'Secured Advance';}?></td> <td><?php echo '('.$adjustment_amt.')';?></td>
+									</tr>
+									<?php endif;?>
+									<tr>
+										<td></td> <td><?php echo $j++;?></td>
+										<td><?php echo 'Net Payable Amount';?></td> <td><?php echo $payable_amt;?></td>
+									</tr>
+								<?php endif;?>
+							<?php endforeach;?>
+						<?php endforeach;?>
+						</tbody>
+					</table>
+				</div><!-- end of row -->
+				</div><!-- end of pdf print -->
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+<script>
+	var doc_name = $('input#firm_name').val();
+	$("#excel").click(function(){
+	  $("#table2excel").table2excel({
+		// exclude CSS class
+		exclude: ".noExl",
+		name: "Worksheet Name",
+		filename: "FinalBill_"+doc_name, //do not include extension
+	  }); 
+	});
+		
+	$('#print').genpdfinvoice({
+		content: '#report-print',
+		src:"<?php echo $this->url('pdfxls', array('action' => 'pdf'));?>",
+		orentation:"P",//L = landscape, P = potrait
+	});
+</script>
+

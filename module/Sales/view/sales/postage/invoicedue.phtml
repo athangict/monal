@@ -1,0 +1,190 @@
+<?php
+/**
+ * 
+ * View -- of Sales/MasterpsController/serviceAction
+ * 
+ */
+
+$this->headTitle($this->title);
+
+?>
+<?php //echo $this->partial('sales/masterpos/partial.phtml', array('active' => 'servicetarriff'));
+?>
+<div class="card">
+	<div class="card-header">
+		<div class="row">
+			<div class="col-lg-12">
+				<form method="POST" action="<?php echo $this->url('postage', array('action' => 'invoicedue')); ?>" enctype="multipart/form-data" >    
+						<div class="row">
+							<div class="form-group col-lg-2">
+								<label class="control-label" for="start_date">Start Date</label>
+								<div class="date input-group" id="start_date" data-date="<?php echo $data['start_date'];?>" data-date-format="yyyy-mm-dd" >
+									<input class="form-control span2" name="start_date" id="start_date" type="text" placeholder="Start Date" value="<?php echo $data['start_date'];?>"  required>
+									<span class="input-group-addon add-on"><i class="fa fa-calendar"></i></span>
+								</div>
+							</div>
+							<div class="form-group col-lg-2">
+								<label class="control-label" for="end_date">End Date</label>
+								<div class="date input-group" id="end_date" data-date="<?php echo $data['end_date'];?>" data-date-format="yyyy-mm-dd" >
+									<input class="form-control span2" name="end_date" id="end_date" type="text" placeholder="End Date" value="<?php echo $data['end_date'];?>"  required>
+									<span class="input-group-addon add-on"><i class="fa fa-calendar"></i></span>
+								</div>
+							</div>
+							<div class="form-group col-lg-2">
+							<label for="head" class="control-label">Head</label>
+							<select class="form-control" id="head" name="head" data-placeholder="Select">
+								<option value="-1">All</option>
+									<?php foreach($head as $heads):?>
+										<option value="<?php echo $heads['id']?>"<?php echo ($heads['id']==$data['head'])?'selected':'';?>>
+										<?php echo $heads['name'];?></option>
+									<?php endforeach;?>
+							</select>
+							</div>
+							<div class="form-group col-lg-2">
+								<label for="subhead" class="control-label">Sub Head</label>
+								<select class="form-control" id="subhead" name="subhead" data-placeholder="Select" >
+									<option value="-1">All</option>
+									<?php foreach ($subhead as $subheads):?>
+										<option value="<?php echo $subheads['id']?>"<?php echo ($subheads['id']==$data['subhead'])?'selected':'';?>>
+										<?php echo $subheads['name'];?>	</option>
+									<?php endforeach; ?>
+								</select>
+							</div>
+							<div class="form-group col-lg-2">
+								<label for="location" class="control-label">Location</label>
+								<select class="form-control" id="location" name="location" data-placeholder="Select" >
+									<option value="-1">All</option>
+									<?php foreach ($this->locationObj->getAll() as $locs) :?>
+										<option value="<?php echo $locs['id']?>"<?php echo ($locs['id']==$data['location'])?'selected':'';?>>
+										<?php echo $locs['location'];?>	</option>
+									<?php endforeach; ?>
+								</select>
+							</div>
+							<div class="form-group col-lg-1"><br>
+								<button type="submit" class="btn btn-sm btn-success pull-right"><i class="fa fa-gear"></i> Generate </button>
+							</div>
+						</div>
+					</form>
+				</div>
+			<div class="col-lg-3 ">
+				<div class="space"></div>
+				<div class="btn-group pull-right">
+					<?php echo $this->button(2);?>
+				</div>
+			</div>
+		</div>
+	</div>
+<div class="space-12"></div>
+	<div class="row">
+		<div class="col-lg-12"> 
+			<div class="widget-box transparent">
+				<div class="widget-header widget-header-smaller">
+					<h4 class="widget-title blue bolder smaller"> Invoice  for Due Booking</h4>
+				</div>
+				<div class="widget-toolbar hidden-xs">
+					<div class="btn-list">
+						<?php //if($edit_option){ echo $this->button(2,$row['id']); }?>
+						<span data-bs-toggle='tooltip' data-bs-placement='top' title='PDF Print'>
+							<a class='btn btn-danger btn-xs' id="print">
+							<i class="ace-icon fa fa-file-pdf-o bigger-120"></i></a></span>
+					</div>
+				</div>
+				<div class="widget-body" id="print-content">
+					<div class="widget-main padding-12">
+					<div id="report-print">
+					<div class="row" id="convert-tb0">
+							<div class="col-lg-12">
+							</br>
+								<h3 align="center"><?php echo $this->locationObj->getColumn($data['location'],'location');?></h3>
+								<h3 align="center">Creditor:<?php echo $this->subheadObj->getColumn($data['subhead'],'name');?></h3>
+								<h4>Invoice Date: <?php echo $data['start_date'].' to '.$data['end_date']?></h4>
+							</div>
+						</div>
+					<table class="table table-striped table-hover table-condensed table-bordered" style="width:100%; ">
+						<thead>
+							<tr>
+								<th  style="width:7%;"><b>Sl. No.</b></th>
+								<th style="width:11%;"><b>Date</b></th>
+								<th style="width:32%;"><b>Particulars</b></th>
+								<th style="width:18%;"><b>Voucher Type</b></th>
+								<th style="width:20%;"><b>Voucher No.</b></th>
+								<th style="width:12%;"><b>Amount</b></th>
+							</tr>
+						</thead>
+						<tbody>
+							<?php
+								$i = 1; $total_amt = 0;
+								foreach ($paginator as $row):
+								$credit=$this->trandtlObj->getCreditsubhead(array('transaction'=>$row['transaction']));
+								foreach($credit as $credits);
+									
+								?>
+								<tr>
+									<td style="width:7%;"><?php echo $i++; ?> </td>
+									<td style="width:11%;"><?php echo $row['voucher_dates'];?></td>	
+									<td style="width:32%;"><b><?php echo  $this->subheadObj->getColumn($credits['sub_head'],'name');?></b><br><i>Ref: 
+									<?php echo $row['remark'];?></i></td>
+									<td style="width:18%;"><b><?php echo $this->voucherObj->getColumn($row['voucher_types'],'journal');?></b></td>
+									<td style="width:20%;"><b><?php echo $row['voucher_no'] ;?></b></td>
+									<td style="width:12%;"><b><?php echo number_format($row['debit'],2);?></b></td>
+									
+										
+								</tr>
+							<?php 
+							$total_amt = $total_amt+$row['debit'];
+								
+							endforeach;
+											// Assuming $total contains the numeric grand total
+											$numberFormatter = new NumberFormatter("en", NumberFormatter::SPELLOUT);
+											$amountInWords = ucfirst($numberFormatter->format($total_amt));
+											?>
+								<tr>
+									<td style="width:7%;"></td>
+									<td style="width:11%;"></td>
+									<td style="width:32%;"></td>
+									<td style="width:18%;"></td>
+									<td style="width:20%;"><b>TOTAL(Nu)<b></td>
+									<td style="width:12%;"><b><?php echo number_format($total_amt,2);?><b></td>							
+								</tr>
+					
+						</tbody>
+					</table>
+					<div>
+					<h5>Amount in word:<?php echo $amountInWords.' Only';?></h5>
+					</br></br></br>
+					<p><i>This is system generated invoice</i></p>
+					</br>
+					<p>Printed on: <?php echo date('y-m-d');?></p>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+
+<script type="text/javascript">
+	
+$(function(){
+	$('#start_date').datepicker();
+	$('#end_date').datepicker();
+	$('select#head').on('change', function() {
+			$.post(
+				"<?php echo $this->url('vehicle', ['action'=>'getsubhead']); ?>",
+				{
+					headId: $(this).val()
+				},
+				function(data){
+					$('select#subhead').html(data.subhead);
+					$('select#subhead').trigger('chosen:updated');
+				},'json'
+			);
+		});
+	 $('#print').gentcpdf({
+		content: '#print-content',
+		src:"<?php echo $this->url('print', array('action' => 'index'));?>",
+		orentation:"P",
+		size: 'A4',
+	});
+	
+});
+</script>

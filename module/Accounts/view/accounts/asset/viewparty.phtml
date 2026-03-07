@@ -1,0 +1,164 @@
+<?php
+/**
+ * 
+ * View -- of Accounts/AssetConoller/viewpartyAction
+ * 
+ */
+	$this->headTitle($this->title);
+	$party='';
+?>
+<?php echo $this->partial('accounts/asset/partial.phtml', array('active' => 'party')); ?>
+<a class="btn btn-xs btn-danger hidden-xs pull-right" style='cursor:pointer' id="print">
+	<i class="ace-icon fa fa-file-pdf-o fa-lg "></i>
+</a>	
+<div class="space-12"></div>
+<?php foreach ($parties as $party);
+//echo '<pre>';print_r($parties);exit;	?>
+  
+<div id="report-print">     	          
+	<div class="row" id="convert-table">
+		<span class="col-xs-12 col-sm-3 center" id="convert-tab1">
+			<span class="profile-picture">
+				<img class="editable img-responsive" alt="<?php echo $party['name']; ?>" id="<?php echo $party['name']; ?>" src="data:image/png;base64,<?php echo base64_encode($img);?>" />
+			</span>
+
+			<div class="space space-4"></div>
+			<?php echo $this->button(3, $party['id']);?>
+			
+			<a href="<?php echo $this->url('asset', array('action'=>'editparty','id'=>$party['id']))?>" class="btn btn-sm btn-block btn-info">
+				<i class="ace-icon fa fa-pencil bigger-120"></i>
+				<span>Edit Party Details</span>
+			</a>
+		</span>
+		<span class="col-xs-12 col-sm-9" id="convert-tab2">
+			<h4 class="blue">
+				<span class="middle"><?php echo $party['code']; ?></span>
+				<span class="label label-pink arrowed-in-right">
+					<i class="ace-icon fa fa-circle smaller-80 align-middle"></i>
+					<?php echo $party['role'];?>
+				</span>
+			</h4>
+
+			<div class="profile-user-info">
+				<div class="profile-info-row">
+					<div class="profile-info-name"> Party Code </div>
+
+					<div class="profile-info-value">
+						<span><?php echo $party['code'];?></span>
+					</div>
+				</div>
+				<div class="profile-info-row">
+					<div class="profile-info-name"> Full Name </div>
+
+					<div class="profile-info-value">
+						<span><?php echo $party['name'];?></span>
+					</div>
+				</div>
+				<div class="profile-info-row">
+					<div class="profile-info-name"> Contact Person </div>
+
+					<div class="profile-info-value">
+						<span><?php echo $party['contact_person'];?></span>
+					</div>
+				</div>
+				<div class="profile-info-row">
+					<div class="profile-info-name"> Phone/Fax/Email </div>
+					
+					<div class="profile-info-value">
+						<span> <?php echo $party['telephone'];?> / <?php echo $party['tpn'];?> / <?php echo $party['email'];?></span>
+					</div>
+				</div>
+				
+				<div class="profile-info-row">
+					<div class="profile-info-name"> Location </div>
+
+					<div class="profile-info-value">
+						<i class="fa fa-map-marker light-orange bigger-110"></i>
+						<span><?php echo $party['country'];?></span>
+						<span><?php echo $party['region'];?></span>
+						<span><?php echo $party['city'];?></span>
+					</div>
+				</div>
+
+				<div class="profile-info-row">
+					<div class="profile-info-name"> Address </div>
+
+					<div class="profile-info-value">
+						<span><?php echo $party['address1'];?></span>
+					</div>
+				</div>
+				
+				<div class="profile-info-row">
+					<div class="profile-info-name"> Postal Code </div>
+
+					<div class="profile-info-value">
+						<span><?php echo $party['postal_code'];?></span>
+					</div>
+				</div>
+
+				<div class="profile-info-row">
+					<div class="profile-info-name"> Postal Location </div>
+
+					<div class="profile-info-value">
+						<span><?php echo ($party['location'] == 0 || $party['location'] == '')?'N/A':$this->locationObj->getColumn($party['location'],'location');?></span>
+					</div>
+				</div>
+			</div>
+		</span>
+	</div>
+	<div class="row">
+		<div class="col-lg-12">
+			<div class="space-12"></div>
+			<div class="widget-box transparent">
+				<div class="widget-header widget-header-small">
+					<h4 class="widget-title smaller"> 
+						<i class="ace-icon fa fa-lightbulb-o bigger-120"></i>
+						Subhead
+					</h4>
+				</div>
+				<div class="widget-body">
+					<div class="widget-main">
+						<div class="table-responsive">
+							<table class="table-striped table-bordered table-condensed col-lg-12 table-responsive">
+								<thead>
+									<tr>
+										<th>#</th>
+										<th>Head Type</th>
+										<th>Head</th>
+										<th>Description</th>
+									</tr>
+								</thead>
+								<tbody> 
+									<?php $i = 1; foreach ($subheads as $sh): ?>
+										<tr>
+											<td><?php echo $i++;?></td>
+											<td><?php echo $sh['head_type']; ?></td>
+											<td><?php echo $sh['head']; ?></td>
+											<td><?php echo $sh['code']; ?></td>
+										</tr>
+									<?php endforeach; ?>
+								</tbody>
+							</table>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+<div id="modal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+	<div class="modal-dialog">
+		<div class="modal-content">                                                  
+		</div>
+	</div>
+</div>  
+<script type="text/javascript">
+	$('#print').genpdfprofile({
+		content: '#report-print',
+		src:"<?php echo $this->url('pdfxls', array('action' => 'pdf'));?>",
+		orentation:"P",//L =landscape, P = potrait
+	});
+</script>   
+
+   			
+    

@@ -1,0 +1,68 @@
+<?php
+/** 
+ * View -- of Store/PaymentController/getpreceiptAction
+ */
+   $this->headTitle($this->title);
+?>
+<form id="#form"  method="post" action="<?php echo $this->url('inpurpayment', array('action' => 'addpayment')); ?>" >
+    <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+        <h4 class="modal-title"> <i class="fa fa-asterisk"></i> Get From Purchase Rceipt</h4>
+    </div>  <!-- /modal-header -->
+    <div class="modal-body">
+        <div class="panel panel-default">                       
+            <div class="panel-body"> 
+                <div class="form-group">
+                    <label for="preceipt" class="control-label">Purchase Receipt</label>
+					<select id="preceipt" name="preceipt" class="form-control" data-placeholder="Select" required>
+						<option value=""></option>
+						<?php foreach($this->purchasereceipts as $purchasereceipt):?>
+						<option value = "<?php echo $purchasereceipt['id'];?>"><?php echo $purchasereceipt['purchase_receipt_no']."|".$purchasereceipt['activity']."|".$purchasereceipt['item_group']."|".$purchasereceipt['purchase_receipt_date'];?></option>
+						<?php endforeach;?>
+                    </select>
+                </div>                    
+            </div>
+        </div>
+    </div> <!-- /modal-body -->
+    <div class="modal-footer">
+        <button type="submit" class="btn btn-success"><i class="fa fa-check"></i> Get </button>
+        <button type="button" class="btn btn-warning" data-dismiss="modal"><i class="fa fa-times"></i> Cancel </button>
+    </div>  
+</form>
+<script>
+	$('document').ready(function(){
+		const fv = FormValidation.formValidation(document.getElementById('#form'), {
+			fields: {
+				supplier: {
+					validators: {
+						notEmpty: {
+							message: 'Please select supplier.'
+						},
+					}
+				},
+				porder: {
+					validators: {
+						notEmpty: {
+							message: 'Please select purchase order.'
+						}
+					}
+				},
+			},
+			plugins: {
+				trigger: new FormValidation.plugins.Trigger(),
+				bootstrap3: new FormValidation.plugins.Bootstrap3(),
+				submitButton: new FormValidation.plugins.SubmitButton(),
+				defaultSubmit: new FormValidation.plugins.DefaultSubmit(),
+			},
+		}).on('core.element.validated', function (e) {
+			if (e.valid) {
+				$('div#'+ e.field.replace('[]','') +'_chosen').removeClass('is-invalid');
+				$('div#'+ e.field.replace('[]','') +'_chosen').addClass('is-valid');
+			} else {
+				$('div#'+ e.field.replace('[]','') +'_chosen').removeClass('is-valid');
+				$('div#'+ e.field.replace('[]','') +'_chosen').addClass('is-invalid');
+			}
+		});
+		
+	});
+</script>

@@ -1,0 +1,225 @@
+<?php
+/**
+ * 
+ * View -- of Accounts/AssetController/editcashaccountAction
+ * 
+ */
+	$this->headTitle($this->title);
+?>
+<?php 
+    foreach($this->cashaccounts as $cashaccount):
+        extract($cashaccount);
+    	$code = $cash_account_code;
+		$name = $cash_account_name;
+    endforeach;
+?>
+<div class="row">
+	<div class="col-lg-12">
+		<div class="widget widget-box">
+			<div class="widget-header">
+				<h5 class="widget-title lighter smaller">
+					<i class="fa fa-asterisk"></i> Edit Cash Account
+				</h5>
+			</div>
+			<div class="widget-body">
+				<div class="widget-main">
+					<form id="form" method="post" action="<?php echo $this->url('asset', array('action' => 'editcashaccount', 'id' => $id)); ?>" enctype="multipart/form-data" >
+						<div class="row">    
+							<div class="form-group col-lg-4">
+								<label for="cash_account_code" class="control-label">Cash Account Code</label>
+								<input type="text" class="form-control" name="cash_account_code" id="cash_account_code" value="<?php echo $code;?>" placeholder="Cash Account Code" required>
+							</div>
+							<div class="form-group col-lg-4">
+								<label for="cash_account_name" class="control-label">Cash Account Name</label>
+								<input type="text" class="form-control" name="cash_account_name" id="cash_account_name" value="<?php echo $name;?>" placeholder="Cash Account Name" required>
+							</div>
+							<div class="form-group col-lg-4">
+								<label for="region" class="control-label">Region</label>
+								<select class="form-control" id="region" name="region" data-placeholder="Select" required >
+									<option value=""></option>
+									<?php 
+									foreach ($regions as $regionrow):
+										$selected=($region_id==$regionrow['id'])?"selected":"";
+									?>
+										<option value="<?php echo $regionrow['id'];?>"<?php echo $selected;?>>
+											<?php echo $regionrow['region'];?>
+										</option>
+									<?php
+									endforeach;
+									?>
+								</select>
+							</div>
+						</div>
+						<div class="row">  
+							<div class="form-group col-lg-4">
+								<label for="location" class="control-label">Location</label>
+								<select class="form-control chosen-widget" id="location" name="location" data-placeholder="Select" required >
+									<option value=""></option>
+									<?php 
+									foreach ($this->locationObj->get(array('region'=>$region_id)) as $locationrow):
+										$selected=($location_id==$locationrow['id'])?"selected":"";
+									?>
+										<option value="<?php echo $locationrow['id'];?>"<?php echo $selected;?>>
+											<?php echo $locationrow['location'];?>
+										</option>
+									<?php
+									endforeach;
+									?>
+								</select>
+							</div>        
+						</div>
+						<div class="row">
+							<div class="col-lg-12"> 
+								<h5 class='header blue'>Sub Head Details</h5>
+								<table id="head_table" class="table small-padding">
+									<thead>
+										<tr>
+											<th>Head Type</th>
+											<th>Head</th>
+											<th>&nbsp;</th>
+										</tr>
+									</thead>
+									<tbody>
+										<?php 
+											$count=sizeof($subheads);
+											if($count > 0):
+												foreach($subheads as $subheads):?>
+													<tr>
+														<td>
+															<div class="form-group">
+																<select class="form-control head_type" id="head_type" name="head_type[]" data-placeholder="Select" >
+																	<option value=""></option>
+																	<?php 
+																	foreach ($headtypes as $headtype):
+																		$selected = ($subheads['headtype_id'] == $headtype['id'])? "selected":"";
+																	?>
+																		<option value="<?php echo $headtype['id'];?>" <?php echo $selected	?>>
+																			<?php echo $headtype['head_type'];?>
+																		</option>
+																	<?php endforeach;?>
+																</select>
+															</div>
+															<input type="hidden" id="subhead_id" name="subhead_id[]" value="<?php echo $subheads['id'];?>"/>
+														</td>
+														<td>
+															<div class="form-group">
+																<select class="form-control head" id="head" name="head[]" data-placeholder="Select" >
+																	<option value=""></option>
+																	<?php 
+																	$heads=$headObj->get(array('h.head_type'=> $subheads['headtype_id']));
+																	
+																	foreach ($heads as $headrow):
+																		$selected = ($subheads['head_id'] == $headrow['id'])? "selected":"";
+																	?>
+																		<option value="<?php echo $headrow['id'];?>" <?php echo $selected	?>>
+																			<?php echo $headrow['code'];?>
+																		</option>
+																	<?php endforeach;?>
+																</select>
+															</div>
+														</td>
+														<td></td>
+													</tr>
+												<?php endforeach;?>
+											<?php else:	?>
+												<tr>
+													<td>
+														<div class="form-group">
+															<select class="form-control head_type" id="head_type" name="head_type[]" data-placeholder="Select" >
+																<option value=""></option>
+																<?php foreach ($headtypes as $headtype):?>
+																	<option value="<?php echo $headtype['id'];?>">
+																		<?php echo $headtype['head_type'];?>
+																	</option>
+																<?php endforeach;?>
+															</select>
+														</div>
+													</td>
+													<td>
+														<div class="form-group">
+															<select class="form-control head" id="head" name="head[]" data-placeholder="Select" >
+																<option value=""></option>
+															</select>
+														</div>
+													</td>
+													<td width="30px;"></td>
+												</tr>
+											<?php endif;?>
+									</tbody>
+								</table>
+							</div>
+						</div>  
+						<div class="row">
+							<div class="col-lg-12"> 
+								<button type="submit" class="btn btn-success"><i class="fa fa-check"></i> Save </button>
+								<button type="button" class="btn btn-warning" onclick="javascript:history.back();" ><i class="fa fa-times"></i> Cancel </button>
+							</div>
+						</div>
+					</form>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+<script>
+	$(function() {		
+		$("#region").change(function() { 
+			$('#location').load("<?php echo $this->url('ajresponse', array('action' => 'getlocation')); ?>/"+ $("#region").val(), function() {
+				$("#location").trigger('chosen:updated');
+				$('form').formValidation('revalidateField','location');
+			});
+	    });
+		/****** dynamic insertion of table row*******/
+		$('#head_table').subhead({src:'<?php echo $this->url("ajresponse", array("action" => "gethead")); ?>'});	
+	
+		const fv = FormValidation.formValidation(document.getElementById('#form'), {
+			fields: {
+				scash_account: {
+						validators: {
+							notEmpty: {
+								message: 'Please provide cash account.'
+							}
+						}
+					},
+					location: {
+						validators: {
+							notEmpty: {
+								message: 'Please select location.'
+							}
+						}
+					},
+					/*'head_type[]': {
+						validators: {
+							notEmpty: {
+								message: 'Please select Head Type'
+							}
+						}
+					},
+					'head[]': {
+						validators: {
+							notEmpty: {
+								message: 'Please select Head'
+							}
+						}
+					},*/
+			},
+			plugins: {
+				trigger: new FormValidation.plugins.Trigger(),
+				bootstrap3: new FormValidation.plugins.Bootstrap3(),
+				submitButton: new FormValidation.plugins.SubmitButton(),
+				defaultSubmit: new FormValidation.plugins.DefaultSubmit(),
+			},
+		}).on('core.element.validated', function (e) {
+			if (e.valid) {
+				$('div#'+ e.field.replace('[]','') +'_chosen').removeClass('is-invalid');
+				$('div#'+ e.field.replace('[]','') +'_chosen').addClass('is-valid');
+			} else {
+				$('div#'+ e.field.replace('[]','') +'_chosen').removeClass('is-valid');
+				$('div#'+ e.field.replace('[]','') +'_chosen').addClass('is-invalid');
+			}
+		});
+		$('form select').chosen().change(function () {
+			fv.revalidateField($(this).attr('name'));
+		});
+	});
+</script>

@@ -1,0 +1,287 @@
+<?php
+/**
+ * View -- of Sales/FundController/addfundtransferAction
+ */
+//previous form id=' id="transForm"'
+?>
+<div class="row">
+	<div class="col-lg-12">
+        <div class="widget widget-box">
+            <div class="widget-header">
+            	<h5 class="widget-title lighter smaller">
+	            	<i class="fa fa-asterisk"></i> New Fund Transfer
+	             </h5>
+            </div>
+            <div class="widget-body">
+				<div class="widget-main">
+					<form  id="#form" method="post" action="<?php echo $this->url('fund', array('action' => 'addfundtransfer')); ?>"  enctype="multipart/form-data" >    
+						
+						<div class="row">
+							<div class="col-lg-12"> 
+								<!--h5>Fund Transfer Details</h5-->
+								<div>
+									<table id="trdetails_table" class="table small-padding">
+										<thead>
+											<tr>
+												<th></th>
+												<th>Location</th>
+												<th>Activity</th>
+												<th>Account</th>
+											</tr>
+										</thead>
+										<tbody>
+											<tr>
+												<td class="col-lg-2">
+													<h4 class="smaller ligher"><b>From Location :</b></h4>
+												</td>
+												<td class="col-lg-2">
+													<div class="form-group">
+														<select id="from_location" name="from_location" class="form-control" data-placeholder="Select" required>
+															<option value=""></option>
+															<?php 
+																foreach ($regions as $region):
+															?>
+																<optgroup label="<?php echo $region['region'];?>">
+																		<?php  
+																			 // retrive locations under the above region ID
+																			 $locations = $locationObj->get(array('region'=>$region['id']));
+																		  
+																			 foreach ($locations as $location):
+																		 ?>
+																		 <option value="<?php echo $location['id']; ?>">
+																			<?php echo $location['location']; ?>
+																		 </option>
+																		 <?php 
+																			 endforeach;
+																		 ?>
+																 </optgroup>
+															<?php 
+															  endforeach;
+															?>
+														</select>
+													</div>
+												</td>
+												<td class="col-lg-2">
+													<div class="form-group">
+														<select id="from_activity" name="from_activity" class="form-control"  data-placeholder="Select" required >
+															<option value=""></option>
+															<?php 
+															foreach ($activities as $activity):
+															$selected = ($activity['id'] == 5)? "selected":"";
+															?>
+																<option value="<?php echo $activity['id'];?>"<?php echo $selected;?>>
+																<?php echo $activity['activity']; ?>
+																</option>
+															<?php 
+															endforeach;
+															?>
+														</select>
+													</div>
+												</td>
+												<td class="col-lg-2">
+													<div class="form-group">
+														<select id="from_sub_head" name="from_sub_head" class="form-control tr_head" data-placeholder="~~ From Account ~~" required>
+															<option value=""></option>
+															<?php 
+																$cash_sub_acc = $this->subheadObj->get(array('head' => array('210','212')));
+																foreach ($cash_sub_acc as $cash_sub_acc):
+															?>
+																<option value="<?php echo $cash_sub_acc['id'];?>"><?php echo $cash_sub_acc['code'];?></option>
+															<?php 
+																endforeach;
+															?>
+														</select>
+													</div>
+												</td>
+											</tr>
+											<tr>
+												<td class="col-lg-2">
+													<h4 class="smaller ligher"><b>To Location :</b></h4>
+												</td>
+												<td class="col-lg-2">
+													<div class="form-group">
+														<select id="to_location" name="to_location" class="form-control" data-placeholder="Select" required >
+															<option value=""></option>
+															<?php 
+																foreach ($regions as $region):
+															?>
+																<optgroup label="<?php echo $region['region'];?>">
+																		<?php  
+																			 // retrive locations under the above region ID
+																			 $locations = $locationObj->get(array('region'=>$region['id']));
+																			  
+																			 foreach ($locations as $location):
+																		 ?>
+																		 <option value="<?php echo $location['id']; ?>">
+																			<?php echo $location['location']; ?>
+																		 </option>
+																		 <?php 
+																			 endforeach;
+																		 ?>
+																 </optgroup>
+															<?php 
+															  endforeach;
+															?>
+														</select>
+													</div>
+												</td>
+												<td class="col-lg-2">
+													<div class="form-group">
+														<select id="to_activity" name="to_activity" class="form-control"  data-placeholder="Select" required >
+															<option value=""></option>
+															<?php 
+															foreach ($activities as $activity):
+															$selected = ($activity['id'] == 5)? "selected":"";
+															?>
+																<option value="<?php echo $activity['id'];?>"<?php echo $selected;?>>
+																<?php echo $activity['activity']; ?>
+																</option>
+															<?php 
+															endforeach;
+															?>
+														</select>
+													</div>
+												</td>
+												<td class="col-lg-2">
+													<div class="form-group">
+														<select id="to_sub_head" name="to_sub_head" class="form-control tr_head" data-placeholder="~~ To Account ~~" required >
+															<option value=""></option>
+															<?php 
+																$bank_sub_acc = $this->subheadObj->get(array('head' => array('210','212')));
+																foreach ($bank_sub_acc as $bank_sub_acc):
+															?>
+																<option value="<?php echo $bank_sub_acc['id'];?>"> <?php echo $bank_sub_acc['code'];?></option>
+															<?php 
+																endforeach;
+															?>
+														</select>
+													</div>
+												</td>
+											</tr>									
+										</tbody>
+									</table>
+								</div>
+							</div>
+						</div>
+						<div class="row"> 
+							<div class="col-lg-6"></div>
+							<div class="col-lg-3">    
+								<div class="form-group">
+									<label for="transfer_date" class="control-label">Fund Transfer Date</label>
+									<div class="date input-group" id="transfer_date" data-date="<?php echo date('Y-m-d');?>" data-date-format="yyyy-mm-dd" >
+										<input class="form-control span2" name="transfer_date" id="transfer_date" type="text" value="<?php echo date('Y-m-d');?>" placeholder="Transfer Date" readonly required>
+										<span class="input-group-addon add-on"><i class="fa fa-calendar"></i></span>
+									</div>
+								</div>
+							</div>
+							<div class="col-lg-3">
+								<div class="form-group">
+									<label for="transfer_amount" class="control-label">Fund Transfer Amount(<?php //echo $this->currency_code();?>)</label>
+									<input type="text" class="form-control" name="transfer_amount" id="transfer_amount" placeholder="Fund Transfer Amount" required />
+								</div>
+							</div>   
+						</div>
+						<div class="row">
+							<div class="col-lg-12">
+								<div class="form-group">
+									<label for="remarks">Remark (Narration)</label>
+									<textarea class="form-control" name="remark" id="remark" ></textarea>  
+								</div>
+							</div>
+						</div>
+						<br/>
+						<button type="submit" class="btn btn-success"><i class="fa fa-check"></i> Commit </button>
+						<button type="button" class="btn btn-warning" onclick="javascript:history.back();" ><i class="fa fa-times"></i> Cancel </button> 
+					</form>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+<br/>
+<script type="text/javascript">
+$(function() {
+	$('#transfer_date').datepicker();
+	$('#transfer_date').on('changeDate',function(){
+		$('form').formValidation('revalidateField', $(this).attr('id'));
+	});
+	//formValidation
+	const fv = FormValidation.formValidation(document.getElementById('#form'), {
+		fields: {
+			'transfer_date': {
+				validators: {
+					notEmpty: {
+						message: 'Please enter fund transfer date'
+					}
+				}
+			},
+			'transfer_amount': {
+				validators: {
+					notEmpty: {
+						message: 'Please provide fund transfer amount'
+					},
+					numeric: {
+						message: 'Please provide numeric value'
+					}
+				}
+			}, 
+			'from_location': {
+				validators: {
+					notEmpty: {
+						message: 'Please select source location'
+					}
+				}
+			},
+			'from_activity': {
+				validators: {
+					notEmpty: {
+						message: 'Please select source activity'
+					}
+				}
+			}, 
+			'from_sub_head': {
+				validators: {
+					notEmpty: {
+						message: 'Please select source subhead'
+					}
+				}
+			},  
+			'to_location': {
+				validators: {
+					notEmpty: {
+						message: 'Please select destination location'
+					}
+				}
+			},
+			'to_activity': {
+				validators: {
+					notEmpty: {
+						message: 'Please select destination activity'
+					}
+				}
+			}, 
+			'to_sub_head': {
+				validators: {
+					notEmpty: {
+						message: 'Please select destination subhead'
+					}
+				}
+			},  
+		},
+		plugins: {
+			trigger: new FormValidation.plugins.Trigger(),
+			bootstrap3: new FormValidation.plugins.Bootstrap3(),
+			submitButton: new FormValidation.plugins.SubmitButton(),
+			defaultSubmit: new FormValidation.plugins.DefaultSubmit(),
+		},
+	}).on('core.element.validated', function (e) {
+		if (e.valid) {
+			$('div#'+ e.field.replace('[]','') +'_chosen').removeClass('is-invalid');
+			$('div#'+ e.field.replace('[]','') +'_chosen').addClass('is-valid');
+		} else {
+			$('div#'+ e.field.replace('[]','') +'_chosen').removeClass('is-valid');
+			$('div#'+ e.field.replace('[]','') +'_chosen').addClass('is-invalid');
+		}
+	});
+});
+</script> 

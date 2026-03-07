@@ -1,0 +1,96 @@
+<?php
+/**
+ * View -- of Sales/ClaimController/claimAction
+ */
+	$this->headTitle($this->title);	
+?>
+<?php $minYear = date('Y', strtotime($minYear)); ?>
+<div class="card">
+	<div class="card-header">
+		<div class="row">
+			<form id="#form" method="post" action="<?php echo $this->url('claim'); ?>"  enctype="multipart/form-data" >
+				<div class="form-group col-lg-3">
+					<label class="control-label" for="year">Year</label>
+					<select class="form-control" id="year" name="year" data-placeholder="Select" onchange='this.form.submit()'>
+						<option value=""></option>
+						<?php 
+							for($year=date('Y');$year>=$minYear;$year--):
+								$selected = ($year == $data['year'])?"selected":"";
+						?>
+							<option value="<?php echo $year;?>" <?php echo $selected;?> >
+								<?php echo $year;?> 
+							</option>
+						<?php endfor; ?>
+					</select>
+				</div>
+				<div class="form-group col-lg-3">
+					<label class="control-label" for="month">Month</label>
+					<select class="form-control" id="month" name="month" data-placeholder="Select" onchange='this.form.submit()'>
+						<?php for($month=1; $month<=12; $month++):?>
+							<?php $selected = ($month == $data['month'])?'selected':'';?>
+							<option value="<?php echo $month;?>" <?php echo $selected; ?>>
+								<?php echo DateTime::createFromFormat('!m', $month)->format('F');?>
+							</option> 
+						<?php endfor;?>
+					</select>
+				</div>
+			</form>
+			<div class="form-group col-lg-6">
+				<div class="clearfix">
+					<div class="pull-right tableTools-container"></div>
+					<a class="red pull-right DTTT_button btn btn-white btn-info btn-bold" data-tooltip="tooltip" data-placement="top" title="Add New Claims" href="<?php echo $this->url('claim', array('action'=>'addclaim'));?>" >
+						<span class="red"><i class="fa fa-plus"></i> <span class="hidden-sm hidden-xs">&nbsp;Add Claims</span></span>
+					</a>
+				</div>
+			</div>
+		</div>		
+		<table class="table table-bordered table-striped table-hover" id="dataTables">
+			<thead>
+				<tr>
+					<th>#</th>
+					<th>Claim No</th>
+					<th>Claim Type</th>
+					<th>Claim Date</th>
+					<th>Status</th>
+				</tr>
+			</thead>
+			<tbody>
+			<?php $i=1;
+	  		foreach($claimObj->getAll() as $claim):
+	  			$year = date('Y', strtotime($claim['claim_date']));
+				$month = date('m',strtotime($claim['claim_date']));
+					
+				if($year == $data['year'] && $month == $data['month']):?>
+		        <tr data-href ="<?php echo $this->url('claim', array('action'=>'viewclaim', 'id'=>$claim['id']));?>">
+		            <td><?php echo $i++; ?></td>
+		            <td><?php echo $claim['claim_no']; ?></td>
+		            <td><?php echo $claimtypeObj->getColumn($claim['claim_type'], 'claim_type'); ?></td>
+		            <td><?php echo $claim['claim_date']; ?></td>
+		            <td><?php $status_list  = $this->statusObj->get($claim['status']); 
+							foreach ($status_list as $status):
+								extract($status);endforeach;?>
+						<span class="label label-<?php echo $label;?>">
+							&nbsp; <?php echo $status; ?> &nbsp;
+						</span>
+					</td>	
+			    </tr>
+		  		<?php endif; endforeach; ?>
+			</tbody>	
+		</table>
+	</div>
+</div>
+<script>
+$("tr[data-href]").each(function(){
+	$(this).find('td').not('td.action').each(function(){
+		$(this).css('cursor','pointer');
+		$(this).bind('click',function() {
+			window.document.location = $(this).closest('tr').attr("data-href");
+		});
+	});
+});	
+$('document').ready(function(){
+	$('#dataTables').DataTable({
+		"paging":   true,
+	});
+});
+</script> 

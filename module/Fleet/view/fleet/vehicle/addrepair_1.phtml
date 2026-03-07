@@ -1,0 +1,376 @@
+<?php
+/**
+ * View -- of Purchase/VehicleControlleraddrepairAction
+ */
+  $this->headTitle($this->title);
+?>
+<div class="row">
+	<div class="col-lg-12">
+		<div class="widget widget-box">
+			<div class="widget-header">
+				<h5 class="widget-title lighter smaller">
+					<i class="fa fa-asterisk"></i>&nbsp;&nbsp;New Transport Expense
+				</h5>
+			</div><!-- end of widget-header -->
+			<div class="widget-body">
+				<div class="widget-main">
+					<form id="#form" method="post" action="<?php echo $this->url('vehicle', array('action' => 'addrepair')); ?>"  enctype="multipart/form-data" >    
+						<div class="row">	
+							<div class="col-lg-3">    
+								<div class="form-group">
+                                    <label for="date" class="control-label">Date</label>
+                                    <div class="date input-group" id="date" data-date="<?php echo date('Y-m-d');?>" data-date-format="yyyy-mm-dd" >
+                                        <input class="form-control span2" name="date" id="date" type="text" value="<?php echo date('Y-m-d');?>" placeholder="Work Order Date"  required>
+                                        <span class="input-group-addon add-on"><i class="fa fa-calendar"></i></span>
+                                    </div>
+                                </div>
+                            </div>
+							<div class="form-group col-lg-3">
+                                <label for="location" class="control-label">Location</label>
+							<?php if($this->user_role=='17'):?>
+								<select id="location" name="location" class="form-control location" data-placeholder="Select" required>
+                                    <option value=""></option>
+                                    <?php foreach($this->locationObj->getAll() as $location):?> 
+                                     <option value="<?php echo $location['id']; ?>">
+                                        <?php echo $location['location']; ?>
+                                     </option>
+                                    <?php endforeach;?> 
+                                </select> <?php else:?>
+                                <select id="location" name="location" class="form-control location" data-placeholder="Select" required>
+                                    <option value=""></option>
+                                    <?php foreach($this->locationObj->get(array('id'=>$this->user_loc)) as $location):?> 
+                                     <option value="<?php echo $location['id']; ?>">
+                                        <?php echo $location['location']; ?>
+                                     </option>
+                                    <?php endforeach;?> 
+                                </select> <?php endif;?>
+                            </div> 
+						</div>			
+						<div class="row">
+						   <div class="col-lg-12"> 
+							  <h4>Service Details</h4>
+								<div>
+									<table id="purchase_field" class="table small-padding">
+										<thead>
+											<tr>
+												<th>Head</th>
+												<th>Subhead</th>
+												<th>Amount</th>
+												<th>&nbsp;</th>
+											</tr>
+										</thead>
+										<tbody>
+											<tr>
+												<td class="col-lg-3 input-cell">
+													<div class="form-group">
+													<label for="item" class="control-label">Head</label>
+														<select class="form-control tr_service" name="service[]" id="service" data-placeholder="Select" required>
+															<option value=""></option>
+															<?php  foreach($head as $services):?>
+																<option value="<?php echo $services['id']; ?>">
+																<?php echo $services['code']; ?>
+																</option>
+																<?php endforeach;?>
+														</select>
+													</div>
+													<input type="hidden"  class="tr_plate" name="license_plate[]" id="license_plate" />
+												</td>
+												<td class="col-lg-3 input-cell">
+													<div class="form-group">
+													<label for="item" class="control-label">Subhead</label>
+													<select class="form-control tr_item" name="service_item[]" id="service_item" data-placeholder="Select" required>
+															<option value=""></option>
+													</select>
+													</div>
+												</td>
+												<td class="col-lg-2 input-cell">
+													<div class="form-group">
+													<label for="amount" class="control-label">Amount</label>
+														<input type="text" class="form-control tr_amount" name="amount[]" id="amount" value="0.00" />
+													</div>         
+												</td>
+												<td>
+													<br>
+													<button class="btn btn-sm btn-success" type="button"  onclick="purchase_field();"> <span class="fa fa-plus-square" aria-hidden="true"></span> </button>
+												</td>
+											</tr> 
+										</tbody>
+										
+									</table>	
+									<div class="clear"></div>
+								</div>
+							</div>
+						</div>	
+						<div class="row">
+						    <div class="col-lg-3">
+							    <div class="form-group">
+									<label for="head" class="control-label">Head</label>
+										<select class="form-control" name="head" id="head" data-placeholder="Select" required>
+											<option value=""></option>
+											<?php  foreach($heads as $hd):?>
+												<option value="<?php echo $hd['id']; ?>">
+												<?php echo $hd['code'].'|'.$hd['name']; ?>
+												</option>
+												<?php endforeach;?>
+										</select>
+								</div>
+							</div>
+							<div class="col-lg-3">
+								<div class="form-group">
+									<label for="party" class="control-label">Party</label>
+									<select class="form-control" name="party" id="party" data-placeholder="Select" required>
+											<option value=""></option>
+									</select>
+								</div>
+							</div>
+							<div class="col-lg-3">
+								<div class="form-group">
+									<label for="ref_no" class="control-label">Reference Number</label>
+									<input type="text" class="form-control" name="ref_no" id="ref_no" value ="0.00" placeholder="Reference No" > 
+								</div>
+							</div>
+						    <div class="col-lg-3">
+								<div class="form-group">
+									<label for="rm_amount" class="control-label">Total Amount</label>
+									<input type="text" class="form-control" name="rm_amount" id="rm_amount" value ="0.00" placeholder="Amount" readonly > 
+								</div>
+							</div>
+							<div class="col-lg-12">
+								<label class="control-label" for="remarks">Notes/Remarks: </label>
+								<textarea class="form-control" name="remarks" id="remarks"></textarea>
+							</div>
+						</div>
+						<div class="space-12"></div>
+						<div class="row"> 	
+							<div class="col-lg-9"> 
+								<button type="submit" class="btn btn-success"><i class="fa fa-check"></i> Save </button>
+								<button type="button" class="btn btn-warning" onclick="javascript:history.back();" ><i class="fa fa-times"></i> Cancel </button> 					
+							</div>
+						</div>
+					</form>	
+				</div><!-- widget widget-main -->
+			</div>  <!-- widget widget-body -->   
+		</div> <!-- widget widget-box --> 
+	</div><!-- col-lg-12 -->
+</div><!-- row -->
+
+<script type="text/javascript">	
+$('#date').datepicker(); 
+var room = 1;
+	function purchase_field() {
+    room++;
+    var objTo = document.getElementById('purchase_field');
+    var divtest = document.createElement('tr');
+    divtest.setAttribute('class', 'form-group removeclass' + room);
+    
+    divtest.innerHTML = 
+		'<tr><td class="col-lg-3 input-cell"><div class="form-group"><select id="service" name="service[]" class="form-control tr_service" data-placeholder="Select" required><option value="">Select</option><?php foreach($head as $services):?><option value="<?php echo $services['id'];?>"><?php echo $services['code'];?></option><?php endforeach;?></select></div><input type="hidden"  class="tr_plate" name="license_plate[]" id="license_plate" /></td><td class="col-lg-3 input-cell"><div class="form-group"><select id="service_item" name="service_item[]" class="form-control tr_item" data-placeholder="Select" required><option value="">Select</option></select></div></td></td><td class="col-lg-1"><div class="form-group"><input type="text" class="form-control tr_amount" id="amount" name="amount[]"  value="" ></div></td><td class="col-lg-1 input-cell"><div class="input-group-btn"><button class="btn btn-sm btn-danger" type="button" onclick="remove_purchase_field(' + room + ');"><span class="glyphicon-minus" aria-hidden="true"></span></button></div></td><tr>';
+		objTo.appendChild(divtest);
+		calculateTotalAmount()
+    
+	}
+	function remove_purchase_field(rid) {
+	$('.removeclass' + rid).remove();
+	calculateTotalAmount()
+	
+	}
+$(document).on('change', '.tr_service, .location', function() {
+    var selectedService = $(this).closest('tr').find('.tr_service').val();
+    var selectedLocation = $('#location').val();
+    var relatedItemElement = $(this).closest('tr').find('.tr_item');
+
+    $.post(
+        "<?php echo $this->url('vehicle', array('action' => 'gettransport')); ?>",
+        {
+            serviceId: selectedService,
+            locationId: selectedLocation,
+        },
+        function(data) {
+            relatedItemElement.html(data.item);
+            relatedItemElement.trigger('chosen:updated');
+		  },
+        'json'
+    );  
+});
+$(document).on('change', '.tr_service, .tr_item', function() {
+    var selectedService = $(this).closest('tr').find('.tr_service').val();
+     var selectedItem = $(this).closest('tr').find('.tr_item').val();
+    var relatedItemElement = $(this).closest('tr').find('.tr_plate');
+
+    $.post(
+        "<?php echo $this->url('vehicle', array('action' => 'getplate')); ?>",
+        {
+            serviceId: selectedService,
+            itemId: selectedItem,
+        },
+        function(data) {
+            relatedItemElement.val(data.license_plate);
+		 },
+        'json'
+    );  
+});
+/*	$(document).on('change', '.tr_item', function() {z
+		var selectedService = $(this).closest('tr').find('.tr_item').val();
+		var relatedItemElement = $(this).closest('tr').find('.tr_subhead');
+		$.post(
+			"<?php echo $this->url('vehicle', array('action' => 'getsub')); ?>",
+			{
+				serviceitemId: selectedService,
+			},
+			function(data) {
+				relatedItemElement.val(data.sh);
+				},
+			'json'
+		);  
+	});*/
+	
+	$(document).on('input', '.tr_amount,.tr_quantity', function () {
+		calculateTotalAmount();
+		});
+	$(document).on('input', '.tr_rate, .tr_quantity', function() {
+		calculateTotal($(this));
+	});
+	function calculateTotal(element) {
+		var row = element.closest('tr');  // Get the closest table row
+
+		var rateInput = row.find('.tr_rate');  // Adjusted these to use class selectors and scope within the row
+		//var quantityInput = row.find('.tr_quantity');
+		var totalInput = row.find('.tr_amount'); // Assuming there's a field for the total amount with the class "tr_amount"
+
+		var rate = parseFloat(rateInput.val()) || 0;
+		//var quantity = parseFloat(quantityInput.val()) || 0;
+		var total = rate ;
+
+		totalInput.val(total.toFixed(2));  // Assuming you want to show up to two decimal places
+		calculateTotalAmount();
+	}
+	function calculateTotalAmount() {
+		console.log("calculateTotal amount");
+		var total = 0.0;
+
+		// Iterate over each amount input field in the table
+		$('.tr_amount').each(function() {
+			var amount = parseFloat($(this).val());
+			if (!isNaN(amount)) { // Make sure it's a valid number
+				total += amount;
+			}
+		});
+
+		// Update the #total field with the new sum
+		$('#rm_amount').val(total.toFixed(2));
+	}	
+    $(function(){
+	    $('#transport').on('change',function(){
+		//alert($(this).val()); 
+		$.post(
+			"<?php echo $this->url('vehicle', array('action' => 'gettransportDetails'));?>",
+			{
+				assets_id: $(this).val(),
+			},
+			function(data){
+				//console.log(data);
+				$('select#location').html(data.locs);
+				$('select#location').trigger('chosen:updated');
+				$('select#transporter_fcb').html(data.driver);
+				$('select#transporter_fcb').trigger('chosen:updated');
+			   },
+			'json'
+		    );
+	    });
+		$('#head').on('change',function(){
+		//alert($(this).val()); 
+		$.post(
+			"<?php echo $this->url('vehicle', array('action' => 'subhead'));?>",
+			{
+				headId: $(this).val(),
+			},
+			function(data){
+				//console.log(data);
+				$('select#subhead').html(data.subhead);
+				$('select#subhead').trigger('chosen:updated');
+			   },
+			'json'
+		    );
+	    });
+	    /*** Form Validation of RM ***/
+
+	/*	const fv = FormValidation.formValidation(document.getElementById('#form'), {
+			fields: {
+				work_order_date: {
+					validators: {
+						notEmpty: {
+							message: 'Please select work order date'
+						}
+					}
+				},
+				transport: {
+					validators: {
+						notEmpty: {
+							message: 'Please select transport'
+						}
+					}
+				},
+				location: {
+					validators: {
+						notEmpty: {
+							message: 'Please select location'
+						}
+					}
+				},
+				driver: {
+					validators: {
+						notEmpty: {
+							message: 'Please select driver'
+						}
+					}
+				}, 
+				cost_cnter: {
+					validators: {
+						notEmpty: {
+							message: 'Please select cost_cnter'
+						}
+					}
+				},
+				supplier: {
+					validators: {
+						notEmpty: {
+							message: 'Select supplier'
+						}
+					}
+				},
+				work_order_ref: {
+					validators: {
+						notEmpty: {
+							message: 'Select work_order_ref'
+						}
+					}
+				},
+
+				rm_amount:{
+					validators:{
+						notEmpty:{
+							message:'Please provide Net RM Amount',
+						},
+					},
+				},
+			},
+			plugins: {
+				trigger: new FormValidation.plugins.Trigger(),
+				bootstrap3: new FormValidation.plugins.Bootstrap3(),
+				submitButton: new FormValidation.plugins.SubmitButton(),
+				defaultSubmit: new FormValidation.plugins.DefaultSubmit(),
+			},
+		}).on('core.element.validated', function (e) {
+			if (e.valid) {
+				$('div#'+ e.field.replace('[]','') +'_chosen').removeClass('is-invalid');
+				$('div#'+ e.field.replace('[]','') +'_chosen').addClass('is-valid');
+			} else {
+				$('div#'+ e.field.replace('[]','') +'_chosen').removeClass('is-valid');
+				$('div#'+ e.field.replace('[]','') +'_chosen').addClass('is-invalid');
+			}
+		});
+		$('form select').chosen().change(function () {
+		fv.revalidateField($(this).attr('name'));
+	});*/
+	});    
+</script>

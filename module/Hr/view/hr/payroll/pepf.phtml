@@ -1,0 +1,120 @@
+<?php
+/**
+ * 
+ * View -- of Accounts/ReportController/genprofitlossAction
+ * 
+ */
+$this->headTitle($this->title);	
+?>
+<?php echo $this->partial('hr/payroll/partial.phtml', array('active' => 'pepf')); ?><br/>
+<div class="card">
+	<div class="card-header">
+		<div class="row">
+		<?php $currentYear = (int)date('Y');
+		$currentMonth = (int)date('m');
+                $minYear = ($this->minYear == 0)? date('Y'):$this->minYear;?>
+			<form id="#form" method="post" action="<?php echo $this->url('payroll',array('action'=>'pepf')); ?>"  enctype="multipart/form-data" >
+				<div class="form-group col-lg-2">
+					<label class="control-label" for="year">Year</label>
+					<select name="year" id="year" class="form-control" onchange='this.form.submit()'>
+						<option value="-1">All</option>
+						<?php for($year = $currentYear; $year >= $minYear; $year--):
+							$selected = ($this->year == $year)?'selected':''; ?>
+							<option value="<?php echo $year;?>" <?php echo $selected;?>> <?php echo $year; ?> </option>
+						<?php endfor;?>
+					</select>
+				</div>
+				<div class="col-lg-2">
+					<label for="month" class="control-label">Month </label>
+					<select class="form-control" name="month" id="month" data-placeholder="Select" onchange='this.form.submit()' >
+						<option value=""></option>
+						<?php 
+							for($m=1;$m<=12;$m++):
+								$selected = ($month == $m)?'selected':'';
+						?>
+							<option value="<?php echo $m;?>" <?php echo $selected;?>>
+								<?php echo date("F", strtotime(date("d-$m-y"))); ?>
+							</option>
+						<?php endfor; ?>
+					</select>
+				</div>
+				<div class="col-lg-6">
+					<!-- <div class="space-12"></div>
+					<button type="submit" class="btn btn-sm btn-primary "><i class="fa fa-refresh"></i> Refresh </button>		 -->
+				</div>
+				<?php if(sizeof($this->pepfObj->get(array('year'=>$currentYear,'month'=>$month)))==0):?>
+				<div class="col-lg-2">
+					<div class="clearfix">
+						<div class="pull-right tableTools-container">
+						<a href="<?php echo $this->url('payroll', array('action'=>'generatepepf','id'=>$currentYear.'-'.$month));?>"  class="btn btn-primary" onclick="confirmSubmit(this);" >
+						Generate PE PF for the month of <?php echo date('F, Y', strtotime('1-'.$month.'-'.$currentYear));?>
+					</a>
+					</div>
+				</div>
+				<?php endif;?>
+			</form>
+		</div>
+		
+		<div>
+			<table class="table table-bordered table-striped table-hover" id="dataTables">
+				<thead>
+					<tr>
+						<th>#</th>
+						<th>Month</th>
+						<th>Total Enteries </th>
+						<th>Total PE PF</th>
+						<th>Status</th>
+						<th>Action</th>
+
+					</tr>
+				</thead>
+				<tbody>
+				<?php $i=1; foreach($pepf as $row):
+				if($role==100 || $role==99):
+					$admin_locs='-1';
+				else:
+					$admin_locs=$admin_locs;
+				endif;
+				$my=$row['year']."-".$row['month'];?>
+					<tr data-href="<?php echo $this->url('payroll', array('action'=>'pepf'));?>" >
+						<td><?php echo $i++; ?></td>
+						<td><strong><?php echo date("F, Y", strtotime("1-".$row['month']."-".$row['year'])); ?></strong></td>
+						<td><?php echo $this->pepfObj->getCount(array('month'=>$row['month'], 'year'=>$row['year']));?></td>
+						<td><?php echo $this->pepfObj->getSum(array('month'=>$row['month'], 'year'=>$row['year']),'pe_pf');?></td>
+						<td><?php echo $this->status($row['status']);?></td>
+						<td><?php echo $this->button(1,$my);?></td>
+					</tr>
+					<?php endforeach; ?>
+				</tbody>	
+			</table>
+		</div>
+	</div>
+</div>
+<!-- for modal -->
+<div id="modal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+	<div class="modal-dialog">
+		<div class="modal-content">
+		</div>
+	</div>
+</div>
+<script>	
+$('document').ready(function(){
+	$('#dataTables').DataTable({
+		"paging":   true,
+	});
+	$("tr[data-href]").each(function(){
+		$(this).find('td').not('td.action').each(function(){
+			$(this).css('cursor','pointer');
+			$(this).bind('click',function() {
+				window.document.location = $(this).closest('tr').attr("data-href");
+			});
+		});
+	});
+	$('#dataTables').genpdftable({
+		src:"<?php echo $this->url('pdfxls', array('action' => 'pdf'));?>",
+		orentation:"P",//L =landscape, P = potrait
+	});
+});
+</script>
+
+

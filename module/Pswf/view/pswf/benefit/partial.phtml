@@ -1,0 +1,54 @@
+<?php // partial.phtml 
+  $asset = ($this->active == "asset")?"active":"";
+  $party = ($this->active == "party")?"active":"";
+  $bankaccount = ($this->active == "bankaccount")?"active":"";
+  $fund = ($this->active == "fund")?"active":"";
+  $cashaccount = ($this->active == "cashaccount")?"active":"";
+  $incomehead = ($this->active == "incomehead")?"active":"";
+  $hr = ($this->active == "hr")?"active":"";
+?>
+<br/>
+<ul class="nav nav-tabs padding-18" id="myTab">
+	<li class="<?php echo $asset; ?>">
+		<a href="<?php echo $this->url('asset', array('action' => 'asset')); ?>">
+			<i class="orange ace-icon fa fa-truck bigger-120"> </i>
+			<span class="hidden-xs">Asset</span>
+		</a>
+	</li>
+	<li class="<?php echo $party; ?>">
+		<a href="<?php echo $this->url('asset', array('action' => 'party')); ?>">
+			<i class="blue ace-icon fa fa-street-view bigger-120"> </i>
+			<span class="hidden-xs">Party</span>
+		</a>
+	</li>
+	<li class="<?php echo $bankaccount; ?>">
+		<a href="<?php echo $this->url('asset', array('action' => 'bankaccount')); ?>">
+			<i class="green ace-icon fa fa-ticket bigger-120"> </i>
+			<span class="hidden-xs">Bank Acc</span>
+		</a>
+	</li>
+	<li class="<?php echo $fund; ?>">
+		<a href="<?php echo $this->url('asset', array('action' => 'fund')); ?>">
+			<i class="pink ace-icon fa fa-suitcase bigger-120"> </i>
+			<span class="hidden-xs">Fund</span>
+		</a>
+	</li>
+	<li class="<?php echo $cashaccount; ?>">
+		<a href="<?php echo $this->url('asset', array('action' => 'cashaccount')); ?>">
+			<i class="green ace-icon fa fa-money bigger-120"> </i>
+			<span class="hidden-xs">Cash Account</span>
+		</a>
+	</li>
+	<li class="<?php echo $incomehead; ?>">
+		<a href="<?php echo $this->url('asset', array('action' => 'incomehead')); ?>">
+			<i class="blue ace-icon fa fa-money bigger-120"> </i>
+			<span class="hidden-xs">Income Head</span>
+		</a>
+	</li>
+        <li class="<?php echo $hr; ?>">
+		<a href="<?php echo $this->url('asset', array('action' => 'hr')); ?>">
+			<i class="blue ace-icon fa fa-money bigger-120"> </i>
+			<span class="hidden-xs">Human Resource</span>
+		</a>
+	</li>
+</ul>

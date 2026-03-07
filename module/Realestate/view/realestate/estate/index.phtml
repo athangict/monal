@@ -1,0 +1,84 @@
+<?php
+/**
+ * 
+ * View -- of Realestate/EstateController/indexAction
+ * 
+ */
+	$this->headTitle($this->title);
+?>
+<?php //echo $this->partial('realestate/estate/partial.phtml',array('active' => 'buildingdetails'));?>
+<!-- <div class="card">
+	<div class="card-header">
+		<div class="btn-group pull-right">
+			<?php echo $this->button(2);?>
+		</div>
+	</div>
+	<div class="table-responsive">
+		<table class="table card-table text-nowrap" id="dataTables">
+			<thead>
+				<tr>
+					<th>#</th>
+					<th>Lessee</th>
+					<th>Agreement No.</th>
+					<th>Date</th>
+					<th>Location</th>
+					<th>Leased Property</th>
+					<th>Rent</th>
+					<th>Start Date</th>
+					<th>End Date</th> -->
+					<!--th class="no-sort no-printpdf">Action</th-->
+				</tr>
+			</thead>
+			<tbody>
+				<?php $i=1;					
+				  //foreach ($leasedrent as $rows):					  						
+				?>
+					<!-- <tr data-href="<?php echo $this->button(4, $rows['id']); ?>">
+						<td><?php echo $i++; ?> </td>
+						<td><strong><?php echo $rows['lessee']; ?></strong></td>	
+						<td><?php echo $rows['agreement_no']; ?></td>
+						<td><?php echo $rows['date']; ?></td>	
+						<td><?php echo $rows['location_name']; ?></td>							
+						<td><?php echo $rows['storage']; ?></td>
+						<td><?php echo $rows['rent']; ?></td>	
+						<td><?php echo $rows['start_date']; ?></td>	
+						<td><?php echo $rows['end_date']; ?></td>	 -->
+						<!--td class="action">
+							<a class="btn btn-xs btn-danger" data-toggle="modal" data-target="#modal" 
+									href="<?php //echo $this->url('acl', array('action' => 'activitylog', 'id' => "29-".$rows['id'])); ?>" title="View Activity Logs">
+									<i class="ace-icon fa fa-plus smaller-120" ></i>  
+							</a>
+						</td-->
+						<?php //echo $this->button(1, $rows['id']); ?>
+					
+					</tr>
+				<?php 
+				$i++;
+				//endforeach;  
+				?>
+			</tbody>
+		</table>
+	</div>
+</div>
+<div id="modal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+	<div class="modal-dialog">
+		<div class="modal-content">
+		</div>
+	</div>
+</div>
+<script type="text/javascript">
+	$("tr[data-href]").each(function(){
+		$(this).find('td').not('td.action').each(function(){
+			$(this).css('cursor','pointer');
+			$(this).bind('click',function() {
+				window.document.location = $(this).closest('tr').attr("data-href");
+			});
+		});
+	});
+
+	$('document').ready(function(){
+		$('#dataTables').DataTable();
+	});
+</script>
+
+

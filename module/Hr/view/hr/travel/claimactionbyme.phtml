@@ -1,0 +1,70 @@
+<?php
+/**
+ * 
+ * View -- of Hr/EmployeeController/indexAction
+ * 
+ */
+$this->headTitle($this->title);
+ echo $this->tabs_helper(array(976,995,996)); 
+// echo '<pre>';print_r($claim);exit;
+?>
+<div class="card">
+	<div class="card-header">
+	</div>
+</div>
+<div>
+	<table class="table table-striped table-hover table-condensed" style="width:100%;" id="dataTables">
+		<thead>
+			<tr>
+				<th>#</th>
+                <th>No. (Date)</th>
+				<th>Claim Date</th>
+				<th>Details</th>
+                <th>Actual Expense</th>
+				<th>Estimated Expense</th>
+				<th>Advance Requested</th>
+                <th>Amount Claimed</th>
+                <th>Status</th>
+                <th>Action</th>
+			</tr>
+		</thead>
+		<tbody>
+			<?php $i = 1; foreach ($claim as $rows):?>
+				<tr>
+					<td><?php echo $i++; ?> </td>
+                    <td><b><?php echo $rows['ta']; ?></b></td>
+					<td><b><?php echo $rows['date']; ?></b></td>
+					<td><?php echo $this->employeeObj->getColumn($rows['employee'],'full_name'); ?></td>
+                    <td><?php echo $rows['actual_expense']; ?></td>
+					<td><?php echo $rows['estimated_expense']; ?></td>
+					<td><?php echo $rows['advance']; ?></td>
+                    <td><?php echo $rows['amount_claim']; ?></td>
+					<td><?php echo $this->status($rows['status']); ?></td>
+					<td><?php echo $this->button(6,$rows['id'],'','979'); echo $this->button(6,"524-".$rows['id'],'','3');?></td>
+					
+				</tr>
+			<?php 
+			endforeach;  
+			?> 
+		</tbody>
+	</table>
+</div>
+<div id="modal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content"> </div>
+    </div>
+</div>
+<script>
+	$("tr[data-href]").each(function(){
+		$(this).find('td').not('td.action').each(function(){
+			$(this).css('cursor','pointer');
+			$(this).bind('click',function() {
+				window.document.location = $(this).closest('tr').attr("data-href");
+			});
+		});
+	});
+	$('document').ready(function(){
+		$('#dataTables').DataTable({"paging":   true,});
+	});
+</script>
+

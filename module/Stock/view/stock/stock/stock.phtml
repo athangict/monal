@@ -1,0 +1,121 @@
+<?php
+/**
+ * 
+ * View -- of Accounts/ChartaccountController/indexAction
+ * 
+ */
+	$this->headTitle($this->title);
+?>
+<?php echo $this->partial('/stock/stock/partial.phtml', array('active' => 'stock')); ?>
+<div class="space-12"></div>
+<div class="row">
+	<div class="col-xs-12">
+		<!-- PAGE CONTENT BEGINS -->
+		<div class="row">
+			<div class="col-sm-10">
+				<ol class="dd-list" id="class">
+					<?php 
+						$cl = 1;
+						$i = '';
+						foreach($classes as $class):
+							$in = ($i==0)?'':'';
+							$icon = ($i==0)?'fa-plus':'fa-plus';
+					?>
+					<a style="text-decoration:none;" data-toggle="collapse" data-parent="#class" href="#group<?php echo $class['id'];?>">
+						<li class="dd-item">
+							<div class="dd-handle btn-grey">
+								<?php $groups = $this->groupObj->get(array('item_class'=>$class['id']));?>
+								<i class="ace-icon fa <?php echo $icon;?>" data-icon-show="fa-plus" data-icon-hide="fa-minus"></i>
+								<?php echo $cl++.". &nbsp;".$class['item_class'];?> 
+								<span class="badge badge-danger pull-right"><?php echo count($groups);?></span>
+							</div>
+						</li>
+					</a>
+					<ol class="collapse <?php echo $in;?>" id="group<?php echo $class['id'];?>">
+						<?php
+							$gr = 1;
+							foreach($groups as $group):
+								$subgroups = $this->subgroupObj->get(array('item_group'=>$group['id']));
+						?>
+						<a style="text-decoration:none;" data-toggle="collapse" data-parent="#group<?php echo $class['id'];?>" href="#subgroup<?php echo $group['id'];?>">
+							<li class="dd-item">
+								<div class="dd-handle btn-yellow">
+									<i class="ace-icon fa <?php echo $icon;?>" data-icon-show="fa-plus" data-icon-hide="fa-minus"></i>
+									<?php echo $gr++.". &nbsp;".$group['item_group'];?>
+									<span class="badge badge-success pull-right"><?php echo count($subgroups);?></span>
+								</div>
+							</li>
+						</a>
+						<ol class="collapse <?php echo $in;?>" id="subgroup<?php echo $group['id'];?>">
+							<?php
+								$sub = 1;
+								foreach($subgroups as $subgroup):
+									$items = $this->itemObj->get(array('item_subgroup'=>$subgroup['id']));
+							?>
+							<a style="text-decoration:none;" data-toggle="collapse" data-parent="#subgroup<?php echo $group['id'];?>" href="#item<?php echo $subgroup['id'];?>">
+								<li class="dd-item">
+									<div class="dd-handle btn-purple">
+										<i class="ace-icon fa <?php echo $icon;?>" data-icon-show="fa-plus" data-icon-hide="fa-minus"></i>
+										<?php echo $sub++.". &nbsp;".$subgroup['item_subgroup'];?>
+										<span class="badge badge-warning pull-right"><?php echo count($items);?></span>
+									</div>
+								</li>
+							</a>
+							<ol class="collapse <?php echo $in;?>" id="item<?php echo $subgroup['id'];?>">
+								<?php
+									$sl = 1;
+									foreach($items as $item):
+								?>
+									<li class="dd-item">
+										<div class="dd-handle">
+											<?php echo $sl++;?>. &nbsp;
+											<strong class="red"><?php echo $item['name'];?></strong> &nbsp; 
+											<i class="blue"> <?php //echo $item['code'];?> </i> &nbsp;
+											<?php
+												 if($item['status']==1):
+													$status_name = "Active";
+													$label = "success";
+												 else:
+													$status_name = "Inactive";
+													$label = "danger";
+												 endif;
+											 ?>
+											<span class="label label-<?php echo $label;?>">
+												&nbsp; <?php echo $status_name; ?> &nbsp;
+											</span>
+											<span class="label label-info">
+												<?php echo $item['activity'];?>
+											</span>
+											<a class="pull-right" href="<?php echo $this->url('stock', array('action' => 'viewitem', 'id' => $item['id'])); ?>" >
+												<i class="normal-icon ace-icon fa fa-eye bigger-130 red"></i>
+											</a>
+										</div>
+									</li>
+									<?php endforeach;?>
+								</ol>
+								<?php endforeach;?>
+							</ol>
+						<?php endforeach;?>
+					</ol>
+					<?php endforeach;?>
+				</ol>
+			</div>
+			<div class="col-sm-2">
+				<i class="grey ace-icon fa fa-suitcase bigger-120"></i> - Item Class<br>
+				<i class="ace-icon fa fa-cubes bigger-120" style="color:#fee188"></i> - Item Group<br>
+				<i class="ace-icon fa fa-cube bigger-120" style="color:#9585bf"></i> - Item Sub-Group<br>
+				<i class="ace-icon fa fa-shopping-cart bigger-120" style="color:#7C9EB2"></i> - Stock Items<br><br>
+				
+				Total Item Classes = <?php echo $data['class'];?><br>
+				Total Item Groups = <?php echo $data['group'];?><br>
+				Total Item Sub-groups = <?php echo $data['subgroup'];?><br>
+				Total Stock Items = <?php echo $data['item'];?><br><br>
+				
+				<?php foreach($activitites as $activity):?>
+					<?php echo $activity['activity']." : ".$this->itemObj->getCount(array('activity'=>$activity['id']))."<br>";?>
+				<?php endforeach;?>
+			</div>
+		</div><!-- PAGE CONTENT ENDS -->
+	</div><!-- /.col -->
+</div><!-- /.row -->
+<!--for modal -->

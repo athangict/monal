@@ -1,0 +1,313 @@
+<?php
+/**
+ * Edit Repacking/Shifting Charge 
+ */
+?>
+<?php 
+	foreach($repackings as $repacking):
+		extract($repacking);
+		$repacking_id = $id;
+		$contractor_id = $contractor;
+		$location_id = $location;
+		$activity_id = $activity;
+		$item_id = $item;
+		$uom_id = $uom;
+	endforeach;
+?>
+<form id="#form" method="post" action="<?php echo $this->url('contractor', array('action' => 'editrepacking')); ?>" enctype="multipart/form-data" >
+<div class="modal-header">
+	<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+	<h4 class="modal-title"> 
+		<i class="fa fa-asterisk"></i> Edit Repacking/Shifting Charges
+	</h4>
+</div>     
+    <div class="modal-body">    
+		<div class="panel panel-default">                       
+			<div class="panel-body">
+				<div class="row">
+					<div class="col-lg-6">
+						<div class="form-group">
+							<input type="hidden" name="repacking_id" id="repacking_id" value="<?php echo $repacking_id;?>" />
+							<input type="hidden" name="repacking_no" id="repacking_no" value="<?php echo $repacking_no;?>" />
+							<label for="repacking_date" class="control-label">Invoice Date</label>
+							<div class="date input-group" id="repacking_date" data-date="<?php echo date('Y-m-d');?>" data-date-format="yyyy-mm-dd" >
+								<input class="form-control span2" name="repacking_date" id="repacking_date" type="text" value="<?php echo $repacking_date;?>" placeholder="Repacking Date" readonly required>
+								<span class="input-group-addon add-on"><i class="fa fa-calendar"></i></span>
+							</div>
+						</div>
+					</div>
+					<div class="col-lg-6">
+						<div class="form-group">
+							<label for="work_type" class="control-label">Work Type</label>
+							<select class="form-control" id="work_type" name="work_type" data-placeholder="Select" required>
+		                        <option value=""></option>
+		        				<option value="1" <?php echo ($work_type ==1)?'selected':'';?>>Repacking</option>
+		        				<option value="2" <?php echo ($work_type ==2)?'selected':'';?>>Shifting</option>
+		        	        </select>
+						</div>
+					</div>
+				</div>
+				<div class="row">
+					<div class="col-lg-6"> 
+						<div class="form-group">
+							<label for="contractor" class="control-label">Contractor</label>
+							<select id="contractor" name="contractor" class="form-control" data-placeholder="Select" required>
+								<option value=""></option>
+								<?php 
+									foreach($contractors as $contractor):
+										$selected_con = ($contractor['id'] == $contractor_id)?'selected':'';
+								?>
+									<option value="<?php echo $contractor['id'];?>" <?php echo $selected_con;?>>
+										<?php echo $contractor['name'];?>
+									</option>
+								<?php endforeach;?>					
+							</select> 
+						</div>
+					</div>
+					<div class="col-lg-6"> 
+						<div class="form-group">
+							<label for="location" class="control-label">Location</label>
+							<select id="location" name="location" class="form-control" data-placeholder="Select" required>
+								<option value=""></option>
+								<?php foreach ($regions as $region): ?>
+								<optgroup label="<?php echo $region['region'];?>">
+									<?php 
+										$locations = $locationObj->get(array('l.region'=>$region['id']));
+										foreach ($locations as $location):
+										$selected = ($location['id']==$location_id)?"selected":"";
+									?>
+									 <option value="<?php echo $location['id']; ?>" <?php echo $selected;?>>
+										<?php echo $location['location']; ?>
+									 </option>
+									<?php endforeach;?>
+								</optgroup>
+								<?php endforeach;?>									
+							</select> 
+						</div>
+					</div>
+				</div>
+				<div class="row">
+					<div class="col-lg-6"> 
+						<div class="form-group">
+							<label for="activity" class="control-label">Activity</label>
+							<select class="form-control" name="activity" id="activity" data-placeholder="Select" required>
+								<option value=""></option>
+								<?php 
+									foreach($this->activities as $activity):
+										$selected_act = ($activity['id']==$activity_id)?'selected':'';
+								?>
+									<option value="<?php echo $activity['id'];?>" <?php echo $selected_act;?> >
+								   		<?php echo $activity['activity']; ?>
+								   	</option>
+								<?php endforeach;?>
+							</select>
+						</div>
+					</div> 
+					<div class="col-lg-6">
+						<div class="form-group">
+							<label for="item" class="control-label">Item</label>
+							<select id="item" name="item" class="form-control" data-placeholder="Select" required >
+								<option value=""></option>
+								<?php 
+									$items = $this->itemObj->get(array('i.activity' => $activity_id));
+									foreach($items as $item):
+										$selected_item = ($item['id'] == $item_id)?'selected':'';
+								?>
+									<option value="<?php echo $item['id'];?>" <?php echo $selected_item;?>>
+										<?php echo $item['code'];?>
+									</option>
+								<?php endforeach;?>
+							</select>
+						</div>
+					</div>
+				</div>
+				<div class="row">
+					<div class="col-lg-4">
+						<div class="form-group">
+							<label for="uom" class="control-label">UOM</label>
+							<select class="form-control" name="uom" id="uom" data-placeholder="Select" required >
+								<option value=""></option>
+								<?php 
+								$items = $this->itemObj->get($item_id);
+									foreach($items as $item):
+										$selected = ($item['uom']==$uom_id)?"selected":"";
+								?>
+									<option value="<?php echo $item['uom']?>" <?php echo $selected;?>>
+										<?php echo $this->uomObj->getColumn($item['uom'], 'code');?>
+									</option>
+								<?php endforeach;?>
+								<?php   
+									$itemuoms = $this->itemuomObj->get(array('ui.item' => $item_id));
+									foreach($itemuoms as $uom):
+										$selected = ($uom['uom']==$uom_id)?"selected":"";
+								?>
+									<option value="<?php echo $uom['uom'];?>" <?php echo $selected;?>>
+										<?php echo $uom['uom_code'];?>
+									</option>
+								<?php endforeach;?>
+							</select>
+						</div>
+					</div>		
+					<div class="col-lg-4">
+						<div class="form-group">
+							<label for="quantity" class="control-label">Quantity</label>
+							<input type="text" class="form-control" name="quantity" id="quantity" value="<?php echo $quantity;?>" placeholder="Quantity" required />
+						</div>
+					</div>
+					<div class="col-lg-4">
+						<div class="form-group">
+							<label for="rate" class="control-label">Rate (<?php echo $this->currency_code();?>)</label>
+							<input type="text" class="form-control" name="rate" id="rate" value="<?php echo $rate;?>" placeholder="Rate" required/>
+						</div>
+					</div>
+				</div>
+				<div class="row">
+					<div class="col-lg-8"></div>
+					<div class="col-lg-4">
+						<div class="form-group">
+							<label for="amount" class="control-label">Amount (<?php echo $this->currency_code();?>)</label>
+							<input type="text" class="form-control" name="amount" id="amount" placeholder="Amount" value="<?php echo $amount;?>" required readonly />
+						</div>
+					</div>
+				</div>
+            </div>
+        </div>
+    </div>    
+    <div class="modal-footer">
+		<button type="submit" class="btn btn-success"><i class="fa fa-check"></i> Save </button>
+		<button type="button" class="btn btn-warning" data-dismiss="modal" ><i class="fa fa-times"></i> Cancel </button> 
+    </div>  
+</form>
+<script>
+	$('form select').chosen();//{ allow_single_deselect: true }
+	$('#repacking_date').datepicker();
+	
+	$('#quantity').change(function(){
+		var amount = $(this).val() * $('#rate').val();
+		$('#amount').val(parseFloat(amount).toFixed(2));
+	});
+	$('#rate').change(function(){
+		var amount = $(this).val() * $('#quantity').val();
+		$('#amount').val(parseFloat(amount).toFixed(2));
+	});
+	
+	$('#activity').on('change', function(){
+		$.post(
+			"<?php echo $this->url("contractor", array("action" => "getitembyactivity"));?>",
+			{
+				activity_id: $(this).val(),
+			},
+			function(data){
+				$("#item").html(data.stock_item);
+				$("#item").trigger('chosen:updated');
+			},
+			'json'
+		);	
+	});
+	
+	$('#item').on('change', function(){
+		$.post(
+			"<?php echo $this->url("contractor", array("action" => "getuombyitem"));?>",
+			{
+				item_id: $(this).val(),
+			},
+			function(data){
+				$("#uom").html(data.uoms);
+				$("#uom").trigger('chosen:updated');
+			},
+			'json'
+		);	
+	});
+	
+	const fv = FormValidation.formValidation(document.getElementById('#form'), {
+		fields: {
+			repacking_date: {
+				validators:{
+					notEmpty:{
+						message: 'Please select repacking date.'
+					}
+				}
+			},
+			work_type: {
+				validators: {
+					notEmpty: {
+						message: 'Please select work type.'
+					}
+				}
+			},
+			contractor: {
+				validators:{
+					notEmpty:{
+						message: 'Please select contractor.'
+					}
+				}
+			},
+			location:{
+				validators: {
+					notEmpty:{
+						message: 'Please select location.'
+					}
+				}
+			},
+			activity:{
+				validators: {
+					notEmpty:{
+						message: 'Please select activity.'
+					}
+				}
+			},
+			item:{
+				validators: {
+					notEmpty: {
+						message: 'Please select item.'
+					}
+				}
+			},
+			uom: {
+				validators: {
+					notEmpty: {
+						message: 'Please select uom.'
+					}
+				}
+			},
+			quantity:{
+				validators: {
+					notEmpty: {
+						message: 'Please provide quantity.'
+					}
+				}
+			},
+			rate:{
+				validators: {
+					notEmpty: {
+						message: 'Please provide rate.'
+					}
+				}
+			},
+			amount:{
+				validators: {
+					notEmpty: {
+						message: 'Please provide amount.'
+					}
+				}
+			},
+		},
+		plugins: {
+			trigger: new FormValidation.plugins.Trigger(),
+			bootstrap3: new FormValidation.plugins.Bootstrap3(),
+			submitButton: new FormValidation.plugins.SubmitButton(),
+			defaultSubmit: new FormValidation.plugins.DefaultSubmit(),
+		},
+	}).on('core.element.validated', function (e) {
+		if (e.valid) {
+			$('div#'+ e.field.replace('[]','') +'_chosen').removeClass('is-invalid');
+			$('div#'+ e.field.replace('[]','') +'_chosen').addClass('is-valid');
+		} else {
+			$('div#'+ e.field.replace('[]','') +'_chosen').removeClass('is-valid');
+			$('div#'+ e.field.replace('[]','') +'_chosen').addClass('is-invalid');
+		}
+	});
+	$('#repacking_date').on('changeDate',function(){
+		$('form').formValidation('revalidateField', $(this).attr('id'));
+	});
+</script>

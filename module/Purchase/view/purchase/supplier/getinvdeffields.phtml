@@ -1,0 +1,26 @@
+<?php
+/**
+ * ajax response
+ * Purchase/view/purchase/invoice/getinvdeffields.pthml
+ */
+?>
+<?php  //echo "<td>test</td>"; exit;?>
+<thead id="thead">
+<?php foreach($inv_def_fields as $inv_field):?>
+	<th class="inv_fields">
+		<?php echo $inv_field['def_field'];?>
+	</th>
+<?php endforeach;?>
+</thead>
+<tbody>
+<?php foreach($inv_def_fields as $inv_field):?>
+	<td class="inv_fields">
+		<div class="form-group">
+			<input type="hidden" name="field_id[]" id="field_id-<?php echo $i;?>" value="<?php echo $inv_field['id']; ?>" />
+			<input type="text" class="form-control" name="<?php echo $inv_field['id']; ?>[]" id="<?php echo $inv_field['id']; ?>-<?php echo $i;?>" >
+		</div>
+	</td>
+<?php endforeach;?>
+</tbody>
+
+

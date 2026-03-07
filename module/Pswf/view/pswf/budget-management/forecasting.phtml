@@ -1,0 +1,273 @@
+<?php
+/**
+ * 
+ * Index -- of Closing Balance
+ * 
+ */
+	$this->headTitle($this->title);
+?>
+<div class="row">
+	<div class="space-12"></div>
+	<div class="col-xs-12">
+		<div class="widget-box transparent">
+			<div class="widget-header widget-header-large">
+				<h3 class="widget-title grey lighter">
+					<i class="ace-icon fa fa-file-text-o green"></i>
+					Budget Forecasting <?php echo $this->selected_year;?>
+				</h3>
+			</div>
+			<div class="widget-body">
+				<div class="widget-main padding-24">
+					<form method="post" class="form-group" action="<?php echo $this->url('budgetmanagement', array('action' => 'forecasting')); ?>">
+						<div class="row">
+							<div class="form-group col-lg-2">
+								<label for="tier" class="control-label">Tier</label>
+								<select name="tier" id="tier" class="form-control" data-paceholder="Select">
+									<option value=""></option>
+									<?php 
+										$st1 = ($data["tier"]==1)? 'selected':'';
+										$st2 = ($data["tier"]==2)? 'selected':'';
+										$st3 = ($data["tier"]==3)? 'selected':'';
+										$st4 = ($data["tier"]==4)? 'selected':'';
+										$total_income_accumulated=0;
+										$total_expense_accumulated=0;
+										$tax1=0;$tax2=0;
+									?>
+									<option value="4" <?php echo $st4; ?>> Class </option>
+									<option value="3" <?php echo $st3; ?>> Group </option>
+									<option value="2" <?php echo $st2; ?>> Head </option>
+									<option value="1" <?php echo $st1; ?>> Sub Head </option>
+								</select>
+							</div>  
+							<div class="form-group col-lg-2">
+								<label for="year" class="control-label">Year</label>
+								<select id="year" name="year" class="form-control" data-placeholder="Select" onchange="this.form.submit()">
+									<?php 
+									for($year = date('Y'); $year >= $this->min_year; $year--):
+									?>
+										<?php $selected = ($year == $this->selected_year)?"selected":"";?>
+										<option value="<?php echo $year;?>" <?php echo $selected;?>>
+											<?php echo $year;?> 
+										</option>
+									<?php endfor; ?>
+								</select>
+							</div>
+							<div class="form-group col-lg-2">
+								<label for="region" class="control-label">Region</label>
+								<select class="form-control" name="region" id="region" data-paceholder="Select" onchange="this.form.submit()">
+									<option value="-1">All</option>
+									<?php foreach ($this->regionObj->getAll() as $region):?>
+									<?php $selected_reg = ($data["region"]==$region['id'])? 'selected':'';?>
+										<option value="<?php echo $region['id'];?>" <?php echo $selected_reg;?>>
+											<?php echo $region['region']; ?>
+										</option>
+									<?php endforeach;?>									
+								</select>
+							</div>
+							<div class="form-group col-lg-2">
+								<label for="location" class="contol-label">Location</label>
+								<select class="form-control" name="location" id="location" data-placeholder="Select" onchange="this.form.submit()">
+									<option value="-1">All</option>
+									<?php if($data["region"]>0):
+										foreach($this->locationObj->get(array('region'=> $data["region"])) as $locations):
+									?>
+										<?php $selected_loc = ($data["location"]==$locations['id'])? 'selected':'';?>
+										<option value="<?php echo $locations['id'];?>" <?php echo $selected_loc;?> ><?php echo $locations['location'];?></option>
+									<?php endforeach;
+									endif;?>							
+								</select>
+							</div> 
+							<div class="row">
+								<div class="col-lg-12">
+									<button type="submit" class="btn btn-sm btn-success pull-right"><i class="fa fa-gear"></i> Generate </button>
+								</div>
+							</div>
+						</div>
+					</form>
+					<div class="space-12"></div>
+					<div class="row">
+						<div class="col-lg-12">
+							<table class="table table-striped table-bordered table-hover" id="dataTables">
+								<thead>
+									<tr>
+										<th rowspan="2">Particulars</th>
+										<th>January</th>
+										<th>Febuary</th>
+										<th>March</th>
+										<th>April</th>
+										<th>May</th>
+										<th>June</th>
+										<th>July</th>
+										<th>August</th>
+										<th>September</th>
+										<th>October</th>
+										<th>November</th>
+										<th>December</th>
+									</tr>
+								</thead>
+								<tbody>
+								<?php 
+								if($data['tier'] <= 4):
+									$budget_amount=0.00;
+									foreach($this->classObj->get(array('id'=>array(3,4))) as $class): 
+										$total_pres_expenditure = array();
+										$total_pres_income = array();?>
+										<tr class="grouprow">
+											<td class=""><?php echo $this->classObj->getColumn($class['id'],'code');?></td>
+											<?php
+											$gbdgt=0;
+											$budget_amount_class=0.00;
+											for($month = 1; $month <= 12; $month++){
+												$suminclass= $this->budgetforecastObj->getsumbyclass($class['id'],$data['year'],$month,$data['location'],$data['region'],'budget_dr');
+												foreach($suminclass as $sumc);
+													$total= $sumc['totalofclass'];
+													if($sumc!=null):
+														$budget_amount_class=$total;
+													else:
+														$budget_amount_class=0.00;
+													endif;?>
+											<td style ="text-align:right"><?php echo number_format($budget_amount_class,2,'.',',');}?></td>	
+										</tr>
+										<?php 
+										if($data['tier'] <= 3):
+											foreach($this->groupObj->get(array('class'=>$class['id'])) as $group):?>
+												<tr class="grouprow">
+													<td class="text-danger">&nbsp;<?php echo $this->groupObj->getColumn($group['id'],'code');?></td>
+													<?php 
+														$budget_amount_group=0.00;
+														for ($month = 1; $month <= 12; $month++){
+															$sumingroup= $this->budgetforecastObj->getsumbygroup($group['id'],$data['year'],$month,$data['location'],$data['region'],'budget_dr');
+															if(!empty($sumingroup)){
+																foreach($sumingroup as $sumg);
+																	$total= $sumg['totalofgroup'];
+																	$budget_amount_group=$total;
+															}else{
+																$budget_amount_group =0.000;
+															}?>	
+														<td style ="text-align:right"><?php echo number_format($budget_amount_group,2,'.',',');}?></td>
+												</tr>
+												<?php
+												if($data['tier'] <= 2):
+													foreach($this->headObj->get(array('g.id'=>$group['id'])) as $head):?>
+														<tr class="headrow">
+															<td class="text-success">&nbsp;&nbsp;<?php echo $this->headObj->getColumn($head['id'],'code');?></td>
+															<?php 
+																$budget_amount_head=0.00;
+																for ($month = 1; $month <= 12; $month++){
+																	$suminhead= $this->budgetforecastObj->getsumbyhead($head['id'],$data['year'],$month,$data['location'],$data['region'],'budget_dr');
+																	if(!empty($suminhead)){
+																		foreach($suminhead as $sumh);
+																			$total= $sumh['totalofhead'];
+																			$budget_amount_head=$total;
+																	}else{
+																		$budget_amount_head =0.000;
+																	}?>	
+															<td style ="text-align:right"><?php echo number_format($budget_amount_head,2,'.',',');}?></td>
+														</tr>
+														<?php 
+														if($data['tier'] <= 1):
+															foreach($this->subheadObj->get(array('head'=>$head['id'])) as $subhead):?>
+																<tr class="subheadrow">
+																	<td>&nbsp;&nbsp;&nbsp;&nbsp;<?php echo $subhead['code'];?>-<?php echo $subhead['name'];?></td>
+																	<?php 
+																	 for ($month = 1; $month <= 12; $month++) {
+																		$bdgt=0;
+																		foreach($this->budgetforecastObj->getsubheadbased($subhead['id'],$data['year'],$data['location'],$month,$data['region']) as $bdgt);
+																		if($bdgt!=null):
+																			$budget_amount = $bdgt['budget_dr'];
+																		else:
+																			$budget_amount = 0.00;
+																		endif;
+																		//echo '<pre>';print_r($budget_amount);
+																		//$pres_closing_balance =+ $classrow['budget_dr'];
+																	?>	
+																	<td style ="text-align:right"><?php echo number_format($budget_amount,2,'.',',');}?></td>
+																</tr>			
+															<?php 
+														   endforeach;
+														endif;
+													endforeach;
+												endif; 
+											endforeach;
+										endif;
+									endforeach;
+								endif; ?>
+								<?php
+								$total_income=0;
+								$total_expense=0;?>
+								<tr class="blue classrow">
+									<td>Gross Profit/Loss</td>
+									<?php
+										for($month = 1; $month <= 12; $month++){
+											$income= $this->budgetforecastObj->getsumbyclass(3,$data['year'],$month,$data['location'],$data['region'],'budget_dr');
+											$expense= $this->budgetforecastObj->getsumbyclass(4,$data['year'],$month,$data['location'],$data['region'],'budget_dr');
+											foreach($income as $in);
+												$total_income= $in['totalofclass'];
+											foreach($expense as $exp);
+												$total_expense= $exp['totalofclass'];
+										$pl=$total_income -$total_expense;
+									?>
+										<td style ="text-align:right"><?php echo number_format(($pl),2,'.',',');}?></td>
+								</tr>
+								<tr class="red classrow">
+									<td> Taxable ( 30% ) </td>
+									<?php 
+									if($data['tier'] > 0):
+										$tax1=0;
+										for($month = 1; $month <= 12; $month++){
+											$income= $this->budgetforecastObj->getsumbyclass(3,$data['year'],$month,$data['location'],$data['region'],'budget_dr');
+											$expense= $this->budgetforecastObj->getsumbyclass(4,$data['year'],$month,$data['location'],$data['region'],'budget_dr');
+											foreach($income as $in);
+												$total_income= $in['totalofclass'];
+											foreach($expense as $exp);
+												$total_expense= $exp['totalofclass'];
+										if(($total_income - $total_expense) > 0){
+											$tax1 =  ($total_income - $total_expense)*0.3;
+										}else{
+											$tax1 =0;
+										}?>
+										<td style ="text-align:right"><?php echo number_format($tax1,2,'.',',');}?></td>
+									<?php 
+									endif;?>
+								 </tr>
+								 <tr class="green classrow">
+									<td>Net Profit/Loss</td>
+									<?php 
+										$tax1=0;
+										for($month = 1; $month <= 12; $month++){
+											$income= $this->budgetforecastObj->getsumbyclass(3,$data['year'],$month,$data['location'],$data['region'],'budget_dr');
+											$expense= $this->budgetforecastObj->getsumbyclass(4,$data['year'],$month,$data['location'],$data['region'],'budget_dr');
+											foreach($income as $in);
+												$total_income= $in['totalofclass'];
+											foreach($expense as $exp);
+												$total_expense= $exp['totalofclass'];
+										if(($total_income - $total_expense) > 0){
+											$tax1 =  ($total_income - $total_expense)*0.3;
+										}else{
+											$tax1 =0;
+										}?>
+										<td style ="text-align:right" ><?php echo number_format(($total_income - $total_expense - $tax1),2,'.',',');}?></td>
+									</tr>
+								</tbody>
+							</table>	
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+<script>
+$(function(){
+	$('#dataTables').DataTable({
+		"paging":   false,
+	});
+	$("#region").change(function() { 
+		$.post( "<?php echo $this->url('ajresponse', array('action' => 'getlocation')); ?>/"+ $("#region").val(), function( data ) {
+			var newdata ="<option value='-1'>All</option>"+data
+			$('#location').html( newdata );
+			$("#location").trigger('chosen:updated');
+		});
+	});
+});
+</script>

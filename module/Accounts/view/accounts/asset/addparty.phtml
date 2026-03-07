@@ -1,0 +1,237 @@
+<?php
+/**
+ * 
+ * View -- of Accounts/AssetController/addassetAction
+ * 
+ */
+	$this->headTitle($this->title);
+?>
+<div class="modal-body">
+	<div class="panel panel-default">                       
+		<div class="panel-body"> 
+			<div class="row">
+				<div class="col-lg-12"> 
+					<form id="form" method="post" action="<?php echo $this->url('asset', array('action' => 'addparty')); ?>" enctype="multipart/form-data" >
+						
+						<div class="row">    
+							<div class="form-group col-lg-4">
+								<label for="code" class="control-label">Code</label>
+								<input type="text" class="form-control" name="code" id="code" placeholder="Code" required>
+							</div>
+							<div class="form-group col-lg-4">
+								<label for="name" class="control-label">Name</label>
+								<input type="text" class="form-control" name="name" id="name" placeholder="Name" required>
+							</div>
+							<div class="form-group col-lg-4">
+								<label for="role" class="control-label">Role</label>
+								<select class="form-control" id="role" name="role" data-placeholder="Select Role" required >
+									<option value=""></option>
+									<?php 
+									foreach ($role as $role):
+									?>
+										<option value="<?php echo $role['id'];?>">
+											<?php echo $role['role'];?> 
+										</option>
+									<?php
+									endforeach;
+									?>
+								</select>
+							</div>
+						</div>
+						<div class="row">
+							<div class="form-group col-lg-4">
+								<label for="country" class="control-label">Country</label>
+								<input type="text" class="form-control" name="country" id="country" placeholder="Country" >
+							</div>
+							<div class="form-group col-lg-4">
+								<label for="region" class="control-label">Region</label>
+								<input type="text" class="form-control" name="region" id="region" placeholder="Region" >
+							</div>
+							<div class="form-group col-lg-4">
+								<label for="city" class="control-label">City</label>
+								<input type="text" class="form-control" name="city" id="city" placeholder="City"  >
+							</div>
+							
+						</div>
+						<div class="row">
+							<div class="form-group col-lg-4">
+								<label for="address1" class="control-label">Address 1</label>
+								<textarea class="form-control" name="address1" id="address1"></textarea>
+							</div>
+							<div class="form-group col-lg-4">
+								<label for="location" class="control-label">Location</label>
+								<select class="form-control" name="location" id="location" data-placeholder="Select Location" >
+									<option value="-1">All</option>
+									<?php foreach($locations as $loc):?>
+									<option value="<?php echo $loc['id'];?>"><?php echo $loc['location'];?></option>
+									<?php endforeach;?>
+								</select>
+							</div>
+						</div>
+						<h5 class='header blue'>Contact Details</h5>
+						<div class="row">
+							<div class="form-group col-lg-4">
+								<label for="telephone" class="control-label">Telephone</label>
+								<input type="text" class="form-control" name="telephone" id="telephone" placeholder="Telephone" >
+							</div>
+							<div class="form-group col-lg-4">
+								<label for="tpn" class="control-label">TPN Number</label>
+								<input type="text" class="form-control" name="tpn" id="tpn" placeholder="TPN">
+							</div>
+							<div class="form-group col-lg-4">
+								<label for="email" class="control-label">Email</label>
+								<input type="email" class="form-control" name="email" id="email" placeholder="Email">
+							</div>
+						</div>
+						<div class="row">
+							<div class="form-group col-lg-4">
+								<label for="postal_code" class="control-label">Postal Code</label>
+								<input type="text" class="form-control" name="postal_code" id="postal_code" placeholder="Postal Code" >
+							</div>
+							<div class="form-group col-lg-4">
+								<label for="contact_person" class="control-label">Contact person</label>
+								<input type="text" class="form-control" name="contact_person" id="contact_person" placeholder="Contact Person" >
+							</div>	
+							<div class="form-group col-lg-4">
+								<label for="uploadimage" class="control-label">Party Profile pic</label>
+								<input type="file" id="uploadimage" name="imageupload"/>
+							</div>	
+						</div>
+						
+						<div class="row">
+							<div class="col-lg-12">  
+								<h5 class='header blue'>Sub Head Details</h5>
+								<table id="head_table" class="table small-padding">
+									<thead>
+										<tr>
+											<th>Head Type</th>
+											<th>Head</th>
+											<th>&nbsp;</th>
+										</tr>
+									</thead>
+									<tbody>
+										<tr>
+											<td>
+												<div class="form-group">
+													<select class="form-control head_type" id="head_type" name="head_type[]" data-placeholder="Select" required>
+														<option value=""></option>
+														<?php 
+														foreach ($headtypes as $headtype):
+														?>
+															<option value="<?php echo $headtype['id'];?>">
+																<?php echo $headtype['head_type'];?>
+															</option>
+														<?php
+														endforeach;
+														?>
+													</select>
+												</div>
+											</td>
+											<td>
+												<div class="form-group">
+													<select class="form-control" id="head" name="head[]" data-placeholder="Select" required>
+														<option value=""></option>
+													</select>
+												</div>
+											</td>
+											<td width="30px;"></td>
+										</tr>
+									</tbody>
+								</table>
+							</div>
+						</div>
+						<div class="row">
+							<div class="col-lg-12">
+								<button type="submit" class="btn btn-success"><i class="fa fa-check"></i> Save </button>
+								<button type="button" class="btn btn-warning" onclick="javascript:history.back();" ><i class="fa fa-times"></i> Cancel </button>
+							</div>
+						</div> 
+					</form>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+<script>
+	$(function() {
+		/****** dynamic insertion of table row*******/
+		$('#head_table').subhead({src:'<?php echo $this->url("ajresponse", array("action" => "gethead")); ?>'});	
+	
+		const fv = FormValidation.formValidation(document.getElementById('#form'), {
+			fields: {
+				code: {
+						validators: {
+							notEmpty: {
+								message: 'Please provide code.'
+							},
+						}
+					},
+					name: {
+						validators: {
+							notEmpty: {
+								message: 'Please provide name.'
+							},
+						}
+					},
+					role: {
+						validators: {
+							notEmpty: {
+								message: 'Please select role.'
+							},
+						}
+					},
+					/*address1: {
+						validators: {
+							notEmpty: {
+								message: ''
+							},
+						}
+					},
+					
+					email: {
+						validators: {
+							notEmpty: {
+								message: 'Please provide email.'
+							},
+							emailAddress: {
+								message: 'Please provide valid email.'
+							},
+						}
+					},*/
+					
+					'head_type[]': {
+						validators: {
+							notEmpty: {
+							message: 'Please select Head Type'
+							}
+						}
+						},
+					'head[]': {
+						validators: {
+							notEmpty: {
+							message: 'Please select Head'
+							}
+						}
+					}, 
+			},
+			plugins: {
+				trigger: new FormValidation.plugins.Trigger(),
+				bootstrap3: new FormValidation.plugins.Bootstrap3(),
+				submitButton: new FormValidation.plugins.SubmitButton(),
+				defaultSubmit: new FormValidation.plugins.DefaultSubmit(),
+			},
+		}).on('core.element.validated', function (e) {
+			if (e.valid) {
+				$('div#'+ e.field.replace('[]','') +'_chosen').removeClass('is-invalid');
+				$('div#'+ e.field.replace('[]','') +'_chosen').addClass('is-valid');
+			} else {
+				$('div#'+ e.field.replace('[]','') +'_chosen').removeClass('is-valid');
+				$('div#'+ e.field.replace('[]','') +'_chosen').addClass('is-invalid');
+			}
+		});
+		$('form select').chosen().change(function () {
+			fv.revalidateField($(this).attr('name'));
+		});
+	});
+</script>
+	

@@ -1,0 +1,202 @@
+<?php
+/**
+ * 
+ * View -- of Purchase/PurchaseController/viewporder
+ * 
+ */
+?>
+<?php 
+	foreach($this->tr_sanctions as $row ):
+		extract($row); 
+	    $so_id = $row['id'];
+	    $so_status = $row['status'];
+            $so_author = $row['author'];
+$transaction_id= $row['transaction'];
+	endforeach;
+	//print_r($this->userID);exit;
+?>
+<style>
+	.mytable tr th,.mytable tr td {
+		padding:5px;
+	}
+</style>
+<div class="row">
+	<div class="col-lg-12">
+		<div class="widget widget-box">
+			<form method="post" action="<?php echo $this->url('pol', array('action' => 'viewpol')); ?>" >
+				<div class="widget-header">
+					<h5 class="widget-title lighter smaller">
+						# View POL Management: <strong>&nbsp;&nbsp;<?php echo $sanction_order_no; ?> | </strong>&nbsp;
+						<?php $this->status($status);?>
+					</h5>
+					<div class="widget-toolbar hidden-xs">
+							<button type="button" id="cm_btn" class="btn btn-white btn-warning btn-bold btn-xs"><i class="fa fa-plus"></i> <a href="<?php echo $this->url('pol', array('action'=>'addpol'));?>"> Add POL</a></button>
+					</div>
+					<div class="widget-toolbar hidden-xs">
+						<div class="btn-group">
+							<a class="btn btn-xs btn-danger" data-toggle="modal" data-target="#modal" href="<?php echo $this->url('acl', array('action' => 'activitylog', 'id' => "29-".$id)); ?>" title="View Activity Logs">
+								<i class="ace-icon fa fa-plus bigger-120" ></i>  
+							</a> 
+							<a class="btn btn-xs" id="print" title="Print">
+								<i class="ace-icon fa fa-file-pdf-o bigger-120"></i>
+							</a>
+						</div>
+					</div>
+				</div>
+				<div class="widget-body">
+					<div class="widget-main padding-12">
+						<div id="report-print">
+                            <h5 class="widget-title lighter smaller center">
+								<b>Sanction Order from <?php echo $this->dateformat($start_date); ?> to <?php echo $this->dateformat($end_date); ?></b>&nbsp;
+							</h5>
+							<div class="row" id="convert-tb0">
+								<div class="col-lg-8" id="convert-tb1">
+									<ul class="list-unstyled spaced">
+										<li>
+											<i class="ace-icon fa fa-caret-right blue"></i>
+											<b>Sanction Order Date : </b><?php echo $this->dateformat($sanction_order_date); ?>
+										</li>
+										<li>
+											<i class="ace-icon fa fa-caret-right blue"></i>
+											<b>POL No. : </b><?php echo $sanction_order_no; ?>
+										</li>
+										<li>
+											<i class="ace-icon fa fa-caret-right blue"></i>
+											<b>Location :  </b><?php echo $location;?>
+										</li>
+										<li>
+											<i class="ace-icon fa fa-caret-right blue"></i>
+											<b>Head : </b><?php echo $this->headObj->getColumn($head,'name'); ?>
+										</li>
+											<li>
+											<i class="ace-icon fa fa-caret-right blue"></i>
+											<b>Sub Head : </b><?php echo  $this->subheadObj->getColumn($subhead,'name'); ?>
+										</li>
+										<li>
+											<i class="ace-icon fa fa-caret-right blue"></i>
+											<b> Driver : </b> <?php echo $driver; ?> 
+										</li>
+										<li>
+											<i class="ace-icon fa fa-caret-right blue"></i>
+											<b> Voucher No. : </b> <?php echo $this->transObj->getColumn($transaction_id,'voucher_no'); ?> 
+										</li>
+									</ul>
+								</div>
+								<div class="col-lg-4" id="convert-tb2">
+									<ul class="list-unstyled spaced">
+										<li>
+											<i class="ace-icon fa fa-caret-right blue"></i>
+											<b>Opening Balance : </b><?php echo $opening_tank; ?> (L)
+										</li>
+										<li>
+											<i class="ace-icon fa fa-caret-right blue"></i>
+											<b>Closing Balance : </b><?php echo $closing_tank; ?> (L)
+										</li>
+										<li>
+											<i class="ace-icon fa fa-caret-right blue"></i>
+											<b>Last Kilometer Reading :  </b><?php echo $last_reading;?> (KM)
+										</li>
+										<li>
+											<i class="ace-icon fa fa-caret-right blue"></i>
+											<b>Present Kilometer Reading : </b><?php echo $present_reading; ?> (KM)
+										</li>
+										<li>
+											<i class="ace-icon fa fa-caret-right blue"></i>
+											<b>Party. : </b><?php echo $party; ?>
+										</li>
+										<li>
+											<i class="ace-icon fa fa-caret-right blue"></i>
+											<b>Amount. : </b><?php echo $amount; ?>
+										</li>
+									</ul>
+								</div>
+							</div>
+						  
+							<div class="space-6"></div>
+							<h5 class="widget-title lighter smaller">
+								<strong>Vehicle Logs Details</strong>&nbsp;
+								<?php if($status == '1'):?>
+										<a href="<?php echo $this->url('pol', array('action'=>'editpol', 'id'=>$id));?>"> <b class = "red"><i class="fa fa-pencil bigger-120"></i></a></b>
+								<?php endif;?>
+							</h5>
+							<div class="row">
+								<div class="col-lg-12" >
+									<table class="table" style="border-top:2px solid #ddd;">
+										<thead>
+											<tr>
+												<th>Initial Reading</th>
+												<th>Final Reading</th>
+												<th>KM Covered</th>
+												<th>Opening Tank Balance</th>
+												<th>Refuelling</th>
+												<th>Total Fuel</th>
+												<th>Milage</th>
+												<th>Fuel Consumed</th>
+												<th>Closing Tank Balance</th>
+												<th>Amount</th>
+											</tr>
+										</thead>
+										<tbody>
+											<?php 
+											   $total_km_covered = 0; $total_fuel_consumed =0;
+												foreach($this->veg_logObj->get(array('sanction_order'=>$id)) as $tdrow): 
+												?>
+												<tr>
+													<td><?php echo $tdrow['initial_reading'];?></td>
+													<td><?php echo $tdrow['final_reading'];?></td>
+													<td><?php echo $tdrow['km_covered'];?></td>
+													<td><?php echo $tdrow['opening_tank_balance'];?></td>
+													<td><?php echo $tdrow['refuelling'];?></td>
+													<td><?php echo $tdrow['total_fuel'];?></td>
+													<td><?php echo $tdrow['milage'];?></td>
+													<td><?php echo $tdrow['fuel_consumed'];?></td>
+													<td><?php echo $tdrow['closing_tank_balance'];?></td>
+													<td><?php echo $tdrow['amount'];?></td>
+													<?php 
+													$total_km_covered += $tdrow['km_covered']; 
+													$total_fuel_consumed += $tdrow['fuel_consumed']; ?>
+												</tr>
+											<?php endforeach;?>
+											<tr style="border-top:2px solid #ddd;border-bottom:2px solid #ddd;">
+												<th colspan="2">Total </th>
+												<th> <?php echo $total_km; ?> (KM)</th>
+												<th colspan="2"></th>
+												<th> <?php echo $total_fuel; ?> (L)</th>
+												<th><?php echo number_format((float)($total_fuel_consumed), 2, '.', ',');?> (L) </th>
+												<th><?php echo $total_fuel_consumed; ?> (L) </th>
+											</tr>
+										</tbody>
+									</table>
+								</div>
+							</div>
+							<div class="row">
+						<div class="col-lg-12" style="text-align: right">
+						<?php	$role = $this->userObj->getColumn($this->userID,'role');
+							//	$checker = $this->userObj->get(array('id'=>$this->userID,'role'=>3));		
+								//$approver = $this->userObj->get(array('id'=>$this->userID,'role'=>5));	
+								?>					
+							<?php if(($status == '1' ||$status == '2' )&& $this->user_location == $location_id && $role==2):?>
+								<a href="<?php echo $this->url('pol', array('action'=>'editpol', 'id'=>$id));?>" class="btn btn-info"> <i class="fa fa-pencil"></i> Edit </a>
+								<a data-toggle="modal" data-target="#modal" href="<?php echo $this->url('pol', array('action'=>'processpol', 'id'=>$id));?>" class="btn btn-warning"> <i class="fa fa-arrow-right"></i>Apply</a>
+								
+								<?php endif;?>
+							</div>
+						</div>
+							<!-- Upload and Download file attachments -->			
+							<?php   
+							   echo $this->partial('partial/attachment.phtml', array('process' => '1002', 'process_id'=>$id , 'status' => $status));
+							?>					
+				            <!-- End of attachment -->
+						</div>
+					</div>
+				</div>
+			</form>
+		</div>
+	</div>
+</div>
+<script type="text/javascript">
+	$('#cm_btn').on('click',function(){
+		window.document.location = "<?php echo $this->url('pol', array('action' => 'addpol'));?>";
+	});
+	
+</script>

@@ -1,0 +1,308 @@
+<?php
+/**
+ * 
+ * View -- of Sales/SchemeController/viewsdetails
+ * 
+ */
+?>
+<?php 
+	foreach($this->schemes as $scheme):
+		//echo "<pre>";print_r($scheme);
+		extract($scheme);
+	    $sc_status = $status;
+	    $sc_id = $id;
+	endforeach;
+?>
+<style>
+	.mytable tr th,.mytable tr td {
+		padding:5px;
+	}
+</style>
+<div class="row">
+	<div class="col-lg-12">
+		<div class="widget widget-box">
+			<div class="widget-header">
+				<h5 class="widget-title lighter smaller">
+					# Schemes:<strong>&nbsp;&nbsp;<?php echo $scheme_no; ?> | <?php echo $scheme_type; ?> | <?php echo $activity;?>&nbsp;<?php
+						 $status_list  = $this->statusObj->get($status); 
+						 foreach ($status_list as $status):
+							 extract($status);
+						 endforeach;
+					 ?>
+					<span class="label label-<?php echo $label;?>">
+						&nbsp; <?php echo $status; ?> &nbsp;
+					</span> </strong>
+				</h5>
+				<div class="widget-toolbar hidden-xs">
+					<div class="btn-group">
+						<a class="btn btn-xs btn-danger" data-toggle="modal" data-target="#modal" href="<?php echo $this->url('acl', array('action' => 'activitylog', 'id' => "18-".$sc_id)); ?>" title="View Activity Logs">
+							<i class="ace-icon fa fa-plus bigger-120" ></i>  
+						</a> 
+						<a class="btn btn-xs" id="print" title="Print">
+							<i class="ace-icon fa fa-file-pdf-o bigger-120"></i>
+						</a>
+					</div>
+				</div>
+			</div>
+			<div class="widget-body">
+				<div class="widget-main padding-12">
+					<div id="report-print">
+						<div class="row" id="convert-tb0">
+							<div class="col-lg-8" id="convert-tb1">
+								<ul class="list-unstyled spaced">
+									<li>
+										<i class="ace-icon fa fa-caret-right blue"></i>
+										Scheme No : <b class="red"><?php echo $scheme_no; ?></b>
+									</li>
+									<li>
+										<i class="ace-icon fa fa-caret-right blue"></i>
+										Activity: <b class="red"><?php echo $activity;?></b>
+									</li>
+									<li>
+										<i class="ace-icon fa fa-caret-right blue"></i>
+										Item : <b class="red"><?php echo $item; ?></b>
+									</li>
+									<li>
+										<i class="ace-icon fa fa-caret-right blue"></i>
+										Start Date : <b class="red"><?php echo $from_date; ?></b>
+									</li>
+									<li>
+										<i class="ace-icon fa fa-caret-right blue"></i>
+										Subhead : <b class="red"><?php echo $this->subheadObj->getColumn($sub_head,'name'); ?></b>
+									</li>
+								</ul>
+							</div>
+							<div class="col-lg-4" id="convert-tb2">
+								<ul class="list-unstyled spaced">
+									<li>
+										<i class="ace-icon fa fa-caret-right blue"></i>
+										Scheme Date : <b class="red"><?php echo $scheme_date; ?></b>
+									</li>
+									<li>
+										<i class="ace-icon fa fa-caret-right blue"></i>
+										Scheme Type : <b class="red"><?php echo $scheme_type; ?></b>
+									</li>
+									<li>
+										<i class="ace-icon fa fa-caret-right blue"></i>
+										Supplier : <b class="red"><?php echo $supplier; ?></b>
+									</li>
+									<li>
+										<i class="ace-icon fa fa-caret-right blue"></i>
+										End Date : <b class="red"><?php echo $to_date; ?></b>
+									</li>
+									<li>
+										<i class="ace-icon fa fa-caret-right blue"></i>
+										Claim : <b class="red"><?php echo ($claim==1)?'YES':'NO'; ?></b>
+									</li>
+								</ul>
+							</div>
+						</div>
+						<div class="row">
+							<div class="col-lg-12">
+								<ul class="list-unstyled spaced">
+									<li>
+										<i class="ace-icon fa fa-caret-right blue"></i>Note: <b class="red"><?php echo $note;?> </b>
+									</li>
+								</ul>
+							</div>
+						</div>
+						<div class="space-6"></div>
+						<div class="row">
+							<?php if($sc_status =='1' || $sc_status =='2'){?>
+							<div class="col-lg-12" ><?php }else{?>
+							<div class="col-lg-7" ><?php }?>
+								<div class="table-responsive">
+									<h5> Scheme Details</h5>
+									<table class="table" id="trscviews_table" style="border-top:2px solid #ddd;">
+										<thead>
+											<tr>
+												<th>UOM</th>
+												<?php
+												switch($scheme_type_id){
+													case '1':
+													?>
+														<th>Qty Slab1</th>
+														<th>Qty Slab2</th>
+														<th>Free Item</th>
+														<th>F.I UOM</th>
+													<?php
+													break;
+													case '2':
+													case '3':
+													?>
+														<th>Qty Slab1</th>
+														<th>Qty Slab2</th>
+													<?php
+													break;
+													case '4':
+													?>
+														<th>Unit Qty</th>
+														<th>Free Item</th>
+														<th>F.I UOM</th>
+													<?php
+													break;
+													case '5':
+													case '6':
+													?>
+													<th>Unit Qty</th><?php
+													break;
+												}?>
+												<th>Discount/Qty</th>
+											</tr>
+										</thead>
+										<tbody>
+											<?php foreach($this->schemedtls->get(array('scheme'=>$sc_id)) as $schemedtl):?>
+												<tr style="border-top:1px solid #ddd;border-bottom:1px solid #ddd;">
+													<td><?php echo $this->uomObj->getColumn($schemedtl['uom'],'code');?></td>
+													<?php
+													switch($scheme_type_id){
+													case '1':
+													?>
+														<td><?php echo $schemedtl['qty_slab1'];?></td>
+														<td><?php 
+															if($schemedtl['qty_slab2'] > 0):
+																echo $schemedtl['qty_slab2'];
+															else:
+																echo "Above";
+															endif; ?></td>
+														<td><?php echo $this->itemObj->getColumn($schemedtl['free_item'],'code');?></td>
+														<td><?php echo $this->uomObj->getColumn($schemedtl['free_item_uom'],'code');?></td>
+													<?php
+													break;
+													case '2':
+													case '3':
+													?>
+														<td><?php echo $schemedtl['qty_slab1'];?></td>
+														<td><?php 
+															if($schemedtl['qty_slab2'] > 0):
+																echo $schemedtl['qty_slab2'];
+															else:
+																echo "Above";
+															endif; ?></td>
+													<?php
+													break;
+													case '4':
+													?>
+														<td><?php echo $schemedtl['unit_quantity'];?></td>
+														<td><?php echo $this->itemObj->getColumn($schemedtl['free_item'],'code');?></td>
+														<td><?php echo $this->uomObj->getColumn($schemedtl['free_item_uom'],'code');?></td>
+													<?php
+													break;
+													case '5':
+													case '6':
+													?>
+													<td><?php echo $schemedtl['unit_quantity'];?></td>
+													<?php
+													break;
+												}?>
+												<td><?php echo $schemedtl['discount_qty'];?></td>
+											<?php endforeach;?>
+										</tbody>
+									</table>
+								</div>
+							</div>
+							<div class="col-lg-1">
+							</div>
+							<?php
+								if($sc_status == '3' || $sc_status == '4'){?>
+							<div class="col-lg-4 table-responsive">
+								<h5> Mapping Batches</h5>
+								<table class="table" id="trbatchviews_table" style="border-top:2px solid #ddd;">
+									<thead>
+										<tr>
+											<th>Batch</th>
+											<th>Location</th>
+											<th class="no-sort">Action</th>
+										</tr>
+									</thead>
+									<tbody>
+									<?php 
+									$schemebatchs = $this->schemebatchObj->get(array('scheme'=>$sc_id));
+									$item_valuation = $this->itemObj->getColumn($item_id,'valuation');
+										if(sizeof($schemebatchs)>0):
+											foreach($schemebatchs as $sc_batch):
+											    $schemebatch_id = $sc_batch['id'];
+											    $batch_id = $sc_batch['batch'];
+											    $location_id = $sc_batch['location'];
+											    $batch = $this->batchObj->getColumn($batch_id, 'id');
+											    $location = $this->locationObj->getColumn($location_id, 'id');?>
+												<tr style="border-top:1px solid #ddd;border-bottom:1px solid #ddd;">
+													<td>
+														<?php 
+														if($item_valuation == 0){
+															echo ($batch_id == '-1')? "ALL":$this->batchObj->getColumn($batch_id, 'batch');
+														}else{
+															echo $item;
+														}
+														?>
+													</td>
+													<td>
+														<?php if($location_id == '-1'){ echo "ALL";
+													    }else{ echo $this->locationObj->getColumn($location_id, 'location');}?>
+													</td>
+													<td>
+														<a class="btn btn-xs btn-info" data-toggle="modal" href="<?php echo $this->url('schemes', array('action'=>'editscbatch', 'id' => $sc_id));?>" data-target="#modal">
+														<i class="ace-icon fa fa-pencil bigger-120"></i>
+														</a>
+														<a class="btn btn-xs btn-danger" href="<?php echo $this->url('schemes', array('action'=>'deletescbatch', 'id' => $schemebatch_id));?>">
+														<i class="ace-icon fa fa-trash-o fa-lg"></i>
+														</a>
+													</td>
+												</tr>	
+											<?php endforeach; 
+										else:?>
+											<tr>
+												<td colspan="3"><h6 align="center"><i><?php echo "Batches not mapped to: ".$scheme_no;?> </i></h6>
+												</td>
+											</tr>
+										<?php endif;?>
+									</tbody>									
+								</table>
+							</div>
+							<?php }?>
+						</div>
+						<?php if($sc_status == '3' || $sc_status == '4'):?>
+							<div class="row">
+								<div class="col-lg-9"></div>
+								<div class="col-lg-3">
+									<a class="btn btn-white btn-success btn-bold" data-tooltip="tooltip" data-toggle="modal" data-target="#modal" data-placement="top" title="Adjust End Date" href="<?php echo $this->url('schemes', array('action' => 'adjustenddate','id'=>$sc_id));?>" >
+										<span class="green"><i class="fa fa-calendar"></i> <span class="hidden-sm hidden-xs">&nbsp;Adjust End Date</span></span>
+									</a>
+									<a class="red DTTT_button btn btn-white btn-info btn-bold" data-tooltip="tooltip" data-toggle="modal" data-target="#modal" data-placement="top" title="Map Batch" href="<?php echo $this->url('schemes', array('action' => 'addscbatch','id'=>$sc_id));?>" >
+										<span class="red"><i class="fa fa-plus"></i> <span class="hidden-sm hidden-xs">&nbsp;Map Batch</span></span>
+									</a>
+								</div>
+							</div>
+						<?php endif;?>
+						<div class="row">
+							<?php if($sc_status =='1' || $sc_status =='2'){?>
+							<div class="col-lg-12" style="text-align: right"><?php }else{?>
+							<div class="col-lg-7" style="text-align: right"><?php }?>
+								<?php if($sc_status == '1' || $sc_status == '2'):?>
+									<a href="<?php echo $this->url('schemes', array('action'=>'editsdetails', 'id'=>$sc_id));?>" class="btn btn-info"> <i class="fa fa-pencil"></i> Edit </a>
+									<a href="<?php echo $this->url('schemes', array('action'=>'commitschemes', 'id'=>$sc_id));?>" class="btn btn-success"> <i class="fa fa-check-square-o"></i>Commit</a>
+								<?php else:?>
+									<p align = 'left'><a href="<?php echo $this->url('schemes', array('action'=>'cancelschemes', 'id'=>$sc_id));?>" class="btn btn-danger"> <i class="fa fa-times"></i> Cancel </a></p>
+								<?php endif;?>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+<!-- for modal -->
+<div id="modal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+	<div class="modal-dialog">
+		<div class="modal-content">
+		</div>
+	</div>
+</div>
+<script type="text/javascript">
+	$('#print').genpdfinvoice({
+		content: '#report-print',
+		src:"<?php echo $this->url('pdfxls', array('action' => 'pdf'));?>",
+		orentation:"L",//L =landscape, P = potrait
+	});
+</script>

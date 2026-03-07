@@ -1,0 +1,226 @@
+<?php /*stock/SamController/addstockopening	
+	 * Add Stock Opening
+	**/
+	$this->headTitle($this->title);
+?>
+<div class="row">
+	<div class="col-lg-12">
+		<div class="widget widget-box">
+			<div class="widget-header">
+				<h5 class="widget-title lighter smaller">
+					<i class="fa fa-pencil"></i>&nbsp;Add New Stock Opening &nbsp;&nbsp;
+				</h5>
+			</div><!-- end of widget-header -->
+			<div class="widget-body">
+				<div class="widget-main">
+					<form id="#form" method="post" action="<?php echo $this->url('inissue', array('action' => 'addassetopening')); ?>"  enctype="multipart/form-data" >    
+						<div class="row">
+							<div class="col-lg-3 form-group">
+								<label for="opening_date" class="control-label">Date</label>
+								<div class="date input-group" id="opening_date" data-date="<?php echo date('Y-m-d');?>" data-date-format="yyyy-mm-dd" >
+									<input class="form-control span2" value="<?php echo '2017-12-31';?>" name="opening_date" id="opening_date" type="text" placeholder="Batch Date" readonly required>
+									<span class="input-group-addon add-on"><i class="fa fa-calendar"></i></span>
+								</div>
+							</div>
+							<div class="form-group col-lg-3">
+								<label for="location" class="control-label">Location</label>
+								<select class="form-control ace" name="location" id="location" data-placeholder="Select" readonly >
+									<option value=""></option>
+									<?php $admin_locs = $this->locationObj->getAll();
+										foreach($admin_locs as $admin_loc):
+										$selected_loc = ($admin_loc['id']==241)?'selected':'';?>
+										<option value="<?php echo $admin_loc['id'];?>" <?php echo $selected_loc;?>>
+											<?php echo $admin_loc['location'];?>
+										</option>
+									<?php endforeach;?>	
+								</select>
+							</div> 
+							<div class="col-lg-3"> 
+								<div class="form-group">
+									<label for="item_group" class="control-label">Item Group</label>
+									<select id="item_group" name="item_group" class="form-control" data-placeholder="Select" readonly required>
+										<option value=""></option>
+										<?php foreach ($this->groupObj->getAll() as $group):
+										    $slted = ($group['id'] == 1)?"selected":"";?>
+											<option value="<?php echo $group['id'];?>"<?php echo  $slted;?>><?php echo $group['name']; ?></option>
+										<?php endforeach; ?>								
+									</select> 
+								</div>
+							</div>
+							<div class="form-group col-lg-3 ">
+								<label for="item" class="control-label">Item</label>
+								<select class="form-control" name="item" id="item" data-placeholder="Select" required>
+									<option value=""></option>
+								</select> 
+							</div>
+						</div>				
+						<div class="row">
+							<div class="col-lg-3 form-group">
+								<label for="basic_uom" class="control-label">Basic UOM</label>
+								<select class="form-control" name="basic_uom" id="basic_uom" data-placeholder="Select" required>
+									<option value=""></option>				
+								</select>
+							</div>
+						</div>
+						<div class="space-12"></div>
+						<div class="row">
+							<div class="col-lg-12">
+								<table class="table table-striped table-condensed" id="opening_details" style="border-top:2px solid #ddd;">
+									<thead>
+										<tr>
+											<th>Location</th>	
+											<th>Quantity</th>
+											<th>Amount(<?php echo $this->currency_code();?>)</th>
+											<th></th>
+										</tr>
+									</thead>
+									<tbody>
+										<tr> 
+											<td>
+												<div class="form-group">
+													<select class="form-control ace" name="location" id="location" data-placeholder="Select" required>
+														<option value=""></option>
+														<?php $admin_locs = $this->locationObj->getAll();
+															foreach($admin_locs as $admin_loc):
+															$selected_loc = ($admin_loc['id']==241)?'selected':'';?>
+															<option value="<?php echo $admin_loc['id'];?>" <?php echo $selected_loc;?>>
+																<?php echo $admin_loc['location'];?>
+															</option>
+														<?php endforeach;?>	
+													</select>
+												</div>
+											</td>
+											<td><div class="form-group"><input type="text" name="qty" id="qty" class="form-control" value="0.00" required></div></td>
+											<td><div class="form-group"><input type="text" name="amount" id="amount" class="form-control" value="0.00" required> </div></td>
+											<td></td>
+										</tr>
+									</tbody>
+								</table>
+							</div>
+						</div>
+						<div class="space-12"></div>
+						<div class="row">
+							<div class="col-lg-12">
+							   <button type="submit" class="btn btn-success"><i class="fa fa-save"></i> &nbsp; Save Opening Details</button>
+							</div>
+						</div>	
+					</form>    
+				</div> 
+			</div>   
+      	</div>
+    </div>   
+</div>	
+					
+<script type="text/javascript">                                                          
+$(function() {	
+    $("#item_group").ready(function() {
+		$.post(
+			"<?php echo $this->url('inissue', array('action' => 'getitems'));?>",
+			{
+				item_group: $("select#item_group option:selected").val(),
+			},
+			function(data){
+				//console.log(data);	
+				$('#item').html(data.stock_items);
+				$('#item').trigger('chosen:updated');
+				$('form').formValidation('revalidateField',$('#item'));		
+			},
+			'json'
+		);	
+	});
+	$('#item').on('change',function(){
+		$.post(
+			"<?php echo $this->url('inissue', array('action' => 'getitemuom'));?>",
+			{
+				item: $(this).val(),
+				opening_date: $('input#opening_date').val(),
+			},
+			function(data){
+				console.log(data);
+                $('select#basic_uom').html(data.uom);
+				$('select#basic_uom').trigger('chosen:updated');
+				$('form').formValidation('revalidateField',$('select#basic_uom'));	
+				$('#assetssp').val(data.assetssp);
+				$('#assetssp').trigger('chosen:updated');
+				$('form').formValidation('revalidateField',$('#assetssp'));
+			},
+			'json'
+		);	
+	});
+	const fv = FormValidation.formValidation(document.getElementById('#form'), {
+		fields: {
+			item: {
+				validators: {
+					notEmpty: {
+						message: 'Please select an item.'
+					}
+				}
+			},
+			assetssp: {
+				validators: {
+					notEmpty: {
+						message: 'Please define a asset or store spare no'
+					}
+				}
+			},
+			uom: {
+				validators: {
+					notEmpty: {
+						message: 'Please select standard uom.'
+					}
+				}
+			},
+			location[]: {
+				validators: {
+					notEmpty: {
+						message: 'Please select location.'
+					}
+				}
+			},
+			quantity[]:{
+			  validators: {
+				  notEmpty: {
+					  message: 'Please provide Opening qty.'
+				  },
+				  numeric:{
+						message: 'Please enter numeric value.'
+				  },
+				  greaterThan: {
+                        value: 0.1,
+                        message: 'The value must be greater than or equal to 0'
+                  },
+			  }
+			}, 
+			rate[]:{
+			  validators: {
+				  notEmpty: {
+					  message: 'Please enter rate.'
+				  },
+				  numeric:{
+						message: 'Please enter numeric value.'
+				  },
+				  greaterThan: {
+                        value: 0.1,
+                        message: 'The value must be greater than or equal to 0'
+                  },
+			  }
+
+		},
+		plugins: {
+			trigger: new FormValidation.plugins.Trigger(),
+			bootstrap3: new FormValidation.plugins.Bootstrap3(),
+			submitButton: new FormValidation.plugins.SubmitButton(),
+			defaultSubmit: new FormValidation.plugins.DefaultSubmit(),
+		},
+	}).on('core.element.validated', function (e) {
+		if (e.valid) {
+			$('div#'+ e.field.replace('[]','') +'_chosen').removeClass('is-invalid');
+			$('div#'+ e.field.replace('[]','') +'_chosen').addClass('is-valid');
+		} else {
+			$('div#'+ e.field.replace('[]','') +'_chosen').removeClass('is-valid');
+			$('div#'+ e.field.replace('[]','') +'_chosen').addClass('is-invalid');
+		}
+	});
+
+});
+</script>

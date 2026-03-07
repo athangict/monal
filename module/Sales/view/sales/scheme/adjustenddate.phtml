@@ -1,0 +1,88 @@
+<?php
+/**
+ * View -- of Sales/SchemeController/extendenddateAction
+ */
+?>
+<?php
+	foreach($schemes as $scheme):
+		//echo "<pre>"; print_r($scheme);
+		extract($scheme);
+	endforeach;
+?>
+<form id="#form" method="post" action="<?php echo $this->url('schemes', array('action' => 'adjustenddate')); ?>"  enctype="multipart/form-data" >                 
+    <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+        <h4 class="modal-title"><i class="fa fa-calendar"></i> Adjust Scheme End Date</h4>
+    </div><!-- /modal-header -->
+    <div class="modal-body">
+		<div class="panel panel-default">
+			<div class="panel-body">
+				<div class="row">
+					<div class="col-lg-12">
+						<span>Scheme No. <strong class="red"><?php echo $scheme_no;?></strong> for item <strong class="green">"<?php echo $item;?>"</strong> suppplied by <strong class="blue"><?php echo $supplier;?></strong> was created on <strong class="red"><?php echo $this->dateformat($scheme_date);?></strong>.</span>
+					</div>
+				</div>
+				<div class="space-6"></div>
+				Initially Applied date is from:
+				<div class="row">
+					<div class="col-lg-6">
+						<i class="ace-icon fa fa-caret-right blue"></i>
+						Start Date : <b class="red"><?php echo $this->dateformat($from_date); ?></b>
+					</div>
+					<div class="col-lg-6">
+						<i class="ace-icon fa fa-caret-right blue"></i>
+						End Date : <b class="red"><?php echo $this->dateformat($to_date); ?></b>
+					</div>
+				</div>
+				<div class="space-12"></div>
+				<div class="row">
+					<div class="col-lg-12 form-group">
+						<input type="hidden" name="scheme_id" id="scheme_id" value="<?php echo $id; ?>" />
+						<label for="to_date" class="control-label">New End Date</label>
+						<div class="date input-group" id="to_date" data-date="<?php echo date('Y-m-d');?>" data-date-format="yyyy-mm-dd" >
+							<input class="form-control span2" name="to_date" id="to_date" type="text" placeholder="End Date" readonly required>
+							<span class="input-group-addon add-on"><i class="fa fa-calendar"></i></span>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>                    
+    </div><!-- /modal-body -->
+    <div class="modal-footer">
+        <button type="submit" class="btn btn-success"><i class="fa fa-check"></i> Save </button>
+        <button type="button" class="btn btn-warning" data-dismiss="modal" ><i class="fa fa-times"></i> Cancel </button> 
+    </div><!-- /modal-footer -->
+</form>
+<script type="text/javascript">
+$('#to_date').datepicker();
+$('document').ready(function(){
+	const fv = FormValidation.formValidation(document.getElementById('#form'), {
+		fields: {
+			to_date: {
+				validators: {
+					notEmpty: {
+						message: 'Please Select End Date.'
+					},
+				}
+			},
+		},
+		plugins: {
+			trigger: new FormValidation.plugins.Trigger(),
+			bootstrap3: new FormValidation.plugins.Bootstrap3(),
+			submitButton: new FormValidation.plugins.SubmitButton(),
+			defaultSubmit: new FormValidation.plugins.DefaultSubmit(),
+		},
+	}).on('core.element.validated', function (e) {
+		if (e.valid) {
+			$('div#'+ e.field.replace('[]','') +'_chosen').removeClass('is-invalid');
+			$('div#'+ e.field.replace('[]','') +'_chosen').addClass('is-valid');
+		} else {
+			$('div#'+ e.field.replace('[]','') +'_chosen').removeClass('is-valid');
+			$('div#'+ e.field.replace('[]','') +'_chosen').addClass('is-invalid');
+		}
+	});
+});
+$('#to_date').on('changeDate',function(){
+	$('form').formValidation('revalidateField', $(this).attr('id'));
+});
+</script>

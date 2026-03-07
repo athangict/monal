@@ -1,0 +1,258 @@
+<?php 
+/**
+*
+* View Selling Price  Stock/BatchController/sellingprice
+*
+*/
+	$this->headTitle($this->title);
+?>
+<div class="row">
+	<div class="col-lg-12">
+		<div class="widget widget-box">
+			<div class="widget-header">
+				<h5 class="widget-title lighter smaller"> 
+					<i class="fa fa-taxi"></i> Bank Book
+				</h5>
+				<div class="widget-toolbar hidden-xs">
+					<a style='cursor:pointer' id="print">
+						<i class="ace-icon fa fa-file-pdf-o red"></i>
+					</a>
+				</div>	
+			</div>
+			<div class="widget-body">
+				<div class="widget-main">
+					<form method="post" action="<?php echo $this->url('transaction', array('action' => 'bankbook')); ?>">
+						<div class="row">
+							<div class="col-lg-3">
+								<div class="form-group">
+									<label for="location" class="control-label">Location</label>
+									<select id="location" name="location" class="form-control" data-placeholder="Select" required>
+										<option value=""></option>
+										<?php foreach($this->locationObj->getAll() as $locations):
+										$selected = ($location_id == $locations['id'])?"selected":"";?>
+											<option value="<?php echo $locations['id'];?>" <?php echo $selected;?>>
+													<?php echo $locations['location'];?>
+											</option>
+										<?php endforeach;?>
+									</select> 
+								</div>
+							</div>
+							<div class="col-lg-3">
+								<div class="form-group">
+									<label for="sub_head" class="control-label">Bank Account</label>
+									<select id="sub_head" name="sub_head" class="form-control" data-placeholder="Select" required>
+										<option value=""></option>
+										<?php foreach($this->bankaccObj->get(array('ba.location'=>$location_id)) as $bankacc):
+										$selected = ($subhID == $bankacc['id'])?'selected':'';?>
+											<option value="<?php echo $bankacc['id'];?>" <?php echo $selected;?>>
+													<?php echo $bankacc['code'];?>
+											</option>	
+										<?php endforeach;?>
+									</select> 
+								</div>
+							</div>
+							<div class="col-lg-2">
+								<div class="form-group">
+									<label for="start_date" class="control-label">Start Date</label>
+									<div class="date input-group" id="start_date" data-date-format="yyyy-mm-dd" >
+										<input class="form-control span2" name="start_date" id="start_date" value="<?php echo $start_date;?>" type="text" placeholder="Start Date" readonly required>
+										<span class="input-group-addon add-on"><i class="fa fa-calendar"></i></span>
+									</div>
+								</div>
+							</div>
+							<div class="col-lg-2">
+								<div class="form-group">
+									<label for="end_date" class="control-label">End Date</label>
+									<div class="date input-group" id="end_date" data-date-format="yyyy-mm-dd" >
+										<input class="form-control span2" name="end_date" id="end_date" value="<?php echo $end_date;?>" type="text" placeholder="End Date" readonly required>
+										<span class="input-group-addon add-on"><i class="fa fa-calendar"></i></span>
+									</div>
+								</div>
+							</div>
+							<div class="col-lg-2"> <br/>
+								<button type="submit" id="refresh_btn" class="btn btn-info pull-right"><i class="fa fa-refresh"></i> Refresh </button>
+							</div>
+						</div>	  
+					</form>	
+					<div class="space-12"></div>
+					<div id="report-print">
+						<table class="table table-hover">
+							<thead>
+								<tr>
+									<th colspan="5" style="text-align:center">
+									<?php 
+									if($location_id > 0):
+										echo "BANK BOOK for Bank Acc No: <i>".$this->subheadObj->getColumn($subhead_id, 'code')."</i>,";
+										echo " <i>".$this->locationObj->getColumn($location_id, 'location')."</i>";?>
+										 from <?php echo $start_date;?> to <?php echo $end_date;
+									else:
+										echo "*Select Location and Bank Account No. first to get the Data*";
+									endif;?>
+									</th>
+								</tr>
+								<tr>
+									<th>Txn Type</th>
+									<th>Voucher No</th>
+									<th>Txn Date</th>
+									<th>Amount Dr</th>
+									<th>Amount Cr</th>
+								</tr>
+							</thead>
+							<tbody>
+								<tr>
+									<td colspan="2"><strong>Opening Balance</strong></td>
+									<td><strong>
+										<?php $date = $start_date;
+											  $date = strtotime($date);
+											  $date = strtotime("-1 day", $date);
+											  $closing_date = date('Y-m-d', $date);
+											  echo $closing_date;
+										?></strong>
+									</td>
+									<td>
+										<?php 
+											  $i = 1; $fixed_start_date = "2015-01-01";
+											  $open_date = $fixed_start_date;
+											  $open_date = strtotime($open_date);
+											  $open_date = strtotime("-10 year", $open_date);
+											  $opening_date = date('Y-m-d', $open_date);
+										?>
+										
+										<?php $i = 1;
+											$tot_open_receipt = 0.00; $tot_open_payment = 0.00;	
+											foreach($this->transactionObj->getBytransactionDate($opening_date, $closing_date) as $transactions):
+												foreach($this->transactiondetailObj->get(array('transaction'=> $transactions['id'], 'td.sub_head' => $subhead_id, 'td.location' =>$location_id)) as $transdtl):
+													$tot_open_receipt += $transdtl['debit']; 
+													$tot_open_payment += $transdtl['credit']; 
+												endforeach;
+											endforeach;
+										$open_tot_receipt += $tot_open_receipt;
+										$open_tot_payment += $tot_open_payment;
+										$opening_balance = $open_tot_receipt-$open_tot_payment;
+										?>
+										<strong>
+										<?php echo $grand_tot_receipt = $opening_balance;?>
+										</strong>
+									</td>
+									<td><strong><?php echo $grand_tot_payment = 0.00;?></strong></td>
+								</tr>
+								
+								
+							<?php $i = 1; 
+									$tot_receipt = 0.00; $tot_payment = 0.00;
+									foreach($this->transactionObj->getBytransactionDate($start_date, $end_date) as $transactions):
+								?>
+									<?php  
+										foreach($this->transactiondetailObj->get(array('transaction'=> $transactions['id'], 'td.sub_head' => $subhead_id, 'td.location' =>$location_id)) as $transdtl):
+									?>
+									<tr>
+										<td><?php echo $transactions['remark'];?></td>
+										<td><?php echo $transactions['voucher_no'];?></td>
+										<td><?php echo $transactions['voucher_date'];?></td>
+										<td><?php $tot_receipt += $transdtl['debit']; echo $transdtl['debit'];?></td>
+										<td><?php $tot_payment += $transdtl['credit']; echo $transdtl['credit'];?></td>
+									</tr>
+									<?php endforeach;?>		
+								<?php endforeach;?>
+								<tr>
+									<td></td>
+									<td colspan="2" style="text-align:center"><strong><?php echo "Total amount";?></strong></td>
+									<td><strong><?php echo $grand_tot_receipt += $tot_receipt;?></strong></td>
+									<td><strong><?php echo $grand_tot_payment += $tot_payment;?></strong></td>
+								</tr>
+								<tr>
+									<td colspan="2"></td>
+									<td colspan="2"><strong>Closing Balance</strong></td>
+									<td><strong><?php echo $grand_tot_receipt-$grand_tot_payment;?></strong></td>
+								</tr>	
+							</tbody>	
+						</table>
+					</div>
+				</div>
+			</div>	
+		</div>
+	</div>			
+</div>
+<script text="text/javascript">
+	$('#print').genpdfinvoice({
+		content: '#report-print',
+		src:"<?php echo $this->url('pdfxls', array('action' => 'pdf'));?>",
+		orentation:"P",//L =landscape, P = potrait
+	});
+	$(function() {
+		$('#location').on('change', function(){
+			//alert($(this).val());
+			$.post(
+				"<?php echo $this->url('transaction', array('action' => 'getbankaccount')); ?>",
+				{
+					location_id: $(this).val(),
+				},
+				function(data){
+					//console.log(data);
+					$("#sub_head").html(data.subhead);
+					$("#sub_head").trigger('chosen:updated');				
+				},
+				'json'
+			);	
+		});
+		$('#start_date').datepicker();
+		$('#start_date').on('changeDate', function(){
+			$('form').formValidation('revalidateField', $(this).attr('id'));
+		});
+		$('#end_date').datepicker();
+		$('#end_date').on('changeDate', function(){
+			$('form').formValidation('revalidateField', $(this).attr('id'));
+		});
+	});
+
+	const fv = FormValidation.formValidation(document.getElementById('#form'), {
+		fields: {
+			'location': {
+				 	validators: {
+						notEmpty: {
+							message: 'Please select location'
+					  	}
+				  	}
+			  	},
+			  	'bank_account': {
+				 	validators: {
+						notEmpty: {
+							message: 'Please select Bank Account'
+					  	}
+				  	}
+			  	},
+			  	'start_date': {
+				 	validators: {
+						notEmpty: {
+							message: 'Please select start date'
+					  	}
+				  	}
+			  	},
+			  	'end_date': {
+				 	validators: {
+						notEmpty: {
+							message: 'Please select end date'
+					  	}
+				  	}
+			  	},
+		},
+		plugins: {
+			trigger: new FormValidation.plugins.Trigger(),
+			bootstrap3: new FormValidation.plugins.Bootstrap3(),
+			submitButton: new FormValidation.plugins.SubmitButton(),
+			defaultSubmit: new FormValidation.plugins.DefaultSubmit(),
+		},
+	}).on('core.element.validated', function (e) {
+		if (e.valid) {
+			$('div#'+ e.field.replace('[]','') +'_chosen').removeClass('is-invalid');
+			$('div#'+ e.field.replace('[]','') +'_chosen').addClass('is-valid');
+		} else {
+			$('div#'+ e.field.replace('[]','') +'_chosen').removeClass('is-valid');
+			$('div#'+ e.field.replace('[]','') +'_chosen').addClass('is-invalid');
+		}
+	});
+	$('form select').chosen().change(function () {
+		fv.revalidateField($(this).attr('name'));
+	});
+</script>
+

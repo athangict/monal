@@ -1,0 +1,226 @@
+<?php
+/**
+ * View -- of Stock/TransportController/viewtranspcharge
+ */
+?>
+<?php echo $this->partial('stock/transporter/partial.phtml', array('active' => 'charge')); ?> <br/>
+<style>
+	.mytable tr th,.mytable tr td {
+		padding:5px;
+	}
+</style>
+<?php 
+	foreach($transport_charges as $transpcharge):
+		extract($transpcharge);
+		$tc_id = $id;
+		$tc_status = $status;
+	endforeach;
+?>
+<div class="row">
+	<div class="col-lg-12">
+		<div class="widget widget-box">
+			<div class="widget-header">
+				<h5 class="widget-title lighter smaller">
+					# Transport Charge Details:<strong> &nbsp;&nbsp;<?php echo $transport_no; ?> |
+					<?php echo $this->partyObj->getColumn($transporter,'code')?> | 
+					<?php echo $this->activityObj->getColumn($activity,'activity'); ?></strong>&nbsp;
+					<?php $this->status($status);?>
+				</h5>
+				<div class="widget-toolbar hidden-xs">
+					<a style='cursor:pointer' id="print">
+						<i class="ace-icon fa fa-file-pdf-o red"></i>
+					</a>
+				</div>	
+			</div>
+			<div class="widget-body">
+				<div class="widget-main padding-12">
+					<div id="report-print">
+						<div class="row" id="convert-tb0">
+							<div class="col-lg-8" id="convert-tb1">
+								<ul class="list-unstyled spaced">
+									<li>
+										<i class="ace-icon fa fa-caret-right blue"></i>
+										Source Location : <b class="red"><?php echo $this->locationObj->getColumn($source_location,'location');?> </b>
+									</li>
+									<li>
+										<i class="ace-icon fa fa-caret-right blue"></i>
+										Dispatch No : <b class="red"><?php echo $this->dispatchObj->getColumn($dispatch,'challan_no');?> </b>
+									</li>
+									<li>
+										<i class="ace-icon fa fa-caret-right blue"></i>
+										Dispatch Date : <b class="red"><?php echo $this->dispatchObj->getColumn($dispatch,'dispatch_date');?> </b>
+									</li>
+									<li>
+										<i class="ace-icon fa fa-caret-right blue"></i>
+										Transporter/Driver : <b class="red"><?php echo $this->dispatchObj->getColumn($dispatch,'transporter');?> </b>
+									</li>
+								</ul>
+							</div>
+							<div class="col-lg-4" id="convert-tb2">
+								<ul class="list-unstyled spaced">
+									<li>
+										<i class="ace-icon fa fa-caret-right blue"></i>
+										Destination Location : <b class="red"><?php echo $this->locationObj->getColumn($destination_location,'location');?></b>
+									</li>
+									<li>
+										<i class="ace-icon fa fa-caret-right blue"></i>
+										Transport Charge No. : <b class="red"><?php echo $transport_no;?></b>
+									</li>
+									<li>
+										<i class="ace-icon fa fa-caret-right blue"></i>
+										Transport Charge Date : <b class="red"><?php echo $transport_date;?></b>
+									</li>
+									<li>
+										<i class="ace-icon fa fa-caret-right blue"></i>
+										Vehicle no. : <b class="red"><?php echo $this->dispatchObj->getColumn($dispatch,'vehicle_no');?> </b>
+									</li>
+								</ul>
+							</div>
+						</div>
+						<div class="row">
+							<div class="col-lg-12">
+								<ul class="list-unstyled spaced">
+									<li>
+										<i class="ace-icon fa fa-caret-right blue"></i>Transporter: <b class="red"><?php echo $this->partyObj->getColumn($transporter,'name');?> </b>
+									</li>
+								</ul>
+							</div>
+						</div>
+						<h3 class="green smaller lighter">Transit Loss Details</h3>
+						<?php
+							$transit_losses = $this->transit_lossObj->get(array('dispatch'=>$dispatch));
+							//print_r($transit_losses);exit;
+							if(sizeof($transit_losses) <= 0):
+						?>
+						<div class="row message_box">
+							<div class="col-lg-12">
+								<div class="alert alert-block alert-info">
+									<i class="ace-icon fa fa-check blue"></i>
+									<strong class="blue"> No Transit Loss </strong> for the Dispatch : <strong class="blue"><?php echo $this->dispatchObj->getColumn($dispatch,'challan_no');?>.</strong>
+								</div>
+							</div>
+						</div>
+						<div class="space-12"></div>
+						<?php else:?>
+						<div class="row">
+							<div class="col-lg-12" >
+								<table class="table" style="border-top:2px solid #ddd;">
+									<thead>
+										<tr>
+											<th>#</th>
+											<th>Item</th>
+											<th>Batch</th>
+											<th>UOM</th>
+											<th>Qty Loss</th>
+											<th>Rate (<?php echo $this->currency_code();?>)</th>
+											<th>Recovery Qty</th>
+											<th>Amount (<?php echo $this->currency_code();?>)</th>
+										</tr>
+									</thead>
+									<tbody>
+									<?php 
+										$sl=1;
+										foreach($transit_losses as $tloss):
+									?>
+										<tr>
+											<td><?php echo $sl++;?></td>
+											<td><?php echo $this->itemObj->getColumn($tloss['item'],'code');?></td>
+											<td><?php echo ($tloss['batch']==0)?'N/A':$this->batchObj->getColumn($tloss['batch'],'batch');?></td>
+											<td><?php echo $this->uomObj->getColumn($tloss['uom'],'code');?></td>
+											<td><?php echo $tloss['qty_loss'];?></td>
+											<td><?php echo $tloss['rate'];?></td>
+											<td><?php echo $tloss['recovery_qty'];?></td>
+											<td><?php echo $tloss['amount'];?></td>
+										</tr>
+									<?php 
+										$sum_tloss_amt += $tloss['amount'];
+									endforeach;?>
+										<tr style="border-top:2px solid #ddd;border-bottom:2px solid #ddd;">
+											<th colspan="6"><?php //echo $this->numtoWords($sum_tloss_amt);?></th>
+											<th colspan="2">Net Transit Loss Amount : 
+											<?php echo $this->currency($sum_tloss_amt); ?></th>
+										</tr>
+									</tbody>
+								</table>
+							</div>
+						</div>
+						<?php endif;?>
+						<h3 class="blue smaller lighter">Transportation Charge</h3>
+						<div class="row">
+							<div class="col-lg-8">
+								<table class="table table-striped table-bordered table-condensed">	
+									<tbody>
+										<tr>
+											<th></th>
+											<th>Distance</th>
+											<th>Rate</th>
+											<th>Quantity</th>
+											<th>Amount</th>
+										</tr>
+										<tr>
+											<th>Hill</th>
+											<td><?php echo $hill_distance;?> KM</td>
+											<td><?php echo $this->currency_code();?> <?php echo $hill_rate;?> </td>
+											<td rowspan="2" style="vertical-align:middle; text-align:center;"><?php echo $qty;?> MT</td>
+											<td><?php echo $this->currency_code();?> <?php echo $h_charge = $hill_distance * $hill_rate * $qty;?></td>
+										</tr>
+										<tr>
+											<th>Plain</th>
+											<td><?php echo $plain_distance;?> KM</td>
+											<td><?php echo $this->currency_code();?> <?php echo $plain_rate;?> </td>
+											<td><?php echo $this->currency_code();?> <?php echo $p_charge = $plain_distance * $plain_rate * $qty;?></td>
+										</tr>
+										<tr>
+											<th colspan="4" style="text-align:right;">Net Transportation Charge </th>
+											<th><?php echo $this->currency_code();?> <?php echo $t_charge = $h_charge + $p_charge;?></th>
+										</tr>
+										<tr>
+											<th colspan="4" style="text-align:right;">Transit Loss Charge </th>
+											<th><?php echo $this->currency_code();?> <?php echo $sum_tloss_amt = ($sum_tloss_amt == "")?"0.00":$sum_tloss_amt;?></th>
+										</tr>
+										<tr>
+											<th colspan="4" style="text-align:right;">Actual Transportation Charge </th>
+											<th><?php echo $this->currency_code();?> <?php echo $actual_charge = $t_charge - $sum_tloss_amt;?></th>
+										</tr>
+									</tbody>
+								</table>
+							</div>
+							<div class="col-lg-4">
+								<table class="table table-striped table-bordered table-condensed">	
+									<tbody>
+										<tr>
+											<td>
+												Hill Charge = Hill Distance X Hill Rate X Quantity <br>
+												Plain Charge = Plain Distance X Plain Rate X Quantity<br> 
+												Total Charge = Hill Charge + Plain Charge<br>
+												Actual Charge = Total Charge - Transit Loss Charge<br>
+											</td>
+										</tr>
+									</tbody>
+								</table>
+							</div>
+						</div>
+					</div>
+					<div class="row">
+						<div class="col-lg-7"></div>
+						<div class="col-lg-5" style="text-align: right">
+						<?php if($tc_status != 3):?>
+							<a href="<?php echo $this->url('transporter', array('action'=>'edittranspcharge', 'id'=>$tc_id));?>" class="btn btn-info"> <i class="fa fa-pencil"></i> Edit </a>
+<?php if($actual_charge > 0 || $actual_charge < 0):?>							
+<a href="<?php echo $this->url('transporter', array('action'=>'committranspcharge', 'id'=>$tc_id));?>" class="btn btn-success"> <i class="fa fa-check-square-o"></i>Commit</a>
+<?php endif;?>						
+                                                <?php endif;?>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+<script type="text/javascript">
+	$('#print').genpdfinvoice({
+		content: '#report-print',
+		src:"<?php echo $this->url('pdfxls', array('action' => 'pdf'));?>",
+		orentation:"P",//L =landscape, P = potrait
+	});
+</script>

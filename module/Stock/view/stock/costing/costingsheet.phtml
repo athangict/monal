@@ -1,0 +1,133 @@
+<?php
+/**
+ * 
+ * View -- of Stock/StockController/elccostingAction
+ * 
+ */
+	$this->headTitle($this->title);
+?>
+<?php $minYear = date('Y', strtotime($minYear)); ?>
+<div class="row">
+	<div class="col-lg-12">
+		<div class="row">
+			<form id="#form" method="post" action="<?php echo $this->url('cost'); ?>"  enctype="multipart/form-data" >
+				<div class="form-group col-lg-2">
+					<label class="control-label" for="year">Year</label>
+					<select class="form-control" id="year" name="year" data-placeholder="Select" onchange='this.form.submit()'>
+						<option value=""></option>
+						<?php 
+							for($year=date('Y');$year>=$minYear;$year--):
+								$selected = ($year == $data['year'])?"selected":"";
+						?>
+							<option value="<?php echo $year;?>" <?php echo $selected;?> >
+								<?php echo $year;?> 
+							</option>
+						<?php endfor; ?>
+					</select>
+				</div>
+				<div class="form-group col-lg-2">
+					<label class="control-label" for="month">Month</label>
+					<select class="form-control" id="month" name="month" data-placeholder="Select" onchange='this.form.submit()'>
+						<option value="-1" <?php echo ($data['month'] == '-1')?'selected':'';?>>All</option>
+						<?php for($month=1; $month<=12; $month++):?>
+							<?php $selected = ($month == $data['month'])?'selected':'';?>
+							<option value="<?php echo $month;?>" <?php echo $selected; ?>>
+								<?php echo DateTime::createFromFormat('!m', $month)->format('F');?>
+							</option> 
+						<?php endfor;?>
+					</select>
+				</div>
+				<div class="form-group col-lg-2">
+					<label class="control-label" for="activity">Activity</label>
+					<select class="form-control" id="activity" name="activity" data-placeholder="Activity" onchange='this.form.submit()'>
+						<option value="-1" <?php echo ($data['activity'] == '-1')?'selected':'';?>>All</option>
+						<?php 
+							$activites = $this->activityObj->getAll();
+							foreach($activites as $act):
+								$selected_act = ($act['id'] == $data['activity'])?'selected':'';
+						?>
+							<option value="<?php echo $act['id']?>" <?php echo $selected_act;?>>
+								<?php echo $act['activity'];?>
+							</option>
+						<?php endforeach;?>
+					</select>
+				</div>
+			</form>
+			<div class="form-group col-lg-6">					
+				<div class="clearfix">
+					<div class="pull-right tableTools-container"></div>
+					<a class="red pull-right DTTT_button btn btn-white btn-info btn-bold" data-tooltip="tooltip" data-placement="top" title="ELC costing" href="<?php echo $this->url('cost', array('action' => 'elccosting'));?>" >
+						<span class="red"><i class="fa fa-plus"></i> <span class="hidden-sm hidden-xs">&nbsp;Add Costing Sheet</span></span>
+					</a>
+				</div>
+			</div>
+		</div>
+		<div>
+			<table class="table table-bordered table-striped table-hover" id="dataTables">
+				<thead>
+					<tr>
+						<th>#</th>
+						<th>Costing No.</th>
+						<th>Invoice No.</th>
+						<!--<th>Location</th>-->
+						<th>Supplier</th>	
+						<th>Costing Date</th>
+                        <th>Status</th>
+						<th>Action</th>
+					</tr>
+				</thead>
+				<tbody>
+				  <?php $i=1;
+				  foreach($this->sheets as $sheet):?>
+				        <tr>
+				          <td><?php echo $i++; ?></td>
+				          <td><?php echo $sheet['costing_no']; ?> &nbsp;
+						  <span class="label label-info">  
+						    <?php echo $this->activityObj->getColumn($sheet['activity'],'activity'); ?>
+						  </span>
+				          </td>
+					  <?php if($sheet['po_invoice'] == "1"): ?>
+				                 	<td><?php echo $this->POObj->getColumn($sheet['po_invoice_no'],'po_no'); ?> </td>
+				           <?php elseif($sheet['po_invoice'] == "2"): ?>
+				           			<td><?php echo $this->invoiceObj->getColumn($sheet['po_invoice_no'],'invoice_no'); ?> </td>
+				           <?php  endif;  ?>
+				         <!-- <td><?php //echo $this->locationObj->getColumn($sheet['location'],'location'); ?></td>-->
+				          <td><?php echo $this->partyObj->getColumn($sheet['supplier'],'code'); ?></td>	
+				          <td><?php echo $sheet['sheet_date']; ?></td>	
+                         
+							<td><?php echo $this->status($sheet['status']); ?></td>						  
+					      <td>
+                          <div class="btn-group">
+					      <a class="btn btn-xs btn-info" href="<?php echo $this->url('cost', array('action' => 'elccosting', 'id' => $sheet['id'])); ?>" title="Edit Costing Sheet">
+										<i class="ace-icon fa fa-pencil bigger-120" ></i> 
+						  </a>
+						   <a class="btn btn-xs btn-success" href="<?php echo $this->url('cost', array('action' => 'sheetdetail', 'id' => $sheet['id'])); ?>" title="view details">
+										<i class="ace-icon fa fa-eye bigger-120" ></i>  
+						  </a>
+						   <a data-toggle="modal" data-target = "#modal" class="btn btn-xs btn-danger" href="<?php echo $this->url('acl', array('action' => 'activitylog', 'id' => "9-".$sheet['id'])); ?>" title="View Activity Logs">
+										<i class="ace-icon fa fa-plus bigger-120" ></i>  
+						  </a></div>
+						 </td>		          				          				          
+				        </tr>
+				  <?php endforeach; ?>
+				</tbody>
+			</table>    
+		</div>
+	</div>
+</div>
+
+<div id="modal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+	<div class="modal-dialog">
+		<div class="modal-content">
+		</div>
+	</div>
+</div>
+
+<script type="text/javascript">
+$('document').ready(function(){
+	$('#dataTables').DataTable({
+		"paging":   true,
+	});
+});
+</script>
+

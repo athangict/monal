@@ -1,0 +1,37 @@
+<?php // view partial.phtml 
+  $viewvehicle = ($this->active == "viewvehicle")?"active":"";
+  $transhistory = ($this->active == "transhistory")?"active":"";
+  $transdetail = ($this->active == "transdetail")?"active":"";
+?>
+<br/>
+<ul class="nav nav-tabs padding-18" id="myTab" >
+	<?php if($this->id > 0):?>
+		<li class="<?php echo $viewvehicle; ?>">
+			<a href="<?php echo $this->url('vehicle', array('action' => 'viewvehicle', 'id' => $this->id)); ?>">
+				<i class="blue ace-icon fa fa-car bigger-120"> </i>
+				<span class="hidden-xs" >Transport</span>
+			</a>
+		</li>
+	<?php else: ?>
+		<li class="<?php echo $viewvehicle; ?>">
+			<a href="<?php echo $this->url('vehicle', array('action' => 'addvehiclerecord', 'id' => $this->id)); ?>">
+				<i class="blue ace-icon fa fa-car bigger-120"> </i>
+				<span class="hidden-xs" >Transport Details</span>
+			</a>
+		</li>
+	<?php endif;?>
+	<li class="<?php echo $transdetail; ?>">
+		<a href="<?php echo $this->url('vehicle', array('action' => 'transdetail', 'id' => $this->id)); ?>">
+			<i class="green ace-icon fa fa-car bigger-120"> </i>
+			<span class="hidden-xs" >Transport Details</span>
+		</a>
+	</li>
+	<li class="<?php echo $transhistory; ?>">
+		<a href="<?php echo $this->url('vehicle', array('action' => 'transhistory', 'id' => $this->id)); ?>">
+			<i class="green ace-icon fa fa-car bigger-120"> </i>
+			<span class="hidden-xs" >Transport History</span>
+		</a>
+	</li>
+</ul>
+
+

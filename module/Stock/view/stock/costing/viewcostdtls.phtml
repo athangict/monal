@@ -1,0 +1,172 @@
+<?php if(sizeof($this->costItemDtls) > 0): ?>
+  		<?php 
+			foreach ($this->costItemDtls as $itemDtls):
+				//echo"<pre>"; print_r($itemDtls);
+				extract($itemDtls);
+				$costingItemId = $id;
+			endforeach;  
+			$item_code = $this->itemObj->getColumn($item, 'name');
+    ?>
+ <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+        <h5 class="modal-title"> <i class="fa fa-asterisk"></i> Costing Details of <?php echo $item_code; ?> </h5>
+</div>  <!-- /modal-header -->
+<div class="modal-body">
+  <div class="row">
+	<div class="col-lg-6">
+	   <table class="table table-striped table-bordered table-hover" id="trdetails_table">
+		 <thead>
+		    <tr>
+			    <th>Costing Variables</th>
+			    <th>Values</th>
+		    <tr>
+		 </thead>
+		 <tr>
+		 <tbody>
+			<tr><th>Batch No</th>
+				<td>
+                <input type="hidden" name="costing_item_id" id="costing_item_id" value="<?php echo $costingItemId; ?>"/>
+				<?php 
+				      if($batch > 0){
+					    echo $this->batchObj->getColumn($batch,'batch');
+				      }
+				      else{
+				      	echo"<i>* First Commit to view Batch No</i>";
+				      }
+				?>
+				</td>
+			</tr>
+			<tr>
+				<th>Valuation</th><td><?php echo ($valuation == 0)?"FIFO(First In First Out)":"Moving Average"; ?></td>
+			</tr>
+			<tr>
+				<th>Invoice Rate</th><td><?php echo $rate; ?></td>
+			</tr>
+			<tr>
+				<th>Invoice Quantity</th><td><?php echo $qty; ?></td>
+			</tr>	
+			<tr>
+				<th>UOM</th><td><?php echo $this->uomObj->getColumn($uom,'code'); ?></td>
+			</tr>
+				 <?php if($valuation == "1" && $ref_rate > 0 && $ref_qty > 0):				 
+					 if($ref_po_sinv == "1"){
+					 	//PO					 
+					 	$po_sinv_No = $this->porderObj->getColumn($ref_po_sinv_no, 'po_no');
+					 	$label_po_sinv = "Purchase Order";
+					 }else{
+					 	//Supplier Inv.					
+					 	$po_sinv_No = $this->invoiceObj->getColumn($ref_po_sinv_no, 'invoice_no');
+					 	$label_po_sinv = "Supplier Invoice";
+					 }					 
+				 ?>
+				<tr><td colspan="2"><b>Reference Purchase Details</b></td>	</tr>
+				<tr><td><b><?php echo  $label_po_sinv; ?> No. </b></td><td><?php echo $po_sinv_No; ?></td> </tr>
+				<tr>
+				 <td><b>Reference Rate</b></td><td>
+					   <?php echo $ref_rate; ?>					  
+				 </td>
+				</tr>
+				<tr>
+					<td><b>Ref Rate Taken For Costing</b></td>
+					<td><?php
+							$prevDtls = $this->costingitemsObj->get($prev_costing_item);
+							foreach ($prevDtls as $dtl);
+							$actual_rate_taken = $dtl['rate_taken_value'];
+							if($actual_rate_taken == ''):
+								if($rate_taken == 1){
+									$rate_label = "Previous Stock Rate";
+									$actual_rate_taken = $dtl['ref_rate'];
+								}elseif($rate_taken == 2){
+									$rate_label = "Current Stock Rate";
+									$actual_rate_taken = $dtl['rate'];
+								}elseif($rate_taken == 3){
+									$rate_label = "Wt.Moving Avg Rate";
+									$actual_rate_taken = $dtl['avg_rate'];
+								}else{
+									$rate_label = "Current Stock Rate Default";
+									$actual_rate_taken = $dtl['rate'];
+								}
+							else:
+								if($rate_taken == 1){
+									$rate_label = "Previous Stock Rate";
+								}elseif($rate_taken == 2){
+									$rate_label = "Current Stock Rate";
+								}elseif($rate_taken == 3){
+									$rate_label = "Wt.Moving Avg Rate";
+								}else{
+									$rate_label = "Current Stock Rate Default";
+								}
+								$actual_rate_taken = $actual_rate_taken;
+							endif;
+							echo $rate_label." | ".$actual_rate_taken;
+						?>
+					</td>
+				</tr>
+				<tr><td><b>Current Stock Balance</b></td>
+				<td> <?php echo $ref_qty; ?>	</td></tr>
+				 <?php 
+				 endif;
+				 ?>
+				 
+			</tbody>
+		</table>
+		 
+		<?php if($valuation == "1" && $ref_rate > 0 && $ref_qty > 0): ?>
+			<h4>Weighted Moving Average</h4>
+			<h6> X = (X1 * Y1 + X2 * Y2) / ( Y1 + Y2 ) </h6>
+			<span> where X1, Y1 = New purchase Rate and Quantity
+	            <br> X2, Y2 = Current Stock Rate, Quantity <br>
+	            X = Weighted Moving Average Rate
+			</span> 
+	<?php 
+		$X1 = $rate ; $X2 = $actual_rate_taken; $Y1 = $qty; $Y2 = $ref_qty;
+		$X = round(($X1 * $Y1 + $X2 * $Y2) / ( $Y1 + $Y2 ),3);
+		echo "<h5> X = ". $X . "</h5>"?> 
+	<?php endif; ?>
+	</div>
+	<div class="col-lg-6">
+		<?php if($valuation == "1" && $ref_rate > 0 && $ref_qty > 0):	?>
+		<table class="table table-striped table-bordered table-hover" id="trdetails_table">
+			<tbody>
+				<tr>
+					<th>Rate Taken For Costing</th>
+					<td>
+						<?php if($rate_taken == 1):
+								echo "Current Stock Rate (".$rate_taken_value.")";
+							elseif($rate_taken == 2):
+								echo "New Purchase Rate (".$rate_taken_value.")";
+							else:
+								echo "Weighed Moving Average Rate (".$rate_taken_value.")";
+							endif;
+						?>
+					</td>
+				</tr>
+			</tbody>
+		</table>
+	   <?php 
+			endif;
+	      $costItemDtls = $this->sheetDtls->get(array('costing_item'=>$costingItemId));
+	   ?>
+        <table class="table table-striped table-bordered table-hover" id="trdetails_table">
+			<thead>	<tr><th>Costing Head</th><th>Value</th></tr></thead>
+			<tbody>
+			 <?php foreach ($costItemDtls as $dtls): 			
+			   extract($dtls);               
+			 ?>
+			   <tr>
+			      <th><?php echo $costing_head_code; ?></th><td><?php echo $value; ?></td>
+			   </tr>
+			  <?php endforeach; ?>
+			</tbody>				
+		</table>		
+   </div>
+  </div>
+<?php endif; ?>	
+<?php if($status == "1"): ?>			
+	<div class="row"> 	
+		<div class="col-lg-9"> 
+			<a href="<?php echo $this->url('cost', array('action' => 'resetelc', 'id'=>"0-".$costingItemId)); ?>" class="btn btn-success"  onclick="return confirm('Are you sure to commit?')"><i class="fa fa-refresh"></i> Cancel & Do Costing Again </a>
+		</div>
+	</div>
+<?php endif; ?>
+</div>

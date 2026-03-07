@@ -1,0 +1,77 @@
+<?php
+/**
+ * 
+ * View -- of Hr/MasterController/addtpnAction
+ * 
+ */
+?>
+
+<form method="post" id="#form" action="<?php echo $this->url('master', array('action' => 'addtpn')); ?>"  enctype="multipart/form-data" >    
+    <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+        <h4 class="modal-title"> <i class="fa fa-asterisk"></i> Add TPN/GIS/PF No</h4>
+    </div>     
+    <div class="modal-body">       
+		<div class="panel panel-default">                       
+			<div class="panel-body">
+				<div class="form-group">
+					<label for="employee" class="control-label">Employee</label>
+					<select type="text" class="form-control" name="employee" id="employee" required> 
+                        <option value=""></option>
+                        <?php foreach($employee as $emp):?>
+                            <option value="<?php echo $emp['id'];?>"><?php echo $emp['full_name'].'-'.$emp['emp_id']?></option>
+                            <?php endforeach;?>
+                        </select>
+				</div>
+				<div class="form-group">
+					<label for="tpn" class="control-label">TPN No</label>
+					<input type="text" class="form-control" name="tpn" id="tpn" > 
+				</div>
+				<div class="form-group">
+					<label for="gis" class="control-label">GIS No</label>
+					<input type="text" class="form-control" name="gis" id="gis" > 
+				</div>
+                <div class="form-group">
+					<label for="pf" class="control-label">PF No</label>
+					<input type="text" class="form-control" name="pf" id="pf" > 
+				</div>
+			</div>
+		</div>
+	</div> <!-- /modal-body -->        
+	<div class="modal-footer">
+		<button type="submit" class="btn btn-success"><i class="fa fa-check"></i> Save </button>
+		<button type="button" class="btn btn-warning" data-dismiss="modal" ><i class="fa fa-times"></i> Cancel </button> 
+    </div>  
+</form>   
+<script>
+	$(function(){
+	const fv = FormValidation.formValidation(document.getElementById('#form'), {
+		fields: {
+			employee: {
+				validators: {
+					notEmpty: {
+						message: 'Please select Employee.'
+					}
+				}
+			},
+		},
+		plugins: {
+			trigger: new FormValidation.plugins.Trigger(),
+			bootstrap3: new FormValidation.plugins.Bootstrap3(),
+			submitButton: new FormValidation.plugins.SubmitButton(),
+			defaultSubmit: new FormValidation.plugins.DefaultSubmit(),
+		},
+	}).on('core.element.validated', function (e) {
+		if (e.valid) {
+			$('div#'+ e.field.replace('[]','') +'_chosen').removeClass('is-invalid');
+			$('div#'+ e.field.replace('[]','') +'_chosen').addClass('is-valid');
+		} else {
+			$('div#'+ e.field.replace('[]','') +'_chosen').removeClass('is-valid');
+			$('div#'+ e.field.replace('[]','') +'_chosen').addClass('is-invalid');
+		}
+	});
+	$('form select').chosen().change(function () {
+		fv.revalidateField($(this).attr('name'));
+	});
+});
+</script> 

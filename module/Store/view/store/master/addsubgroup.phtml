@@ -1,0 +1,106 @@
+<?php
+/**
+ * 
+ * View -- of Stock/MasterController/adduomAction
+ * 
+ */
+?>
+<form id="#form" method="post" action="<?php echo $this->url('inmaster', array('action' => 'addsubgroup')); ?>"  enctype="multipart/form-data" >
+    <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+        <h4 class="modal-title"> <i class="fa fa-asterisk"></i> Add New Sub Group Item</h4>
+    </div>  <!-- /modal-header -->
+    <div class="modal-body">
+		<div class="panel panel-default">                       
+			<div class="panel-body">   
+				<div class="form-group">
+					<label for="name" class="control-label">Name</label>
+					<input type="text" class="form-control" name="name" id="name" size="30" placeholder="Code" required/> 
+				</div>
+				<div class="form-group">
+					<label for="code" class="control-label">Code</label>
+					<input type="text" class="form-control" name="code" id="code" size="30" placeholder="Code" required/> 
+				</div>
+				<div class="form-group">
+					<label for="item_group" class="control-label">Select Group Item</label>
+					<select id="item_group" name="item_group" class="form-control" data-placeholder="Select" required>
+						<option value=""></option>
+						<?php
+							foreach ($this->groupObj->getAll() as $rowset):
+						?>
+						 <option value="<?php echo $rowset['id']; ?>">
+							<?php echo $rowset['code']; ?>
+						 </option>
+						<?php endforeach;?>								
+					</select> 
+				</div>
+				<div class="form-group">
+					<label for="prefix" class="control-label">Item Prefix </label>
+					<input type="text" class="form-control" name="prefix" id="prefix" size="30" placeholder="prefix" required/> 
+				</div>
+			</div>
+		</div>
+    </div> <!-- /modal-body -->
+    <div class="modal-footer">
+        <button type="submit" class="btn btn-success"><i class="fa fa-check"></i> Save </button>
+        <button type="button" class="btn btn-warning" data-dismiss="modal" ><i class="fa fa-times"></i> Cancel </button> 
+    </div>  
+</form>
+<script>
+    $('select').chosen({ allow_single_deselect: true });	
+	$('document').ready(function(){
+		const fv = FormValidation.formValidation(document.getElementById('#form'), {
+			fields: {
+				name: {
+					validators: {
+						notEmpty: {
+							message: 'Eneter name'
+						},
+					}
+				},
+				code: {
+					validators: {
+						notEmpty: {
+							message: 'Enter the Code'
+						},
+					}
+				},
+				/*prefix: {
+					validators: {
+						notEmpty: {
+							message: 'Please provide prefix.'
+						},
+						regexp: {
+							regexp: /([A-Z])\w+/,
+							message: 'Capital alphabetical characters only.'
+						},
+						remote: {
+							message: 'This item prefix is already used. Please try different prefix.',
+							url: '<?php echo $this->url('inmaster', array('action' => 'checkavailability'));?>',
+							type: 'POST'
+						},
+						stringLength: {
+							min: 1,
+							max: 1,
+							message: 'The item prefix must be 1 characters'
+						},
+					}
+				},*/
+			},
+			plugins: {
+				trigger: new FormValidation.plugins.Trigger(),
+				bootstrap3: new FormValidation.plugins.Bootstrap3(),
+				submitButton: new FormValidation.plugins.SubmitButton(),
+				defaultSubmit: new FormValidation.plugins.DefaultSubmit(),
+			},
+		}).on('core.element.validated', function (e) {
+			if (e.valid) {
+				$('div#'+ e.field.replace('[]','') +'_chosen').removeClass('is-invalid');
+				$('div#'+ e.field.replace('[]','') +'_chosen').addClass('is-valid');
+			} else {
+				$('div#'+ e.field.replace('[]','') +'_chosen').removeClass('is-valid');
+				$('div#'+ e.field.replace('[]','') +'_chosen').addClass('is-invalid');
+			}
+		});
+	});
+</script>

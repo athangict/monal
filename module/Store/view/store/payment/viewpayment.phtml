@@ -1,0 +1,157 @@
+<?php
+/**
+ * 
+ * View -- of Store/PaymentController/viewporder
+ * 
+ */
+?>
+<?php foreach($payment as $sup_pay):
+		extract($sup_pay);
+		$payment_id = $id;
+		$pay_status = $status;
+		$pay_author = $author;
+		$payment_type_id = $payment_type; 
+		$cheque_no = $sup_pay['cheque_no'];
+		$activity = $sup_pay['activity'];
+     endforeach;?>
+<style>
+	.mytable tr th,.mytable tr td {
+		padding:5px;
+	}
+</style>
+<div class="row">
+	<div class="col-lg-12">
+		<div class="widget widget-box">
+			<div class="widget-header">
+				<h5 class="widget-title lighter smaller">
+					#Payment Detail:<strong> &nbsp;&nbsp;<?php echo $payment_no; ?> | <?php echo $supplier; ?> | <?php echo $cost_center;?></strong>&nbsp;
+					<?php $this->status($status);?>
+				</h5>
+				<div class="widget-toolbar hidden-xs">
+					<a style='cursor:pointer' id="print">
+						<i class="ace-icon fa fa-file-pdf-o red"></i>
+					</a>
+				</div>	
+			</div>
+			<div class="widget-body">
+				<div class="widget-main padding-12">
+					<div id="report-print">
+						<div class="row" id="convert-tb0">
+							<div class="col-lg-8" id="convert-tb1">
+								<ul class="list-unstyled spaced">
+									<li>
+										<i class="ace-icon fa fa-caret-right blue"></i>
+										Payment No : <b class="red"><?php echo $payment_no; ?></b>
+									</li>
+									<li>
+										<i class="ace-icon fa fa-caret-right blue"></i>
+										Location : <b class="red"><?php echo $location; ?></b>
+									</li>
+									<li>
+										<i class="ace-icon fa fa-caret-right blue"></i>
+										Activity : <b class="red"><?php echo $cost_center; ?></b>
+									</li>
+									<li>
+										<i class="ace-icon fa fa-caret-right blue"></i>
+										Supplier : <b class="red"> <?php echo $supplier; ?></b>
+									</li>
+									<li>
+										<i class="ace-icon fa fa-caret-right blue"></i>
+										Item Group : <b class="red"> <?php echo $item_group; ?></b>
+									</li>
+								</ul>
+							</div>
+							<div class="col-lg-4" id="convert-tb2">
+								<ul class="list-unstyled spaced">
+								    <li>
+										<i class="ace-icon fa fa-caret-right blue"></i>
+										Purchase Receipt No : <b class="red"><a target="_blank" href="<?php echo $this->url('inpurreceipt', array('action'=>'viewreceipt', 'id'=>$purchase_receipt));?>"><?php echo $this->purchasereceiptObj->getColumn($purchase_receipt, 'purchase_receipt_no'); ?></a></b>
+									</li>
+									<li>
+										<i class="ace-icon fa fa-caret-right blue"></i>
+										Payment Date : <b class="red"><?php echo $this->dateformat($payment_date); ?></b>
+									</li>
+									<li>
+										<i class="ace-icon fa fa-caret-right blue"></i>
+										Check No : <b class="red"><?php echo $cheque_no;?></b>
+									</li>
+									<li>
+										<i class="ace-icon fa fa-caret-right blue"></i>
+										Bank Charge : <b class="red"><?php echo $this->currency_code();?><?php echo $bank_charge; ?> </b>
+									</li>
+                                    <li>
+										<i class="ace-icon fa fa-caret-right blue"></i>
+										Transaction Voucher No. : <b class="red"><a target="_blank" href="<?php echo $this->url('transaction', array('action'=>'viewtransaction', 'id' => $transaction));?>"><?php echo $this->transactionObj->getColumn(array('id' => $transaction),'voucher_no');?> </a> </b>
+									</li>
+								</ul>
+							</div>
+						</div>
+						<div class="row">
+							<div class="col-lg-12">
+								<ul class="list-unstyled spaced">
+									<li>
+										<i class="ace-icon fa fa-caret-right blue"></i>Note: <b class="red"><?php echo $note;?> </b>
+									</li>
+								</ul>
+							</div>
+						</div>
+						<div class="space-6"></div>
+						<div class="row">
+							<div class="col-lg-12" >
+								<table class="table" style="border-top:2px solid #ddd;">
+									<thead>
+										<tr>
+										    <th>#</th>
+											<th colspan="3" >Invoice No | Challan No.</th>
+											<th>Payable Amount(<?php echo $this->currency_code();?>)</th>
+										</tr>
+									</thead>
+									<tbody>
+										<?php
+										    $i = 1;
+											$paymentDetails = $this->paymentdetailsObj->get(array('payment' => $payment_id));
+											foreach($paymentDetails as $payment): 									
+										?>
+											<tr>
+												<td><?php echo $i++; ?></td>
+												<td colspan="3"><?php echo $payment['invoice_no'];?></td>
+												<td><?php echo $this->currency($payment['payment_amt']); ?></td>
+											</tr>
+										<?php endforeach;?>
+										<tr style="border-top:2px solid #ddd;border-bottom:2px solid #ddd;">
+											<th colspan="4"><?php echo $this->numtoWords($payment_amount);?></th>
+											<th colspan="1">Net Amount : 
+											<?php echo $this->currency($payment_amount);?> </th>
+										</tr>
+									</tbody>
+								</table>
+							</div>
+						</div>
+						<div class="row" id="convert-tb0">
+							<div class="col-lg-9"></div>
+							<div class="col-lg-3">
+								<div class="space-4"></div>
+								<?php if($pay_status == '1'):?>
+									<a href="<?php echo $this->url('inpurpayment', array('action'=>'editpayment', 'id'=>$payment_id));?>" class="btn btn-info"> <i class="fa fa-pencil"></i> Edit Payment </a>
+									<a href="<?php echo $this->url('inpurpayment', array('action'=>'bookpayment', 'id'=>$payment_id));?>" class="btn btn-success"> <i class="fa fa-share-square-o"></i>Book Payment</a>
+								<?php endif;?>
+							</div>
+						</div>
+					</div>
+					<!-- Upload and Download file attachments -->			
+					<?php   
+					   echo $this->partial('partial/attachment.phtml', array('process' => '6', 'process_id'=> $payment_id , 'status' => $pay_status));
+					?>					
+				    <!-- End of attachment -->
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+<script type="text/javascript">
+	$('#print').genpdfinvoice({
+		content: '#report-print',
+		src:"<?php echo $this->url('pdfxls', array('action' => 'pdf'));?>",
+		orentation:"P",//L =landscape, P = potrait
+	});
+</script>

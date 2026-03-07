@@ -1,0 +1,130 @@
+<?php
+/**
+ * View -- of Sales/SchemeController/schemeAction
+ */
+	$this->headTitle($this->title);	
+?>
+<?php $minYear = date('Y', strtotime($minYear)); ?>
+<div class="card">
+	<div class="card-header"> 
+		<div class="row">
+			<form method="post" action="<?php echo $this->url('schemes'); ?>"  enctype="multipart/form-data" >
+				<div class="form-group col-lg-3">
+					<label class="control-label" for="year">Year</label>
+					<select class="form-control" id="year" name="year" data-placeholder="Select" onchange='this.form.submit()'>
+						<option value=""></option>
+						<?php 
+							for($year=date('Y');$year>=$minYear;$year--):
+								$selected = ($year == $data['year'])?"selected":"";
+						?>
+							<option value="<?php echo $year;?>" <?php echo $selected;?> >
+								<?php echo $year;?> 
+							</option>
+						<?php endfor; ?>
+					</select>
+				</div>
+				<div class="form-group col-lg-3">
+					<label class="control-label" for="month">Month</label>
+					<select class="form-control" id="month" name="month" data-placeholder="Select" onchange='this.form.submit()'>
+                                            <option value="-1" <?php echo ($data['month'] == '-1')?'selected':'';?>>All</option>
+						<?php for($month=1; $month<=12; $month++):?>
+							<?php $selected = ($month == $data['month'])?'selected':'';?>
+							<option value="<?php echo $month;?>" <?php echo $selected; ?>>
+								<?php echo DateTime::createFromFormat('!m', $month)->format('F');?>
+							</option> 
+						<?php endfor;?>
+					</select>
+				</div>
+			</form>
+			<div class="col-lg-6">
+				<div class="clearfix">
+					<div class="pull-right tableTools-container"></div>
+					<a class="red pull-right DTTT_button btn btn-white btn-info btn-bold" data-tooltip="tooltip" data-placement="top" title="Add New Scheme Details" href="<?php echo $this->url('schemes', array('action'=>'addsdetails'));?>" >
+						<span class="red"><i class="fa fa-plus"></i> <span class="hidden-sm hidden-xs">&nbsp;Add Schemes</span></span>
+					</a>
+				</div>
+			</div>	
+		</div>
+			<table class="table table-bordered table-striped table-hover" id="dataTables">
+				<thead>
+					<tr>
+						<th>#</th>
+						<th>Scheme No</th>
+						<th>Scheme Date</th>
+						<th>Scheme Type</th>
+						<th>Item</th>
+						<th>Sub Head</th>
+						<th>Start Date</th>
+						<th>End Date</th>
+						<th>Status</th>
+						<th class="no-sort no-printpdf">Action</th>	
+					</tr>
+				</thead>
+				<tbody>
+					<?php $i=1;
+						foreach($schemes as $scheme):	
+					?>
+			        <tr data-href ="<?php echo $this->url('schemes', array('action'=>'viewsdetails', 'id'=>$scheme['id']));?>">
+			            <td><?php echo $i++; ?></td>
+			            <td>
+							<b><?php echo $scheme['scheme_no']; ?></b> &nbsp;&nbsp;&nbsp;
+							<i>
+								<?php echo $this->partyObj->getColumn($scheme['supplier'],'code');?>&nbsp;&nbsp;&nbsp;
+								<span class="label label-info"> 
+									<?php echo $this->activityObj->getColumn($scheme['activity'],'activity'); ?> &nbsp;&nbsp;&nbsp;
+								</span>
+							</i>
+							&nbsp;<?php $this->status($scheme['status']);?>
+						</td>	
+			            <td><?php echo $scheme['scheme_date']; ?></td>
+						<td><?php echo $this->schemetypeObj->getColumn($scheme['scheme_type'],'scheme_type');?></td>
+						<td><?php echo $this->itemObj->getColumn($scheme['item'],'code'); ?></td>
+			            <td><?php echo $this->subheadObj->getColumn($scheme['sub_head'],'code'); ?></td>
+						<td><?php echo $scheme['from_date']; ?></td>
+						<td><?php echo $scheme['to_date']; ?></td>
+			            <td>
+							<?php
+							$end_date = strtotime($scheme['to_date']);
+							$curren_date = date('Y-m-d', time());
+							$current_date = strtotime($curren_date);
+				            if($end_date >= $current_date): ?>
+								&nbsp;&nbsp;<span class="label label-success"><b><i>Active</i></b></span>
+							<?php else: ?>
+								&nbsp;&nbsp;<span class="label label-danger"><b><i>Expired</i></b></span>
+							<?php endif;?>
+						</td>
+						<td class="action">
+							<div class="btn-group">
+								<a class="btn btn-xs btn-danger" data-toggle="modal" data-target="#modal" href="<?php echo $this->url('acl', array('action' => 'activitylog', 'id' => "18-".$scheme['id'])); ?>" title="View Activity Logs">
+									<i class="ace-icon fa fa-plus bigger-120" ></i>  
+						  		</a>
+					  		</div>
+						</td>	
+				    </tr>
+			  		<?php endforeach; ?>
+				</tbody>	
+			</table>
+	</div>
+</div>
+<div id="modal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+	<div class="modal-dialog">
+		<div class="modal-content">
+		</div>
+	</div>
+</div>
+<script type="text/javascript">
+$('document').ready(function(){
+	$('#dataTables').DataTable({
+		"paging":   true,
+	});
+	$("tr[data-href]").each(function(){
+		$(this).find('td').not('td.action').each(function(){
+			$(this).css('cursor','pointer');
+			$(this).bind('click',function() {
+				window.document.location = $(this).closest('tr').attr("data-href");
+			});
+		});
+	});	
+});
+</script>
+ 

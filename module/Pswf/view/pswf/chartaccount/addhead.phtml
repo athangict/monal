@@ -1,0 +1,115 @@
+<?php
+/**
+ * 
+ * View -- of Accounts/ChartaccountController/addgroupAction
+ * 
+ */
+?>
+<form id="#form" method="post" action="<?php echo $this->url('pchartaccount', array('action' => 'addhead')); ?>"  enctype="multipart/form-data" >
+    <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+        <h4 class="modal-title"> <i class="fa fa-asterisk"></i> New Head</h4>
+    </div>  <!-- /modal-header -->
+    <div class="modal-body">
+        <div class="panel panel-default">                       
+            <div class="panel-body"> 
+                <div class="form-group">
+                      <label for="code" class="control-label">Code</label>
+                      <input class="form-control" name="code" id="code" size="30" placeholder="Code" required/> 
+                </div>  
+                <div class="form-group" class="control-label">
+                  <label for="name">Name</label>
+                  <input class="form-control" name="name" id="name" size="30" placeholder="Name" required/> 
+                </div>  
+                <div class="form-group">
+                    <label for="group" class="control-label">Group</label>
+                    <select id="group" name="group" class="form-control" data-placeholder="Select" required >
+                        <option value=""></option>
+                        <?php 
+                        foreach ($group as $group):
+                        ?>
+                            <option value="<?php echo $group['id'];?>">
+                            <?php echo $group['name']; ?>
+                            </option>
+                        <?php 
+                        endforeach;
+                        ?>
+                    </select>
+                </div>  
+                <!-- <div class="form-group">
+                    <label for="head_type" class="control-label">HeadType</label>
+                    <select id="head_type" name="head_type" class="form-control" data-placeholder="Select" required >
+                        <option value=""></option>
+                        <?php 
+                        foreach ($headtype as $headtype):
+                        ?>
+                            <option value="<?php echo $headtype['id'];?>">
+                            <?php echo $headtype['head_type']; ?>
+                            </option>
+                        <?php 
+                        endforeach;
+                        ?>
+                    </select>
+                </div>   -->
+            </div>
+        </div>
+    </div> <!-- /modal-body -->
+    <div class="modal-footer">
+        <button type="submit" class="btn btn-success"><i class="fa fa-check"></i> Save </button>
+        <button type="button" class="btn btn-warning" data-dismiss="modal" ><i class="fa fa-times"></i> Cancel </button> 
+    </div>  
+</form>
+<script>
+$(function(){
+	const fv = FormValidation.formValidation(document.getElementById('#form'), {
+		fields: {
+			code: {
+				validators: {
+					notEmpty: {
+						message: 'Please select Code.'
+					}
+				}
+			},
+			name: {
+				validators: {
+					notEmpty: {
+						message: 'Please provide  Name.'
+					}
+				}
+			},
+            group: {
+				validators: {
+					notEmpty: {
+						message: 'Please provide  Group.'
+					}
+				}
+			},
+            head_type: {
+				validators: {
+					notEmpty: {
+						message: 'Please provide  Head Type.'
+					}
+				}
+			},
+			
+		},
+		plugins: {
+			trigger: new FormValidation.plugins.Trigger(),
+			bootstrap3: new FormValidation.plugins.Bootstrap3(),
+			submitButton: new FormValidation.plugins.SubmitButton(),
+			defaultSubmit: new FormValidation.plugins.DefaultSubmit(),
+		},
+	}).on('core.element.validated', function (e) {
+		if (e.valid) {
+			$('div#'+ e.field.replace('[]','') +'_chosen').removeClass('is-invalid');
+			$('div#'+ e.field.replace('[]','') +'_chosen').addClass('is-valid');
+		} else {
+			$('div#'+ e.field.replace('[]','') +'_chosen').removeClass('is-valid');
+			$('div#'+ e.field.replace('[]','') +'_chosen').addClass('is-invalid');
+		}
+	});
+	$('form select').chosen().change(function () {
+		fv.revalidateField($(this).attr('name'));
+	});
+});
+</script>

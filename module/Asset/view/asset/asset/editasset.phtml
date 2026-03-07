@@ -1,0 +1,369 @@
+<?php
+/**
+ * 
+ * View -- of Accounts/AssetController/editassetAction
+ * 
+ */
+	$this->headTitle($this->title);
+?>
+<?php 
+//echo '<pre>';print_r($asset);exit;
+    foreach($asset as $assets):
+        extract($assets);
+    endforeach;
+	
+?>   
+<div class="space-12"></div>
+<div class="row">
+	<div class="col-lg-12">
+		<div class="widget widget-box">
+			<div class="widget-header">
+				<h5 class="widget-title lighter smaller">
+					<i class="fa fa-pencil-square-o"></i> Edit Asset
+				</h5>
+			</div>
+			<div class="widget-body">
+				<div class="widget-main">
+					<form id="#form" method="post" action="<?php echo $this->url('assets', array('action' => 'editasset', 'id' => $id)); ?>" enctype="multipart/form-data" >
+						<div class="row">  								
+							<div class="form-group col-lg-3">
+								<label for="assetid" class="control-label"> Asset ID</label>
+								<input type="text" class="form-control" name="assetid" id="assetid" value="<?php echo $assetid;?>" required>
+							</div>
+							<div class="form-group col-lg-3">
+								<label for="assetcode" class="control-label">Asset Code</label>
+								<input type="text" class="form-control" name="code" id="code" value="<?php echo $code;?>" size="30" required> 
+							</div>
+							<div class="form-group col-lg-3">
+								<label for="name" class="control-label">Asset Name</label>
+								<input type="text" class="form-control" name="name" id="name" value="<?php echo $name;?>" >
+							</div> 
+							<div class="form-group col-lg-3">
+								<label for="asset_type" class="control-label">Asset Type</label>
+								<select class="form-control" id="asset_type" name="asset_type" data-placeholder="Select" required >
+									<option value=""></option>
+									<?php 
+									foreach ($assettypes as $asttype):
+										$selected=($asset_type==$asttype['id'])?"selected":"";
+									?>
+										<option value="<?php echo $asttype['id'];?>"<?php echo $selected;?>>
+											<?php echo $asttype['name'];?>
+										</option>
+									<?php
+									endforeach;
+									?>
+								</select>
+							</div> 
+						</div>
+						<div class="row">
+						    <div class="form-group col-lg-3">
+								<label for="region" class="control-label">Region</label>
+								<select class="form-control" id="region" name="region" data-placeholder="Select" required >
+									<option value=""></option>
+									<?php 
+									foreach ($regions as $regionrow):
+										$selected=($region_id==$regionrow['id'])?"selected":"";
+									?>
+										<option value="<?php echo $regionrow['id'];?>"<?php echo $selected;?>>
+											<?php echo $regionrow['region'];?>
+										</option>
+									<?php
+									endforeach;
+									?>
+								</select>
+							</div> 
+							<div class="form-group col-lg-3">
+								<label for="location" class="control-label">Location</label>
+								<select class="form-control chosen-widget" id="location" name="location" data-placeholder="Select" required >
+									<option value=""></option>
+									<?php 
+									foreach ($this->locationObj->get(array('region'=>$region_id)) as $locationrow):
+										$selected=($location_id==$locationrow['id'])?"selected":"";
+									?>
+										<option value="<?php echo $locationrow['id'];?>"<?php echo $selected;?>>
+											<?php echo $locationrow['location'];?>
+										</option>
+									<?php
+									endforeach;
+									?>
+								</select>
+							</div>  
+                            <div class="form-group col-lg-3"> 
+								<label for="asset_value" class="control-label">Purchase Value</label>
+								<input type="money" class="form-control" name="asset_value" id="asset_value" value="<?php echo $asset_value ?>" required>
+							</div>	
+                            <div class="form-group col-lg-3">
+								<label for="depreciation" class="control-label">Depreciation </label>
+								<?php 
+									$yes = ($depreciation=='1')? 'checked':'';
+									$no = ($depreciation=='0')? 'checked':'';
+									$disabled = ($depreciation=='0')? 'disabled':'';
+									  
+								?>
+								<div class="radio">                                			
+									<label>
+										<input class="ace" type="radio" name="depreciation" id="depreciation" value="1" <?php echo $yes; ?>>
+										<span class="lbl"> Yes </span>
+									</label>
+									<label>
+										<input class="ace" type="radio" name="depreciation" id="depreciation" value="0" <?php echo $no; ?> >
+										<span class="lbl"> No </span>
+									</label>	
+								</div>
+							</div>    							
+						</div>
+						<div class="row"> 
+						    <div class="form-group col-lg-3">
+								<label for="custodian" class="control-label">Custodian</label>
+								<select id="custodian" name="custodian" class="form-control" data-placeholder="custodian" required >
+									<option value=""></option>
+									<?php 
+									foreach ($empObj->get(array('e.location' => $location_id)) as $emp):
+										$selected = ($custodian==$emp['id'])?"selected":"";
+									?>
+										<option value="<?php echo $emp['id'];?>" <?php echo $selected;?>>
+											<?php echo $emp['full_name'].'-'.$emp['emp_id']; ?>
+										</option>
+									<?php 
+									endforeach;
+									?>
+								</select>
+							</div>
+							<div class="form-group col-lg-3">
+								<label for="purchase_date" class="control-label">Purchase Date</label>
+								<div class="date input-group" id="purchase_date" data-date="<?php echo date('Y-m-d', strtotime($purchase_date));?>" data-date-format="yyyy-mm-dd" data-date-viewmode="years">
+									<input class="form-control span2" name="purchase_date" id="purchase_date" type="text" value="<?php echo $purchase_date ?>" readonly required>
+									<span class="input-group-addon add-on"><i class="fa fa-calendar"></i></span>
+								</div>
+							</div> 
+						    <div class="form-group col-lg-3">
+								<label for="putin_date" class="control-label">PutInUse Date</label>
+								<div class="date input-group" id="putin_date" data-date="<?php echo date('Y-m-d', strtotime($putin_date));?>" data-date-format="yyyy-mm-dd" data-date-viewmode="years">
+									<input class="form-control span2" name="putin_date" id="putin_date" type="text" value="<?php echo $putin_date ?>" readonly required>
+									<span class="input-group-addon add-on"><i class="fa fa-calendar"></i></span>
+								</div>
+							</div>  
+						</div>
+						<div class="row">
+							<div class="form-group col-lg-3">
+								<label for="salvage" class="control-label">Salvage</label>
+								<input type="money" class="form-control" name="salvage" id="salvage" value="<?php echo $salvage ?>" >
+							</div>  
+                            <div class="form-group col-lg-3">
+								<label for="usefullife" class="control-label">Useful Life</label>
+								<input type="money" class="form-control" name="usefullife" id="usefullife" value="<?php echo $usefullife ?>" >
+							</div> 	
+                            <div class="form-group col-lg-3">
+								<label for="dep_amount" class="control-label">Depreciable Amount(<em>*Auto </em>)</label>
+								<input type="money" class="form-control" name="dep_amount" id="dep_amount"  value="<?php echo $depreciable_amount ?>" readonly>
+							</div> 
+							<div class="form-group col-lg-3">
+								<label for="previous_depreciated_amount" class="control-label">Depreciation(Opening)</label>
+								<input type="money" class="form-control" name="previous_depreciated_amount" id="previous_depreciated_amount"  value="<?php echo $previous_depreciated_amount ?>">
+							</div>
+						</div>
+						<div class="row">
+							<div class="col-lg-12">				
+								<button type="submit" class="btn btn-success"><i class="fa fa-check"></i> Save </button>
+								<button type="button" class="btn btn-warning" onclick="javascript:history.back();" ><i class="fa fa-times"></i> Cancel </button>
+							</div>
+						</div>
+					</form>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+<script>
+$(function() {
+	$("#region").change(function() { 
+		$('#location').load("<?php echo $this->url('ajresponse', array('action' => 'getlocation')); ?>/"+ $("#region").val(), function() {
+			$("#location").trigger('chosen:updated');
+			$('form').formValidation('revalidateField','location');
+		});
+	});			
+	$('#location').on('change', function(){
+		//alert($(this).val());
+		$.post(
+			"<?php echo $this->url('assets', array('action' => 'getCustodian')); ?>",
+			{
+				loc_id: $(this).val(),
+			},
+			function(data){
+				console.log(data);
+				$("#custodian").html(data.emp);	
+				$("#custodian").trigger('chosen:updated');
+					
+			},
+			'json'
+		);	
+	});	
+	$('#purchase_date').datepicker();	
+    $('#putin_date').datepicker();	
+	/**-----------ON CHOOSE DEPRECIATION---------------*/	
+	$("input[name=depreciation]:radio").change(function () {
+		if($("input:radio[name='depreciation']:checked").val()=="1"){
+			$("#rate").removeAttr("disabled");
+			$("#salvage").removeAttr("disabled");
+			$("#usefullife").removeAttr("disabled");
+			$("input[name=method]:radio").removeAttr("disabled");
+			
+		}else{
+			$("#rate").val("");
+			$("#rate").attr("disabled", "disabled");
+			$("#salvage").val("");
+			$("#salvage").attr("disabled", "disabled");
+			$("#usefullife").val("");
+			$("#usefullife").attr("disabled", "disabled");
+			$("input[name=method]:radio").removeAttr("checked");
+			$("input[name=method]:radio").attr("disabled","disabled");
+		}
+	});
+	/**-----------END---------------*/
+	/*------------------CALCULATE DEPRECIAITON---------------*/
+	function calculateDepreciation(purchaseValue, salvageValue) {
+		// Ensure that the useful life is greater than 0 to avoid division by zero.
+		
+		var depreciation = purchaseValue - salvageValue;
+		return depreciation;
+	}
+	
+    $("#salvage, #usefullife").on('change', calculateDepreciationOnInput);
+	
+    function calculateDepreciationOnInput() {
+        var purchaseValue = parseFloat($("#asset_value").val().replace(/,/g, ""));
+        var salvageValue = parseFloat($("#salvage").val().replace(/,/g, ""));
+        var usefulLife = parseInt($("#usefullife").val());
+        /**CALCULATE THE DERPRECIATION PER YEAR*/
+        if (!isNaN(salvageValue) && !isNaN(usefulLife) && usefulLife > 0) {
+            var depreciationAmount = calculateDepreciation(purchaseValue, salvageValue);
+            $("#dep_amount").val(depreciationAmount.toFixed(2));
+			("#dep_amount").trigger('chosen:updated');
+        } else {
+            $("#depreciationAmount").text("");
+        }
+    }
+	/*------------------END---------------*/
+		if($.isNumeric($("#asset_value").val())){
+			$("#asset_value").val(parseFloat($("#asset_value").val().replace(/,/g, ""))
+							.toFixed(3)
+							.toString()
+							.replace(/\B(?=(\d{3})+(?!\d))/g, ",")
+						);
+		}else{
+			$("#asset_value").val("0.000");
+		}
+		
+		$("#asset_value").blur(function (){ 
+			if($.isNumeric($(this).val())){
+				$(this).val(parseFloat($(this).val().replace(/,/g, ""))
+							.toFixed(3)
+							.toString()
+							.replace(/\B(?=(\d{3})+(?!\d))/g, ",")
+						);
+			}else{
+				$(this).val("0.000");
+			}
+		});
+		/****** dynamic insertion of table row*******/
+		$('#head_table').subhead({src:'<?php echo $this->url("ajresponse", array("action" => "gethead")); ?>'});
+		
+		const fv = FormValidation.formValidation(document.getElementById('#form'), {
+			fields: {
+				custodian: {
+					validators: {
+						notEmpty: {
+							message: 'Please select Custodian.'
+						},
+					}
+				},
+				activity: {
+					validators: {
+						notEmpty: {
+							message: 'Please select activity.'
+						},
+					}
+				},
+				code: {
+					validators: {
+						notEmpty: {
+							message: 'Please provide assert code.'
+						},
+					}
+				},
+				name: {
+					validators: {
+						notEmpty: {
+							message: 'Please provide assert name.'
+						},
+					}
+				},
+				region: {
+					validators: {
+						notEmpty: {
+							message: 'Please select region.'
+						},
+					}
+				},
+				location: {
+					validators: {
+						notEmpty: {
+							message: 'Please select location.'
+						},
+					}
+				},
+				purchase_date: {
+					validators: {
+						notEmpty: {
+							message: 'Please select purchase date.'
+						},
+					}
+				},
+				asset_value: {
+					validators: {
+						notEmpty: {
+							message: 'Please provide purchase value.'
+						},
+					}
+				},
+				/*'head_type[]': {
+	                validators: {
+	                    notEmpty: {
+	                        message: 'Please select Head Type'
+	                    }
+	                }
+	            },
+	            'head[]': {
+	                validators: {
+	                    notEmpty: {
+	                        message: 'Please select Head'
+	                    }
+	                }
+	            }, */
+			},
+			plugins: {
+				trigger: new FormValidation.plugins.Trigger(),
+				bootstrap3: new FormValidation.plugins.Bootstrap3(),
+				submitButton: new FormValidation.plugins.SubmitButton(),
+				defaultSubmit: new FormValidation.plugins.DefaultSubmit(),
+			},
+		}).on('core.element.validated', function (e) {
+			if (e.valid) {
+				$('div#'+ e.field.replace('[]','') +'_chosen').removeClass('is-invalid');
+				$('div#'+ e.field.replace('[]','') +'_chosen').addClass('is-valid');
+			} else {
+				$('div#'+ e.field.replace('[]','') +'_chosen').removeClass('is-valid');
+				$('div#'+ e.field.replace('[]','') +'_chosen').addClass('is-invalid');
+			}
+		});
+		$('form select').chosen().change(function () {
+			fv.revalidateField($(this).attr('name'));
+		});
+		
+		$('#purchase_date').on('changeDate',function(){
+			$('form').formValidation('revalidateField','purchase_date');
+		});
+	});
+</script>
+	
+	

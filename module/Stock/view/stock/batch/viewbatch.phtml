@@ -1,0 +1,241 @@
+<?php
+/**
+ * View -- of Stock/BatchController/viewbatchAction
+ */
+ $this->headTitle($this->title);
+?>
+<?php 
+	foreach($batch as $batch_rows):
+		extract($batch_rows);
+	    $item_id = $item;
+		$batch_id = $id;
+		$costing_status = $status; 
+		$batch_uom = $uom; 
+		$unit_uom = $unit_uom;
+		$source_location = $location;
+	endforeach;
+	$itemDtls = $this->itemObj->get($item_id);
+	foreach ($itemDtls as $itemdtl):	
+		$st_uom_code = $itemdtl['st_uom_code'];
+		$item_name = $itemdtl['code'];
+		$location_costing = $itemdtl['transportation_charge'];
+		$item_activity = $itemdtl['activity'];
+		$netWeight = $itemdtl['net_weight'];
+		$scalarUnit = $itemdtl['scalar_uom'];
+		$basic_uom = $itemdtl['uom'];
+	endforeach;
+?>
+<style>
+	.mytable tr th,.mytable tr td {
+		padding:5px;
+	}
+</style>
+<div class="row">
+	<div class="col-lg-12">
+		<div class="widget widget-box">
+			<div class="widget-header">
+				<h5 class="widget-title lighter smaller">
+					# Batch Details:<strong>&nbsp;&nbsp;<?php echo $batch; ?> | <?php echo $item_code; ?></strong>&nbsp;
+				         <?php $this->status($status);?> 
+				</h5>
+				<div class="widget-toolbar hidden-xs">
+					<a style='cursor:pointer' id="print">
+						<i class="ace-icon fa fa-file-pdf-o red"></i>
+					</a>
+					<a class="btn btn-xs btn-info" href="<?php echo $this->url('batch', array('action' => 'editbatch', 'id' => $batch_id)); ?>" title="Edit">
+						<i class="ace-icon fa fa-pencil bigger-120" ></i> 
+					</a>
+					<a data-toggle="modal" data-target = "#modal" class="btn btn-xs btn-danger" href="<?php echo $this->url('acl', array('action' => 'activitylog', 'id' => "13-".$batch_id)); ?>" title="View Activity Logs">
+						<i class="ace-icon fa fa-plus bigger-120" ></i>  
+					</a>
+				</div>
+				
+			</div>
+			<div class="widget-body">
+			    <form id="#form" method="post" action="<?php echo $this->url('batch', array('action' => 'viewbatch', 'id'=>$batch_id)); ?>"  enctype="multipart/form-data" >
+				<div class="widget-main">
+					<div id="report-print">
+						<div class="row" id="convert-tb0">
+							<div class="col-lg-8" id="convert-tb1">
+								<ul class="list-unstyled spaced">
+									<li>
+										<i class="ace-icon fa fa-caret-right blue"></i>
+										Batch No. | Batch Date: <b class="red"><?php echo $batch; ?> | <?php echo $this->dateformat($batch_date);?></b>
+									</li>										
+									<li>
+										<i class="ace-icon fa fa-caret-right blue"></i>
+										Item : <b class="red"><?php echo $item_code;?></b>
+									</li>
+									<li>
+										<i class="ace-icon fa fa-caret-right blue"></i>
+										Source Location : <b class="red"><?php echo $this->locationObj->getColumn($source_location,'location');?> </b>
+									</li>
+									<li>
+										<i class="ace-icon fa fa-caret-right blue"></i>
+										Location Costing Formula : <b class="red">
+										<a href="<?php echo $this->url('formula', array('action'=>'view', 'id'=>$batch_rows['location_formula']));?>" target="_blank">
+											<?php echo $this->costingformulaObj->getColumn($batch_rows['location_formula'],'formula_name');?></a></b>
+									</li>
+									<li>
+										<i class="ace-icon fa fa-caret-right blue"></i>
+										Transportation Charges : <b class="red"><?php echo ($itemdtl['transportation_charge'] == "1")?'YES':'NO';?></b>
+									</li>
+								</ul>
+							</div>
+							
+							<div class="col-lg-4" id="convert-tb2">
+								<ul class="list-unstyled spaced">
+									<li>
+										<i class="ace-icon fa fa-caret-right blue"></i>
+										Item Valuation: <b class="red"><?php echo ($itemdtl['valuation']==1)?'Weighted Moving Average':'FIFO';?></b>
+									</li>
+									<li>
+										<i class="ace-icon fa fa-caret-right blue"></i>
+										UOM | Quantity : <b class="red"><?php echo $uom_code;?> | <?php echo $quantity; ?></b>
+									</li>
+									<li>
+										<?php $standard_UOMs = $this->itemUomObj->get(array('item'=>$item_id, 'costing_uom'=>'1'));
+											  foreach($standard_UOMs as $suomRow):
+											     $standard_UOM = $suomRow['uom_code'];
+											  endforeach;
+										?>	
+										<i class="ace-icon fa fa-caret-right blue"></i>
+										Landed Cost <b class="blue"><?php echo $standard_UOM;?></b> : <b class="red"> <?php echo number_format($landed_cost,'3','.',',');?></b>
+									</li>
+									<li>
+										<i class="ace-icon fa fa-caret-right blue"></i>
+										Landed Cost <b class="blue"><?php echo $uom_code;?></b> : <b class="red"> <?php $converted = $landed_cost/$unit_uom; echo number_format($converted,'3','.',',');?></b>
+									</li>	
+									<?php
+									  $costingItemID = $this->costItemObj->getMax('id',array('batch'=>$batch_id));
+									  if($costingItemID > 0){
+										  foreach($this->costItemObj->get($costingItemID) as $row);
+												$costing_sheetID = $row['costing_sheet'];
+												$sinvDtlID = $row['po_sinv_dtl'];								 
+										  foreach($this->costSheetObj->get($costing_sheetID) as $row1);
+										  if($row1['po_invoice'] == "2"){
+											  $sinv_no = $row1['po_invoice_no'];
+											  $mrp = $this->sinvdtlObj->getColumn( $sinvDtlID, 'mrp');
+											  ?>
+											<li>
+												<i class="ace-icon fa fa-caret-right blue"></i>
+												MRP : <b class="red"><?php echo $this->currency($mrp); ?></b>
+											 </li>
+											  <?php
+										  }
+									  }
+									  
+									?>
+								</ul>
+							</div>
+						</div>
+						<div class="space-12"></div>
+						<div class="row">
+							<div class="col-lg-12" >
+								 <table class="table" style="border-top:2px solid #ddd;">
+								    <thead>																		
+									    <th>#</th>
+										<th>Location</th>	
+										<th>Qty</th>
+										
+										<?php $standard_UOMs = $this->itemUomObj->get(array('item'=>$item_id, 'costing_uom'=>'1'));
+											  foreach($standard_UOMs as $suomRow):
+											     $standard_UOM = $suomRow['uom_code'];
+											  endforeach;
+										?>	
+										<th>ELC/<?php echo $standard_UOM; ?></th>
+										<th>Margin %</th>										
+										<th>Margin/<?php echo $standard_UOM; ?></th>	
+										<th>SP/<?php echo $standard_UOM; ?></th>										
+										<th>SP/<?php echo $st_uom_code; ?></th>
+										<?php
+										  $itemUoms = $this->itemUomObj->get(array('item'=>$item_id));
+										  foreach($itemUoms as $uomRow):
+											if($uomRow['costing_uom']!= '1'):											  
+											   ?><th>SP/<?php echo $uomRow['uom_code']; ?></th><?php
+											endif; 
+										  endforeach; 
+										?>
+									</thead>
+									<tbody>									
+										<?php
+											$i=1;
+											foreach($batchdtls as $tdrow): ?>
+											<tr>
+												<td><?php echo  $i++; ?></td>
+												<td><?php echo $this->locationObj->getColumn($tdrow['location'],'location'); ?>
+												<input type="hidden" value="<?php echo $tdrow['location'];?>" name="location[]">												
+												&nbsp;&nbsp;
+												<span class="label label-info"> 
+												<?php 
+													  $loc_type_id = $this->locationObj->getColumn($tdrow['location'],'location_type'); 
+													  echo $this->locationTypeObj->getColumn($loc_type_id,'location_type');
+												?>											    
+												</span>
+												</td>
+												<td><?php echo round($tdrow['quantity'],2);?> <input type="hidden" value="<?php echo $tdrow['quantity'];?>" name="quantity[]"> </td>
+												<td><?php $elc = $tdrow['landed_cost']; echo number_format($elc, 2,".",",")?></td>
+												  <td><?php echo $tdrow['margin'];?></td>
+												  <td><?php $margin_value = $elc*$tdrow['margin']/100 ;
+         												    echo number_format($margin_value,2,'.',','); ?></td>
+												  <td><?php $sum = $elc + $margin_value;
+												           echo number_format($sum,2,'.',',');?></td>
+												  <td><?php echo $tdrow['selling_price'];?>
+												  <input type="hidden" value="<?php echo $tdrow['selling_price']; ?>" name="selling_price[]">
+												  </td>	
+												  <?php
+												  $itemUoms = $this->itemUomObj->get(array('item'=>$item_id));
+												  foreach($itemUoms as $uomRow):
+												    if($uomRow['costing_uom']!= '1'):
+													  ?> 
+													  <td>
+														<?php echo round($tdrow['selling_price'] * $uomRow['conversion'],2); ?>
+													 </td>
+													  <?php
+													endif; 
+												  endforeach;
+												 ?>																							
+											</tr>
+										<?php endforeach; ?>
+									</tbody>
+								</table>
+								<input type="hidden" value="<?php echo $batch_uom;?>" name="batch_uom">
+								<input type="hidden" value="<?php echo $item_id;?>" name="item">
+								<input type="hidden" name="batch" value="<?php echo $batch_id; ?>" />	
+							</div>
+						</div>
+						<div class="row">
+							<div class="col-lg-7">
+								 <i>Prepared by: <?php echo $this->userTable->getColumn($tdrow['author'],'name');?></i>
+								<br/><br/><br/>
+							</div>
+							<?php if($costing_status == "2"): ?>
+							<div class="col-lg-5" style="text-align: right">					  
+								<input type="hidden" name="batch" value="<?php echo $batch_id; ?>" />   
+								<button type="submit" class="btn btn-info" name="btn1" value="1" onclick="return confirm('Are you sure you want to proceed?')"><i class="fa fa-refresh"></i> Re-calculate SP</button>
+								<button type="submit" class="btn btn-success" name="btn1" value="2" onclick="return confirm('Are you sure you want to proceed?')"><i class="fa fa-save"></i> Commit Selling Price</button>
+								<a href="<?php echo $this->url('batch');?>" class="btn btn-danger"> <i class="fa fa-times"></i> Cancel </a>					
+							</div>
+							<?php endif; ?>
+						</div>
+					</div>
+				</div>
+				</form>	
+			</div>
+		</div>
+	</div>
+</div>
+<!--for modal -->
+<div id="modal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content"> </div>
+    </div>
+</div>
+<script type="text/javascript">
+	$('#print').genpdfinvoice({
+		content: '#report-print',
+		src:"<?php echo $this->url('pdfxls', array('action' => 'pdf'));?>",
+		orentation:"P",//L =landscape, P = potrait
+	});
+</script>
+

@@ -1,0 +1,19 @@
+<?php //partial.phtml 
+	$contractorinvoice = ($this->active == "contractorinvoice")?"active":"";
+	$repacking = ($this->active == "repacking")?"active":"";
+?>
+<br/>
+<ul class="nav nav-tabs padding-18 nav-fixed-top" id="myTab">
+	<li class="<?php echo $contractorinvoice; ?>">
+		<a href="<?php echo $this->url('contractor', array('action' => 'contractorinvoice')); ?>" title="Dispatch of Items">
+			<i class="orange ace-icon fa fa-file-text-o bigger-120"></i>
+			<span class="hidden-xs">Contractor Invoice</span>
+		</a>
+	</li>
+	<li class="<?php echo $repacking; ?>">
+		<a href="<?php echo $this->url('contractor', array('action' => 'repacking')); ?>" title="Good Request for Purchase or Dispatch">
+			<i class="green ace-icon fa fa-gavel bigger-120"></i>
+			<span class="hidden-xs">Repacking Task</span>
+		</a>
+	</li>
+</ul>

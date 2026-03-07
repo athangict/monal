@@ -1,0 +1,82 @@
+<?php $this->headTitle($this->title);?>
+<?php
+    foreach($isuuedtls as $dd):
+		$check = $dd;
+	endforeach;
+	if($check > 0): 
+?>
+	<div class="modal-header">
+		<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+		<h4 class="modal-title red"> <i class="red"></i> Check Source Quantity </h4>
+	</div>  <!-- /modal-header -->
+	<div class="modal-body">
+		<div class="panel panel-default">                       
+			<table class="table">
+				<thead>
+					<tr>
+						<th>Item</th>
+						<th>UOM</th>
+						<th>Source Qty</th>
+						<th>Issue Qty</th>
+					</tr>
+				</thead>
+				<tbody>
+					<?php
+						$issues = $this->isuueObj->get($id);
+						foreach($issues as $issue);
+						for($i=0; $i<sizeof($isuuedtls); $i++){
+						$issuedtls = $this->issuedtlsObj->get(array('d.id' =>$isuuedtls[$i]));
+						foreach($issuedtls as $issuedtl);
+						$item_selected = $this->itemObj->get($issuedtl['item_id']);
+							foreach($item_selected as $items);
+							if($items['item_group'] == 2):
+								$sourceqty = $this->assetsspdtlsObj->getColumn(array('storespare' => $issuedtl['assetssp'],'location' => $issue['from_location']),'quantity');
+							else:
+								$sourceqty = $this->assetdtlsObj->getColumn(array('asset' => $issuedtl['assetssp'],'location'=> $issue['from_location']),'quantity');
+							endif;
+					?>
+					<tr>
+						<td><?php echo $issuedtl['item'];?></td>
+						<td><?php echo $issuedtl['uom'];?></td>
+						<td><?php echo $sourceqty;?></td>
+						<td><?php echo $issuedtl['quantity'];?></td>
+					</tr>
+					<?php } ?>
+				</tbody>
+			</table>
+			<div class="row" style="padding:10px 10px 0 10px;">
+				<div class="col-lg-12">
+					<ul class="list-unstyled spaced">
+						<li>
+							<b class="red"><?php echo "Not enough source quantity to issue."; ?> </b>
+						</li>
+					</ul>
+				</div>
+			</div>
+		</div>
+	</div> <!-- /modal-body -->
+<?php else: ?>
+	<div class="modal-header">
+		<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+		<h4 class="modal-title red"> <i class="red"></i> Check Source Quantity to Issue </h4>
+	</div>  <!-- /modal-header -->
+	<div class="modal-body">
+		<div class="panel panel-default">
+			<div class="row" style="padding:10px 10px 0 10px;">
+				<div class="col-lg-12">
+					<ul class="list-unstyled spaced">
+						<li>
+							<b class="red"><?php echo "Are you sure you want to proceed with the Issue?"; ?> </b>
+						</li>
+					</ul>
+				</div>
+			</div>
+			<div class="row" style="padding:10px 10px 0 10px;">
+				<div class="col-lg-12">
+					<a href="<?php echo $this->url('inissue', array('action'=>'doissue', 'id'=>$id));?>" class="btn btn-success"> <i class="fa fa-plane"></i> Issue </a>
+				</div>
+			</div>
+			<div class="space-12"></div>
+		</div>
+	</div> <!-- /modal-body -->
+<?php endif; ?>

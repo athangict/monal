@@ -1,0 +1,283 @@
+ales/SalesController/editmarketAction
+ */
+  $this->headTitle($this->title);
+  foreach($this->markets as $market):
+    extract($market);
+  endforeach;
+?>
+<div class="row">
+	<div class="col-lg-12">
+		<div class="widget widget-box">
+			<div class="widget-header">
+				<h5 class="widget-title lighter smaller">
+					<i class="fa fa-asterisk"></i>&nbsp;&nbsp;Market Rate Information
+				</h5>
+			</div><!-- end of widget-header -->
+			<div class="widget-body">
+				<div class="widget-main">
+					<form id="#form" method="post" action="<?php echo $this->url('sales', array('action' => 'editmarket')); ?>"  enctype="multipart/form-data" >    
+						<div class="row">	
+							<div class="col-lg-3">    
+								<div class="form-group">
+									<label for="do_date" class="control-label">Document Date</label>
+									<input type="hidden" name="m_id" id="m_id" value="<?php echo $id;?>"/>
+									<div class="date input-group" id="do_date" data-date="<?php echo date('Y-m-d');?>" data-date-format="yyyy-mm-dd" >
+										<input class="form-control span2" name="do_date" id="do_date" type="text" placeholder="PO Date" value="<?php echo $document_date; ?>" readonly required>
+										<span class="input-group-addon add-on"><i class="fa fa-calendar"></i></span>
+									</div>
+								</div>	
+							</div>								
+							<div class="col-lg-3"> 
+								<div class="form-group">
+									<label for="activity" class="control-label">Location</label>
+									<select id="location" name="location" class="form-control" data-placeholder="Select" required>
+									  <option value=""></option>
+									  <?php foreach ($regions as $region): ?>
+										<optgroup label="<?php echo $region['region'];?>">
+											<?php  
+												 // retrive locations under the above region ID
+												$locations = $locationObj->get(array('l.region'=>$region['id']));
+												 foreach ($locations as $location):
+												 $selected = ($location['id']==$location_id)?"selected":"";
+											?>
+											 <option value="<?php echo $location['id']; ?>" <?php echo $selected;?>>
+												<?php echo $location['location']; ?>
+											 </option>
+											<?php 
+											 endforeach;
+											?>
+									  </optgroup>
+									 <?php endforeach;  ?>									
+									</select> 
+								</div>
+							</div>	
+							<div class="col-lg-3"> 
+								<div class="form-group">
+									<label for="activity" class="control-label">Activity</label>
+									<select id="activity" name="activity" class="form-control" data-placeholder="Select" required>
+									  <option value=""></option>
+									<?php  
+										foreach ($this->activities as $row):
+										$selected = ($row['id'] == $activity)?'selected':'';
+									?>
+									 <option value="<?php echo $row['id']; ?>"<?php echo $selected; ?>>
+										<?php echo $row['activity']; ?>
+									 </option>
+									<?php 
+									 endforeach;
+									?>
+									</select> 
+								</div>
+							</div>	
+						</div>	
+						<div class="row">
+						   <div class="col-lg-12"> 
+							  <h5>Market Rate Details</h5>
+								 <div>
+									<table id="trdetails_table" class="table small-padding">
+										<thead>
+											<tr>
+												<th>Item</th>
+											    <th>Batch</th>
+												<th>UOM</th>
+												<th>Market Rate (<?php echo $this->currency_code();?>)</th>
+												<th>Remarks</th>
+												<th>&nbsp;</th>
+											</tr>
+										</thead>
+										<tbody>
+											<?php 
+		                                  
+												if(sizeOf($this->mtDtls)>0):
+												$batchitems = $this->batchObj->getBatchdetails(array('b.status'=>'3','i.activity'=>$activity));
+												$movingitems = $this->movingitemObj->getItemsDtls(array('i.activity'=>$activity));
+													foreach($this->mtDtls as $details):
+											?>
+											<tr>
+												<td>
+													<div class="form-group">
+														<select id="item" name="item[]" class="form-control"  data-placeholder="Select" required>
+															<option value=""></option>	
+															<?php
+																foreach($batchitems as $batchitem):
+																	$selected_item = ($batchitem['item_id']==$details['item_id'])?"selected":"";?>
+																	<option value="<?php echo $batchitem['item_id'];?>" <?php echo $selected_item;?>>
+																		<?php echo $batchitem['item_code'];?>
+																	</option>
+															<?php
+																endforeach;
+																foreach($movingitems as $movingitem):
+																	$selected_item = ($movingitem['item_id']==$details['item_id'])?"selected":"";?>
+																	<option value="<?php echo $movingitem['item_id'];?>" <?php echo $selected_item;?>>
+																		<?php echo $movingitem['item_code'];?>
+																	</option>
+															<?php endforeach;?>	
+														</select>
+													</div>
+													<input type="hidden" name="mdtls_id[]" id="mdtls_id" value="<?php echo $details['id'];?>"/>
+												</td>
+												<td>
+													<div class="form-group">
+														<select id="batch" name="batch[]" class="form-control"  data-placeholder="Select" required>
+															<option value=""></option>
+															<?php
+																$items = $this->itemObj->get($details['item_id']);
+																foreach($items as $item):
+																	if($item['valuation'] == 1):
+															?>	
+																<option value="0" selected>N/A</option>
+															<?php
+																else:
+																	$batchs = $this->batchObj->getBatchdetails(array('b.item'=>$details['item_id'],'bd.location'=>$location_id));
+																		foreach($batchs as $batch): 
+																			$selected_batch = ($batch['id']==$details['batch'])?"selected":"";
+															?>
+																<option value="<?php echo $batch['id'];?>" <?php echo $selected_batch;?>>
+																	<?php echo $batch['batch'];?>
+																</option>
+															<?php 		endforeach;
+																	endif;
+																endforeach;
+															?>
+														</select>
+													</div>
+												</td>
+												<td>
+													<div class="form-group">
+														<select id="uom" name="uom[]" class="form-control" data-placeholder="Select" required>
+															<option value=""></option>
+															<?php
+																$basic_unit = $this->itemObj->getColumn($details['item_id'], 'uom');
+																$basic_unit_code = $this->uomObj->getColumn($basic_unit, 'code');
+																$selected_basic = ($basic_unit==$details['uom_id'])?"selected":"";
+															?>	
+																<option value="<?php echo $basic_unit; ?>" <?php echo $selected_basic;?>>
+																	<?php echo $basic_unit_code;?>
+																</option>
+															<?php 
+																$itemuoms = $this->itemuomObj->get(array('ui.item'=>$details['item_id']));
+																foreach($itemuoms as $itemuom):
+																$selected_uom = ($itemuom['uom_id']==$details['uom_id'])?"selected":"";
+															?>
+																<option value="<?php echo $itemuom['uom_id'];?>" <?php echo $selected_uom;?>>
+																	<?php echo $itemuom['uom_code'];?>
+																</option>
+															<?php endforeach;?>
+														</select>
+													</div>
+												</td>
+												<td>
+													<div class="form-group">
+														<input name="rate[]" id="rate" type="text" class="form-control" value="<?php echo $details['rate'];?>"  />
+													</div>         
+												</td>
+												<td>
+													<div class="form-group">
+														<input name="remarks[]" id="remarks" type="text" class="form-control" placeholder="Remarks" value="<?php echo $details['remarks'];?>" />
+													</div>         
+												</td>
+												<td></td>											
+											</tr>
+											<?php 
+													endforeach;
+												endif;
+											?>
+										</tbody>
+									</table>
+								</div>
+							</div>
+						</div>
+						<div class="row">
+							<div class="col-lg-12">
+								<label class="control-label" for="note">Note: </label>
+								<textarea class="form-control" name="note" id="note"></textarea>
+							</div>
+						</div>
+						<div class="space-12"></div>
+						<div class="row"> 	
+							<div class="col-lg-9"> 
+								<button type="submit" class="btn btn-success"><i class="fa fa-check"></i> Save </button>
+								<button type="button" class="btn btn-warning" onclick="javascript:history.back();" ><i class="fa fa-times"></i> Cancel </button> 					
+							</div>
+						</div>
+					</form>	
+				</div><!-- widget widget-main -->
+			</div>  <!-- widget widget-body -->   
+		</div> <!-- widget widget-box --> 
+	</div><!-- col-lg-12 -->
+</div><!-- row -->
+
+<script type="text/javascript">	 
+$(function() {
+	$('#do_date').datepicker();
+	$('#trdetails_table').market({
+		getItem:"<?php echo $this->url("sales", array("action" => "getitemactivity"));?>",
+		getDetails:"<?php echo $this->url("sales", array("action" => "getitemDetails"));?>",
+	});
+	$('#do_date').on('changeDate',function(){
+		$('form').formValidation('revalidateField', $(this).attr('id'));
+	});
+	/*** Form Validation of PO ***/
+	const fv = FormValidation.formValidation(document.getElementById('#form'), {
+		fields: {
+			'do_date': {
+				validators: {
+					notEmpty: {
+						message: 'Please select PO date'
+					}
+				}
+			},
+			'activity': {
+				validators: {
+					notEmpty: {
+						message: 'Please select activity'
+					}
+				}
+			},
+			'location': {
+				validators: {
+					notEmpty: {
+						message: 'Please select location'
+					}
+				}
+			}, 
+			'item[]': {
+				validators: {
+					notEmpty: {
+						message: 'Please select item'
+					}
+				}
+			},
+			'uom[]': {
+				validators: {
+					notEmpty: {
+						message: 'Please select uom'
+					}
+				}
+			},
+			'rate[]': {
+				validators: {
+					notEmpty: {
+						message: 'Please provide rate'
+					}
+				}
+			},
+		},
+		plugins: {
+			trigger: new FormValidation.plugins.Trigger(),
+			bootstrap3: new FormValidation.plugins.Bootstrap3(),
+			submitButton: new FormValidation.plugins.SubmitButton(),
+			defaultSubmit: new FormValidation.plugins.DefaultSubmit(),
+		},
+	}).on('core.element.validated', function (e) {
+		if (e.valid) {
+			$('div#'+ e.field.replace('[]','') +'_chosen').removeClass('is-invalid');
+			$('div#'+ e.field.replace('[]','') +'_chosen').addClass('is-valid');
+		} else {
+			$('div#'+ e.field.replace('[]','') +'_chosen').removeClass('is-valid');
+			$('div#'+ e.field.replace('[]','') +'_chosen').addClass('is-invalid');
+		}
+	});
+});    
+</script>
+

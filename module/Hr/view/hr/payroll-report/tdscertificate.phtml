@@ -1,0 +1,311 @@
+<?php
+/**
+ * 
+ * View -- of Accounts/ReportController/genprofitlossAction
+ * 
+ */
+?>
+<?php
+	// $minYear = (int)date('Y', strtotime($this->minDate));
+	// $currentYear = (int)date('Y');
+	// $count=0;
+	// for($i=0;$i<sizeof($role);$i++){
+	// 	if($role[$i]==99 || $role[$i]==100){
+	// 		$count=1;
+	// 		break;
+	// 	}
+	// 	else{
+	// 		$count=0;
+	// 	}
+	// }
+	
+?>
+<div class="row">
+	<div class="col-lg-12">
+		<div class="hr hr8 hr-double hr-dotted"></div>
+		<a style="cursor:pointer;" class="pull-right" id="print">
+			<i class="ace-icon fa fa-file-pdf-o fa-lg red">pdf</i>
+		</a>
+		<div class="widget widget-box transparent" id="report-print">
+			<div class="widget-body">   
+				<div class="widget-main padding-24"> 
+					<div class="row" id="convert-table1" style="text-align:center;">
+                         <ul class="list-unstyled spaced pull-center">
+						    <li class="center">
+								<b>Salary Certificate</b> </b>  
+							</li>
+							<li class="center">
+							<b>for period 1-Jan-<?php echo $year; ?> to 31-Dec-<?php echo $year; ?> </b>
+							</li>	 
+						</ul>	
+					</div>
+                    <div class="row">
+                    <b>CID:</b> <b class="dark-blue"><?php echo  $this->employeeObj->getColumn($empId,'cid'); ?> </b> &nbsp;&nbsp;&nbsp;&nbsp;
+                     
+                                <b> Employee Name : <?php echo $this->employeeObj->getColumn($empId,'full_name'); ?></b>&nbsp;&nbsp;&nbsp;&nbsp;
+                                 <b>TPN No: </b> <b class="dark-blue"><?php echo (!empty($this->tpnObj->get(array('employee'=>$empId))))?$this->tpnObj->getColumn(array('employee'=>$empId),'tpn'):''; ?> </b> <br> <br>
+                        <table class="table table-striped table-bordered table-condensed">
+                            <thead>
+                                <tr>
+                                    <th><b>Nature of Payment</b></th>
+                                    <th><b>Month</b></th>
+                                    <th><b>Basic Pay</b></th>
+									<th><b>Contract Allowance</b></th>
+									<th><b>PSA</b></th>
+									<th><b>LTC</b></th>
+                                    <th><b>Other Allowance</b></th>
+                                    <th><b>Gross Pay</b></th>
+                                    <th><b>TDS</b></th>
+                                    <th><b>HC</b></th>
+                                    <th><b>P.F</b></th>
+                                    <th><b>GIS</b></th>
+                                    <th class="remarks"><b>Remarks</b></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                            <?php $tot_bs=0;$tot_ca=0;$tot_oa=0;$tot_gross=0;$tot_tds=0;$tot_hc=0;$tot_pf=0;$tot_gis=0;$grand_gross=0;$grand_tds=0;
+                             $tot_ca=0;$tot_psa=0;$tot_ltc=0;
+							 $leaveen=$this->leaveenchasObj->getEncash('encash_date',$year,array('employee'=>$empId));
+                             $sittingfee=$this->sittingfeeObj->getSitting('s.date',$year,array('sd.employee'=>$empId));
+                             $pyear=$year-1;
+                             $bonus=$this->bonusObj->getBonus($pyear,array('bd.employee'=>$empId));
+                             //echo '<pre>';print_r($leaveen);exit;
+                            if(sizeof($payrolls) > 0):
+                        foreach($payrolls as $payroll):
+                           //echo '<pre>';print_r($payroll);exit;
+                        $month=$payroll['month'];
+                        $year=$payroll['year'];?>
+                                <tr>
+                                    <th>Salary</th>
+                                    <td><?php echo date("F", strtotime(date("1-$month-$this->year"))); ?></td>
+                                    <td><?php $bs=$this->paydetailObj->getColumn(array('pay_roll'=>$payroll['id'],'pay_head'=>1),'amount');$bsa=(!empty($bs))?$bs:0.00;echo number_format((float)$bsa,2,'.',',');?></td>
+									<td><?php $ca=$this->paydetailObj->getColumn(array('pay_roll'=>$payroll['id'],'pay_head'=>42),'amount');$casa=(!empty($ca))?$ca:0.00;echo number_format((float)$casa,2,'.',',');?></td>
+									<td><?php $psa=$this->paydetailObj->getColumn(array('pay_roll'=>$payroll['id'],'pay_head'=>5),'amount');$psasa=(!empty($psa))?$psa:0.00;echo number_format((float)$psasa,2,'.',',');?></td>
+								    <td><?php $ltcs=$this->paydetailObj->getColumn(array('pay_roll'=>$payroll['id'],'pay_head'=>6),'amount');$ltcssa=(!empty($ltcs))?$ltcs:0.00;echo number_format((float)$ltcssa,2,'.',',');?></td>
+									<td><?php $oa=$this->paydetailObj->getAllow(array('pay_roll'=>$payroll['id']),'amount'); if(!empty($oa)){foreach($oa as $oas);
+                                       $oass=$oas['amount'];}else{echo $oass=0.00;}echo number_format((float)$oass,2,'.',',');?></td>
+                                    <td><?php 
+									$ca = !empty($ca) ? $ca : 0;
+									$psa = !empty($psa) ? $psa : 0;
+									$ltcs = !empty($ltcs) ? $ltcs : 0;
+									$gross= $ca+$psa+$ltcs+$bsa+$oass;echo number_format((float)$gross,2,'.',',');?></td>
+                                    <td><?php $td=$this->paydetailObj->getColumn(array('pay_roll'=>$payroll['id'],'pay_head'=>11),'amount');$tds=(!empty($td))?$td:0.00; echo number_format((float)$tds,2,'.',',');?></td>
+                                    <td><?php $hc=$this->paydetailObj->getColumn(array('pay_roll'=>$payroll['id'],'pay_head'=>14),'amount');$hcd=(!empty($hc))?$hc:0.00;echo number_format((float)$hcd,2,'.',',');?></td>
+                                    <td><?php $pf=$this->paydetailObj->getColumn(array('pay_roll'=>$payroll['id'],'pay_head'=>9),'amount');$pfd=(!empty($pf))?$pf:0.00;echo number_format((float)$pfd,2,'.',',');?></td>
+                                    <td><?php $gis=$this->paydetailObj->getColumn(array('pay_roll'=>$payroll['id'],'pay_head'=>12),'amount');$gisd=(!empty($gis))?$gis:0.00;echo number_format((float)$gisd,2,'.',',');?></td>
+                                    <td class="remarks"><?php $vou=($this->voucherObj->getDateWise('date',$year,$month,array('type'=>1)));
+                                    foreach($vou as $vous);
+									//echo '<pre>';print_r($vous);exit;
+                                    echo(!empty($vou))?$vous['voucher']:'';?></td>
+                    
+                                </tr>
+                                <?php $tot_bs+=$bsa;$tot_oa+=$oass;$tot_gross+=$gross;$tot_tds+=$tds;$tot_hc+=$hcd;$tot_pf+=$pfd;$tot_gis+=$gisd;
+								$tot_ca+=$casa;$tot_psa+=$psasa;$tot_ltc+=$ltcssa;
+								endforeach;
+                            endif;?>
+                            <tr>
+                                <td><b>Total</b></td>
+                                <td></td>
+                                <td><b><?php echo number_format((float)$tot_bs,2,'.',',');?></b></td>
+								<td><b><?php echo number_format((float)$tot_ca,2,'.',',');?></b></td>
+								<td><b><?php echo number_format((float)$tot_psa,2,'.',',');?></b></td>
+								<td><b><?php echo number_format((float)$tot_ltc,2,'.',',');?></b></td>
+                                <td><b><?php echo number_format((float)$tot_oa,2,'.',',');?></b></td>
+                                <td><b><?php echo number_format((float)$tot_gross,2,'.',',');?></b></td>
+                                <td><b><?php echo number_format((float)$tot_tds,2,'.',',');?></b></td>
+                                <td><b><?php echo number_format((float)$tot_hc,2,'.',',');?></b></td>
+                                <td><b><?php echo number_format((float)$tot_pf,2,'.',',');?></b></td>
+                                <td><b><?php echo number_format((float)$tot_gis,2,'.',',');?></b></td>
+                                <td></td>
+                            </tr>
+                            <tr><?php $b=0; $bd=0;
+							 //echo '<pre>';print_r($bonus);exit;?>
+                                <td>Bonus</td>
+                                <td><?php if(!empty($bonus)){foreach($bonus as $bo);$date = new DateTime($bo['date']); echo $date->format('F');}?></td>
+                                <td><?php echo '';?></td>
+                                <td></td>
+								<td></td>
+								<td></td>
+								<td></td>
+                                <td><?php 
+								if(!empty($bonus)){foreach($bonus as $bonu);$b=$bonu['gross'];}else{$en=0.00;}
+                                echo number_format((float)$b,2,'.',',');?></td>
+                                <td><?php if(!empty($bonus)){foreach($bonus as $bonu);$bd=$bonu['tds'];}else{$end=0.00;}
+                                echo number_format((float)$bd,2,'.',',');?></td>
+                                <td></td>
+                                <td></td>
+                                <td></td>
+                                <td class="remarks">
+                                <?php 
+								if(!empty($bonus)){
+                                    foreach($bonus as $bonu);
+								   //echo '<pre>';print_r($bonu);
+                                    $year = date('Y',strtotime($bonu['date']));
+                                    $month = date('m',strtotime($bonu['date']));
+                                    $day = date('d',strtotime($bonu['date']));
+                                    $voucherlist=$this->voucherObj->getDateWise('date',$year,$month,array('type'=>4));
+                                    foreach($voucherlist as $vou);
+                                    if(!empty($vou)){
+										echo  $vou['voucher'];
+									}
+									else{
+										echo '';
+									}
+                                }?>
+								</td>
+                            </tr>
+                            <tr><?php foreach($leaveen as $leve);?>
+                                <td>Leave Encsh</td>
+                                <td><?php if(!empty($leve['encash_date'])){$date = new DateTime($leve['encash_date']); echo $date->format('F');}?></td>
+                                <td></td>
+                                <td></td>
+								<td></td>
+								<td></td>
+								<td></td>
+                                <td><?php if(!empty($leaveen)){foreach($leaveen as $le);$en=$le['payment_amount']+$le['deduction'];}else{$en=0.00;}
+                                echo number_format((float)$en,2,'.',',');?></td>
+                                <td><?php if(!empty($leaveen)){foreach($leaveen as $le);$end=$le['deduction'];}else{$end=0.00;}
+                                echo number_format((float)$end,2,'.',',');?></td>
+                                <td></td>
+                                <td></td>
+                                <td></td>
+                                <td class="remarks"><?php if(!empty($leaveen)){
+                                    foreach($leaveen as $le);
+                                    $year = date('Y',strtotime($le['encash_date']));
+                                    $month = date('m',strtotime($le['encash_date']));
+                                    $day = date('d',strtotime($le['encash_date']));
+                                    $voucherlist=$this->voucherObj->getDateWise('date',$year,$month,array('type'=>2));
+                                    foreach($voucherlist as $vou);
+                                    if(!empty($voucherlist)){ 
+                                        if(($month==6 ||$month==12) && $form['type']!=1 && $day<=15){
+					
+                                            $list=$this->voucherObj>getDateWiseDay($year.'-'.$month.'-01',$year.'-'.$month.'-15',array('type'=>2));
+                                            foreach($list as $lists);
+                                            if(!empty($list)){
+                                                echo  $lists['voucher'];
+                                            }
+                                            else{
+                                                echo '';
+                                            }
+                                     }
+                                    else if(($month==6 ||$month==12) && $form['type']!=1 && $day>15){
+                                    
+                                        $list=$this->voucherObj->getDateWiseDay($year.'-'.$month.'-15',$year.'-'.$month.'-31',array('type'=>2));
+                                        foreach($list as $lists);
+                                        if(!empty($list)){
+                                            echo  $lists['voucher'];
+                                        }
+                                        else{
+                                            echo '';
+                                        }
+                                 }
+                                    else{
+                                        echo $vou['voucher'];
+                                    }
+                                 }
+                                 else{
+                                    echo " ";
+                                 }
+                                }
+                                else{echo " ";
+                                }?></td>
+                            </tr>
+                            <?php 
+							$tot_sitting=0;
+							$tot_sitting_tds=0;
+							if(!empty($sittingfee)):foreach($sittingfee as $sf):
+							$tot_sitting+=$sf['amount'];
+							$tot_sitting_tds+=$sf['deduction'];?>
+                            <tr>
+                                
+                                <td>Sitting Fees</td>
+                                <td><?php $date = new DateTime($sf['date']); echo $date->format('F');?></td>
+                                <td></td>
+                                <td></td>
+								<td></td>
+								<td></td>
+								<td></td>
+                                <td><?php $sitt=$sf['amount'];
+                                echo number_format((float)$sitt,2,'.',',');?></td>
+                                <td><?php $sittd=$sf['deduction'];
+                                echo number_format((float)$sittd,2,'.',',');?></td>
+                                <td></td>
+                                <td></td>
+                                <td></td>
+                                <td class="remarks"> <?php 
+								    $year = date('Y',strtotime($sf['date']));
+                                    $month = date('m',strtotime($sf['date']));
+                                    $day = date('d',strtotime($sf['date']));
+                                    $voucherlist=$this->voucherObj->getDateWise('date',$year,$month,array('type'=>3));
+                                    foreach($voucherlist as $vou);
+									//echo '<pre>';print_r($voucherlist);
+									if(!empty($vou)){
+										echo  $vou['voucher'];
+									}
+									else{
+										echo '';
+									}
+                                    
+                                ?></td>
+                            </tr>
+                            <?php endforeach;else:?>
+                                <td>Sitting Fees</td>
+                                <td></td>
+                                <td></td>
+                                <td></td>
+                                <td><?php $sitt=0.00;
+                                echo number_format((float)$sitt,2,'.',',');?></td>
+                                <td><?php $sittd=0.00;
+                                echo number_format((float)$sittd,2,'.',',');?></td>
+                                <td></td>
+								<td></td>
+								<td></td>
+                                <td></td>
+                                <td></td>
+                                <td></td>
+                                <td></td>
+                           <?php endif;?>
+                            <tr>
+								<td><b>Grand Total</b></td>
+                                <td></td>
+                                <td><b><?php echo number_format((float)$tot_bs,2,'.',',');?></b></td>
+								<td><b><?php echo number_format((float)$tot_ca,2,'.',',');?></b></td>
+								<td><b><?php echo number_format((float)$tot_psa,2,'.',',');?></b></td>
+								<td><b><?php echo number_format((float)$tot_ltc,2,'.',',');?></b></td>
+                                <td><b><?php echo number_format((float)$tot_oa,2,'.',',');?></b></td>
+                                <td><b><?php echo number_format((float)$tot_gross+$en+$tot_sitting+$b,2,'.',',');?></b></td>
+                                <td><b><?php echo number_format((float)$tot_tds+$end+$tot_sitting_tds+$bd,2,'.',',');?></b></td>
+                                <td><b><?php echo number_format((float)$tot_hc,2,'.',',');?></b></td>
+                                <td><b><?php echo number_format((float)$tot_pf,2,'.',',');?></b></td>
+                                <td><b><?php echo number_format((float)$tot_gis,2,'.',',');?></b></td>
+                                <td></td>
+                            </tr>
+                            </tbody>	
+                            </table>
+                            <!-- <div class="hr hr8 hr-dotted"></div> -->
+							<b><i>Note: This is a System Generated Salary Certificate</i></b>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+<!--for modal -->
+<div id="recipt_modal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+	<div class="modal-dialog" style="width:400px;">
+		<div class="modal-content"> </div>
+	</div>
+</div>
+<script>
+	$(function(){
+			$('#print').gentcpdftds({
+				content: '#report-print',
+				src:"<?php echo $this->url('print', array('action' => 'index'));?>",
+				orentation:"L",
+			});
+					
+	});
+	
+</script>
+
