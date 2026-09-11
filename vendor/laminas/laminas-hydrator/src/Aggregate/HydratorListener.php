@@ -12,15 +12,13 @@ use Laminas\Hydrator\HydratorInterface;
  * Aggregate listener wrapping around a hydrator.
  *
  * Listens to {@see HydrateEvent::EVENT_HYDRATE} and {@see ExtractEvent::EVENT_EXTRACT}
+ *
+ * @final
  */
 class HydratorListener extends AbstractListenerAggregate
 {
-    /** @var HydratorInterface */
-    protected $hydrator;
-
-    public function __construct(HydratorInterface $hydrator)
+    public function __construct(protected HydratorInterface $hydrator)
     {
-        $this->hydrator = $hydrator;
     }
 
     /**

@@ -11,6 +11,9 @@ use Acl\Model as Acl;
 
 class AclController extends AbstractActionController
 {
+	protected $_connection;
+	protected $_permissionObj;
+	protected $_safedataObj;
 	private $_container;
 	protected $_table; 		// database table 
     protected $_user; 		// user detail
@@ -180,18 +183,18 @@ class AclController extends AbstractActionController
     {  
     	$this->init(); 
 		$id = $this->_id;
-		$array_id = explode("_", $id);
+		$array_id = explode("_", (string) $id);
 		$role_id = $array_id[0];
 		$page = (sizeof($array_id)>1)?$array_id[1]:'';
 		if ($this->getRequest()->isPost()):
 			$form = $this->getRequest()->getPost();
 			$data = array(
-					'id'          => $form['role_id'], 
-					'role'	      => $form['role'],
-					'description' => $form['description'],
-					'status'      => $form['status'],
-					'author'      => $this->_author,
-					'modified'    => $this->_modified
+				'id'          => $form['role_id'], 
+				'role'	      => $form['role'],
+				'description' => $form['description'],
+				'status'      => $form['status'],
+				'author'      => $this->_author,
+				'modified'    => $this->_modified
 			);
 			$data = $this->_safedataObj->rteSafe($data);
 			$this->_connection->beginTransaction();
@@ -206,11 +209,11 @@ class AclController extends AbstractActionController
 			return $this->redirect()->toRoute('acl/paginator',array('action'=>'rolelist','page'=>$this->_id, 'id'=>'0','role'=>'0','task'=>'0'));
 		endif;
         $ViewModel = new ViewModel(array(
-				'title'        => 'Edit Role',
-				'page'         => $page,
-				'role_id'      => $role_id,
-				'highest_role' => $this->_highest_role,
-				'rolesObj'     => $this->getDefinedTable(Acl\RolesTable::class),
+			'title'        => 'Edit Role',
+			'page'         => $page,
+			'role_id'      => $role_id,
+			'highest_role' => $this->_highest_role,
+			'rolesObj'     => $this->getDefinedTable(Acl\RolesTable::class),
 		));
 		
 		$ViewModel->setTerminal(True);
@@ -224,21 +227,21 @@ class AclController extends AbstractActionController
 		$this->init();	
 		
 		$id = $this->_id;
-		$array_id = explode("_", $id);
+		$array_id = explode("_", (string) $id);
 		$role_id = $array_id[0];
 		$page = (sizeof($array_id)>1)?$array_id[1]:'';
 		$role = $role_id;
 		$module = $this->params()->fromRoute('role');
 		$task = $this->params()->fromRoute('task');
 
-		if(strlen($task) > 0 && ($role > 0 && $module > 0))
+		if (!empty($task) && $role > 0 && $module > 0)
 		{  
 			$data = array(
-				        'role'    => $role,
-					    'module'  => $module,
-					    'author'  => $this->_author,
-					    'created' => $this->_created,
-					    'modified'=> $this->_modified
+				'role'    => $role,
+				'module'  => $module,
+				'author'  => $this->_author,
+				'created' => $this->_created,
+				'modified'=> $this->_modified
 			);
 			
 			switch ($task){
@@ -308,7 +311,7 @@ class AclController extends AbstractActionController
 			exit;
 		}else{
 			$id = $this->_id;
-			$array_id = explode("_", $id);
+			$array_id = explode("_", (string) $id);
 			if(sizeof($array_id)==3):
 				$resource = isset($array_id[0])?$array_id[0]:'-1';
 				$process = isset($array_id[1])?$array_id[1]:'-1';
@@ -325,15 +328,15 @@ class AclController extends AbstractActionController
 			'role'     => $role,
 		);
 		return new ViewModel(array(
-				'title'          => 'Role Permission Manager',
-				'data'           => $data,
-				'modules'        => $this->getDefinedTable(Acl\ModuleTable::class)->get(array('general'=>'0')),
-				'processObj'     => $this->getDefinedTable(Acl\ProcessTable::class),
-				'roleObj'        => $this->getDefinedTable(Acl\RolesTable::class),
-				'roleaclObj'     => $this->getDefinedTable(Acl\RoleaclTable::class),
-				'pactionObj'     => $this->getDefinedTable(Acl\ProcessActionTable::class),
-				'aclObj'         => $this->getDefinedTable(Acl\AclTable::class),
-				'roleprocessObj' => $this->getDefinedTable(Acl\RoleprocessTable::class),
+			'title'          => 'Role Permission Manager',
+			'data'           => $data,
+			'modules'        => $this->getDefinedTable(Acl\ModuleTable::class)->get(array('general'=>'0')),
+			'processObj'     => $this->getDefinedTable(Acl\ProcessTable::class),
+			'roleObj'        => $this->getDefinedTable(Acl\RolesTable::class),
+			'roleaclObj'     => $this->getDefinedTable(Acl\RoleaclTable::class),
+			'pactionObj'     => $this->getDefinedTable(Acl\ProcessActionTable::class),
+			'aclObj'         => $this->getDefinedTable(Acl\AclTable::class),
+			'roleprocessObj' => $this->getDefinedTable(Acl\RoleprocessTable::class),
 		));
 	}
 	/**
@@ -389,7 +392,7 @@ class AclController extends AbstractActionController
 			return $this->redirect()->toRoute('acl',array('action'=>'permission','id'=>$this->_id));
 		endif;	
 		$id = $this->_id;
-		$array_id = explode("_", $id);
+		$array_id = explode("_", (string) $id);
 		if(sizeof($array_id)==3):
 			$resource = isset($array_id[0])?$array_id[0]:'-1';
 			$process = isset($array_id[1])?$array_id[1]:'-1';
@@ -405,13 +408,13 @@ class AclController extends AbstractActionController
 			'role'     => $role,
 		);
 		$ViewModel = new ViewModel(array(
-				'title'      => 'Create Permission',
-				'id'         => $this->_id,
-				'data'       => $data,
-				'modules'    => $this->getDefinedTable(Acl\ModuleTable::class)->get(array('general'=>'0')),
-				'processObj' => $this->getDefinedTable(Acl\ProcessTable::class),
-				'roleObj'    => $this->getDefinedTable(Acl\RolesTable::class),
-				'statusObj'  => $this->getDefinedTable(Acl\StatusTable::class),
+			'title'      => 'Create Permission',
+			'id'         => $this->_id,
+			'data'       => $data,
+			'modules'    => $this->getDefinedTable(Acl\ModuleTable::class)->get(array('general'=>'0')),
+			'processObj' => $this->getDefinedTable(Acl\ProcessTable::class),
+			'roleObj'    => $this->getDefinedTable(Acl\RolesTable::class),
+			'statusObj'  => $this->getDefinedTable(Acl\StatusTable::class),
 		));
 		
 		$ViewModel->setTerminal(True);
@@ -424,7 +427,7 @@ class AclController extends AbstractActionController
     {  
     	$this->init(); 
 		$access_data = $this->_id;
-		$array_id = explode("_", $access_data);
+		$array_id = explode("_", (string) $access_data);
 		$resource = $array_id[0];
 		$process = $array_id[1];
 		$role = $array_id[2];
@@ -494,12 +497,12 @@ class AclController extends AbstractActionController
 			'selected_data' => $selected_data,
 		);
 		$ViewModel = new ViewModel(array(
-				'title'          => 'Update Access',
-				'data'           => $data,
-				'processObj'     => $this->getDefinedTable(Acl\ProcessTable::class),
-				'roleObj'        => $this->getDefinedTable(Acl\RolesTable::class),
-				'roleprocessObj' => $this->getDefinedTable(Acl\RoleprocessTable::class),
-				'statusObj'      => $this->getDefinedTable(Acl\StatusTable::class),
+			'title'          => 'Update Access',
+			'data'           => $data,
+			'processObj'     => $this->getDefinedTable(Acl\ProcessTable::class),
+			'roleObj'        => $this->getDefinedTable(Acl\RolesTable::class),
+			'roleprocessObj' => $this->getDefinedTable(Acl\RoleprocessTable::class),
+			'statusObj'      => $this->getDefinedTable(Acl\StatusTable::class),
 		));
 		
 		$ViewModel->setTerminal(True);
@@ -513,7 +516,7 @@ class AclController extends AbstractActionController
     	$this->init(); 
 		
 		$transfer_data = $this->_id;
-		$array_id = explode("_", $transfer_data);
+		$array_id = explode("_", (string) $transfer_data);
 		$resource = $array_id[0];
 		$process = $array_id[1];
 		$role = $array_id[2];
@@ -582,11 +585,11 @@ class AclController extends AbstractActionController
 			'selected_data' => $selected_data,
 		);
 		$ViewModel = new ViewModel(array(
-				'title'      => 'Transfer Permission',
-				'data'       => $data,
-				'modules'    => $this->getDefinedTable(Acl\ModuleTable::class)->get(array('general'=>'0')),
-				'processObj' => $this->getDefinedTable(Acl\ProcessTable::class),
-				'roleObj'    => $this->getDefinedTable(Acl\RolesTable::class),
+			'title'      => 'Transfer Permission',
+			'data'       => $data,
+			'modules'    => $this->getDefinedTable(Acl\ModuleTable::class)->get(array('general'=>'0')),
+			'processObj' => $this->getDefinedTable(Acl\ProcessTable::class),
+			'roleObj'    => $this->getDefinedTable(Acl\RolesTable::class),
 		));
 		
 		$ViewModel->setTerminal(True);
@@ -600,7 +603,7 @@ class AclController extends AbstractActionController
 		$this->init();
 		
 		$remove_data = $this->_id;
-		$array_id = explode("_", $remove_data);
+		$array_id = explode("_", (string) $remove_data);
 		$resource = $array_id[0];
 		$process = $array_id[1];
 		$role = $array_id[2];
@@ -661,7 +664,7 @@ class AclController extends AbstractActionController
 			exit;
 		}else{
 			$id = $this->_id;
-			$array_id = explode("_", $id);
+			$array_id = explode("_", (string) $id);
 			if(sizeof($array_id)==2):
 				$resource = isset($array_id[0])?$array_id[0]:'-1';
 				$report = isset($array_id[1])?$array_id[1]:'-1';
@@ -677,13 +680,13 @@ class AclController extends AbstractActionController
 		);
 		
 		return new ViewModel(array(
-				'title'        => 'Report Role Permission',
-				'data'         => $data,
-				'highest_role' => $this->_highest_role,
-				'modules'      => $this->getDefinedTable(Acl\ModuleTable::class)->get(array('general'=>'0')),
-				'rolesObj'     => $this->getDefinedTable(Acl\RolesTable::class),
-				'roleaclObj'   => $this->getDefinedTable(Acl\RoleaclTable::class),
-				'aclObj'       => $this->getDefinedTable(Acl\AclTable::class),
+			'title'        => 'Report Role Permission',
+			'data'         => $data,
+			'highest_role' => $this->_highest_role,
+			'modules'      => $this->getDefinedTable(Acl\ModuleTable::class)->get(array('general'=>'0')),
+			'rolesObj'     => $this->getDefinedTable(Acl\RolesTable::class),
+			'roleaclObj'   => $this->getDefinedTable(Acl\RoleaclTable::class),
+			'aclObj'       => $this->getDefinedTable(Acl\AclTable::class),
 		));
 	}
 }

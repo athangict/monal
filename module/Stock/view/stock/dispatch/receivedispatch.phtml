@@ -25,7 +25,7 @@
 <?php
 	$depoyManager = $this->userRoleObj->get(array('id'=>$this->userID)); 
 	$admin_locs = $this->usersObj->getColumn($userID,'admin_location');
-	$admin_loc_array = explode(',',$admin_locs);
+	$admin_loc_array = explode(',', (string) $admin_locs);
 	if(($dispatch_status == '3') && in_array($to_location, $admin_loc_array) && sizeof($depoyManager)>0): 
 ?>
 <div class="row">

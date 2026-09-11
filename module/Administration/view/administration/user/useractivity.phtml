@@ -6,7 +6,8 @@
 	$this->headTitle($this->title);
 ?>
 <?php foreach ($users as $user);?>
-<?php echo $this->tabs_helper(array(403,409,410),$user['id']); ?>
+<?php $routeId = !empty($user['uuid']) ? $user['uuid'] : $user['id']; ?>
+<?php echo $this->tabs_helper(array(403,409,410),$routeId); ?>
 <div class="card">
 	<div class="card-header"></div>
 	<div class="table-responsive">
@@ -35,7 +36,7 @@
 	</div>
 	<div class="card-footer d-flex align-items-center">
 		<?php echo $this->paginationControl($this->paginator,'Sliding','adm_pagination.phtml', 
-			array('route' => 'user/paginator','action'=>'useractivity','id'=>$user['id']));?>
+			array('route' => 'user/paginator','action'=>'useractivity','id'=>$routeId));?>
 	</div>
 </div>
 <script type="text/javascript">

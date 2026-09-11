@@ -1,0 +1,84 @@
+<?php
+/**
+ * 
+ * View -- of Realestate/landController/indexAction
+ * 
+ */
+	$this->headTitle($this->title);
+	
+		
+		
+?>
+
+<?php ///echo $this->partial('realestate/building/partial.phtml',array('active' => 'land'));?>
+<div class="card">
+	<div class="card-header">
+		<div class="btn-group pull-right">
+			<?php echo $this->button(2);?>
+		</div>
+	</div>
+	<div class="table-responsive">
+		<table class="table card-table text-nowrap" id="dataTables">
+			<thead>
+				<tr>
+                    <th>#</th>
+					<th>Region</th>
+					<th>Location</th>
+					<th>Land type</th>
+					<th>Exact Location</th>
+					<th>Area in acres</th>
+					<th>Area in sq. ft</th>
+					<th>Plot No</th>
+					<th>Thram No</th>
+					<th>Land</th>
+					<th>Land tax</th>
+					<th>Land income</th>
+					<th>Purchase price</th>
+					<th class="no-sort no-printpdf">Action</th>
+				</tr>
+			</thead>
+			<tbody>
+			
+
+				<?php $i=1;					
+				  foreach ($lands as $rows):					  						
+				?>
+					<tr data-href="<?php echo $this->button(4, $rows['id']); ?>">
+                    <td><?php echo $i++; ?> </td>
+					<td><?php echo $this->regionObj->getColumn($rows['region'],'region'); ?></td>
+					<td><?php echo $this->locationObj->getColumn($rows['location'],'location'); ?></td>
+                    <td><?php echo $rows['land_type']; ?></td>
+					<td><?php echo $rows['exact_location']; ?></td>
+                    <td><?php echo $rows['area_in_acres']; ?></td>
+					<td><?php echo $rows['area_in_sqaureft']; ?></td>
+                    <td><?php echo $rows['plot_number']; ?></td>
+					<td><?php echo $rows['thram_no']; ?></td>
+                    <td><?php echo $rows['land']; ?></td>
+                    <td><?php echo $rows['land_tax']; ?></td>
+					<td><?php echo $rows['land_income']; ?></td>
+					<td><?php echo $rows['pp']; ?></td>
+						
+						<td><?php echo $this->button(1, $rows['id']); ?></td>
+					
+					</tr>
+				<?php 
+				$i++;
+				endforeach;  
+				?>
+			</tbody> 
+		</table>
+	</div>
+</div>
+<!--for modal -->
+<div id="modal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content"> </div>
+    </div>
+</div>
+<script>
+$('document').ready(function(){
+	$('#dataTables').DataTable({"paging":   true,});
+});
+</script>
+
+

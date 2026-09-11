@@ -37,6 +37,8 @@ use const PHP_EOL;
 
 /**
  * Helper for printing <link> elements
+ *
+ * @deprecated This class has been moved to the `Laminas\Navigation` component and will be removed in 3.0
  */
 class Links extends AbstractHelper
 {
@@ -135,7 +137,6 @@ class Links extends AbstractHelper
      * </code>
      *
      * @param  string $method
-     * @param  array  $arguments
      * @return mixed
      * @throws Exception\ExceptionInterface
      */

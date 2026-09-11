@@ -23,6 +23,8 @@ class Module
     /**
      * Register a specification for the FilterManager with the ServiceListener.
      *
+     * @deprecated Since 2.40.0 This method is not necessary for module manager and will be removed in 3.0
+     *
      * @param ModuleManager $moduleManager
      * @return void
      */

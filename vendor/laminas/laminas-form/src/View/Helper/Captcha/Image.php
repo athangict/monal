@@ -1,24 +1,28 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Laminas\Form\View\Helper\Captcha;
 
 use Laminas\Captcha\Image as CaptchaAdapter;
+use Laminas\Form\Element\Captcha;
 use Laminas\Form\ElementInterface;
 use Laminas\Form\Exception;
 
+use function assert;
 use function sprintf;
 
+/** @final */
 class Image extends AbstractWord
 {
     /**
      * Render the captcha
      *
-     * @param  ElementInterface          $element
      * @throws Exception\DomainException
-     * @return string
      */
-    public function render(ElementInterface $element)
+    public function render(ElementInterface $element): string
     {
+        assert($element instanceof Captcha);
         $captcha = $element->getCaptcha();
 
         if ($captcha === null || ! $captcha instanceof CaptchaAdapter) {
@@ -38,11 +42,11 @@ class Image extends AbstractWord
         ];
 
         if ($element->hasAttribute('id')) {
-            $imgAttributes['id'] = $element->getAttribute('id') . '-image';
+            $imgAttributes['id'] = (string) $element->getAttribute('id') . '-image';
         }
 
         $closingBracket = $this->getInlineClosingBracket();
-        $img = sprintf(
+        $img            = sprintf(
             '<img %s%s',
             $this->createAttributesString($imgAttributes),
             $closingBracket
@@ -53,7 +57,7 @@ class Image extends AbstractWord
         $captchaInput = $this->renderCaptchaInputs($element);
 
         $pattern = '%s%s%s';
-        if ($position == self::CAPTCHA_PREPEND) {
+        if ($position === self::CAPTCHA_PREPEND) {
             return sprintf($pattern, $captchaInput, $separator, $img);
         }
 

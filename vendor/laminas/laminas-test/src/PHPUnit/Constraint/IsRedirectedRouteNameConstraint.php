@@ -12,31 +12,28 @@ use Laminas\Mvc\Controller\ControllerManager;
 use Laminas\Mvc\Controller\Plugin\Url;
 use Laminas\Router\RouteMatch;
 use Laminas\Test\PHPUnit\Controller\AbstractHttpControllerTestCase;
+use Override;
 use PHPUnit\Framework\Constraint\Constraint;
 use RuntimeException;
 
-use function get_class;
-use function gettype;
-use function is_object;
+use function get_debug_type;
 use function is_string;
 use function sprintf;
 
 final class IsRedirectedRouteNameConstraint extends Constraint
 {
-    /** @var AbstractHttpControllerTestCase */
-    private $activeTestCase;
-
-    public function __construct(AbstractHttpControllerTestCase $activeTestCase)
+    public function __construct(private readonly AbstractHttpControllerTestCase $activeTestCase)
     {
-        $this->activeTestCase = $activeTestCase;
     }
 
+    #[Override]
     public function toString(): string
     {
         return 'is the redirected route name';
     }
 
     /** @param mixed $other */
+    #[Override]
     public function matches($other): bool
     {
         if (! is_string($other)) {
@@ -93,7 +90,7 @@ final class IsRedirectedRouteNameConstraint extends Constraint
             throw new RuntimeException(sprintf(
                 'Invalid controller pulled from ControllerManager by identifier "%s"; received "%s"',
                 $controllerIdentifier,
-                is_object($controller) ? get_class($controller) : gettype($controller)
+                get_debug_type($controller)
             ));
         }
 

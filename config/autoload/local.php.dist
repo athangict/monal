@@ -13,4 +13,18 @@
  */
 
 return [
+	'dk_stripe' => [
+		'base_url' => 'https://internal-gateway.sit.digitalkidu.bt:8082/uat/stripe',
+		'api_key' => '',
+		'submerchant_id' => '2606308100000031',
+		'dk_account' => '100100426695',
+		'agency_name' => 'Your Agency Name',
+		'currency' => 'usd',
+		// Optional explicit callback URLs. Must be HTTPS.
+		// You can include {payment_id} placeholder.
+		'success_url' => '',
+		'cancel_url' => '',
+		// Set false only in controlled UAT environments if certificate verification blocks testing.
+		'verify_ssl' => true,
+	],
 ];

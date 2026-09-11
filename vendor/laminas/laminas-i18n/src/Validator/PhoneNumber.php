@@ -8,15 +8,24 @@ use Locale;
 use Traversable;
 
 use function array_key_exists;
+use function assert;
 use function file_exists;
 use function in_array;
 use function is_scalar;
+use function is_string;
 use function preg_match;
+use function str_starts_with;
 use function strlen;
-use function strpos;
 use function strtoupper;
 use function substr;
 
+/**
+ * @deprecated This class is deprecated and will be removed in v3.0.0
+ *             Use Laminas\I18n\PhoneNumber\Validator\PhoneNumber instead:
+ *             https://github.com/laminas/laminas-i18n-phone-number
+ *
+ * @final
+ */
 class PhoneNumber extends AbstractValidator
 {
     public const NO_MATCH    = 'phoneNumberNoMatch';
@@ -167,7 +176,7 @@ class PhoneNumber extends AbstractValidator
      * Load Pattern
      *
      * @param  string        $code
-     * @return array[]|false
+     * @return array{code: string, patterns: array<string, array<string, string>>}|false
      */
     protected function loadPattern($code)
     {
@@ -203,18 +212,18 @@ class PhoneNumber extends AbstractValidator
         }
         $this->setValue($value);
 
-        $country = $this->getCountry();
+        $country        = $this->getCountry();
+        $countryPattern = $this->loadPattern(strtoupper($country));
 
-        if (! $countryPattern = $this->loadPattern(strtoupper($country))) {
-            if (isset($context[$country])) {
-                $country = $context[$country];
-            }
+        if (! $countryPattern && isset($context[$country]) && is_string($context[$country])) {
+            $country        = $context[$country];
+            $countryPattern = $this->loadPattern(strtoupper($country));
+        }
 
-            if (! $countryPattern = $this->loadPattern(strtoupper($country))) {
-                $this->error(self::UNSUPPORTED);
+        if (! $countryPattern) {
+            $this->error(self::UNSUPPORTED);
 
-                return false;
-            }
+            return false;
         }
 
         $codeLength = strlen($countryPattern['code']);
@@ -225,16 +234,18 @@ class PhoneNumber extends AbstractValidator
          *   2) International double-O prefix
          *   3) Bare country prefix
          */
-        if (0 === strpos((string) $value, '+' . $countryPattern['code'])) {
+        $valueNoCountry = null;
+        if (str_starts_with((string) $value, '+' . $countryPattern['code'])) {
             $valueNoCountry = substr((string) $value, $codeLength + 1);
-        } elseif (0 === strpos((string) $value, '00' . $countryPattern['code'])) {
+        } elseif (str_starts_with((string) $value, '00' . $countryPattern['code'])) {
             $valueNoCountry = substr((string) $value, $codeLength + 2);
-        } elseif (0 === strpos((string) $value, $countryPattern['code'])) {
+        } elseif (str_starts_with((string) $value, $countryPattern['code'])) {
             $valueNoCountry = substr((string) $value, $codeLength);
         }
 
         // check against allowed types strict match:
         foreach ($countryPattern['patterns']['national'] as $type => $pattern) {
+            assert($pattern !== '');
             if (in_array($type, $this->allowedTypes, true)) {
                 // check pattern:
                 if (preg_match($pattern, (string) $value)) {
@@ -251,6 +262,7 @@ class PhoneNumber extends AbstractValidator
         // check for possible match:
         if ($this->allowPossible()) {
             foreach ($countryPattern['patterns']['possible'] as $type => $pattern) {
+                assert($pattern !== '');
                 if (in_array($type, $this->allowedTypes, true)) {
                     // check pattern:
                     if (preg_match($pattern, (string) $value)) {

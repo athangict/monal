@@ -130,7 +130,7 @@ $this->headTitle($this->title);
 						</div>
 					</div>
 				</div>
-				<?php $permission_array = explode(",", $process['permission_level']);
+				<?php $permission_array = explode(",", (string) $process['permission_level']);
 				$permission_status = array();
 				for($i=0;$i<sizeof($permission_array);$i++):
 					$status_data = array(
@@ -139,7 +139,7 @@ $this->headTitle($this->title);
 					);
 					array_push($permission_status,$status_data);
 				endfor;
-				$status_array = explode(",", $permission_level);?>
+				$status_array = explode(",", (string) $permission_level);?>
 				<div class="row">
 					<div class="form-group col-lg-12">
 						<label class="control-label" for="permission_level">Permission Level</label>

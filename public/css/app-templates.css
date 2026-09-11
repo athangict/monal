@@ -1,0 +1,192 @@
+/* Keep Ace native structure; add only subtle accents for custom skin choices. */
+
+body.no-skin.skin-1 #navbar.navbar-default {
+    background: #2a5d84;
+}
+
+body.no-skin.skin-1 .ace-nav > li.purple > a,
+body.no-skin.skin-1 .ace-nav > li.open.purple > a,
+body.no-skin.skin-1 .ace-nav > li.purple > a:hover,
+body.no-skin.skin-1 .ace-nav > li.purple > a:focus {
+    background-color: #1f4967 !important;
+}
+
+body.no-skin.skin-1 .ace-nav > li.light-blue > a,
+body.no-skin.skin-1 .ace-nav > li.open.light-blue > a,
+body.no-skin.skin-1 .ace-nav > li.light-blue > a:hover,
+body.no-skin.skin-1 .ace-nav > li.light-blue > a:focus {
+    background-color: #3d7aa8 !important;
+}
+
+body.no-skin.skin-1 .nav-list > li.active > a,
+body.no-skin.skin-1 .nav-list > li.open > a {
+    color: #2a5d84 !important;
+}
+
+body.no-skin.skin-1 .btn-primary,
+body.no-skin.skin-1 .btn-info {
+    background-color: #2a5d84 !important;
+    border-color: #234d6d !important;
+}
+
+body.no-skin.skin-1 .btn-primary:hover,
+body.no-skin.skin-1 .btn-primary:focus,
+body.no-skin.skin-1 .btn-info:hover,
+body.no-skin.skin-1 .btn-info:focus {
+    background-color: #234d6d !important;
+    border-color: #1f435f !important;
+}
+
+body.no-skin.skin-1 .footer .blue.bolder {
+    color: #2a5d84 !important;
+}
+
+body.no-skin.skin-2 #navbar.navbar-default {
+    background: #9c4a1a;
+}
+
+body.no-skin.skin-2 .ace-nav > li.purple > a,
+body.no-skin.skin-2 .ace-nav > li.open.purple > a,
+body.no-skin.skin-2 .ace-nav > li.purple > a:hover,
+body.no-skin.skin-2 .ace-nav > li.purple > a:focus {
+    background-color: #7b3812 !important;
+}
+
+body.no-skin.skin-2 .ace-nav > li.light-blue > a,
+body.no-skin.skin-2 .ace-nav > li.open.light-blue > a,
+body.no-skin.skin-2 .ace-nav > li.light-blue > a:hover,
+body.no-skin.skin-2 .ace-nav > li.light-blue > a:focus {
+    background-color: #b85f2b !important;
+}
+
+body.no-skin.skin-2 .nav-list > li.active > a,
+body.no-skin.skin-2 .nav-list > li.open > a {
+    color: #9c4a1a !important;
+}
+
+body.no-skin.skin-2 .btn-primary,
+body.no-skin.skin-2 .btn-info {
+    background-color: #9c4a1a !important;
+    border-color: #803d15 !important;
+}
+
+body.no-skin.skin-2 .btn-primary:hover,
+body.no-skin.skin-2 .btn-primary:focus,
+body.no-skin.skin-2 .btn-info:hover,
+body.no-skin.skin-2 .btn-info:focus {
+    background-color: #803d15 !important;
+    border-color: #6d3412 !important;
+}
+
+body.no-skin.skin-2 .footer .blue.bolder {
+    color: #9c4a1a !important;
+}
+
+body.no-skin.skin-3 #navbar.navbar-default {
+    background: #56697f;
+}
+
+body.no-skin.skin-3 .ace-nav > li.purple > a,
+body.no-skin.skin-3 .ace-nav > li.open.purple > a,
+body.no-skin.skin-3 .ace-nav > li.purple > a:hover,
+body.no-skin.skin-3 .ace-nav > li.purple > a:focus {
+    background-color: #3f4f62 !important;
+}
+
+body.no-skin.skin-3 .ace-nav > li.light-blue > a,
+body.no-skin.skin-3 .ace-nav > li.open.light-blue > a,
+body.no-skin.skin-3 .ace-nav > li.light-blue > a:hover,
+body.no-skin.skin-3 .ace-nav > li.light-blue > a:focus {
+    background-color: #6f869e !important;
+}
+
+body.no-skin.skin-3 .nav-list > li.active > a,
+body.no-skin.skin-3 .nav-list > li.open > a {
+    color: #56697f !important;
+}
+
+body.no-skin.skin-3 .btn-primary,
+body.no-skin.skin-3 .btn-info {
+    background-color: #56697f !important;
+    border-color: #465669 !important;
+}
+
+body.no-skin.skin-3 .btn-primary:hover,
+body.no-skin.skin-3 .btn-primary:focus,
+body.no-skin.skin-3 .btn-info:hover,
+body.no-skin.skin-3 .btn-info:focus {
+    background-color: #465669 !important;
+    border-color: #3b4959 !important;
+}
+
+body.no-skin.skin-3 .footer .blue.bolder {
+    color: #56697f !important;
+}
+
+body.login-layout.skin-1 .widget-main .header {
+    color: #2a5d84 !important;
+}
+
+body.login-layout.skin-1 .btn-primary,
+body.login-layout.skin-1 .btn-success,
+body.login-layout.skin-1 .btn-danger {
+    background-color: #2a5d84 !important;
+    border-color: #234d6d !important;
+}
+
+body.login-layout.skin-1 .toolbar,
+body.login-layout.skin-1 .widget-box .toolbar {
+    background: #2a5d84 !important;
+}
+
+body.login-layout.skin-1 .toolbar a,
+body.login-layout.skin-1 .widget-box .toolbar a {
+    color: #ffffff !important;
+}
+
+body.login-layout.skin-2 .widget-main .header {
+    color: #9c4a1a !important;
+}
+
+body.login-layout.skin-2 .btn-primary,
+body.login-layout.skin-2 .btn-success,
+body.login-layout.skin-2 .btn-danger {
+    background-color: #9c4a1a !important;
+    border-color: #803d15 !important;
+}
+
+body.login-layout.skin-2 .toolbar,
+body.login-layout.skin-2 .widget-box .toolbar {
+    background: #9c4a1a !important;
+}
+
+body.login-layout.skin-2 .toolbar a,
+body.login-layout.skin-2 .widget-box .toolbar a {
+    color: #ffffff !important;
+}
+
+body.login-layout.skin-3 .widget-main .header {
+    color: #56697f !important;
+}
+
+body.login-layout.skin-3 .btn-primary,
+body.login-layout.skin-3 .btn-success,
+body.login-layout.skin-3 .btn-danger {
+    background-color: #56697f !important;
+    border-color: #465669 !important;
+}
+
+body.login-layout.skin-3 .toolbar,
+body.login-layout.skin-3 .widget-box .toolbar {
+    background: #56697f !important;
+}
+
+body.login-layout.skin-3 .toolbar a,
+body.login-layout.skin-3 .widget-box .toolbar a {
+    color: #ffffff !important;
+}
+
+#navbar .navbar-brand img.brand-logo {
+    object-fit: contain;
+    background: transparent;
+}

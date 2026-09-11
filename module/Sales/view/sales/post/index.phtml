@@ -1,0 +1,67 @@
+<?php
+/**
+ * Edit Renewal Form View
+ */
+$this->headTitle($this->title);
+?>
+
+<?php 
+    foreach($this->renews as $renew):
+        extract($renew);        
+    endforeach;
+?>
+
+<div class="container">
+    <div class="row">
+        <div class="col-md-6 offset-md-3">
+            <h2>Edit Renewal</h2>
+            <form method="post" action="<?php echo $this->url('renew', ['action' => 'viewrenew', 'id' => $renew['id']]); ?>" class="renewal-form">
+
+                <div class="form-group">
+                    <label for="region">Region:</label>
+                    <input type="text" name="region" id="region" class="form-control" value="<?php echo $renew['region']; ?>" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="location">Location:</label>
+                    <input type="text" name="location" id="location" class="form-control" value="<?php echo $renew['location']; ?>" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="postbox_no">Postbox No:</label>
+                    <input type="text" name="postbox_no" id="postbox_no" class="form-control" value="<?php echo $renew['postbox_no']; ?>" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="renewal_year">Renew Year:</label>
+                    <input type="text" name="renewal_year" id="renewal_year" class="form-control" value="<?php echo $renew['renewal_year']; ?>" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="renewal_amount">Renew Amount:</label>
+                    <input type="text" name="renewal_amount" id="renewal_amount" class="form-control" value="<?php echo $renew['renewal_amount']; ?>" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="total_amount">Total Amount:</label>
+                    <input type="text" name="total_amount" id="total_amount" class="form-control" value="<?php echo $renew['total_amount']; ?>" required>
+                </div>
+
+                <div class="form-group">
+                    <button type="submit" class="btn btn-primary">Update</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        var amountFields = document.querySelectorAll('[name="renewal_amount"], [name="total_amount"]');
+        amountFields.forEach(function (field) {
+            field.addEventListener('input', function () {
+                this.value = this.value.replace(/[^0-9.]/g, ''); // Allow only numeric and decimal values
+            });
+        });
+    });
+</script>

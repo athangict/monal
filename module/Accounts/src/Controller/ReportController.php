@@ -12,6 +12,8 @@ use Accounts\Model As Accounts;
 use Hr\Model As Hr;
 class ReportController extends AbstractActionController
 {   
+	protected $_connection;
+	protected $_safedataObj;
 	private $_container;
 	protected $_table; 		// database table 
     protected $_user; 		// user detail
@@ -115,7 +117,7 @@ class ReportController extends AbstractActionController
 			'start_date' => $start_date,
 			'end_date'  => $end_date,
 		);
-		$role=explode(",",$this->_login_role);//Multiple Role
+		$role=explode(",", (string) ($this->_login_role ?? ''));//Multiple Role
 		$user_region= $this->getDefinedTable(Administration\UsersTable::class)->getColumn($this->_login_id,'region');
 		if(in_array($this->_login_role,array(100,99,8,6,2,17,5,7))):
 		   $regions=$this->getDefinedTable(Administration\RegionTable::class)->getAll();
@@ -165,7 +167,7 @@ class ReportController extends AbstractActionController
 			'start_date' => $start_date,
 			'end_date'  => $end_date,
 		);
-		$role=explode(",",$this->_login_role);//Multiple Role
+		$role=explode(",", (string) ($this->_login_role ?? ''));//Multiple Role
 		$user_region= $this->getDefinedTable(Administration\UsersTable::class)->getColumn($this->_login_id,'region');
 		if(in_array($this->_login_role,array(100,99,8,6,2,17,5,7))):
 		   $regions=$this->getDefinedTable(Administration\RegionTable::class)->getAll();
@@ -216,7 +218,7 @@ class ReportController extends AbstractActionController
 			'start_date' => $start_date,
 			'end_date'  => $end_date,
 		);
-		$role=explode(",",$this->_login_role);//Multiple Role
+		$role=explode(",", (string) ($this->_login_role ?? ''));//Multiple Role
 		$user_region= $this->getDefinedTable(Administration\UsersTable::class)->getColumn($this->_login_id,'region');
 		if(in_array($this->_login_role,array(100,99,8,6,2,17,5,7))):
 		   $regions=$this->getDefinedTable(Administration\RegionTable::class)->getAll();
@@ -440,7 +442,7 @@ class ReportController extends AbstractActionController
 		);
 		$group_id = $this->getDefinedTable(Accounts\HeadTable::class)->getColumn($head,'group');
 		$class_id = $this->getDefinedTable(Accounts\GroupTable::class)->getColumn($group_id,'class');
-		$role=explode(",",$this->_login_role);//Multiple Role
+		$role=explode(",", (string) ($this->_login_role ?? ''));//Multiple Role
 		$user_region= $this->getDefinedTable(Administration\UsersTable::class)->getColumn($this->_login_id,'region');
 		if(in_array($this->_login_role,array(100,99,8,6,2,17,5,7))):
 		   $regions=$this->getDefinedTable(Administration\RegionTable::class)->getAll();
@@ -493,7 +495,7 @@ class ReportController extends AbstractActionController
 		);
 		$group_id = $this->getDefinedTable(Accounts\HeadTable::class)->getColumn($head,'group');
 		$class_id = $this->getDefinedTable(Accounts\GroupTable::class)->getColumn($group_id,'class');
-		$role=explode(",",$this->_login_role);//Multiple Role
+		$role=explode(",", (string) ($this->_login_role ?? ''));//Multiple Role
 		$user_region= $this->getDefinedTable(Administration\UsersTable::class)->getColumn($this->_login_id,'region');
 		if(in_array($this->_login_role,array(100,99,8,6,2,17,5,7))):
 		   $regions=$this->getDefinedTable(Administration\RegionTable::class)->getAll();
@@ -535,7 +537,7 @@ class ReportController extends AbstractActionController
 			'end_date' => $end_date,
 			'location' =>$location,
 		);
-		$role=explode(",",$this->_login_role);//Multiple Role
+		$role=explode(",", (string) ($this->_login_role ?? ''));//Multiple Role
 		$user_region= $this->getDefinedTable(Administration\UsersTable::class)->getColumn($this->_login_id,'region');
 		if(in_array($this->_login_role,array(100,99,8,6,2,17,5,7))):
 		   $regions=$this->getDefinedTable(Administration\RegionTable::class)->getAll();
@@ -576,7 +578,7 @@ class ReportController extends AbstractActionController
 			'start_date' => date('Y-m-d',strtotime($start_date)),
 			'end_date' => date('Y-m-d',strtotime($end_date)),
 		);
-		$role=explode(",",$this->_login_role);//Multiple Role
+		$role=explode(",", (string) ($this->_login_role ?? ''));//Multiple Role
 		$user_region= $this->getDefinedTable(Administration\UsersTable::class)->getColumn($this->_login_id,'region');
 		if(in_array($this->_login_role,array(100,99,8,6,2,17,5,7))):
 		   $regions=$this->getDefinedTable(Administration\RegionTable::class)->getAll();
@@ -651,7 +653,7 @@ class ReportController extends AbstractActionController
 	public function transactionlistAction()
 	{
 		$this->init();		
-		$param = explode('-',$this->_id);
+		$param = explode('-', (string) $this->_id);
 		$head = $param['0'];
 		$login_id=$this->_login_id;
 		$user_location = $this->getDefinedTable(Administration\UsersTable::class)->getColumn($login_id,'admin_location');
@@ -740,7 +742,7 @@ class ReportController extends AbstractActionController
 	public function reconcilationAction()
     {
         $this->init();
-	    $array_id = explode("_", $this->_id);
+	    $array_id = explode("_", (string) $this->_id);
 		$startDate = isset($array_id[2])?$array_id[2]:'';
 		$endDate = isset($array_id[3])?$array_id[3]:'';
 		$bank = isset($array_id[4])?$array_id[4]:'';

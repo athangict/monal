@@ -27,6 +27,8 @@ class ReportController extends AbstractActionController
     protected $_id; 		// route parameter id, usally used by crude
     protected $_auth; 		// checking authentication
     protected $_safedataObj; //safedata controller plugin
+	protected $_connection; // DB transaction connection
+	protected $_userloc; //location of the current user
     
 	public function __construct(ContainerInterface $container)
     {
@@ -83,7 +85,7 @@ class ReportController extends AbstractActionController
 	public function podetailsAction()
 	{
 		$this->init();	
-		$array_id = explode("_", $this->_id);
+		$array_id = explode("_", (string) ($this->_id ?? ''));
 			$location = (sizeof($array_id)>1)?$array_id[1]:'-1';
 			$item = (sizeof($array_id)>1)?$array_id[1]:'-1';
 			$item_subgroup = (sizeof($array_id)>1)?$array_id[1]:'-1';
@@ -117,7 +119,20 @@ class ReportController extends AbstractActionController
 				'supplier'=>$supplier,
 				'item_class'  => $item_class,
 			);
+			
 			$results = $this->getDefinedTable(Purchase\PurchaseOrderTable::class)->getPODetails($data,$start_date, $end_date);
+			if($data['item_class']=='-1'){
+				$itemgroups=$this->getDefinedTable(Stock\ItemGroupTable::class)-> getAll();
+			}
+			else{
+				$itemgroups=$this->getDefinedTable(Stock\ItemGroupTable::class)-> get(array('item_class'=>$data['item_class']));
+			}
+			if($data['item_class']=='-1'){
+				$items=$this->getDefinedTable(Stock\ItemTable::class)-> getAll();
+			}
+			else{
+				$items=$this->getDefinedTable(Stock\ItemTable::class)-> get(array('item_group'=>$data['item_subgroup']));
+			}
           //  echo sizeof($results); exit; 
 		return new ViewModel( array(   
 				'title'				=> 'Purchase Order '.$start_date." till ".$end_date,			    
@@ -127,10 +142,11 @@ class ReportController extends AbstractActionController
 				'locations' 	  	=> $this->getDefinedTable(Administration\LocationTable::class)->getAll(),
 				'results'   		=> $results,
 				'data'				=> $data,
+				'items'				=> $items,
 				'userLoc'         	=> $this->getDefinedTable(Administration\UsersTable::class)->get($this->_author),
 				'locationObj'     	=> $this->getDefinedTable(Administration\LocationTable::class),
 				'statusObj' 		=> $this->getDefinedTable(Acl\StatusTable::class),
-				'itemgroups' 		=> $this->getDefinedTable(Stock\ItemGroupTable::class)-> getAll(),
+				'itemgroups' 		=> $itemgroups,
 				'itemclass' 		=> $this->getDefinedTable(Stock\ItemClassTable::class)-> getAll(),
 				'supplier' 			=> $this->getDefinedTable(Accounts\PartyTable::class)-> get(array('p.role'=>1)),
 				'supplierObj' 			=> $this->getDefinedTable(Accounts\PartyTable::class),

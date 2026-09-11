@@ -1,0 +1,8 @@
+/docs/html/
+/laminas-mkdoc-theme.tgz
+/laminas-mkdoc-theme/
+/phpunit.xml
+/vendor/
+.phpunit.cache
+.phpcs-cache
+infection.json5

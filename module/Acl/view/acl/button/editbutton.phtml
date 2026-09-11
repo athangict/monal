@@ -67,7 +67,7 @@ $this->headTitle($this->title);
 					</div>
 					<div class="form-group col-lg-6">
 						<label class="control-label" for="class">Button Class</label>
-						<?php $btn_array = explode(" ", $row['class']);?>
+						<?php $btn_array = explode(" ", (string) $row['class']);?>
 						<select multiple="" class="form-control" name="class[]" id="class" data-placeholder="Select" >
 							<?php foreach($elements as $element):?>
 								<option value="<?php echo $element['class'];?>" <?php echo (in_array($element['class'],$btn_array))?'selected':'';?>>

@@ -12,6 +12,8 @@ use Acl\Model as Acl;
 
 class MasterController extends AbstractActionController
 {
+	protected $_connection;
+	protected $_permissionObj;
 	private $_container;
 	protected $_table; 		// database table 
     protected $_user; 		// user detail
@@ -169,7 +171,7 @@ class MasterController extends AbstractActionController
 	{
 	    $this->init();
 		$id = $this->_id;
-		$array_id = explode("_", $id);
+		$array_id = explode("_", (string) $id);
 		$locationtype_id = $array_id[0];
 		$page = (sizeof($array_id)>1)?$array_id[1]:'';
 		if($this->getRequest()->isPost()){
@@ -192,9 +194,9 @@ class MasterController extends AbstractActionController
 			return $this->redirect()->toRoute('setmaster/paginator',array('action'=>'locationtype','page'=>$this->_id, 'id'=>'0'));
 		}
 		$ViewModel = new ViewModel(array(
-				'title'         => 'Edit Location Type',
-				'page'          => $page,
-				'locationtypes' => $this->getDefinedTable(Administration\LocationTypeTable::class)->get($locationtype_id),
+			'title'         => 'Edit Location Type',
+			'page'          => $page,
+			'locationtypes' => $this->getDefinedTable(Administration\LocationTypeTable::class)->get($locationtype_id),
 		));		 
 		$ViewModel->setTerminal(True);
 		return $ViewModel;	
@@ -260,7 +262,7 @@ class MasterController extends AbstractActionController
 	{
 		$this->init();
 		$id = $this->_id;
-		$array_id = explode("_", $id);
+		$array_id = explode("_", (string) $id);
 		$region_id = $array_id[0];
 		$page = (sizeof($array_id)>1)?$array_id[1]:'';
 		if($this->getRequest()->isPost()){
@@ -282,10 +284,10 @@ class MasterController extends AbstractActionController
 			return $this->redirect()->toRoute('setmaster/paginator',array('action'=>'region','page'=>$this->_id, 'id'=>'0'));
 		}
 		$ViewModel = new ViewModel(array(
-				'title'         => 'Edit Region',
-				'page'          => $page,
-				'regions'       => $this->getDefinedTable(Administration\RegionTable::class)->get($region_id),
-				'department'	=> $this->getDefinedTable(Administration\DepartmentTable::class)->getAll(),
+			'title'         => 'Edit Region',
+			'page'          => $page,
+			'regions'       => $this->getDefinedTable(Administration\RegionTable::class)->get($region_id),
+			'department'	=> $this->getDefinedTable(Administration\DepartmentTable::class)->getAll(),
 		));		 
 		$ViewModel->setTerminal(True);
 		return $ViewModel;
@@ -296,7 +298,7 @@ class MasterController extends AbstractActionController
 	public function locationAction()
 	{	
 		$this->init();
-		$array_id = explode("_", $this->_id);
+		$array_id = explode("_", (string) $this->_id);
 		$region = (sizeof($array_id)>1)?$array_id[0]:'-1';
 		$location_type = (sizeof($array_id)>1)?$array_id[1]:'-1';
 		if($this->getRequest()->isPost())
@@ -347,18 +349,18 @@ class MasterController extends AbstractActionController
 			$num_length = strlen((string)$max_code);
 			if($num_length == 1){$max_code = '0'.$max_code;}
 			$data = array(
-					'region'         => $form['region'],
-					'location_type'  => $form['location_type'],
-					'location'       => $form['location'],
-					'prefix'         => $form['prefix'],
-					'location_code'  => $max_code,
-					'district'       => $form['district'],
-					'coordinates'    => $form['coordinates'],
-					'status'         => $form['status'],
-					'status'         => $form['status'],
-					'author'         => $this->_author,
-					'created'        => $this->_created,
-					'modified'       => $this->_modified,
+				'region'         => $form['region'],
+				'location_type'  => $form['location_type'],
+				'location'       => $form['location'],
+				'prefix'         => $form['prefix'],
+				'location_code'  => $max_code,
+				'district'       => $form['district'],
+				'coordinates'    => $form['coordinates'],
+				'status'         => $form['status'],
+				'status'         => $form['status'],
+				'author'         => $this->_author,
+				'created'        => $this->_created,
+				'modified'       => $this->_modified,
 			);
 			$data = $this->_safedataObj->rteSafe($data);
 			$result = $this->getDefinedTable(Administration\LocationTable::class)->save($data);	
@@ -370,11 +372,11 @@ class MasterController extends AbstractActionController
 			return $this->redirect()->toRoute('setmaster/paginator',array('action'=>'location','page'=>$this->_id, 'id'=>$form['region'].'_'.$form['location_type']));
 		}
 		$ViewModel = new ViewModel(array(
-				'title'         => 'Add Location',
-				'page'          => $page,
-				'regions'       => $this->getDefinedTable(Administration\RegionTable::class)->get(array('status'=>'1')),	
-				'locationtypes' => $this->getDefinedTable(Administration\LocationTypeTable::class)->get(array('status'=>'1')),	
-				'districts'     => $this->getDefinedTable(Administration\DistrictTable::class)->get(array('status'=>'1')),	
+			'title'         => 'Add Location',
+			'page'          => $page,
+			'regions'       => $this->getDefinedTable(Administration\RegionTable::class)->get(array('status'=>'1')),	
+			'locationtypes' => $this->getDefinedTable(Administration\LocationTypeTable::class)->get(array('status'=>'1')),	
+			'districts'     => $this->getDefinedTable(Administration\DistrictTable::class)->get(array('status'=>'1')),	
 		));		 
 		$ViewModel->setTerminal(True);
 		return $ViewModel;	
@@ -386,22 +388,22 @@ class MasterController extends AbstractActionController
 	{
 		$this->init();
 		$id = $this->_id;
-		$array_id = explode("_", $id);
+		$array_id = explode("_", (string) $id);
 		$location_id = $array_id[0];
 		$page = (sizeof($array_id)>1)?$array_id[1]:'';
 		if($this->getRequest()->isPost()){
 			$form = $this->getRequest()->getPost();
 			$data = array(	
-					'id'             => $form['location_id'],
-					'region'         => $form['region'],
-					'location_type'  => $form['location_type'],
-					'location'       => $form['location'],
-					'prefix'         => $form['prefix'],
-					'district'       => $form['district'],
-					'coordinates'    => $form['coordinates'],
-					'status'         => $form['status'],
-					'author'         => $this->_author,
-					'modified'       => $this->_modified,
+				'id'             => $form['location_id'],
+				'region'         => $form['region'],
+				'location_type'  => $form['location_type'],
+				'location'       => $form['location'],
+				'prefix'         => $form['prefix'],
+				'district'       => $form['district'],
+				'coordinates'    => $form['coordinates'],
+				'status'         => $form['status'],
+				'author'         => $this->_author,
+				'modified'       => $this->_modified,
 			);
 			$data = $this->_safedataObj->rteSafe($data);
 			$result = $this->getDefinedTable(Administration\LocationTable::class)->save($data);	
@@ -413,12 +415,12 @@ class MasterController extends AbstractActionController
 			return $this->redirect()->toRoute('setmaster/paginator',array('action'=>'location','page'=>$this->_id, 'id'=>$form['region'].'_'.$form['location_type']));
 		}
 		$ViewModel = new ViewModel(array(
-				'title'         => 'Edit Location',
-				'page'          => $page,
-				'regions'       => $this->getDefinedTable(Administration\RegionTable::class)->get(array('status'=>'1')),	
-				'locationtypes' => $this->getDefinedTable(Administration\LocationTypeTable::class)->get(array('status'=>'1')),	
-				'districts'     => $this->getDefinedTable(Administration\DistrictTable::class)->get(array('status'=>'1')),	
-				'locations'		=> $this->getDefinedTable(Administration\LocationTable::class)->get($location_id),
+			'title'         => 'Edit Location',
+			'page'          => $page,
+			'regions'       => $this->getDefinedTable(Administration\RegionTable::class)->get(array('status'=>'1')),	
+			'locationtypes' => $this->getDefinedTable(Administration\LocationTypeTable::class)->get(array('status'=>'1')),	
+			'districts'     => $this->getDefinedTable(Administration\DistrictTable::class)->get(array('status'=>'1')),	
+			'locations'		=> $this->getDefinedTable(Administration\LocationTable::class)->get($location_id),
 		));		 
 		$ViewModel->setTerminal(True);
 		return $ViewModel;	
@@ -482,7 +484,7 @@ class MasterController extends AbstractActionController
 	{
 		$this->init();
 		$id = $this->_id;
-		$array_id = explode("_", $id);
+		$array_id = explode("_", (string) $id);
 		$department_id = $array_id[0];
 		$page = (sizeof($array_id)>1)?$array_id[1]:'';
 		if($this->getRequest()->isPost()){
@@ -504,9 +506,9 @@ class MasterController extends AbstractActionController
 			return $this->redirect()->toRoute('setmaster/paginator',array('action'=>'department','page'=>$this->_id, 'id'=>'0'));
 		}
 		$ViewModel = new ViewModel(array(
-				'title'         => 'Edit Department',
-				'page'          => $page,
-				'departments'   => $this->getDefinedTable(Administration\DepartmentTable::class)->get($department_id),
+			'title'         => 'Edit Department',
+			'page'          => $page,
+			'departments'   => $this->getDefinedTable(Administration\DepartmentTable::class)->get($department_id),
 		));		 
 		$ViewModel->setTerminal(True);
 		return $ViewModel;
@@ -576,7 +578,7 @@ class MasterController extends AbstractActionController
 	{
 		$this->init();
 		$id = $this->_id;
-		$array_id = explode("_", $id);
+		$array_id = explode("_", (string) $id);
 		$activity_id = $array_id[0];
 		$page = (sizeof($array_id)>1)?$array_id[1]:'';
 		if($this->getRequest()->isPost()){
@@ -599,10 +601,10 @@ class MasterController extends AbstractActionController
 			return $this->redirect()->toRoute('setmaster/paginator',array('action'=>'activity','page'=>$this->_id, 'id'=>$form['department']));
 		}
 		$ViewModel = new ViewModel(array(
-				'title'         => 'Edit Activity',
-				'page'          => $page,
-				'departments'   => $this->getDefinedTable(Administration\DepartmentTable::class)->get(array('status'=>'1')),
-				'activities'    => $this->getDefinedTable(Administration\ActivityTable::class)->get($activity_id),
+			'title'         => 'Edit Activity',
+			'page'          => $page,
+			'departments'   => $this->getDefinedTable(Administration\DepartmentTable::class)->get(array('status'=>'1')),
+			'activities'    => $this->getDefinedTable(Administration\ActivityTable::class)->get($activity_id),
 		));		 
 		$ViewModel->setTerminal(True);
 		return $ViewModel;
@@ -613,6 +615,118 @@ class MasterController extends AbstractActionController
 	public function sectionAction()
 	{
 		$this->init();
+		if ($this->_id === 'branding') {
+			$settingTable = $this->getDefinedTable(Administration\AppSettingTable::class);
+			$current = $settingTable->getSettings();
+
+			if ($this->getRequest()->isPost()) {
+				$form = $this->getRequest()->getPost();
+				$files = $this->getRequest()->getFiles()->toArray();
+
+				$appName = trim((string) ($form['app_name'] ?? ''));
+				$appTemplate = trim((string) ($form['app_template'] ?? 'ace'));
+				if ($appTemplate === 'default') {
+					$appTemplate = 'ace';
+				} elseif ($appTemplate === 'ocean') {
+					$appTemplate = 'ace-skin-1';
+				} elseif ($appTemplate === 'sunset') {
+					$appTemplate = 'ace-skin-2';
+				}
+				$appLogo = (string) ($current['app_logo'] ?? 'images/logo.png');
+				$mailFromEmail = trim((string) ($form['mail_from_email'] ?? ($current['mail_from_email'] ?? '')));
+				$mailFromName = trim((string) ($form['mail_from_name'] ?? ($current['mail_from_name'] ?? '')));
+				$smtpHost = trim((string) ($form['smtp_host'] ?? ($current['smtp_host'] ?? '')));
+				$smtpPort = (int) ($form['smtp_port'] ?? ($current['smtp_port'] ?? 587));
+				$smtpEncryption = strtolower(trim((string) ($form['smtp_encryption'] ?? ($current['smtp_encryption'] ?? 'tls'))));
+				$smtpUsername = trim((string) ($form['smtp_username'] ?? ($current['smtp_username'] ?? '')));
+				$smtpPasswordInput = (string) ($form['smtp_password'] ?? '');
+				$smtpPassword = ($smtpPasswordInput !== '') ? $smtpPasswordInput : (string) ($current['smtp_password'] ?? '');
+				$supportEmail = trim((string) ($form['support_email'] ?? ($current['support_email'] ?? '')));
+				$supportPhone = trim((string) ($form['support_phone'] ?? ($current['support_phone'] ?? '')));
+
+				if ($appName === '') {
+					$appName = 'Monal-ERP';
+				}
+
+				$validTemplates = ['ace', 'ace-skin-1', 'ace-skin-2', 'ace-skin-3'];
+				if (!in_array($appTemplate, $validTemplates, true)) {
+					$appTemplate = 'ace';
+				}
+
+				$validEncryptions = ['none', 'ssl', 'tls'];
+				if (!in_array($smtpEncryption, $validEncryptions, true)) {
+					$smtpEncryption = 'tls';
+				}
+				if ($smtpPort <= 0 || $smtpPort > 65535) {
+					$smtpPort = 587;
+				}
+				if ($supportEmail !== '' && filter_var($supportEmail, FILTER_VALIDATE_EMAIL) === false) {
+					$supportEmail = '';
+				}
+
+				if (!empty($files['app_logo']) && (int) ($files['app_logo']['error'] ?? 4) === 0) {
+					$file = $files['app_logo'];
+					$ext = strtolower((string) pathinfo((string) $file['name'], PATHINFO_EXTENSION));
+					$allowed = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
+
+					if (!in_array($ext, $allowed, true)) {
+						$this->flashMessenger()->addMessage('error^ Invalid logo format. Allowed: jpg, jpeg, png, gif, webp.');
+						return $this->redirect()->toRoute('setmaster', ['action' => 'section', 'id' => 'branding']);
+					}
+
+					$uploadRoot = realpath('public');
+					if ($uploadRoot === false) {
+						$this->flashMessenger()->addMessage('error^ Upload directory not found.');
+						return $this->redirect()->toRoute('setmaster', ['action' => 'section', 'id' => 'branding']);
+					}
+
+					$logoDir = $uploadRoot . DIRECTORY_SEPARATOR . 'uploads' . DIRECTORY_SEPARATOR . 'branding';
+					if (!is_dir($logoDir)) {
+						mkdir($logoDir, 0755, true);
+					}
+
+					$fileName = 'brand_logo_' . date('YmdHis') . '_' . rand(1000, 9999) . '.' . $ext;
+					$target = $logoDir . DIRECTORY_SEPARATOR . $fileName;
+
+					if (!move_uploaded_file((string) $file['tmp_name'], $target)) {
+						$this->flashMessenger()->addMessage('error^ Failed to upload logo.');
+						return $this->redirect()->toRoute('setmaster', ['action' => 'section', 'id' => 'branding']);
+					}
+
+					$appLogo = 'uploads/branding/' . $fileName;
+				}
+
+				$data = [
+					'app_name' => $appName,
+					'app_logo' => $appLogo,
+					'app_template' => $appTemplate,
+					'mail_from_email' => $mailFromEmail,
+					'mail_from_name' => $mailFromName,
+					'smtp_host' => $smtpHost,
+					'smtp_port' => $smtpPort,
+					'smtp_encryption' => $smtpEncryption,
+					'smtp_username' => $smtpUsername,
+					'smtp_password' => $smtpPassword,
+					'support_email' => $supportEmail,
+					'support_phone' => $supportPhone,
+					'author' => $this->_author,
+					'created' => $current['created'] ?? $this->_created,
+					'modified' => $this->_modified,
+				];
+
+				$settingTable->saveSettings($data);
+				$this->flashMessenger()->addMessage('success^ Branding settings updated successfully.');
+				return $this->redirect()->toRoute('setmaster', ['action' => 'section', 'id' => 'branding']);
+			}
+
+			$viewModel = new ViewModel([
+				'title' => 'Application Settings',
+				'settings' => $current,
+			]);
+			$viewModel->setTemplate('administration/master/section-branding');
+			return $viewModel;
+		}
+
 		$division_id = (isset($this->_id))? $this->_id:'-1';
 		$sectionTable = $this->getDefinedTable(Administration\SectionTable::class)->getColumnValue('division',$division_id);
 		$paginator = new \Laminas\Paginator\Paginator(new \Laminas\Paginator\Adapter\ArrayAdapter($sectionTable));
@@ -672,7 +786,7 @@ class MasterController extends AbstractActionController
 	{
 		$this->init();
 		$id = $this->_id;
-		$array_id = explode("_", $id);
+		$array_id = explode("_", (string) $id);
 		$activity_id = $array_id[0];
 		$page = (sizeof($array_id)>1)?$array_id[1]:'';
 		if($this->getRequest()->isPost()){
@@ -696,10 +810,10 @@ class MasterController extends AbstractActionController
 			return $this->redirect()->toRoute('setmaster/paginator',array('action'=>'section','page'=>$this->_id, 'id'=>$form['division']));
 		}
 		$ViewModel = new ViewModel(array(
-				'title'         => 'Edit section',
-				'page'          => $page,
-				'division'   => $this->getDefinedTable(Administration\ActivityTable::class)->get(array('status'=>'1')),
-				'activities'    => $this->getDefinedTable(Administration\SectionTable::class)->get($activity_id),
+			'title'         => 'Edit section',
+			'page'          => $page,
+			'division'   => $this->getDefinedTable(Administration\ActivityTable::class)->get(array('status'=>'1')),
+			'activities'    => $this->getDefinedTable(Administration\SectionTable::class)->get($activity_id),
 		));		 
 		$ViewModel->setTerminal(True);
 		return $ViewModel;

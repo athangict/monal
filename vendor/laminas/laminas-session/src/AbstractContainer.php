@@ -3,7 +3,6 @@
 namespace Laminas\Session;
 
 use ArrayIterator;
-use Iterator;
 use Laminas\Session\ManagerInterface as Manager;
 use Laminas\Session\Storage\StorageInterface as Storage;
 use Laminas\Stdlib\ArrayObject;
@@ -26,6 +25,10 @@ use function time;
  * may have their own expiries, or even expiries per key in the container.
  * Additionally, expiries may be absolute TTLs or measured in "hops", which
  * are based on how many times the key or container were accessed.
+ *
+ * @template TKey of string
+ * @template TValue
+ * @template-extends ArrayObject<TKey, TValue>
  */
 abstract class AbstractContainer extends ArrayObject
 {
@@ -138,11 +141,6 @@ abstract class AbstractContainer extends ArrayObject
     {
         if (null === $manager) {
             $manager = static::getDefaultManager();
-            if (! $manager instanceof Manager) {
-                throw new Exception\InvalidArgumentException(
-                    'Manager provided is invalid; must implement ManagerInterface'
-                );
-            }
         }
         $this->manager = $manager;
 
@@ -389,16 +387,16 @@ abstract class AbstractContainer extends ArrayObject
     /**
      * Store a value within the container
      *
-     * @param  string $key
+     * @param  string $offset
      * @param  mixed  $value
      * @return void
      */
-    public function offsetSet($key, $value)
+    public function offsetSet($offset, $value)
     {
-        $this->expireKeys($key);
-        $storage              = $this->verifyNamespace();
-        $name                 = $this->getName();
-        $storage[$name][$key] = $value;
+        $this->expireKeys($offset);
+        $storage                 = $this->verifyNamespace();
+        $name                    = $this->getName();
+        $storage[$name][$offset] = $value;
     }
 
     /**
@@ -438,34 +436,28 @@ abstract class AbstractContainer extends ArrayObject
         }
         $storage = $this->getStorage();
         $name    = $this->getName();
+        $ret     = &$storage[$name][$key];
 
-        return $storage[$name][$key];
+        return $ret;
     }
 
     /**
      * Unset a single key in the container
      *
-     * @param  string $key
+     * @param  string $offset
      * @return void
      */
-    public function offsetUnset($key)
+    public function offsetUnset($offset)
     {
-        if (! $this->offsetExists($key)) {
+        if (! $this->offsetExists($offset)) {
             return;
         }
         $storage = $this->getStorage();
         $name    = $this->getName();
-        unset($storage[$name][$key]);
+        unset($storage[$name][$offset]);
     }
 
-    /**
-     * Exchange the current array with another array or object.
-     *
-     * @see ArrayObject::exchangeArray()
-     *
-     * @param  array|object $input
-     * @return array        Returns the old array
-     */
+    /** @inheritDoc */
     public function exchangeArray($input)
     {
         // handle arrayobject, iterators and the like:
@@ -481,18 +473,12 @@ abstract class AbstractContainer extends ArrayObject
 
         $old            = $storage[$name];
         $storage[$name] = $input;
-        if ($old instanceof ArrayObject) {
-            return $old->getArrayCopy();
-        }
 
-        return $old;
+        /** @psalm-var array<TKey, TValue> */
+        return $old instanceof ArrayObject ? $old->getArrayCopy() : $old;
     }
 
-    /**
-     * Iterate over session container
-     *
-     * @return Iterator
-     */
+    /** @inheritDoc */
     public function getIterator()
     {
         $this->expireKeys();
@@ -532,7 +518,7 @@ abstract class AbstractContainer extends ArrayObject
             $container = $this;
 
             // Filter out any items not in our container
-            $expires = array_filter($vars, static fn($value) => $container->offsetExists($value));
+            $expires = array_filter($vars, static fn($value): bool => $container->offsetExists($value));
 
             // Map item keys => timestamp
             $expires = array_flip($expires);
@@ -567,7 +553,7 @@ abstract class AbstractContainer extends ArrayObject
         $storage = $this->getStorage();
         $ts      = $storage->getRequestAccessTime();
 
-        if (is_scalar($vars) && (null !== $vars)) {
+        if (is_scalar($vars)) {
             $vars = (array) $vars;
         }
 
@@ -579,7 +565,7 @@ abstract class AbstractContainer extends ArrayObject
             $container = $this;
 
             // FilterInterface out any items not in our container
-            $expires = array_filter($vars, static fn($value) => $container->offsetExists($value));
+            $expires = array_filter($vars, static fn($value): bool => $container->offsetExists($value));
 
             // Map item keys => timestamp
             $expires = array_flip($expires);
@@ -601,16 +587,13 @@ abstract class AbstractContainer extends ArrayObject
         return $this;
     }
 
-    /**
-     * Creates a copy of the specific container name
-     *
-     * @return array
-     */
+    /** @inheritDoc */
     public function getArrayCopy()
     {
         $storage   = $this->verifyNamespace();
         $container = $storage[$this->getName()];
 
+        /** @psalm-var array<TKey, TValue> */
         return $container instanceof ArrayObject ? $container->getArrayCopy() : $container;
     }
 }

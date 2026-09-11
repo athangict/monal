@@ -1,0 +1,6 @@
+{
+  "symbol-whitelist" : [
+    "Laminas\\I18n\\Translator\\TranslatorAwareInterface",
+    "Laminas\\I18n\\Translator\\TranslatorInterface"
+  ]
+}

@@ -6,6 +6,10 @@ This is a skeleton application using the Laminas MVC layer and module
 systems. This application is meant to be used as a starting place for those
 looking to get their feet wet with Laminas MVC.
 
+## Project Docs
+
+- Stripe integration (Accounts module): [docs/stripe-integration.md](docs/stripe-integration.md)
+
 ## Installation using Composer
 
 The easiest way to create a new Laminas MVC project is to use
@@ -80,8 +84,8 @@ control. (If you want to make the modifications permanent, edit the
 
 ## Using Vagrant
 
-This skeleton includes a `Vagrantfile` based on ubuntu 18.04 (bento box)
-with configured Apache2 and PHP 7.3. Start it up using:
+This skeleton includes a `Vagrantfile` based on ubuntu 22.04 (bento box)
+with configured Apache2 and PHP 8.4. Start it up using:
 
 ```bash
 $ vagrant up
@@ -105,7 +109,7 @@ machine; you can visit the site at http://localhost:8080/
 
 > ### Vagrant and VirtualBox
 >
-> The vagrant image is based on bento/ubuntu-18.04. If you are using VirtualBox as
+> The vagrant image is based on bento/ubuntu-22.04. If you are using VirtualBox as
 > a provider, you will need:
 >
 > - Vagrant 2.2.6 or later

@@ -25,7 +25,7 @@ class TabsHelper extends AbstractHelper
 	{  
 		$routeMatch = $this->_container->get('Application')->getMvcEvent()->getRouteMatch();
 		$routeName = $routeMatch->getMatchedRouteName();
-		$arr = explode('/', $routeName);
+		$arr = explode('/', (string) $routeName);
 		$routeName = $arr[0];
 		$routeAction = $routeMatch->getParam('action');	
 		$routeParamID = $routeMatch->getParam('id');

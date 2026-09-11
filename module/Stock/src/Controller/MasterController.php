@@ -14,6 +14,9 @@ use Administration\Model As Administration;
 
 class MasterController extends AbstractActionController
 {   
+	protected $_connection;
+	protected $_safedataObj;
+	protected $_user_loc;
 	private $_container;
 	protected $_table; 		// database table 
     protected $_user; 		// user detail

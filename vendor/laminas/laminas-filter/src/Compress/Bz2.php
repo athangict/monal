@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Laminas\Filter\Compress;
 
 use Laminas\Filter\Exception;
-use Traversable;
 
 use function bzclose;
 use function bzcompress;
@@ -16,13 +15,26 @@ use function bzwrite;
 use function extension_loaded;
 use function file_exists;
 use function is_int;
-use function strpos;
+use function str_contains;
 
 /**
  * Compression adapter for Bz2
+ *
+ * @deprecated Since 2.40.0 Compression adapters will be split into multiple interfaces to clearly separate the
+ *             capability of the underlying compression or archive format. For example, tar cannot compress strings and
+ *             GZ cannot be used to create multi-file archives.
+ *
+ * @psalm-type Options = array{
+ *     blocksize?: int,
+ *     archive?: string|null,
+ * }
+ * @extends AbstractCompressionAlgorithm<Options>
+ * @final
  */
 class Bz2 extends AbstractCompressionAlgorithm
 {
+    private const DEFAULT_BLOCK_SIZE = 4;
+
     /**
      * Compression Options
      * array(
@@ -30,15 +42,15 @@ class Bz2 extends AbstractCompressionAlgorithm
      *     'archive'   => Archive to use
      * )
      *
-     * @var array
+     * @var Options
      */
     protected $options = [
-        'blocksize' => 4,
+        'blocksize' => self::DEFAULT_BLOCK_SIZE,
         'archive'   => null,
     ];
 
     /**
-     * @param null|array|Traversable $options (Optional) Options to set
+     * @param null|Options|iterable $options (Optional) Options to set
      * @throws Exception\ExtensionNotLoadedException If bz2 extension not loaded.
      */
     public function __construct($options = null)
@@ -56,7 +68,7 @@ class Bz2 extends AbstractCompressionAlgorithm
      */
     public function getBlocksize()
     {
-        return $this->options['blocksize'];
+        return $this->options['blocksize'] ?? self::DEFAULT_BLOCK_SIZE;
     }
 
     /**
@@ -79,7 +91,7 @@ class Bz2 extends AbstractCompressionAlgorithm
     /**
      * Returns the set archive
      *
-     * @return string
+     * @return string|null
      */
     public function getArchive()
     {
@@ -108,7 +120,7 @@ class Bz2 extends AbstractCompressionAlgorithm
     public function compress($content)
     {
         $archive = $this->getArchive();
-        if (! empty($archive)) {
+        if ($archive !== null) {
             $file = bzopen($archive, 'w');
             if (! $file) {
                 throw new Exception\RuntimeException("Error opening the archive '" . $archive . "'");
@@ -140,7 +152,7 @@ class Bz2 extends AbstractCompressionAlgorithm
         $archive = $this->getArchive();
 
         //check if there are null byte characters before doing a file_exists check
-        if (null !== $content && false === strpos($content, "\0") && file_exists($content)) {
+        if (null !== $content && ! str_contains($content, "\0") && file_exists($content)) {
             $archive = $content;
         }
 

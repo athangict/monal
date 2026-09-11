@@ -12,6 +12,15 @@ use function class_exists;
 use function is_callable;
 use function is_string;
 
+/**
+ * @psalm-type Options = array{
+ *     callback?: callable,
+ *     callback_params?: array,
+ *     ...
+ * }
+ * @extends AbstractFilter<Options>
+ * @final
+ */
 class Callback extends AbstractFilter
 {
     /** @var array */
@@ -37,9 +46,11 @@ class Callback extends AbstractFilter
     /**
      * Sets a new callback for this filter
      *
+     * @deprecated since 2.37.0 - All option setters and getters will be removed in 3.0
+     *
      * @param  callable $callback
-     * @throws Exception\InvalidArgumentException
      * @return self
+     * @throws Exception\InvalidArgumentException
      */
     public function setCallback($callback)
     {
@@ -60,6 +71,8 @@ class Callback extends AbstractFilter
     /**
      * Returns the set callback
      *
+     * @deprecated since 2.37.0 - All option setters and getters will be removed in 3.0
+     *
      * @return callable
      */
     public function getCallback()
@@ -69,6 +82,8 @@ class Callback extends AbstractFilter
 
     /**
      * Sets parameters for the callback
+     *
+     * @deprecated since 2.37.0 - All option setters and getters will be removed in 3.0
      *
      * @param  array $params
      * @return self
@@ -81,6 +96,8 @@ class Callback extends AbstractFilter
 
     /**
      * Get parameters for the callback
+     *
+     * @deprecated since 2.37.0 - All option setters and getters will be removed in 3.0
      *
      * @return array
      */

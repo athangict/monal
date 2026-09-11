@@ -1,0 +1,360 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<files psalm-version="6.16.1@f1f5de594dc76faf8784e02d3dc4716c91c6f6ac">
+  <file src="src/AbstractAdapter.php">
+    <DocblockTypeContradiction>
+      <code><![CDATA[! is_array($options) && ! $options instanceof Traversable]]></code>
+    </DocblockTypeContradiction>
+    <MixedAssignment>
+      <code><![CDATA[$value]]></code>
+    </MixedAssignment>
+  </file>
+  <file src="src/AbstractWord.php">
+    <MixedArgument>
+      <code><![CDATA[$value['input']]]></code>
+    </MixedArgument>
+    <MixedAssignment>
+      <code><![CDATA[$this->id]]></code>
+      <code><![CDATA[$this->word]]></code>
+      <code><![CDATA[$value]]></code>
+    </MixedAssignment>
+    <MixedReturnStatement>
+      <code><![CDATA[$this->word]]></code>
+      <code><![CDATA[$this->word]]></code>
+    </MixedReturnStatement>
+    <PossiblyUnusedMethod>
+      <code><![CDATA[getSessionClass]]></code>
+      <code><![CDATA[getUseNumbers]]></code>
+      <code><![CDATA[setKeepSession]]></code>
+      <code><![CDATA[setSessionClass]]></code>
+    </PossiblyUnusedMethod>
+    <PropertyTypeCoercion>
+      <code><![CDATA[$sessionClass]]></code>
+    </PropertyTypeCoercion>
+    <RedundantCastGivenDocblockType>
+      <code><![CDATA[(int) $ttl]]></code>
+    </RedundantCastGivenDocblockType>
+    <RiskyTruthyFalsyComparison>
+      <code><![CDATA[empty($this->word)]]></code>
+    </RiskyTruthyFalsyComparison>
+    <UnsafeInstantiation>
+      <code><![CDATA[new $this->sessionClass('Laminas_Form_Captcha_' . $id)]]></code>
+    </UnsafeInstantiation>
+  </file>
+  <file src="src/Dumb.php">
+    <PropertyNotSetInConstructor>
+      <code><![CDATA[Dumb]]></code>
+    </PropertyNotSetInConstructor>
+  </file>
+  <file src="src/Factory.php">
+    <DeprecatedClass>
+      <code><![CDATA[Figlet::class]]></code>
+    </DeprecatedClass>
+    <DocblockTypeContradiction>
+      <code><![CDATA[is_array($options)]]></code>
+    </DocblockTypeContradiction>
+    <MixedArgument>
+      <code><![CDATA[$class]]></code>
+      <code><![CDATA[$class]]></code>
+      <code><![CDATA[$class]]></code>
+      <code><![CDATA[$class]]></code>
+    </MixedArgument>
+    <MixedAssignment>
+      <code><![CDATA[$class]]></code>
+      <code><![CDATA[$options]]></code>
+    </MixedAssignment>
+    <MixedMethodCall>
+      <code><![CDATA[new $class($options)]]></code>
+    </MixedMethodCall>
+  </file>
+  <file src="src/Figlet.php">
+    <PossiblyUnusedMethod>
+      <code><![CDATA[getFiglet]]></code>
+    </PossiblyUnusedMethod>
+    <PropertyNotSetInConstructor>
+      <code><![CDATA[Figlet]]></code>
+    </PropertyNotSetInConstructor>
+  </file>
+  <file src="src/Image.php">
+    <InvalidOperand>
+      <code><![CDATA[$color * $fracX1]]></code>
+      <code><![CDATA[$colorX * $fracX]]></code>
+      <code><![CDATA[$colorXy * $fracX]]></code>
+      <code><![CDATA[$colorY * $fracX1]]></code>
+      <code><![CDATA[$sx - floor($sx)]]></code>
+      <code><![CDATA[$sy - floor($sy)]]></code>
+      <code><![CDATA[$x * $freq1]]></code>
+      <code><![CDATA[$x * $freq2]]></code>
+      <code><![CDATA[$x + (sin($x * $freq1 + $ph1) + sin($y * $freq3 + $ph3)) * $szx]]></code>
+      <code><![CDATA[$y * $freq3]]></code>
+      <code><![CDATA[$y * $freq4]]></code>
+      <code><![CDATA[$y + (sin($x * $freq2 + $ph2) + sin($y * $freq4 + $ph4)) * $szy]]></code>
+      <code><![CDATA[(sin($x * $freq1 + $ph1) + sin($y * $freq3 + $ph3)) * $szx]]></code>
+      <code><![CDATA[(sin($x * $freq2 + $ph2) + sin($y * $freq4 + $ph4)) * $szy]]></code>
+      <code><![CDATA[1 - $fracX]]></code>
+      <code><![CDATA[1 - $fracY]]></code>
+    </InvalidOperand>
+    <MixedAssignment>
+      <code><![CDATA[$x]]></code>
+      <code><![CDATA[$y]]></code>
+    </MixedAssignment>
+    <MixedOperand>
+      <code><![CDATA[$h - ($textbox[7] - $textbox[1])]]></code>
+      <code><![CDATA[$textbox[2]]]></code>
+      <code><![CDATA[$textbox[2] - $textbox[0]]]></code>
+      <code><![CDATA[$textbox[7]]]></code>
+      <code><![CDATA[$textbox[7] - $textbox[1]]]></code>
+      <code><![CDATA[$w - ($textbox[2] - $textbox[0])]]></code>
+    </MixedOperand>
+    <PossiblyFalseArgument>
+      <code><![CDATA[$bgColor]]></code>
+      <code><![CDATA[$bgColor]]></code>
+      <code><![CDATA[$img]]></code>
+      <code><![CDATA[$img]]></code>
+      <code><![CDATA[$img]]></code>
+      <code><![CDATA[$img]]></code>
+      <code><![CDATA[$img]]></code>
+      <code><![CDATA[$img]]></code>
+      <code><![CDATA[$img]]></code>
+      <code><![CDATA[$img]]></code>
+      <code><![CDATA[$img]]></code>
+      <code><![CDATA[$img]]></code>
+      <code><![CDATA[$img2]]></code>
+      <code><![CDATA[$img2]]></code>
+      <code><![CDATA[$img2]]></code>
+      <code><![CDATA[$img2]]></code>
+      <code><![CDATA[$img2]]></code>
+      <code><![CDATA[$img2]]></code>
+      <code><![CDATA[$img2]]></code>
+      <code><![CDATA[$textColor]]></code>
+      <code><![CDATA[$textColor]]></code>
+      <code><![CDATA[$textColor]]></code>
+      <code><![CDATA[$textColor]]></code>
+      <code><![CDATA[$textColor]]></code>
+      <code><![CDATA[imagecolorallocate(
+                    $img2,
+                    (int) $newcolor,
+                    (int) $newcolor,
+                    (int) $newcolor
+                )]]></code>
+    </PossiblyFalseArgument>
+    <PossiblyFalseOperand>
+      <code><![CDATA[imagecolorat($img, $sx + 1, $sy + 1)]]></code>
+      <code><![CDATA[imagecolorat($img, $sx + 1, $sy)]]></code>
+      <code><![CDATA[imagecolorat($img, $sx, $sy + 1)]]></code>
+      <code><![CDATA[imagecolorat($img, $sx, $sy)]]></code>
+    </PossiblyFalseOperand>
+    <PossiblyInvalidArrayAccess>
+      <code><![CDATA[$textbox[0]]]></code>
+      <code><![CDATA[$textbox[1]]]></code>
+      <code><![CDATA[$textbox[2]]]></code>
+      <code><![CDATA[$textbox[7]]]></code>
+    </PossiblyInvalidArrayAccess>
+    <PossiblyUnusedMethod>
+      <code><![CDATA[getDotNoiseLevel]]></code>
+      <code><![CDATA[getImgAlt]]></code>
+      <code><![CDATA[getLineNoiseLevel]]></code>
+      <code><![CDATA[getStartImage]]></code>
+      <code><![CDATA[setDotNoiseLevel]]></code>
+      <code><![CDATA[setFont]]></code>
+      <code><![CDATA[setFontSize]]></code>
+      <code><![CDATA[setHeight]]></code>
+      <code><![CDATA[setImgAlt]]></code>
+      <code><![CDATA[setImgDir]]></code>
+      <code><![CDATA[setLineNoiseLevel]]></code>
+      <code><![CDATA[setStartImage]]></code>
+      <code><![CDATA[setWidth]]></code>
+    </PossiblyUnusedMethod>
+    <PropertyNotSetInConstructor>
+      <code><![CDATA[$font]]></code>
+      <code><![CDATA[$startImage]]></code>
+      <code><![CDATA[Image]]></code>
+    </PropertyNotSetInConstructor>
+  </file>
+  <file src="src/ReCaptcha.php">
+    <ImpureMethodCall>
+      <code><![CDATA[__construct]]></code>
+    </ImpureMethodCall>
+    <MixedArgument>
+      <code><![CDATA[$context]]></code>
+      <code><![CDATA[$context[$value]]]></code>
+      <code><![CDATA[$options['pubKey']]]></code>
+      <code><![CDATA[$options['site_key']]]></code>
+      <code><![CDATA[$value]]></code>
+    </MixedArgument>
+    <PossiblyNullArgument>
+      <code><![CDATA[$context]]></code>
+    </PossiblyNullArgument>
+    <PossiblyUnusedReturnValue>
+      <code><![CDATA[$this]]></code>
+      <code><![CDATA[ReCaptcha]]></code>
+    </PossiblyUnusedReturnValue>
+    <PropertyNotSetInConstructor>
+      <code><![CDATA[ReCaptcha]]></code>
+    </PropertyNotSetInConstructor>
+    <RiskyTruthyFalsyComparison>
+      <code><![CDATA[empty($options)]]></code>
+    </RiskyTruthyFalsyComparison>
+  </file>
+  <file src="test/CommonWordTest.php">
+    <InvalidStringClass>
+      <code><![CDATA[new $this->wordClass()]]></code>
+      <code><![CDATA[new $this->wordClass()]]></code>
+    </InvalidStringClass>
+    <MixedMethodCall>
+      <code><![CDATA[getMessages]]></code>
+      <code><![CDATA[getSession]]></code>
+      <code><![CDATA[isValid]]></code>
+      <code><![CDATA[setSessionClass]]></code>
+    </MixedMethodCall>
+  </file>
+  <file src="test/DumbTest.php">
+    <UndefinedThisPropertyFetch>
+      <code><![CDATA[$this->word]]></code>
+    </UndefinedThisPropertyFetch>
+  </file>
+  <file src="test/FactoryTest.php">
+    <DeprecatedClass>
+      <code><![CDATA[Figlet::class]]></code>
+      <code><![CDATA[Figlet::class]]></code>
+      <code><![CDATA[Figlet::class]]></code>
+    </DeprecatedClass>
+    <DocblockTypeContradiction>
+      <code><![CDATA[null === $this->tmpDir]]></code>
+    </DocblockTypeContradiction>
+    <MissingConstructor>
+      <code><![CDATA[$testDir]]></code>
+      <code><![CDATA[$tmpDir]]></code>
+    </MissingConstructor>
+    <NoInterfaceProperties>
+      <code><![CDATA[$captcha->options]]></code>
+    </NoInterfaceProperties>
+    <RedundantConditionGivenDocblockType>
+      <code><![CDATA[null !== $this->testDir]]></code>
+    </RedundantConditionGivenDocblockType>
+    <RiskyTruthyFalsyComparison>
+      <code><![CDATA[! getenv('TESTS_LAMINAS_CAPTCHA_RECAPTCHA_SUPPORT')]]></code>
+      <code><![CDATA[! getenv('TESTS_LAMINAS_CAPTCHA_RECAPTCHA_SUPPORT')]]></code>
+    </RiskyTruthyFalsyComparison>
+  </file>
+  <file src="test/FigletTest.php">
+    <DeprecatedClass>
+      <code><![CDATA[FigletCaptcha]]></code>
+      <code><![CDATA[FigletCaptcha::class]]></code>
+      <code><![CDATA[new FigletCaptcha($config)]]></code>
+      <code><![CDATA[new FigletCaptcha([
+            'sessionClass' => \LaminasTest\Captcha\TestAsset\SessionContainer::class,
+        ])]]></code>
+    </DeprecatedClass>
+    <MixedMethodCall>
+      <code><![CDATA[setTimeout]]></code>
+      <code><![CDATA[setTimeout]]></code>
+    </MixedMethodCall>
+    <RedundantConditionGivenDocblockType>
+      <code><![CDATA[assertIsInt]]></code>
+      <code><![CDATA[assertIsString]]></code>
+      <code><![CDATA[assertIsString]]></code>
+      <code><![CDATA[assertIsString]]></code>
+    </RedundantConditionGivenDocblockType>
+    <UndefinedMethod>
+      <code><![CDATA[setWordLen]]></code>
+      <code><![CDATA[setWordLen]]></code>
+      <code><![CDATA[setWordLen]]></code>
+    </UndefinedMethod>
+    <UndefinedThisPropertyAssignment>
+      <code><![CDATA[$this->id]]></code>
+      <code><![CDATA[$this->word]]></code>
+      <code><![CDATA[$this->word]]></code>
+    </UndefinedThisPropertyAssignment>
+    <UndefinedThisPropertyFetch>
+      <code><![CDATA[$this->word]]></code>
+    </UndefinedThisPropertyFetch>
+  </file>
+  <file src="test/ImageTest.php">
+    <DocblockTypeContradiction>
+      <code><![CDATA[null === $this->tmpDir]]></code>
+    </DocblockTypeContradiction>
+    <RedundantConditionGivenDocblockType>
+      <code><![CDATA[assertIsString]]></code>
+      <code><![CDATA[assertIsString]]></code>
+      <code><![CDATA[assertIsString]]></code>
+    </RedundantConditionGivenDocblockType>
+    <RiskyTruthyFalsyComparison>
+      <code><![CDATA[! getenv('TESTS_LAMINAS_CAPTCHA_GC')]]></code>
+    </RiskyTruthyFalsyComparison>
+    <UndefinedDocblockClass>
+      <code><![CDATA[RuntimeException]]></code>
+    </UndefinedDocblockClass>
+    <UndefinedThisPropertyAssignment>
+      <code><![CDATA[$this->id]]></code>
+      <code><![CDATA[$this->word]]></code>
+      <code><![CDATA[$this->word]]></code>
+    </UndefinedThisPropertyAssignment>
+    <UndefinedThisPropertyFetch>
+      <code><![CDATA[$this->word]]></code>
+    </UndefinedThisPropertyFetch>
+  </file>
+  <file src="test/ReCaptchaTest.php">
+    <DeprecatedMethod>
+      <code><![CDATA[getPrivKey]]></code>
+      <code><![CDATA[getPubKey]]></code>
+      <code><![CDATA[setPrivKey]]></code>
+      <code><![CDATA[setPubKey]]></code>
+    </DeprecatedMethod>
+    <RiskyTruthyFalsyComparison>
+      <code><![CDATA[! getenv('TESTS_LAMINAS_CAPTCHA_RECAPTCHA_SUPPORT')]]></code>
+    </RiskyTruthyFalsyComparison>
+  </file>
+  <file src="test/TestAsset/MockCaptcha.php">
+    <MissingParamType>
+      <code><![CDATA[$options]]></code>
+    </MissingParamType>
+    <PossiblyUnusedMethod>
+      <code><![CDATA[__construct]]></code>
+    </PossiblyUnusedMethod>
+    <PossiblyUnusedProperty>
+      <code><![CDATA[$options]]></code>
+    </PossiblyUnusedProperty>
+    <RiskyTruthyFalsyComparison>
+      <code><![CDATA[$this->name]]></code>
+    </RiskyTruthyFalsyComparison>
+  </file>
+  <file src="test/TestAsset/SessionContainer.php">
+    <MissingParamType>
+      <code><![CDATA[$hops]]></code>
+      <code><![CDATA[$name]]></code>
+      <code><![CDATA[$name]]></code>
+      <code><![CDATA[$name]]></code>
+      <code><![CDATA[$namespace]]></code>
+      <code><![CDATA[$seconds]]></code>
+      <code><![CDATA[$value]]></code>
+    </MissingParamType>
+    <MissingPropertyType>
+      <code><![CDATA[$data]]></code>
+      <code><![CDATA[$word]]></code>
+    </MissingPropertyType>
+    <MixedArrayAccess>
+      <code><![CDATA[$this->data[$name]]]></code>
+    </MixedArrayAccess>
+    <MixedArrayAssignment>
+      <code><![CDATA[$this->data[$name]]]></code>
+      <code><![CDATA[$this->data['setExpirationHops']]]></code>
+      <code><![CDATA[$this->data['setExpirationSeconds']]]></code>
+    </MixedArrayAssignment>
+    <MixedArrayOffset>
+      <code><![CDATA[$this->data[$name]]]></code>
+      <code><![CDATA[$this->data[$name]]]></code>
+    </MixedArrayOffset>
+    <MixedAssignment>
+      <code><![CDATA[static::$word]]></code>
+    </MixedAssignment>
+    <PossiblyUnusedMethod>
+      <code><![CDATA[__get]]></code>
+      <code><![CDATA[__set]]></code>
+      <code><![CDATA[setExpirationHops]]></code>
+      <code><![CDATA[setExpirationSeconds]]></code>
+    </PossiblyUnusedMethod>
+    <UnusedParam>
+      <code><![CDATA[$namespace]]></code>
+    </UnusedParam>
+  </file>
+</files>

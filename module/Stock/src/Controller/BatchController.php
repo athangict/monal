@@ -16,6 +16,7 @@ use Purchase\Model As Purchase;
 use Accounts\Model As Accounts;
 class BatchController extends AbstractActionController
 {   
+	protected $_userloc;
 	private $_container;
 	protected $_table; 		// database table 
     protected $_user; 		// user detail

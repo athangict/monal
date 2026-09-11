@@ -1,0 +1,30 @@
+<?php
+
+declare(strict_types=1);
+
+namespace LaminasTest\Form\TestAsset;
+
+use Laminas\Filter\StringTrim;
+use Laminas\Form\Element;
+use Laminas\I18n\Validator\Alnum;
+use Laminas\InputFilter\InputProviderInterface;
+use Laminas\Validator\NotEmpty;
+
+final class ElementWithFilter extends Element implements InputProviderInterface
+{
+    /** @inheritDoc */
+    public function getInputSpecification()
+    {
+        return [
+            'name'       => (string) $this->getName(),
+            'required'   => true,
+            'filters'    => [
+                ['name' => StringTrim::class],
+            ],
+            'validators' => [
+                ['name' => NotEmpty::class],
+                ['name' => Alnum::class],
+            ],
+        ];
+    }
+}

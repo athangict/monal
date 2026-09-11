@@ -19,13 +19,6 @@ use function sprintf;
 abstract class AbstractHttpControllerTestCase extends AbstractControllerTestCase
 {
     /**
-     * HTTP controller must not use the console request
-     *
-     * @var bool
-     */
-    protected $useConsoleRequest = false;
-
-    /**
      * XPath namespaces
      *
      * @var array<string,string>
@@ -40,9 +33,7 @@ abstract class AbstractHttpControllerTestCase extends AbstractControllerTestCase
      */
     protected function getResponseHeader($header)
     {
-        $response = $this->getResponse();
-        $headers  = $response->getHeaders();
-        return $headers->get($header, false);
+        return $this->getResponse()->getHeaders()->get($header);
     }
 
     /**
@@ -492,7 +483,7 @@ abstract class AbstractHttpControllerTestCase extends AbstractControllerTestCase
     private function queryAssertion($path, $useXpath = false): void
     {
         $match = $this->queryCountOrxpathQueryCount($path, $useXpath);
-        if (! $match > 0) {
+        if ($match <= 0) {
             throw new ExpectationFailedException($this->createFailureMessage(sprintf(
                 'Failed asserting node DENOTED BY %s EXISTS',
                 $path
@@ -878,7 +869,7 @@ abstract class AbstractHttpControllerTestCase extends AbstractControllerTestCase
 
         foreach ($result as $node) {
             $nodeValues[] = $node->nodeValue;
-            if (preg_match($pattern, $node->nodeValue)) {
+            if (preg_match($pattern, (string) $node->nodeValue)) {
                 $found = true;
                 break;
             }

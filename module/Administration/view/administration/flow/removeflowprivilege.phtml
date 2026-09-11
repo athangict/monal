@@ -35,7 +35,7 @@
 								</tr>
 								<tr>
 									<th>Actions</th>
-									<td><?php $btn_array = explode("|", $row['action']);
+									<td><?php $btn_array = explode("|", (string) $row['action']);
 										for($j=0;$j<sizeof($btn_array);$j++):
 											echo '"'.$this->actionObj->getColumn($btn_array[$j],'action').'"';
 											echo ($j != sizeof($btn_array)-1)?" | ":"";

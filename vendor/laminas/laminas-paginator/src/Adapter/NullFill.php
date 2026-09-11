@@ -7,30 +7,25 @@ namespace Laminas\Paginator\Adapter;
 use ReturnTypeWillChange;
 
 use function array_fill;
+use function min;
 
+/**
+ * @implements AdapterInterface<int, null>
+ *     @final
+ */
 class NullFill implements AdapterInterface
 {
     /**
-     * Item count
-     *
-     * @var int
-     */
-    protected $count;
-
-    /**
      * @param int $count Total item count (Optional)
      */
-    public function __construct($count = 0)
+    public function __construct(protected $count = 0)
     {
-        $this->count = $count;
     }
 
     /**
      * Returns an array of items for a page.
      *
-     * @param  int $offset Page offset
-     * @param  int $itemCountPerPage Number of items per page
-     * @return array
+     * @inheritDoc
      */
     public function getItems($offset, $itemCountPerPage)
     {
@@ -40,7 +35,7 @@ class NullFill implements AdapterInterface
         }
 
         $remainItemCount  = $count - $offset;
-        $currentItemCount = $remainItemCount > $itemCountPerPage ? $itemCountPerPage : $remainItemCount;
+        $currentItemCount = min($remainItemCount, $itemCountPerPage);
 
         return array_fill(0, $currentItemCount, null);
     }

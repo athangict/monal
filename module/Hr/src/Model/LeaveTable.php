@@ -444,7 +444,7 @@ public function getDashLeave($where = NULL)
 	 * @param String $column
 	 * @return Array | Int
 	 */
-	public function getPendingLeave($column, $where = NULL,$user){
+	public function getPendingLeave($column, $where, $user){
 	 $adapter = $this->adapter;
     $sql = new Sql($adapter);
 
@@ -480,7 +480,7 @@ public function getDashLeave($where = NULL)
 	 * @param String $column
 	 * @return Array | Int
 	 */
-	public function getActionByMe($where = NULL,$user)
+	public function getActionByMe($where, $user)
 	{
 		$adapter = $this->adapter;
 		$sql = new Sql($adapter);

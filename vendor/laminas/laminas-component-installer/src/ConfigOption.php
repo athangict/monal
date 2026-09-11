@@ -4,35 +4,29 @@ declare(strict_types=1);
 
 namespace Laminas\ComponentInstaller;
 
-class ConfigOption
+use Laminas\ComponentInstaller\Injector\InjectorInterface;
+
+/**
+ * @internal
+ */
+final class ConfigOption
 {
-    /** @var Injector\InjectorInterface */
-    private $injector;
-
-    /** @var string */
-    private $promptText;
-
     /**
-     * @param string $promptText
+     * @param non-empty-string $promptText
      */
-    public function __construct($promptText, Injector\InjectorInterface $injector)
+    public function __construct(private readonly string $promptText, private readonly InjectorInterface $injector)
     {
-        $this->promptText = $promptText;
-        $this->injector   = $injector;
     }
 
     /**
-     * @return string
+     * @return non-empty-string
      */
-    public function getPromptText()
+    public function getPromptText(): string
     {
         return $this->promptText;
     }
 
-    /**
-     * @return Injector\InjectorInterface
-     */
-    public function getInjector()
+    public function getInjector(): InjectorInterface
     {
         return $this->injector;
     }

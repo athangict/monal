@@ -13,6 +13,11 @@ use Laminas\View\ViewEvent;
 
 use function is_string;
 
+/**
+ * @deprecated Since 2.40.0 - Laminas\Feed related code will be removed in 3.0 and replaced by a standalone library
+ *
+ * @final
+ */
 class FeedStrategy extends AbstractListenerAggregate
 {
     /** @var FeedRenderer */

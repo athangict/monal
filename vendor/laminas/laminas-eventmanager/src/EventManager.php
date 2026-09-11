@@ -7,9 +7,8 @@ use ArrayObject;
 use function array_keys;
 use function array_merge;
 use function array_unique;
-use function get_class;
-use function gettype;
-use function is_object;
+use function get_debug_type;
+use function is_callable;
 use function is_string;
 use function krsort;
 use function sprintf;
@@ -19,6 +18,8 @@ use function sprintf;
  *
  * Use the EventManager when you want to create a per-instance notification
  * system for your objects.
+ *
+ * @final This class should not be extended
  */
 class EventManager implements EventManagerInterface
 {
@@ -41,7 +42,7 @@ class EventManager implements EventManagerInterface
      * instead of first iterating over it and generating a new one
      * -> In result it improves performance by up to 25% even if it looks a bit strange
      *
-     * @var array[]
+     * @var array<string, array<int, array{0: list<callable>}>>
      */
     protected $events = [];
 
@@ -67,8 +68,6 @@ class EventManager implements EventManagerInterface
      *
      * Allows optionally specifying identifier(s) to use to pull signals from a
      * SharedEventManagerInterface.
-     *
-     * @param array $identifiers
      */
     public function __construct(?SharedEventManagerInterface $sharedEventManager = null, array $identifiers = [])
     {
@@ -137,7 +136,7 @@ class EventManager implements EventManagerInterface
             $event->setTarget($target);
         }
 
-        if ($argv) {
+        if ($argv !== []) {
             $event->setParams($argv);
         }
 
@@ -156,7 +155,7 @@ class EventManager implements EventManagerInterface
             $event->setTarget($target);
         }
 
-        if ($argv) {
+        if ($argv !== []) {
             $event->setParams($argv);
         }
 
@@ -188,7 +187,7 @@ class EventManager implements EventManagerInterface
             throw new Exception\InvalidArgumentException(sprintf(
                 '%s expects a string for the event; received %s',
                 __METHOD__,
-                is_object($eventName) ? get_class($eventName) : gettype($eventName)
+                get_debug_type($eventName),
             ));
         }
 
@@ -214,7 +213,7 @@ class EventManager implements EventManagerInterface
             throw new Exception\InvalidArgumentException(sprintf(
                 '%s expects a string for the event; received %s',
                 __METHOD__,
-                is_object($eventName) ? get_class($eventName) : gettype($eventName)
+                get_debug_type($eventName),
             ));
         }
 
@@ -262,8 +261,10 @@ class EventManager implements EventManagerInterface
      * listener. It returns an ArrayObject of the arguments, which may then be
      * passed to trigger().
      *
-     * @param  array $args
-     * @return ArrayObject
+     * @template Tk of array-key
+     * @template Tv
+     * @param  array<Tk, Tv> $args
+     * @return ArrayObject<Tk, Tv>
      */
     public function prepareArgs(array $args)
     {
@@ -281,7 +282,7 @@ class EventManager implements EventManagerInterface
     {
         $name = $event->getName();
 
-        if (empty($name)) {
+        if ($name === null || $name === '' || $name === '0') {
             throw new Exception\RuntimeException('Event is missing a name; cannot trigger!');
         }
 
@@ -327,7 +328,7 @@ class EventManager implements EventManagerInterface
 
                     // If the result causes our validation callback to return true,
                     // stop propagation
-                    if ($callback && $callback($response)) {
+                    if (is_callable($callback) && $callback($response)) {
                         $responses->setStopped(true);
                         return $responses;
                     }

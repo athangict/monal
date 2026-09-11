@@ -24,6 +24,8 @@ class Module
 
     /**
      * Register a specification for the HydratorManager with the ServiceListener.
+     *
+     * @deprecated Since 4.17.0 This method is not necessary for module manager and will be removed in 5.0
      */
     public function init(ModuleManager $moduleManager): void
     {

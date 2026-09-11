@@ -17,6 +17,8 @@ use function sprintf;
 
 /**
  * Create and return an instance of the Callback adapter.
+ *
+ * @final
  */
 class CallbackFactory implements FactoryInterface
 {
@@ -62,7 +64,6 @@ class CallbackFactory implements FactoryInterface
     /**
      * Options to use with factory (v2)
      *
-     * @param array $creationOptions
      * @return void
      */
     public function setCreationOptions(array $creationOptions)

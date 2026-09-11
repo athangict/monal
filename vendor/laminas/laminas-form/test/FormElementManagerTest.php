@@ -1,0 +1,333 @@
+<?php
+
+declare(strict_types=1);
+
+namespace LaminasTest\Form;
+
+use Laminas\Form\Element;
+use Laminas\Form\ElementFactory;
+use Laminas\Form\Exception\DomainException;
+use Laminas\Form\Exception\InvalidElementException;
+use Laminas\Form\Factory;
+use Laminas\Form\FieldsetInterface;
+use Laminas\Form\Form;
+use Laminas\Form\FormElementManager;
+use Laminas\Hydrator\HydratorInterface;
+use Laminas\Hydrator\HydratorPluginManager;
+use Laminas\ServiceManager\Exception\InvalidServiceException;
+use Laminas\ServiceManager\PluginManagerInterface;
+use Laminas\ServiceManager\ServiceManager;
+use LaminasTest\Form\TestAsset\FieldsetInterfaceImplementation;
+use LaminasTest\Form\TestAsset\InvokableForm;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\MockObject\MockObject;
+use PHPUnit\Framework\TestCase;
+use Psr\Container\ContainerInterface;
+use ReflectionProperty;
+use Throwable;
+
+use function array_pop;
+use function array_shift;
+use function assert;
+use function count;
+use function method_exists;
+
+#[Group('Laminas_Form')]
+final class FormElementManagerTest extends TestCase
+{
+    private FormElementManager $manager;
+
+    protected function setUp(): void
+    {
+        $this->manager = new FormElementManager(new ServiceManager());
+    }
+
+    public function testInjectToFormFactoryAware(): void
+    {
+        $form = $this->manager->get('Form');
+        assert($form instanceof Form);
+        self::assertSame($this->manager, $form->getFormFactory()->getFormElementManager());
+    }
+
+    #[Group('issue-3735')]
+    public function testInjectsFormElementManagerToFormComposedByFormFactoryAwareElement(): void
+    {
+        $factory = new Factory();
+        $this->manager->setFactory('my-form', static function ($elements) use ($factory): Form {
+            $form = new Form();
+            $form->setFormFactory($factory);
+            return $form;
+        });
+        $form = $this->manager->get('my-form');
+        assert($form instanceof Form);
+        self::assertSame($factory, $form->getFormFactory());
+        self::assertSame($this->manager, $form->getFormFactory()->getFormElementManager());
+    }
+
+    public function testInjectFormElementManagerToCustomFieldset(): void
+    {
+        $factory = new Factory();
+        $this->manager->setFactory('my-fieldset', static function ($elements) use ($factory): FieldsetInterface {
+            $fieldset = new FieldsetInterfaceImplementation();
+            $fieldset->setFormFactory($factory);
+            return $fieldset;
+        });
+        $fieldset = $this->manager->get('my-fieldset');
+        assert($fieldset instanceof FieldsetInterfaceImplementation);
+        self::assertSame($factory, $fieldset->getFormFactory());
+        self::assertSame($this->manager, $fieldset->getFormFactory()->getFormElementManager());
+    }
+
+    public function testRegisteringInvalidElementRaisesException(): void
+    {
+        $this->expectException($this->getInvalidServiceException());
+        /** @psalm-suppress InvalidArgument */
+        $this->manager->setService('test', $this);
+    }
+
+    public function testLoadingInvalidElementRaisesException(): void
+    {
+        $this->manager->setInvokableClass('test', self::class);
+        $this->expectException($this->getInvalidServiceException());
+        $this->manager->get('test');
+    }
+
+    /** @return class-string<Throwable> */
+    protected function getInvalidServiceException(): string
+    {
+        if (method_exists($this->manager, 'configure')) {
+            return InvalidServiceException::class;
+        }
+        return InvalidElementException::class;
+    }
+
+    public function testArrayCreationOptions(): void
+    {
+        $args    = [
+            'name'    => 'foo',
+            'options' => [
+                'label' => 'bar',
+            ],
+        ];
+        $element = $this->manager->get('element', $args);
+        self::assertEquals('foo', $element->getName(), 'Specified name in array[name]');
+        self::assertEquals('bar', $element->getLabel(), 'Specified options in array[options]');
+    }
+
+    public function testOptionsCreationOptions(): void
+    {
+        $args    = [
+            'label' => 'bar',
+        ];
+        $element = $this->manager->get('element', $args);
+        self::assertEquals('element', $element->getName(), 'Invokable CNAME');
+        self::assertEquals('bar', $element->getLabel(), 'Specified options in array');
+    }
+
+    public function testArrayOptionsCreationOptions(): void
+    {
+        $args    = [
+            'options' => [
+                'label' => 'bar',
+            ],
+        ];
+        $element = $this->manager->get('element', $args);
+        self::assertEquals('element', $element->getName(), 'Invokable CNAME');
+        self::assertEquals('bar', $element->getLabel(), 'Specified options in array[options]');
+    }
+
+    #[Group('issue-6132')]
+    public function testSharedFormElementsAreNotInitializedMultipleTimes(): void
+    {
+        $element = $this->getMockBuilder(Element::class)
+            ->onlyMethods(['init'])
+            ->getMock();
+
+        $element->expects($this->once())->method('init');
+
+        $this->manager->setFactory('sharedElement', static fn(): MockObject => $element);
+
+        $this->manager->setShared('sharedElement', true);
+
+        $this->manager->get('sharedElement');
+        $this->manager->get('sharedElement');
+    }
+
+    public function testWillInstantiateFormFromInvokable(): void
+    {
+        $form = $this->manager->get('form');
+        self::assertInstanceof(Form::class, $form);
+    }
+
+    #[Group('issue-58')]
+    #[Group('issue-64')]
+    public function testInjectFactoryInitializerShouldBeRegisteredFirst(): void
+    {
+        // @codingStandardsIgnoreStart
+        $initializers = [
+            static function () : void {
+            },
+            static function () : void {
+            },
+        ];
+        // @codingStandardsIgnoreEnd
+
+        $manager = new FormElementManager(new ServiceManager(), [
+            'initializers' => $initializers,
+        ]);
+
+        $r      = new ReflectionProperty($manager, 'initializers');
+        $actual = $r->getValue($manager);
+
+        self::assertGreaterThan(2, count($actual));
+        $first = array_shift($actual);
+        self::assertSame([$manager, 'injectFactory'], $first);
+    }
+
+    #[Group('issue-58')]
+    #[Group('issue-64')]
+    public function testCallElementInitInitializerShouldBeRegisteredLast(): void
+    {
+        // @codingStandardsIgnoreStart
+        $initializers = [
+            static function () : void {
+            },
+            static function () : void {
+            },
+        ];
+        // @codingStandardsIgnoreEnd
+
+        $manager = new FormElementManager(new ServiceManager(), [
+            'initializers' => $initializers,
+        ]);
+
+        $r      = new ReflectionProperty($manager, 'initializers');
+        $actual = $r->getValue($manager);
+
+        self::assertGreaterThan(2, count($actual));
+        $last = array_pop($actual);
+        self::assertSame([$manager, 'callElementInit'], $last);
+    }
+
+    #[Group('issue-62')]
+    public function testAddingInvokableCreatesAliasAndMapsClassToElementFactory(): void
+    {
+        $this->manager->setInvokableClass('foo', TestAsset\ElementWithFilter::class);
+
+        $r       = new ReflectionProperty($this->manager, 'aliases');
+        $aliases = $r->getValue($this->manager);
+
+        self::assertArrayHasKey('foo', $aliases);
+        self::assertEquals(TestAsset\ElementWithFilter::class, $aliases['foo']);
+
+        $r         = new ReflectionProperty($this->manager, 'factories');
+        $factories = $r->getValue($this->manager);
+
+        self::assertArrayHasKey(TestAsset\ElementWithFilter::class, $factories);
+        self::assertEquals(ElementFactory::class, $factories[TestAsset\ElementWithFilter::class]);
+    }
+
+    public function testOptionsAreSetInInvokableForm(): void
+    {
+        $options = ['foo' => 'bar'];
+
+        /** @var InvokableForm $form */
+        $form = $this->manager->get(InvokableForm::class, $options);
+
+        self::assertInstanceOf(InvokableForm::class, $form);
+        self::assertSame('invokableform', $form->getName());
+        self::assertSame('bar', $form->getOption('foo'));
+    }
+
+    public function testGetHydratorByNameMethodShouldUseHydratorManagerIfExists(): void
+    {
+        $hydrator = $this->createMock(HydratorInterface::class);
+
+        // Hydrator manager
+        $hydratorManager = $this->createMock(PluginManagerInterface::class);
+        $hydratorManager->method('has')
+            ->with('NameOfHydrator')
+            ->willReturn(true);
+        $hydratorManager->method('get')
+            ->with('NameOfHydrator')
+            ->willReturn($hydrator);
+
+        // Service container
+        $container = $this->createMock(ContainerInterface::class);
+        $container->method('has')
+            ->with(HydratorPluginManager::class)
+            ->willReturn(true);
+        $container->method('get')
+            ->with(HydratorPluginManager::class)
+            ->willReturn($hydratorManager);
+
+        $formElementManager = new FormElementManager($container);
+
+        // Test
+        self::assertSame(
+            $hydrator,
+            $formElementManager->getHydratorFromName('NameOfHydrator')
+        );
+    }
+
+    public function testGetHydratorByNameMethodShouldUseServiceManagerAsFallback(): void
+    {
+        $hydrator = $this->createMock(HydratorInterface::class);
+
+        // Service container
+        $container = $this->createMock(ContainerInterface::class);
+        $container->method('has')
+            ->willReturnMap(
+                [
+                    [
+                        'HydratorManager',
+                        false,
+                    ],
+                    [
+                        'NameOfHydrator',
+                        true,
+                    ],
+                ]
+            );
+        $container->method('get')
+            ->with('NameOfHydrator')
+            ->willReturn($hydrator);
+
+        $formElementManager = new FormElementManager($container);
+
+        // Test
+        self::assertSame(
+            $hydrator,
+            $formElementManager->getHydratorFromName('NameOfHydrator')
+        );
+    }
+
+    public function testGetHydratorByNameMethodShouldThrowExceptionForInvalidName(): void
+    {
+        // Service container
+        $container = $this->createMock(ContainerInterface::class);
+        $container->method('has')
+            ->willReturnMap(
+                [
+                    [
+                        'HydratorManager',
+                        false,
+                    ],
+                    [
+                        'NameOfHydrator',
+                        false,
+                    ],
+                ]
+            );
+
+        $formElementManager = new FormElementManager($container);
+
+        // Test
+        $this->expectException(DomainException::class);
+        $this->expectExceptionMessage(
+            'Expects string hydrator name to be a valid class name; received "NameOfHydrator"'
+        );
+
+        $formElementManager->getHydratorFromName('NameOfHydrator');
+    }
+}

@@ -7,7 +7,7 @@
 	<div class="panel panel-default">
 		<div class="panel-body">      
 		<?php   
-		    $variables = explode('-', $this->id);
+		    $variables = explode('-', (string) $this->id);
 			$applicationID = $variables['0'];
 			$action = $variables['1'];
 			if($action == '1') { $button = "Send GRN"; $label = "info"; }elseif($action=="2"){ $button = "Received GRN"; $label="success"; }

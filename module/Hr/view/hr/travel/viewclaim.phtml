@@ -178,7 +178,7 @@ $employeeUser = $this->userObj->getColumn(array('employee'=>$emp['id']), 'id');
 					<?php 
 				
 					elseif($login_id == $flow['role_id']):	
-						$actions = explode('|', $flow['action']);
+						$actions = explode('|', (string) $flow['action']);
 						for($i=0; $i < sizeof($actions); $i++):
 							$buttons = $this->flowactionObj->get($actions[$i]);
 							foreach($buttons as $button):?>

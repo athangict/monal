@@ -5,8 +5,9 @@ declare(strict_types=1);
 namespace Laminas\Router\Http;
 
 use Laminas\Router\Exception;
+use Laminas\Router\RouteInterface;
 use Laminas\Stdlib\ArrayUtils;
-use Laminas\Stdlib\RequestInterface as Request;
+use Laminas\Stdlib\RequestInterface;
 use Traversable;
 
 use function array_merge;
@@ -31,22 +32,8 @@ use function substr;
  * Misuse of this route type can lead to potential security issues.
  * Use the `Segment` route type instead.
  */
-class Wildcard implements RouteInterface
+class Wildcard implements HttpRouteInterface
 {
-    /**
-     * Delimiter between keys and values.
-     *
-     * @var string
-     */
-    protected $keyValueDelimiter;
-
-    /**
-     * Delimiter before parameters.
-     *
-     * @var string
-     */
-    protected $paramDelimiter;
-
     /**
      * Default values.
      *
@@ -66,21 +53,27 @@ class Wildcard implements RouteInterface
      *
      * @param  string $keyValueDelimiter
      * @param  string $paramDelimiter
-     * @param  array  $defaults
      */
-    public function __construct($keyValueDelimiter = '/', $paramDelimiter = '/', array $defaults = [])
-    {
-        $this->keyValueDelimiter = $keyValueDelimiter;
-        $this->paramDelimiter    = $paramDelimiter;
-        $this->defaults          = $defaults;
+    public function __construct(
+        /**
+         * Delimiter between keys and values.
+         */
+        protected $keyValueDelimiter = '/',
+        /**
+         * Delimiter before parameters.
+         */
+        protected $paramDelimiter = '/',
+        array $defaults = []
+    ) {
+        $this->defaults = $defaults;
     }
 
     /**
      * factory(): defined by RouteInterface interface.
      *
-     * @see    \Laminas\Router\RouteInterface::factory()
+     * @see    RouteInterface::factory()
      *
-     * @param  array|Traversable $options
+     * @param  iterable $options
      * @return Wildcard
      * @throws Exception\InvalidArgumentException
      */
@@ -113,12 +106,12 @@ class Wildcard implements RouteInterface
     /**
      * match(): defined by RouteInterface interface.
      *
-     * @see    \Laminas\Router\RouteInterface::match()
+     * @see    RouteInterface::match()
      *
      * @param  integer|null $pathOffset
-     * @return RouteMatch|null
+     * @return HttpRouteMatch|null
      */
-    public function match(Request $request, $pathOffset = null)
+    public function match(RequestInterface $request, $pathOffset = null)
     {
         if (! method_exists($request, 'getUri')) {
             return null;
@@ -162,16 +155,14 @@ class Wildcard implements RouteInterface
             }
         }
 
-        return new RouteMatch(array_merge($this->defaults, $matches), strlen($path));
+        return new HttpRouteMatch(array_merge($this->defaults, $matches), strlen($path));
     }
 
     /**
      * assemble(): Defined by RouteInterface interface.
      *
-     * @see    \Laminas\Router\RouteInterface::assemble()
+     * @see    RouteInterface::assemble()
      *
-     * @param  array $params
-     * @param  array $options
      * @return mixed
      */
     public function assemble(array $params = [], array $options = [])
@@ -199,9 +190,13 @@ class Wildcard implements RouteInterface
     }
 
     /**
-     * getAssembledParams(): defined by RouteInterface interface.
+     * getAssembledParams(): defined by HttpRouteInterface interface.
      *
-     * @see    RouteInterface::getAssembledParams
+     * @deprecated Since 3.19.0. This method will be removed in 4.0 and assembled parameters
+     *  will be available on the value object that will be returned from assemble().
+     *  There is not a forward compatible way to replace usage of this method.
+     *
+     * @see    HttpRouteInterface::getAssembledParams
      *
      * @return array
      */

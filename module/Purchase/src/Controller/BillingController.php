@@ -163,13 +163,21 @@ class BillingController extends AbstractActionController
 			   		'supplier'	    => $form['supplier'],	
 		   			'net_amount'    => str_replace( ",", "",$form['net']),	
 					'total'    		=> str_replace( ",", "",$form['total']),	
-					'tax'    		=> $form['tax'],
+					'sup_gst'    		=> $form['sup_gst'],
+					'sup_total'    		=> $form['sup_total'],
 					'freight'    		=> $form['freight'],
 					'freight_party'	=> $form['freight_party'],	
 					'freight_ref'	=> $form['freight_ref'],	
+					'freight_gst'	=> $form['freight_gst'],	
+					'freight_total'	=> $form['freight_total'],	
 					'tax_party'		=> $form['tax_party'],
+					'tax'    		=> $form['tax'],
 					'tax_ref'		=> $form['tax_ref'],
+					'tax_gst'		=> $form['tax_gst'],
+					'tax_total'		=> $form['tax_total'],
 			   		'discount'		=> $form['discount'],
+			   		'total_gst'		=> $form['total_gst'],
+			   		'grand_tot'		=> $form['grand_total'],
 		   			'receipt_amt'	=>str_replace( ",", "",$form['receipt_amt']) ,
 					'ref_no'        =>$form['ref_no'],
 			   		'note'			=> $form['note'],
@@ -197,7 +205,7 @@ class BillingController extends AbstractActionController
 				'partyObj'  	    	=> $this->getDefinedTable(Accounts\PartyTable::class),
 				'userID'          => $this->_author,
 				'userTable'      => $this->getDefinedTable(Administration\UsersTable::class),
-				'shead'      	=> $this->getDefinedTable(Accounts\SubheadTable::class)->get(array('head'=>[103,141,136])),
+				'shead'      	=> $this->getDefinedTable(Accounts\SubheadTable::class)->get(array('head'=>[103,141,136,144])),
 				'purreceipt' => $this->getDefinedTable(Purchase\PurchaseReceiptTable::class)->getpr(array('r.location'=>$source_locs,'r.status'=>4)),
 		));
 	}
@@ -254,7 +262,7 @@ class BillingController extends AbstractActionController
 				'partyObj'  	    	=> $this->getDefinedTable(Accounts\PartyTable::class),
 				'payment_types'   	=> $this->getDefinedTable(Purchase\PaymentTypeTable::class)->getAll(),
 				'bankaccounts'      => $this->getDefinedTable(Accounts\BankaccountTable::class)->getAll(),
-				'shead'      	=> $this->getDefinedTable(Accounts\SubheadTable::class)->get(array('head'=>[103,141,136])),
+				'shead'      	=> $this->getDefinedTable(Accounts\SubheadTable::class)->get(array('head'=>[103,141,136,144])),
 				'purreceipt' => $this->getDefinedTable(Purchase\PurchaseReceiptTable::class)->getpr(array('r.location'=>$source_locs,'r.status'=>4)),
 				
 		));
@@ -265,7 +273,7 @@ class BillingController extends AbstractActionController
 	public function viewbillingAction()
 	{
 		$this->init();
-		$params = explode("-", $this->_id);
+		$params = explode("-", (string) ($this->_id ?? ''));
 		if (isset($params['1']) && $params['1'] == '1' && isset($params['2']) && $params['2'] > 0) {
 			$flag = $this->getDefinedTable(Acl\NotifyTable::class)->getColumn($params['2'], 'flag'); 
 				if($flag == "0") {
@@ -339,7 +347,7 @@ class BillingController extends AbstractActionController
 							'doc_id'   			=>"billing",
 							'against'			=>0,
 							'voucher_no' 		=> $voucher_no,
-							'voucher_amount' 	=> str_replace( ",", "",$bill['net_amount']),
+							'voucher_amount' 	=> str_replace( ",", "",$bill['grand_tot']),
 							'status' 			=> 6, // status initiated 
 							'remark'			=> $bill['note'],
 							'author' 			=>$this->_author,
@@ -355,7 +363,7 @@ class BillingController extends AbstractActionController
 							'doc_id'   			=>"billing",
 							'voucher_no' 		=> $voucher_no,
 							'against'			=>0,
-							'voucher_amount' 	=> str_replace( ",", "",$bill['net_amount']),
+							'voucher_amount' 	=> str_replace( ",", "",$bill['grand_tot']),
 							'status' 			=> 6, // status initiated 
 							'remark'			=> $bill['note'],
 							'author' 			=>$this->_author,
@@ -407,6 +415,30 @@ class BillingController extends AbstractActionController
 						);
 						$tdetailsdata = $this->_safedataObj->rteSafe($tdetailsdata);
 						$result1 = $this->getDefinedTable(Accounts\TransactiondetailTable::class)->save($tdetailsdata);
+						if($bill['total_gst']>0){
+							$gstdata = array(
+							'transaction' => $resultt,
+							'voucher_dates' => $bill['billing_date'],
+							'voucher_types' => 11,
+							'location' => $bill['location'],
+							'head' => $this->getDefinedTable(Accounts\SubheadTable::class)->getColumn(3293,'head'),
+							'sub_head' =>3293,
+							'bank_ref_type' => '',
+							'debit' =>$bill['total_gst'],
+							'credit' =>'0.00',
+							'against' =>'0',
+							'reconcile'=>'0',
+							'ref_no'=> '', 
+							'type' => '1',//user inputted  data  
+							'status' => 6, // status appied
+							'activity'=>$bill['location'],
+							'author' =>$this->_author,
+							'created' =>$this->_created,
+							'modified' =>$this->_modified,
+						);
+						$gstdata = $this->_safedataObj->rteSafe($gstdata);
+						$gstresult = $this->getDefinedTable(Accounts\TransactiondetailTable::class)->save($gstdata);
+						}
 						$subhead = $this->getDefinedTable(Accounts\SubheadTable::class)->getColumn(array('ref_id'=>$bill['supplier'],'type'=>2),'id');
 						$head = $this->getDefinedTable(Accounts\SubheadTable::class)->getColumn(array('ref_id'=>$bill['supplier'],'type'=>2),'head');
 						$tdetailsdata = array(
@@ -419,7 +451,7 @@ class BillingController extends AbstractActionController
 							'bank_ref_type' => '',
 							'debit' =>'0.00',
 							'against' =>'0',
-							'credit' =>$bill['net_amount'],
+							'credit' =>$bill['sup_total'],
 							'ref_no'=> $bill['ref_no'],
 							'reconcile'=>'0', 
 							'type' => '1',//user inputted  data
@@ -445,7 +477,7 @@ class BillingController extends AbstractActionController
 						'debit' =>'0.00',
 						'against' =>'0',
 						'reconcile'=>'0',
-						'credit' =>$bill['freight'],
+						'credit' =>$bill['freight_total'],
 						'ref_no'=> $bill['freight_ref'], 
 						'type' => '1',//user inputted  data
 						'status' => 6, // status applied
@@ -469,7 +501,7 @@ class BillingController extends AbstractActionController
 							'debit' =>'0.00',
 							'against' =>'0',
 							'reconcile'=>'0',
-							'credit' =>$bill['tax'],
+							'credit' =>$bill['tax_total'],
 							'ref_no'=> $bill['tax_ref'], 
 							'type' => '1',//user inputted  data
 							'status' => 6, // status applied
@@ -599,7 +631,7 @@ class BillingController extends AbstractActionController
 		$this->init();	
 		$bill_no = $this->_id;
 		
-		$tranid = $this->getDefinedTable(Accounts\TransactionTable::class)->getColumn(array('remark'=>$bill_no,'doc_id'=>"billing"),'id');
+		$tranid = $this->getDefinedTable(Purchase\PaymentTable::class)->getColumn($bill_no,'transaction');
 		foreach($this->getDefinedTable(Accounts\TransactiondetailTable::class)->get(array('transaction'=>$tranid)) as $td):
 			$reult1=$this->getDefinedTable(Accounts\TransactiondetailTable::class)->remove($td['id']);
 		endforeach;

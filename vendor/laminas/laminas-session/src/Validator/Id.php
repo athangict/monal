@@ -2,19 +2,28 @@
 
 namespace Laminas\Session\Validator;
 
+use function assert;
 use function ini_get;
+use function is_numeric;
+use function is_string;
 use function preg_match;
 use function session_id;
 use function strrpos;
 use function substr;
 
+use const PHP_VERSION_ID;
+
 /**
  * session_id validator
+ *
+ * @final
  */
 class Id implements ValidatorInterface
 {
     /**
      * Session identifier.
+     *
+     * @deprecated This property will be removed in version 3.0
      *
      * @var string
      */
@@ -26,12 +35,15 @@ class Id implements ValidatorInterface
      * Allows passing the current session_id; if none provided, uses the PHP
      * session_id() function to retrieve it.
      *
+     * @deprecated This method will be removed in version 3.0
+     *
      * @param null|string $id
      */
     public function __construct($id = null)
     {
-        if (empty($id)) {
+        if ($id === null || $id === '') {
             $id = session_id();
+            assert(is_string($id));
         }
 
         $this->id = $id;
@@ -42,6 +54,8 @@ class Id implements ValidatorInterface
      *
      * Tests that the identifier does not contain invalid characters.
      *
+     * @deprecated This method will be removed in version 3.0
+     *
      * @return bool
      */
     public function isValid()
@@ -50,33 +64,36 @@ class Id implements ValidatorInterface
         $saveHandler = ini_get('session.save_handler');
         if ($saveHandler === 'cluster') { // Zend Server SC, validate only after last dash
             $dashPos = strrpos($id, '-');
-            if ($dashPos) {
+            if ($dashPos !== false) {
                 $id = substr($id, $dashPos + 1);
             }
         }
 
-        // Get the session id bits per character INI setting, using 5 if unavailable
-        $hashBitsPerChar = ini_get('session.sid_bits_per_character') ?: 5;
-
-        switch ($hashBitsPerChar) {
-            case 4:
-                $pattern = '#^[0-9a-f]*$#';
-                break;
-            case 6:
-                $pattern = '#^[0-9a-zA-Z-,]*$#';
-                break;
-            case 5:
-                // intentionally fall-through
-            default:
-                $pattern = '#^[0-9a-v]*$#';
-                break;
+        if (PHP_VERSION_ID >= 80400) {
+            // PHP 8.4 deprecated session.sid_bits_per_character and set it hard to "4".
+            // Old (pre PHP 8.4) session IDs with a higher bitrate are still valid though.
+            $hashBitsPerChar = 6;
+        } else {
+            // Get the session id bits per character INI setting, using 5 if unavailable
+            $hashBitsPerChar = ini_get('session.sid_bits_per_character');
+            $hashBitsPerChar = is_numeric($hashBitsPerChar) ? (int) $hashBitsPerChar : 5;
         }
+
+        $pattern = match ($hashBitsPerChar) {
+            4 => '#^[0-9a-f]*$#',
+            6 => '#^[0-9a-zA-Z-,]*$#',
+            // 5
+            // intentionally fall-through
+            default => '#^[0-9a-v]*$#',
+        };
 
         return (bool) preg_match($pattern, $id);
     }
 
     /**
      * Retrieve token for validating call (session_id)
+     *
+     * @deprecated This method will be removed in version 3.0
      *
      * @return string
      */
@@ -87,6 +104,8 @@ class Id implements ValidatorInterface
 
     /**
      * Return validator name
+     *
+     * @deprecated This method will be removed in version 3.0
      *
      * @return string
      */

@@ -3,29 +3,46 @@
  * Layout of the system/application
  */
 ?>
+<?php
+$appSettings = $this->appsetting();
+$appName = !empty($appSettings['app_name']) ? $appSettings['app_name'] : 'Monal-ERP';
+$appTemplate = !empty($appSettings['app_template']) ? $appSettings['app_template'] : 'ace';
+$skinClassMap = [
+	'ace' => '',
+	'default' => '',
+	'ace-skin-1' => 'skin-1',
+	'ace-skin-2' => 'skin-2',
+	'ace-skin-3' => 'skin-3',
+	'ocean' => 'skin-1',
+	'sunset' => 'skin-2',
+];
+$skinClass = isset($skinClassMap[$appTemplate]) ? $skinClassMap[$appTemplate] : '';
+?>
 <?= $this->doctype() ?>
 <html lang="en">
     <head>
+		<?php $assetVersion = '20260831-1'; ?>
         <meta charset="utf-8">
-        <?= $this->headTitle('MONAL ')->setSeparator(' - ')->setAutoEscape(false) ?>
+				<?= $this->headTitle($appName . ' ')->setSeparator(' - ')->setAutoEscape(false) ?>
 
         <?= $this->headMeta()
             ->appendName('viewport', 'width=device-width, initial-scale=1.0, viewport-fit=cover')
             ->appendHttpEquiv('X-UA-Compatible', 'IE=edge')
         ?>
         <!-- Le styles -->
-        <?php echo $this->headLink(array('rel' => 'shortcut icon', 'type' => 'image/vnd.microsoft.icon', 'href' => $this->basePath() . '/images/favicon.png'))
+		<?php echo $this->headLink(array('rel' => 'shortcut icon', 'type' => 'image/vnd.microsoft.icon', 'href' => $this->basePath() . '/images/favicon.png'))
+						->prependStylesheet($this->basePath() . '/css/app-templates.css')
         				->prependStylesheet($this->basePath() . '/old/css/ie/fcb_style-ie2.min.css', 'screen', 'IE')
         				->prependStylesheet($this->basePath() . '/old/css/ie/fcb_style-ie.min.css', 'screen', 'IE')
-        				->prependStylesheet($this->basePath() . '/old/fcb_css.css');
+						->prependStylesheet($this->basePath() . '/old/fcb_css.css?v=' . $assetVersion);
         ?> 
                   
        <!-- Scripts -->
-        <?php echo $this->headScript()->prependFile($this->basePath() . '/old/js/respond.min.js', 'text/javascript', array('conditional' => 'IE'))
+		<?php echo $this->headScript()->prependFile($this->basePath() . '/old/js/respond.min.js', 'text/javascript', array('conditional' => 'IE'))
 									->prependFile($this->basePath() . '/old/js/html5shiv.min.js', 'text/javascript', array('conditional' => 'IE'))
 									->prependFile($this->basePath() . '/old/js/jquery.browser.js')
 									->prependFile($this->basePath() . '/old/js/ch_genpdf.js')
-									->prependFile($this->basePath() . '/old/js/ch_addrow.js')
+									->prependFile($this->basePath() . '/old/js/ch_addrow.js?v=' . $assetVersion)
 									->prependFile($this->basePath() . '/old/js/jquery.mousewheel.js')
 									->prependFile($this->basePath() . '/old/js/jquery.jscrollpane.custom.min.js')
 									->prependFile($this->basePath() . '/old/js/daterangepicker.min.js')
@@ -49,12 +66,56 @@
                                     ->prependFile($this->basePath() . '/old/js/jquery.table2excel.js')
                                     ->prependFile($this->basePath() . '/old/js/jquery.2.1.1.min.js','text/javascript', array('conditional' => '!IE'))
                                     ->prependFile($this->basePath() . '/old/js/jquery.1.11.1.min.js','text/javascript', array('conditional' => 'IE')); ?>  
+
+		<style type="text/css">
+			/* Force Chosen dropdown to overlay table rows in legacy report layout */
+			#jscroll_div,
+			#jscroll_div .table,
+			#jscroll_div tbody,
+			#jscroll_div tr,
+			#jscroll_div td {
+				overflow: visible !important;
+			}
+
+			#jscroll_div td {
+				position: relative !important;
+			}
+
+			.chosen-container,
+			[class*="chosen-container"] {
+				position: relative !important;
+				z-index: 1 !important;
+			}
+
+			.chosen-container.chosen-with-drop,
+			[class*="chosen-container"].chosen-with-drop,
+			.chosen-container-active,
+			[class*="chosen-container"].chosen-container-active {
+				z-index: 200000 !important;
+			}
+
+			.chosen-container .chosen-drop,
+			[class*="chosen-container"] .chosen-drop {
+				position: absolute !important;
+				top: 100% !important;
+				left: -9999px !important;
+				right: auto !important;
+				z-index: 99999 !important;
+			}
+
+			.chosen-container.chosen-with-drop .chosen-drop,
+			[class*="chosen-container"].chosen-with-drop .chosen-drop {
+				left: 0 !important;
+				right: 0 !important;
+				z-index: 200001 !important;
+			}
+		</style>
 		
 		<script type="text/javascript">
 			if('ontouchstart' in document.documentElement) document.write("<script src='assets/js/jquery.mobile.custom.min.js'>"+"<"+"/script>");
 		</script>                             
 	</head>
-    <body class="<?php echo ($user = $this->Identity())?'no-skin':'login-layout light-login patern-bg';?>">
+	<body class="<?php echo ($user = $this->Identity()) ? trim('no-skin ' . $skinClass) : 'login-layout light-login patern-bg';?>">
 		<?php if ($user = $this->Identity()) {  ?>
 			<!-- topbar menu  -->    
 			<?php echo $this->partial('partial/navbar-top.phtml'); ?>

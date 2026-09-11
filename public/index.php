@@ -30,6 +30,37 @@ if (php_sapi_name() === 'cli-server') {
  */
 include __DIR__ . '/../vendor/autoload.php';
 
+// Lightweight .env loader for local deployments when server env vars are not set.
+$envFile = dirname(__DIR__) . '/.env';
+if (is_readable($envFile)) {
+    $lines = file($envFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+    if (is_array($lines)) {
+        foreach ($lines as $line) {
+            $line = trim($line);
+            if ($line === '' || strpos($line, '#') === 0 || strpos($line, '=') === false) {
+                continue;
+            }
+
+            [$key, $value] = array_map('trim', explode('=', $line, 2));
+            if ($key === '') {
+                continue;
+            }
+
+            $first = substr($value, 0, 1);
+            $last  = substr($value, -1);
+            if (($first === '"' && $last === '"') || ($first === "'" && $last === "'")) {
+                $value = substr($value, 1, -1);
+            }
+
+            if (getenv($key) === false) {
+                putenv($key . '=' . $value);
+                $_ENV[$key] = $value;
+                $_SERVER[$key] = $value;
+            }
+        }
+    }
+}
+
 if (! class_exists(Application::class)) {
     throw new RuntimeException(
         "Unable to load application.\n"

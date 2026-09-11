@@ -16,6 +16,9 @@ use Hr\Model As Hr;
 
 class ScheduleController extends AbstractActionController
 {   
+	protected $_connection;
+	protected $_highest_role;
+	protected $_lowest_role;
 	private $_container;
 	protected $_table; 		// database table 
     protected $_user; 		// user detail

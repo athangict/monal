@@ -16,8 +16,8 @@
 	
 	$admin_location = $this->usersObj->getColumn($userID,'admin_location');
 	$role = $this->usersObj->getColumn($userID,'role');
-	$user_role=explode(',', $role);
-	$adm_loc = explode(',', $admin_location);
+	$user_role=explode(',', (string) $role);
+	$adm_loc = explode(',', (string) $admin_location);
 	$subRoles=null;
 	for($i=0;$i<sizeof($user_role);$i++){
 		if($user_role[$i]==2){
@@ -247,7 +247,7 @@
 								<?php endif;?>
 								<?php 
 									$admin_locs = $this->usersObj->getColumn($userID,'admin_location');
-									$admin_loc_array = explode(',',$admin_locs);
+									$admin_loc_array = explode(',', (string) $admin_locs);
 									//print_r($admin_loc_array);exit;
 									if(in_array($to_location, $admin_loc_array) && $dispatch_status ==3):?>
 									<a href="<?php echo $this->url('dispatch',array('action'=>'receivedispatch','id'=>$dispatch_id));?>" class="btn btn-danger"><i class="fa fa-arrow-circle-o-down"> Receive </i></a>							

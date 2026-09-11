@@ -16,7 +16,7 @@ class Attachmenthelper extends AbstractHelper
 	
 	public function __invoke($process)
 	{  
-		$params = explode("-", $process);
+		$params = explode("-", (string) $process);
 		$process = $params['0'];
 		$process_id = $params['1'];
 		$attachments = $this->attachmentTable->get(array('process'=>$process,'process_id'=>$process_id));

@@ -23,6 +23,7 @@ use Asset\Model As Asset;
 use Hr\Model As Hr;
 class EstatereportController extends AbstractActionController
 {   
+	protected $_login_id;
 	private $_container;
 	protected $_table; 		// database table 
     protected $_user; 		// user detail
@@ -127,7 +128,7 @@ class EstatereportController extends AbstractActionController
 	public function estatereportAction()
 	{	
 		$this->init();
-		$array_id = explode("_", $this->_id);
+		$array_id = explode("_", (string) $this->_id);
 		$region = (sizeof($array_id)>1)?$array_id[0]:'-1';
 		$location = (sizeof($array_id)>1)?$array_id[1]:'-1';
 		if($this->getRequest()->isPost())
@@ -174,7 +175,7 @@ class EstatereportController extends AbstractActionController
 	public function buildingreportAction()
 	{	
 		$this->init();
-		$array_id = explode("_", $this->_id);
+		$array_id = explode("_", (string) $this->_id);
 		$region = (sizeof($array_id)>1)?$array_id[0]:'-1';
 		$location = (sizeof($array_id)>1)?$array_id[1]:'-1';
 		$block = (sizeof($array_id)>1)?$array_id[1]:'-1';
@@ -220,7 +221,7 @@ class EstatereportController extends AbstractActionController
 	{
 		$this->init();
 			$id = $this->_id;
-			$array_id = explode("_", $id);
+			$array_id = explode("_", (string) $id);
 			$region = (sizeof($array_id)>1)?$array_id[1]:'-1';
 			$location = (sizeof($array_id)>1)?$array_id[1]:'-1';
 			$block = (sizeof($array_id)>1)?$array_id[1]:'-1';
@@ -310,7 +311,7 @@ public function tenantdtlsAction()
 	{
 		$this->init();
 		$this->_id = isset($this->_id)?$this->_id:date('Y-m-d');
-		list($year, $month) = explode('-', $this->_id);	  
+		list($year, $month) = explode('-', (string) $this->_id);	  
 	
 		if($year == 0):
 			$max_year = $this->getDefinedTable(Realestate\DateTable::class)->getMax('year');

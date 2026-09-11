@@ -6,7 +6,8 @@ namespace Laminas\Router;
 
 use Laminas\ServiceManager\ServiceManager;
 use Laminas\Stdlib\ArrayUtils;
-use Laminas\Stdlib\RequestInterface as Request;
+use Laminas\Stdlib\RequestInterface;
+use Override;
 use Traversable;
 
 use function array_merge;
@@ -15,20 +16,23 @@ use function sprintf;
 
 /**
  * Simple route stack implementation.
+ *
+ * @template TRoute of RouteInterface
+ * @template-implements RouteStackInterface<TRoute>
  */
 class SimpleRouteStack implements RouteStackInterface
 {
     /**
      * Stack containing all routes.
      *
-     * @var PriorityList
+     * @var PriorityList<string, TRoute>
      */
     protected $routes;
 
     /**
      * Route plugin manager
      *
-     * @var RoutePluginManager
+     * @var RoutePluginManager<TRoute>
      */
     protected $routePluginManager;
 
@@ -40,30 +44,23 @@ class SimpleRouteStack implements RouteStackInterface
     protected $defaultParams = [];
 
     /**
-     * Create a new simple route stack.
+     * @param RoutePluginManager<TRoute>|null $routePluginManager
      */
     public function __construct(?RoutePluginManager $routePluginManager = null)
     {
+        /** @var PriorityList<string, TRoute> $this->routes */
         $this->routes = new PriorityList();
-
-        if (null === $routePluginManager) {
-            $routePluginManager = new RoutePluginManager(new ServiceManager());
-        }
-
-        $this->routePluginManager = $routePluginManager;
+        /** @var RoutePluginManager<TRoute> $this->routePluginManager */
+        $this->routePluginManager = $routePluginManager ?? new RoutePluginManager(new ServiceManager());
 
         $this->init();
     }
 
     /**
-     * factory(): defined by RouteInterface interface.
-     *
-     * @see    \Laminas\Router\RouteInterface::factory()
-     *
-     * @param  array|Traversable $options
-     * @return SimpleRouteStack
+     * @inheritDoc
      * @throws Exception\InvalidArgumentException
      */
+    #[Override]
     public static function factory($options = [])
     {
         if ($options instanceof Traversable) {
@@ -103,9 +100,10 @@ class SimpleRouteStack implements RouteStackInterface
     }
 
     /**
-     * Set the route plugin manager.
+     * @deprecated Pass configuration via constructor/factory options; removed in v4.0
      *
-     * @return SimpleRouteStack
+     * @param RoutePluginManager<TRoute> $routePlugins
+     * @return $this
      */
     public function setRoutePluginManager(RoutePluginManager $routePlugins)
     {
@@ -116,22 +114,15 @@ class SimpleRouteStack implements RouteStackInterface
     /**
      * Get the route plugin manager.
      *
-     * @return RoutePluginManager
+     * @return RoutePluginManager<TRoute>
      */
     public function getRoutePluginManager()
     {
         return $this->routePluginManager;
     }
 
-    /**
-     * addRoutes(): defined by RouteStackInterface interface.
-     *
-     * @see    RouteStackInterface::addRoutes()
-     *
-     * @param  array|Traversable $routes
-     * @return SimpleRouteStack
-     * @throws Exception\InvalidArgumentException
-     */
+    /** @inheritDoc */
+    #[Override]
     public function addRoutes($routes)
     {
         if (! is_array($routes) && ! $routes instanceof Traversable) {
@@ -145,16 +136,8 @@ class SimpleRouteStack implements RouteStackInterface
         return $this;
     }
 
-    /**
-     * addRoute(): defined by RouteStackInterface interface.
-     *
-     * @see    RouteStackInterface::addRoute()
-     *
-     * @param  string  $name
-     * @param  mixed   $route
-     * @param  int $priority
-     * @return SimpleRouteStack
-     */
+    /** @inheritDoc */
+    #[Override]
     public function addRoute($name, $route, $priority = null)
     {
         if (! $route instanceof RouteInterface) {
@@ -170,26 +153,16 @@ class SimpleRouteStack implements RouteStackInterface
         return $this;
     }
 
-    /**
-     * removeRoute(): defined by RouteStackInterface interface.
-     *
-     * @see    RouteStackInterface::removeRoute()
-     *
-     * @param  string $name
-     * @return SimpleRouteStack
-     */
+    /** @inheritDoc */
+    #[Override]
     public function removeRoute($name)
     {
         $this->routes->remove($name);
         return $this;
     }
 
-    /**
-     * setRoutes(): defined by RouteStackInterface interface.
-     *
-     * @param  array|Traversable $routes
-     * @return SimpleRouteStack
-     */
+    /** @inheritDoc */
+    #[Override]
     public function setRoutes($routes)
     {
         $this->routes->clear();
@@ -222,7 +195,7 @@ class SimpleRouteStack implements RouteStackInterface
      * Get a route by name
      *
      * @param string $name
-     * @return RouteInterface the route
+     * @return TRoute|null the route
      */
     public function getRoute($name)
     {
@@ -232,7 +205,8 @@ class SimpleRouteStack implements RouteStackInterface
     /**
      * Set a default parameters.
      *
-     * @param  array $params
+     * @deprecated Pass configuration via constructor/factory options; removed in v4.0
+     *
      * @return SimpleRouteStack
      */
     public function setDefaultParams(array $params)
@@ -243,6 +217,8 @@ class SimpleRouteStack implements RouteStackInterface
 
     /**
      * Set a default parameter.
+     *
+     * @deprecated Pass configuration via constructor/factory options; removed in v4.0
      *
      * @param  string $name
      * @param  mixed  $value
@@ -257,8 +233,8 @@ class SimpleRouteStack implements RouteStackInterface
     /**
      * Create a route from array specifications.
      *
-     * @param  array|Traversable $specs
-     * @return RouteInterface
+     * @param  iterable $specs
+     * @return TRoute
      * @throws Exception\InvalidArgumentException
      */
     protected function routeFromArray($specs)
@@ -289,13 +265,10 @@ class SimpleRouteStack implements RouteStackInterface
     }
 
     /**
-     * match(): defined by RouteInterface interface.
-     *
-     * @see    \Laminas\Router\RouteInterface::match()
-     *
-     * @return RouteMatch|null
+     * @inheritDoc
      */
-    public function match(Request $request)
+    #[Override]
+    public function match(RequestInterface $request)
     {
         foreach ($this->routes as $name => $route) {
             if (($match = $route->match($request)) instanceof RouteMatch) {
@@ -315,16 +288,11 @@ class SimpleRouteStack implements RouteStackInterface
     }
 
     /**
-     * assemble(): defined by RouteInterface interface.
-     *
-     * @see    \Laminas\Router\RouteInterface::assemble()
-     *
-     * @param  array $params
-     * @param  array $options
-     * @return mixed
+     * @inheritDoc
      * @throws Exception\InvalidArgumentException
      * @throws Exception\RuntimeException
      */
+    #[Override]
     public function assemble(array $params = [], array $options = [])
     {
         if (! isset($options['name'])) {

@@ -10,16 +10,15 @@
         "framework"
     ],
     "require": {
-        "php": "^7.3",
-        "laminas/laminas-component-installer": "^1.0 || ^2.1",
-        "laminas/laminas-development-mode": "^3.2",
-        "laminas/laminas-skeleton-installer": "^0.2 || ^1.0",
-        "laminas/laminas-mvc": "^3.1.1",
+        "php": "~8.2.0 || ~8.3.0 || ~8.4.0",
+        "laminas/laminas-component-installer": "^3.8",
+        "laminas/laminas-development-mode": "^3.15",
+        "laminas/laminas-mvc": "^3.8",
         "laminas/laminas-db": "^2.12",
-        "laminas/laminas-form": "^2.16",
+        "laminas/laminas-form": "^3.19",
         "laminas/laminas-i18n": "^2.11",
-        "laminas/laminas-mvc-plugin-flashmessenger": "^1.3",
-        "laminas/laminas-mvc-plugin-identity": "^1.2",
+        "laminas/laminas-mvc-plugin-flashmessenger": "^1.11",
+        "laminas/laminas-mvc-plugin-identity": "^1.7",
         "laminas/laminas-permissions-acl": "^2.8",
         "laminas/laminas-paginator": "^2.10",
         "laminas/laminas-http": "^2.14",
@@ -32,20 +31,20 @@
     "autoload": {
         "psr-4": {
             "Application\\": "module/Application/src/",
-			"Auth\\": "module/Auth/src/",
+            "Auth\\": "module/Auth/src/",
             "Acl\\": "module/Acl/src/",
             "Administration\\": "module/Administration/src/",
             "Accounts\\": "module/Accounts/src/",
-			"Hr\\": "module/Hr/src/",
-			"Stock\\": "module/Stock/src/",
-			"Purchase\\": "module/Purchase/src/",
-			"Sales\\": "module/Sales/src/",
+            "Hr\\": "module/Hr/src/",
+            "Stock\\": "module/Stock/src/",
+            "Purchase\\": "module/Purchase/src/",
+            "Sales\\": "module/Sales/src/",
             "Reports\\": "module/Reports/src/",
             "Fleet\\": "module/Fleet/src/",
             "Store\\": "module/Store/src/",
             "Realestate\\": "module/Realestate/src/",
             "Asset\\": "module/Asset/src/",
-			"Pswf\\": "module/Pswf/src/"
+            "Pswf\\": "module/Pswf/src/"
         }
     },
     "autoload-dev": {
@@ -78,7 +77,7 @@
         "test": "Run unit tests."
     },
     "require-dev": {
-        "laminas/laminas-test": "^3.4"
+        "laminas/laminas-test": "^4.12"
     },
     "config": {
         "allow-plugins": {

@@ -25,6 +25,30 @@ class Module
     {
         //$this->bootstrapSession($mvcEvent);
         $config = $e->getApplication()->getServiceManager()->get('config');
+        
+        // Apply session configuration BEFORE creating SessionManager
+        // This MUST happen before session_start() is called anywhere
+        if (isset($config['session_config'])) {
+            // Set session cookie parameters - must be called before session_start()
+            $lifetime = $config['session_config']['cookie_lifetime'] ?? 0;
+            $path = '/';
+            $domain = '';
+            $secure = $config['session_config']['cookie_secure'] ?? false;
+            $httponly = $config['session_config']['cookie_httponly'] ?? true;
+            
+            session_set_cookie_params($lifetime, $path, $domain, $secure, $httponly);
+            
+            // Set garbage collection max lifetime
+            if (isset($config['session_config']['gc_maxlifetime'])) {
+                ini_set('session.gc_maxlifetime', (string)$config['session_config']['gc_maxlifetime']);
+            }
+            
+            // Set session name
+            if (isset($config['session_config']['name'])) {
+                session_name($config['session_config']['name']);
+            }
+        }
+        
         // get the database section
         $dbAdapter = new Adapter($config['db']);
     

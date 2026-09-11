@@ -15,6 +15,9 @@ use Laminas\Session\Storage\StorageInterface;
 use function is_array;
 use function sprintf;
 
+/**
+ * @final
+ */
 class StorageFactory implements FactoryInterface
 {
     /**
@@ -61,6 +64,7 @@ class StorageFactory implements FactoryInterface
     }
 
     /**
+     * @deprecated This method will be removed in version 3.0
      * Create and return a storage instance (v2 usage).
      *
      * @param null|string $canonicalName

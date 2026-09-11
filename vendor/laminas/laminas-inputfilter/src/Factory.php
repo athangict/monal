@@ -12,9 +12,9 @@ use Laminas\Validator\ValidatorChain;
 use Laminas\Validator\ValidatorInterface;
 use Traversable;
 
+use function assert;
 use function class_exists;
-use function get_class;
-use function gettype;
+use function get_debug_type;
 use function is_array;
 use function is_callable;
 use function is_int;
@@ -157,7 +157,7 @@ class Factory
             throw new Exception\InvalidArgumentException(sprintf(
                 '%s expects an array or Traversable; received "%s"',
                 __METHOD__,
-                is_object($inputSpecification) ? get_class($inputSpecification) : gettype($inputSpecification)
+                get_debug_type($inputSpecification),
             ));
         }
 
@@ -251,7 +251,7 @@ class Factory
                             '%s expects the value associated with "filters" to be an array/Traversable of filters'
                             . ' or filter specifications, or a FilterChain; received "%s"',
                             __METHOD__,
-                            is_object($value) ? get_class($value) : gettype($value)
+                            get_debug_type($value)
                         ));
                     }
                     $this->populateFilters($input->getFilterChain(), $value);
@@ -266,7 +266,7 @@ class Factory
                             '%s expects the value associated with "validators" to be an array/Traversable of validators'
                             . ' or validator specifications, or a ValidatorChain; received "%s"',
                             __METHOD__,
-                            is_object($value) ? get_class($value) : gettype($value)
+                            get_debug_type($value)
                         ));
                     }
 
@@ -284,7 +284,7 @@ class Factory
     /**
      * Factory for input filters
      *
-     * phpcs:ignore Generic.Files.LineLength.TooLong
+     * phpcs:ignore Generic.Files.LineLength.TooLong, SlevomatCodingStandard.Commenting.DocCommentSpacing
      * @param InputFilterSpecification|CollectionSpecification|Traversable|InputFilterProviderInterface $inputFilterSpecification
      * @return InputFilterInterface
      * @throws Exception\RuntimeException
@@ -305,9 +305,7 @@ class Factory
             throw new Exception\InvalidArgumentException(sprintf(
                 '%s expects an array or Traversable; received "%s"',
                 __METHOD__,
-                is_object($inputFilterSpecification)
-                    ? get_class($inputFilterSpecification)
-                    : gettype($inputFilterSpecification)
+                get_debug_type($inputFilterSpecification),
             ));
         }
 
@@ -319,6 +317,7 @@ class Factory
         }
 
         $inputFilter = $this->getInputFilterManager()->get($type);
+        assert($inputFilter instanceof InputFilterInterface); // As opposed to InputInterface
 
         if ($inputFilter instanceof CollectionInputFilter) {
             $inputFilter->setFactory($this);

@@ -5,15 +5,17 @@ declare(strict_types=1);
 namespace Laminas\Authentication\Adapter\Http;
 
 use Laminas\Authentication\Result as AuthResult;
-use Laminas\Crypt\Password\Apache as ApachePassword;
 use Laminas\Stdlib\ErrorHandler;
+use Override;
 
+use function assert;
 use function ctype_print;
 use function fclose;
 use function fgetcsv;
 use function fopen;
 use function is_readable;
-use function strpos;
+use function is_string;
+use function str_contains;
 
 use const E_WARNING;
 
@@ -27,14 +29,16 @@ class ApacheResolver implements ResolverInterface
     /**
      * Path to credentials file
      *
-     * @var string
+     * @var string|null
      */
     protected $file;
 
     /**
      * Apache password object
      *
-     * @var ApachePassword
+     * @deprecated Support for Laminas\Crypt will be removed in version 3 of this component
+     *
+     * @var ApachePassword|null
      */
     protected $apachePassword;
 
@@ -70,7 +74,7 @@ class ApacheResolver implements ResolverInterface
     /**
      * Returns the path to the credentials file
      *
-     * @return string
+     * @return string|null
      */
     public function getFile()
     {
@@ -79,6 +83,8 @@ class ApacheResolver implements ResolverInterface
 
     /**
      * Returns the Apache Password object
+     *
+     * @deprecated Support for Laminas\Crypt will be removed in version 3 of this component
      *
      * @return ApachePassword
      */
@@ -99,19 +105,20 @@ class ApacheResolver implements ResolverInterface
      * @return AuthResult
      * @throws Exception\ExceptionInterface
      */
+    #[Override]
     public function resolve($username, $realm, $password = null)
     {
         if (empty($username)) {
             throw new Exception\InvalidArgumentException('Username is required');
         }
 
-        if (! ctype_print($username) || strpos($username, ':') !== false) {
+        if (! ctype_print($username) || str_contains($username, ':')) {
             throw new Exception\InvalidArgumentException(
                 'Username must consist only of printable characters, excluding the colon'
             );
         }
 
-        if (! empty($realm) && (! ctype_print($realm) || strpos($realm, ':') !== false)) {
+        if (! empty($realm) && (! ctype_print($realm) || str_contains($realm, ':'))) {
             throw new Exception\InvalidArgumentException(
                 'Realm must consist only of printable characters, excluding the colon'
             );
@@ -131,7 +138,8 @@ class ApacheResolver implements ResolverInterface
 
         // No real validation is done on the contents of the password file. The
         // assumption is that we trust the administrators to keep it secure.
-        while (($line = fgetcsv($fp, 512, ':')) !== false) {
+        while (($line = fgetcsv($fp, 512, ':', escape: "\\")) !== false) {
+            assert(isset($line[0]));
             if ($line[0] !== $username) {
                 continue;
             }
@@ -157,18 +165,14 @@ class ApacheResolver implements ResolverInterface
             );
         }
 
+        assert(is_string($matchedHash));
+
         // Plaintext password
         if ($matchedHash === $password) {
             return new AuthResult(AuthResult::SUCCESS, $username);
         }
 
-        $apache = $this->getApachePassword();
-        $apache->setUserName($username);
-        if (! empty($realm)) {
-            $apache->setAuthName($realm);
-        }
-
-        if ($apache->verify($password, $matchedHash)) {
+        if (ApachePassword::verify($password, $matchedHash, $username, $realm)) {
             return new AuthResult(AuthResult::SUCCESS, $username);
         }
 

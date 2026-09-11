@@ -154,7 +154,7 @@ class AclTable extends AbstractTableGateway
 	}
 	/**
 	 * Returns the access control list to render role-specific menu system
-	 * @return Zend_Db_Table_Rowset | Array
+	 * @return array
 	 */
 	public function renderMenu($user, $user_module=NULL, $highest_role=NULL)
 	{
@@ -167,7 +167,7 @@ class AclTable extends AbstractTableGateway
 		$adapter = $this->adapter;
 		$sql = new Sql($adapter);
 		
-		$sub0 = explode(',',$role);
+		$sub0 = explode(',', (string) $role);
 		
 		if(in_array($highest_role,$sub0)){
 			$sub1 = new Select(array('a'=>'sys_acl'));
@@ -237,13 +237,13 @@ class AclTable extends AbstractTableGateway
 	} 
 	/**
 	 * Returns the access control list to render role-specific button
-	 * @return Zend_Db_Table_Rowset | Array
+	 * @return array
 	 */
 	public function renderButton($param, $user_role, $highest_role=NULL)
 	{
     	$where = ( is_array($param) )? $param: array('id' => $param);
 		$role = $user_role;
-		$sub0 = explode(',',$role);
+		$sub0 = explode(',', (string) $role);
 		
 		$columns = array('id as acl','menu', 'action', 'route', 'icon', 'class', 'btn_type', 'btn_label', 'permission_level');
 		
@@ -276,13 +276,13 @@ class AclTable extends AbstractTableGateway
 	} 
 	/**
 	 * Returns the access control list to render role-specific tabs
-	 * @return Zend_Db_Table_Rowset | Array
+	 * @return array
 	 */
 	public function renderTabs($param, $user_role, $highest_role=NULL)
 	{
     	$where = ( is_array($param) )? $param: array('id' => $param);
 		$role = $user_role;
-		$sub0 = explode(',',$role);
+		$sub0 = explode(',', (string) $role);
 		
 		$columns = array('id as acl_id','menu', 'action', 'route', 'icon','class');
 		
@@ -326,7 +326,7 @@ class AclTable extends AbstractTableGateway
 		$adapter = $this->adapter;
 		$sql = new Sql($adapter);
 		
-		$sub0 = explode(',',$role);
+		$sub0 = explode(',', (string) $role);
 		
 		if(in_array($highest_role,$sub0)){
 			$sub2 = new Select(array('m'=>'sys_modules'));

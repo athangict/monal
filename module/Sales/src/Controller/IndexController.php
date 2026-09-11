@@ -21,7 +21,7 @@ class IndexController extends AbstractActionController
 	protected $_auth; 		// checking authentication
 
 	/**
-	 * Zend Default TableGateway
+	 * Laminas Default TableGateway
 	 * Table name as the parameter
 	 * returns obj
 	 */

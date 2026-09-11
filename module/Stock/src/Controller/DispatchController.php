@@ -17,6 +17,8 @@ use Accounts\Model As Accounts;
 use Hr\Model As Hr;
 class DispatchController extends AbstractActionController
 {   
+	protected $_connection;
+	protected $_userloc;
 	private $_container;
 	protected $_table; 		// database table 
     protected $_user; 		// user detail
@@ -593,7 +595,7 @@ class DispatchController extends AbstractActionController
 	public function viewdispatchAction()
 	{
 		$this->init();		
-		$params = explode("-", $this->_id);
+		$params = explode("-", (string) $this->_id);
 	/*	if($params['1'] == '1' && $params['2'] > 0){
 			$flag = $this->getDefinedTable(Acl\NotifyTable::class)->getColumn($params['2'], 'flag'); 
 			if($flag == "0") {

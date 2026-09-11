@@ -44,7 +44,7 @@
 								<div class="col-lg-2">
 									<select id="year" name="year" class="form-control" data-placeholder="Select" onchange="this.form.submit()">
 										<?php 
-										for($year = date('Y'); $year >= $this->min_year; $year--):
+										for($year = date('Y'); $year >= (date('Y') - 2); $year--):
 										?>
 											<?php $selected = ($year == $this->selected_year)?"selected":"";?>
 											<option value="<?php echo $year;?>" <?php echo $selected;?>>
@@ -92,7 +92,6 @@
 										<th>Head</th>
 										<th>Location</th>
 										<th>Reference</th>
-										<th>Closing_SDR</th>
 										<th>Closing_DR</th>
 										<th>Closing_CR</th>
 									</tr>
@@ -112,7 +111,6 @@
 												<td><strong><?php echo $this->headObj->getColumn($row['head'],'code');?></strong></td>
 												<td><?php echo $location=($row['location']=='-1')?'All':$this->locationObj->getColumn($row['location'],'location') ?></td>
 												<td><?php echo $row['reference'];?></td>
-												<td><?php echo $row['closing_sdr'];?></td>
 												<td><?php echo $row['closing_dr'];?></td>
 												<td><?php echo $row['closing_cr'];?></td>
 											</tr>
@@ -144,7 +142,6 @@
 									<?php endif; ?>	
                                         <tr>
 											<td>Total</td>
-											<td></td>
 											<td></td>
 											<td></td>
 											<td></td>

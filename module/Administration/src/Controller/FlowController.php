@@ -12,6 +12,8 @@ use Acl\Model as Acl;
 
 class FlowController extends AbstractActionController
 {
+	protected $_connection;
+	protected $_permissionObj;
 	private $_container;
 	protected $_table; 		// database table 
     protected $_user; 		// user detail
@@ -167,10 +169,10 @@ class FlowController extends AbstractActionController
 			return $this->redirect()->toRoute('flow/paginator', array('action'=>'flow','page'=>$this->_id, 'id'=>'0'));
         }		
 		$ViewModel = new ViewModel([
-				'title'     => 'Add Work Flow',
-				'page'      => $page,
-				'processes' => $this->getDefinedTable(Acl\ProcessTable::class)->getAll(),
-				'roles'     => $this->getDefinedTable(Acl\RolesTable::class)->getAllExcept([1,99,100]),
+			'title'     => 'Add Work Flow',
+			'page'      => $page,
+			'processes' => $this->getDefinedTable(Acl\ProcessTable::class)->getAll(),
+			'roles'     => $this->getDefinedTable(Acl\RolesTable::class)->getAllExcept([1,99,100]),
 		]);
 		$ViewModel->setTerminal(True);
 		return $ViewModel;
@@ -182,7 +184,7 @@ class FlowController extends AbstractActionController
 	{
 		$this->init();
 		$id = $this->_id;
-		$array_id = explode("_", $id);
+		$array_id = explode("_", (string) $id);
 		$flow_id = $array_id[0];
 		$page = (sizeof($array_id)>1)?$array_id[1]:'';
 		
@@ -211,11 +213,11 @@ class FlowController extends AbstractActionController
 			return $this->redirect()->toRoute('flow/paginator', array('action'=>'flow','page'=>$this->_id, 'id'=>'0'));
         }		
 		$ViewModel = new ViewModel([
-				'title'     => 'Edit Work Flow',
-				'page'      => $page,
-				'flows'     => $this->getDefinedTable(Administration\FlowTable::class)->get($flow_id),
-				'processes' => $this->getDefinedTable(Acl\ProcessTable::class)->getAll(),
-				'roles'     => $this->getDefinedTable(Acl\RolesTable::class)->getAllExcept([1,99,100]),
+			'title'     => 'Edit Work Flow',
+			'page'      => $page,
+			'flows'     => $this->getDefinedTable(Administration\FlowTable::class)->get($flow_id),
+			'processes' => $this->getDefinedTable(Acl\ProcessTable::class)->getAll(),
+			'roles'     => $this->getDefinedTable(Acl\RolesTable::class)->getAllExcept([1,99,100]),
 		]);
 		$ViewModel->setTerminal(True);
 		return $ViewModel;
@@ -227,7 +229,7 @@ class FlowController extends AbstractActionController
 	{
 		$this->init();
 		$id = $this->_id;
-		$array_id = explode("_", $id);
+		$array_id = explode("_", (string) $id);
 		$flow_id = $array_id[0];
 		$page = (sizeof($array_id)>1)?$array_id[1]:'';
 
@@ -256,7 +258,7 @@ class FlowController extends AbstractActionController
     {
 		$this->init();
 		$id = $this->_id;
-		$array_id = explode("_", $id);
+		$array_id = explode("_", (string) $id);
 		$flow_id = $array_id[0];
 		$page = (sizeof($array_id)>1)?$array_id[1]:'';
 
@@ -275,18 +277,18 @@ class FlowController extends AbstractActionController
 				$count_route++;
 			endforeach;
 			$data = array(	
-					'flow'                  => $form['flow_id'],
-					'action_performed'      => $form['action_performed'],
-					'status_changed_to'     => $form['status_changed_to'],
-					'route_to_role'         => $form['route_to_role'],
-					'action'                => $button,
-					'description'           => $form['description'],
-					'route_notification_to' => $notification,
-					'notification'          => $form['notification'],
-					'email_notify'          => $form['email_notify'],
-					'author'                => $this->_author,
-					'created'               => $this->_created,
-					'modified'              => $this->_modified,
+				'flow'                  => $form['flow_id'],
+				'action_performed'      => $form['action_performed'],
+				'status_changed_to'     => $form['status_changed_to'],
+				'route_to_role'         => $form['route_to_role'],
+				'action'                => $button,
+				'description'           => $form['description'],
+				'route_notification_to' => $notification,
+				'notification'          => $form['notification'],
+				'email_notify'          => $form['email_notify'],
+				'author'                => $this->_author,
+				'created'               => $this->_created,
+				'modified'              => $this->_modified,
 			);
 			$result = $this->getDefinedTable(Administration\FlowPrivilegeTable::class)->save($data);
 			if($result):
@@ -314,7 +316,7 @@ class FlowController extends AbstractActionController
     {
 		$this->init();
 		$id = $this->_id;
-		$array_id = explode("_", $id);
+		$array_id = explode("_", (string) $id);
 		$flow_id = $array_id[0];
 		$privilege_id = (sizeof($array_id)>1)?$array_id[1]:'';
 		$page = (sizeof($array_id)>2)?$array_id[2]:'';
@@ -334,18 +336,18 @@ class FlowController extends AbstractActionController
 				$count_route++;
 			endforeach;
 			$data = array(	
-					'id'                    => $form['privilege_id'],
-					'flow'                  => $form['flow_id'],
-					'action_performed'      => $form['action_performed'],
-					'status_changed_to'     => $form['status_changed_to'],
-					'route_to_role'         => $form['route_to_role'],
-					'action'                => $button,
-					'description'           => $form['description'],
-					'route_notification_to' => $notification,
-					'notification'          => $form['notification'],
-					'email_notify'          => $form['email_notify'],
-					'author'                => $this->_author,
-					'modified'              => $this->_modified,
+				'id'                    => $form['privilege_id'],
+				'flow'                  => $form['flow_id'],
+				'action_performed'      => $form['action_performed'],
+				'status_changed_to'     => $form['status_changed_to'],
+				'route_to_role'         => $form['route_to_role'],
+				'action'                => $button,
+				'description'           => $form['description'],
+				'route_notification_to' => $notification,
+				'notification'          => $form['notification'],
+				'email_notify'          => $form['email_notify'],
+				'author'                => $this->_author,
+				'modified'              => $this->_modified,
 			);
 			$result = $this->getDefinedTable(Administration\FlowPrivilegeTable::class)->save($data);
 			if($result):
@@ -373,7 +375,7 @@ class FlowController extends AbstractActionController
     {
 		$this->init();
 		$id = $this->_id;
-		$array_id = explode("_", $id);
+		$array_id = explode("_", (string) $id);
 		$flow_id = $array_id[0];
 		$privilege_id = (sizeof($array_id)>1)?$array_id[1]:'';
 		$page = (sizeof($array_id)>2)?$array_id[2]:'';
@@ -434,14 +436,14 @@ class FlowController extends AbstractActionController
 				$button .= " ".$btn_class;
 			endforeach;
 			$data = array(	
-					'action'       => $form['action'],
-					'description'  => $form['description'],
-					'class'        => $button,
-					'icon'         => $form['icon'],
-					'status'       => $form['status'],
-					'author'       => $this->_author,
-					'created'      => $this->_created,
-					'modified'     => $this->_modified,
+				'action'       => $form['action'],
+				'description'  => $form['description'],
+				'class'        => $button,
+				'icon'         => $form['icon'],
+				'status'       => $form['status'],
+				'author'       => $this->_author,
+				'created'      => $this->_created,
+				'modified'     => $this->_modified,
 			);
 			$data = $this->_safedataObj->rteSafe($data);
 			$result = $this->getDefinedTable(Administration\FlowActionTable::class)->save($data);	
@@ -453,11 +455,11 @@ class FlowController extends AbstractActionController
 			return $this->redirect()->toRoute('flow/paginator',array('action'=>'flowaction','page'=>$this->_id, 'id'=>'0'));
 		}
 		$ViewModel = new ViewModel(array(
-				'title'        => 'Add Flow Action',
-				'page'         => $page,
-				'elements'     => $this->getDefinedTable(Acl\ButtonTable::class)->getAll(),
-				'icongroupObj' => $this->getDefinedTable(Acl\IcongroupTable::class),
-				'iconObj'      => $this->getDefinedTable(Acl\IconTable::class),
+			'title'        => 'Add Flow Action',
+			'page'         => $page,
+			'elements'     => $this->getDefinedTable(Acl\ButtonTable::class)->getAll(),
+			'icongroupObj' => $this->getDefinedTable(Acl\IcongroupTable::class),
+			'iconObj'      => $this->getDefinedTable(Acl\IconTable::class),
 		));		 
 		$ViewModel->setTerminal(True);
 		return $ViewModel;	
@@ -488,7 +490,7 @@ class FlowController extends AbstractActionController
 	{
 		$this->init();
 		$id = $this->_id;
-		$array_id = explode("_", $id);
+		$array_id = explode("_", (string) $id);
 		$flowaction_id = $array_id[0];
 		$page = (sizeof($array_id)>1)?$array_id[1]:'';
 		if($this->getRequest()->isPost()){
@@ -498,14 +500,14 @@ class FlowController extends AbstractActionController
 				$button .= " ".$btn_class;
 			endforeach;
 			$data = array(	
-					'id'           => $form['flowaction_id'],
-					'action'       => $form['action'],
-					'description'  => $form['description'],
-					'class'        => $button,
-					'icon'         => $form['icon'],
-					'status'       => $form['status'],
-					'author'       => $this->_author,
-					'modified'     => $this->_modified,
+				'id'           => $form['flowaction_id'],
+				'action'       => $form['action'],
+				'description'  => $form['description'],
+				'class'        => $button,
+				'icon'         => $form['icon'],
+				'status'       => $form['status'],
+				'author'       => $this->_author,
+				'modified'     => $this->_modified,
 			);
 			$data = $this->_safedataObj->rteSafe($data);
 			$result = $this->getDefinedTable(Administration\FlowActionTable::class)->save($data);	
@@ -517,12 +519,12 @@ class FlowController extends AbstractActionController
 			return $this->redirect()->toRoute('flow/paginator',array('action'=>'flowaction','page'=>$this->_id, 'id'=>'0'));
 		}
 		$ViewModel = new ViewModel(array(
-				'title'        => 'Edit Flow Action',
-				'page'         => $page,
-				'flowactions'  => $this->getDefinedTable(Administration\FlowActionTable::class)->get($flowaction_id),
-				'elements'     => $this->getDefinedTable(Acl\ButtonTable::class)->getAll(),
-				'icongroupObj' => $this->getDefinedTable(Acl\IcongroupTable::class),
-				'iconObj'      => $this->getDefinedTable(Acl\IconTable::class),
+			'title'        => 'Edit Flow Action',
+			'page'         => $page,
+			'flowactions'  => $this->getDefinedTable(Administration\FlowActionTable::class)->get($flowaction_id),
+			'elements'     => $this->getDefinedTable(Acl\ButtonTable::class)->getAll(),
+			'icongroupObj' => $this->getDefinedTable(Acl\IcongroupTable::class),
+			'iconObj'      => $this->getDefinedTable(Acl\IconTable::class),
 		));		 
 		$ViewModel->setTerminal(True);
 		return $ViewModel;	

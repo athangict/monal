@@ -11,14 +11,23 @@ use Laminas\Filter\Exception;
 use function preg_quote;
 use function preg_replace;
 
+/**
+ * @psalm-type Options = array{
+ *     search_separator?: string,
+ *     replacement_separator?: string,
+ *     ...
+ * }
+ * @template TOptions of Options
+ * @template-extends AbstractFilter<TOptions>
+ */
 class SeparatorToSeparator extends AbstractFilter
 {
+    /** @var string */
     protected $searchSeparator;
+    /** @var string */
     protected $replacementSeparator;
 
     /**
-     * Constructor
-     *
      * @param  string $searchSeparator      Separator to search for
      * @param  string $replacementSeparator Separator to replace with
      */
@@ -31,7 +40,9 @@ class SeparatorToSeparator extends AbstractFilter
     /**
      * Sets a new separator to search for
      *
-     * @param  string $separator Separator to search for
+     * @deprecated This method will be removed in 3.0.0 without replacement
+     *
+     * @param string $separator Separator to search for
      * @return self
      */
     public function setSearchSeparator($separator)
@@ -43,6 +54,8 @@ class SeparatorToSeparator extends AbstractFilter
     /**
      * Returns the actual set separator to search for
      *
+     * @deprecated This method will be removed in 3.0.0 without replacement
+     *
      * @return string
      */
     public function getSearchSeparator()
@@ -53,7 +66,9 @@ class SeparatorToSeparator extends AbstractFilter
     /**
      * Sets a new separator which replaces the searched one
      *
-     * @param  string $separator Separator which replaces the searched one
+     * @deprecated This method will be removed in 3.0.0 without replacement
+     *
+     * @param string $separator Separator which replaces the searched one
      * @return self
      */
     public function setReplacementSeparator($separator)
@@ -64,6 +79,8 @@ class SeparatorToSeparator extends AbstractFilter
 
     /**
      * Returns the actual set separator which replaces the searched one
+     *
+     * @deprecated This method will be removed in 3.0.0 without replacement
      *
      * @return string
      */
@@ -77,8 +94,9 @@ class SeparatorToSeparator extends AbstractFilter
      *
      * Returns the string $value, replacing the searched separators with the defined ones
      *
-     * @param  mixed $value
+     * @param  string|mixed $value
      * @return mixed
+     * @psalm-return ($value is string ? string : mixed)
      */
     public function filter($value)
     {
@@ -89,8 +107,8 @@ class SeparatorToSeparator extends AbstractFilter
     }
 
     /**
-     * @param  string|string[] $value
-     * @return string|string[]
+     * @param  string $value
+     * @return string
      */
     private function filterNormalizedValue($value)
     {

@@ -34,6 +34,7 @@ class Json implements ReaderInterface
      * fromFile(): defined by Reader interface.
      *
      * @see    ReaderInterface::fromFile()
+     *
      * @param  string $filename
      * @return array
      * @throws Exception\RuntimeException
@@ -58,6 +59,7 @@ class Json implements ReaderInterface
      * fromString(): defined by Reader interface.
      *
      * @see    ReaderInterface::fromString()
+     *
      * @param  string $string
      * @return array|bool
      * @throws Exception\RuntimeException
@@ -78,7 +80,6 @@ class Json implements ReaderInterface
     /**
      * Process the array for @include
      *
-     * @param  array $data
      * @return array
      * @throws Exception\RuntimeException
      */
@@ -109,7 +110,7 @@ class Json implements ReaderInterface
      *
      * @param string $data
      * @return array
-     * @throws Exception\RuntimeException for any decoding errors.
+     * @throws Exception\RuntimeException For any decoding errors.
      */
     private function decode($data)
     {

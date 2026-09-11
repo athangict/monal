@@ -1,6 +1,12 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Laminas\Form\Annotation;
+
+use Attribute;
+use Doctrine\Common\Annotations\Annotation;
+use Doctrine\Common\Annotations\Annotation\NamedArgumentConstructor;
 
 /**
  * Options annotation
@@ -11,16 +17,23 @@ namespace Laminas\Form\Annotation;
  * The value should be an associative array.
  *
  * @Annotation
+ * @NamedArgumentConstructor
  */
-class Options extends AbstractArrayAnnotation
+#[Attribute]
+final readonly class Options
 {
     /**
-     * Retrieve the options
-     *
-     * @return null|array
+     * Receive and process the contents of an annotation
      */
-    public function getOptions()
+    public function __construct(private array $options)
     {
-        return $this->value;
+    }
+
+    /**
+     * Retrieve the options
+     */
+    public function getOptions(): array
+    {
+        return $this->options;
     }
 }

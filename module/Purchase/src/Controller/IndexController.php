@@ -20,6 +20,8 @@ class IndexController extends AbstractActionController
 	protected $_dir; 		// default file directory
 	protected $_id; 		// route parameter id, usally used by crude
 	protected $_auth; 		// checking authentication
+	protected $_safedataObj; //safedata controller plugin
+	protected $_connection; // DB transaction connection
 
 	public function __construct(ContainerInterface $container)
     {

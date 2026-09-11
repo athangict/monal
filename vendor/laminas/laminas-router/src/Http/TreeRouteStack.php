@@ -10,8 +10,9 @@ use Laminas\Router\RouteInvokableFactory;
 use Laminas\Router\SimpleRouteStack;
 use Laminas\ServiceManager\Config;
 use Laminas\Stdlib\ArrayUtils;
-use Laminas\Stdlib\RequestInterface as Request;
+use Laminas\Stdlib\RequestInterface;
 use Laminas\Uri\Http as HttpUri;
+use Override;
 use Traversable;
 
 use function array_merge;
@@ -25,6 +26,9 @@ use function strlen;
 
 /**
  * Tree search implementation.
+ *
+ * @template TRoute of HttpRouteInterface
+ * @template-extends SimpleRouteStack<TRoute>
  */
 class TreeRouteStack extends SimpleRouteStack
 {
@@ -48,19 +52,23 @@ class TreeRouteStack extends SimpleRouteStack
      * We use an ArrayObject in this case so we can easily pass it down the tree
      * by reference.
      *
-     * @var ArrayObject
+     * @var ArrayObject<string, TRoute>
      */
     protected $prototypes;
 
     /**
-     * factory(): defined by RouteInterface interface.
+     * @internal
+     * @deprecated Since 3.9.0 This property will be removed or made private in version 4.0
      *
-     * @see    \Laminas\Router\RouteInterface::factory()
-     *
-     * @param  array|Traversable $options
-     * @return SimpleRouteStack
+     * @var int|null
+     */
+    public $priority;
+
+    /**
+     * @inheritDoc
      * @throws Exception\InvalidArgumentException
      */
+    #[Override]
     public static function factory($options = [])
     {
         if ($options instanceof Traversable) {
@@ -84,12 +92,12 @@ class TreeRouteStack extends SimpleRouteStack
     }
 
     /**
-     * init(): defined by SimpleRouteStack.
-     *
-     * @see    SimpleRouteStack::init()
+     * @inheritDoc
      */
+    #[Override]
     protected function init()
     {
+        /** @var ArrayObject<string, TRoute> $this->prototypes */
         $this->prototypes = new ArrayObject();
 
         (new Config([
@@ -143,18 +151,12 @@ class TreeRouteStack extends SimpleRouteStack
     }
 
     /**
-     * addRoute(): defined by RouteStackInterface interface.
-     *
-     * @see    RouteStackInterface::addRoute()
-     *
-     * @param  string  $name
-     * @param  mixed   $route
-     * @param  int $priority
-     * @return TreeRouteStack
+     * @inheritDoc
      */
+    #[Override]
     public function addRoute($name, $route, $priority = null)
     {
-        if (! $route instanceof RouteInterface) {
+        if (! $route instanceof HttpRouteInterface) {
             $route = $this->routeFromArray($route);
         }
 
@@ -162,16 +164,14 @@ class TreeRouteStack extends SimpleRouteStack
     }
 
     /**
-     * routeFromArray(): defined by SimpleRouteStack.
-     *
-     * @see    SimpleRouteStack::routeFromArray()
-     *
-     * @param  string|array|Traversable $specs
-     * @return RouteInterface
+     * @inheritDoc
+     * @param  string|iterable $specs
+     * @return TRoute
      * @throws Exception\InvalidArgumentException When route definition is not an array nor traversable.
      * @throws Exception\InvalidArgumentException When chain routes are not an array nor traversable.
      * @throws Exception\RuntimeException         When a generated routes does not implement the HTTP route interface.
      */
+    #[Override]
     protected function routeFromArray($specs)
     {
         if (is_string($specs)) {
@@ -209,7 +209,7 @@ class TreeRouteStack extends SimpleRouteStack
             $route = parent::routeFromArray($specs);
         }
 
-        if (! $route instanceof RouteInterface) {
+        if (! $route instanceof HttpRouteInterface) {
             throw new Exception\RuntimeException('Given route does not implement HTTP route interface');
         }
 
@@ -234,8 +234,10 @@ class TreeRouteStack extends SimpleRouteStack
     /**
      * Add multiple prototypes at once.
      *
-     * @param  Traversable $routes
-     * @return TreeRouteStack
+     * @deprecated Prototype routes removed in v4.0
+     *
+     * @param iterable<string|iterable|TRoute> $routes
+     * @return $this
      * @throws Exception\InvalidArgumentException
      */
     public function addPrototypes($routes)
@@ -254,13 +256,15 @@ class TreeRouteStack extends SimpleRouteStack
     /**
      * Add a prototype.
      *
-     * @param  string $name
-     * @param  mixed  $route
-     * @return TreeRouteStack
+     * @deprecated Prototype routes removed in v4.0
+     *
+     * @param string                 $name
+     * @param string|iterable|TRoute $route
+     * @return $this
      */
     public function addPrototype($name, $route)
     {
-        if (! $route instanceof RouteInterface) {
+        if (! $route instanceof HttpRouteInterface) {
             $route = $this->routeFromArray($route);
         }
 
@@ -272,28 +276,22 @@ class TreeRouteStack extends SimpleRouteStack
     /**
      * Get a prototype.
      *
+     * @deprecated Prototype routes removed in v4.0
+     *
      * @param  string $name
-     * @return RouteInterface|null
+     * @return TRoute|null
      */
     public function getPrototype($name)
     {
-        if (isset($this->prototypes[$name])) {
-            return $this->prototypes[$name];
-        }
-
-        return null;
+        return $this->prototypes[$name] ?? null;
     }
 
     /**
-     * match(): defined by \Laminas\Router\RouteInterface
-     *
-     * @see    \Laminas\Router\RouteInterface::match()
-     *
-     * @param  integer|null $pathOffset
-     * @param  array        $options
-     * @return RouteMatch|null
+     * @inheritDoc
+     * @param int|null $pathOffset
      */
-    public function match(Request $request, $pathOffset = null, array $options = [])
+    #[Override]
+    public function match(RequestInterface $request, $pathOffset = null, array $options = [])
     {
         if (! method_exists($request, 'getUri')) {
             return null;
@@ -341,16 +339,11 @@ class TreeRouteStack extends SimpleRouteStack
     }
 
     /**
-     * assemble(): defined by \Laminas\Router\RouteInterface interface.
-     *
-     * @see    \Laminas\Router\RouteInterface::assemble()
-     *
-     * @param  array $params
-     * @param  array $options
-     * @return mixed
+     * @inheritDoc
      * @throws Exception\InvalidArgumentException
      * @throws Exception\RuntimeException
      */
+    #[Override]
     public function assemble(array $params = [], array $options = [])
     {
         if (! isset($options['name'])) {
@@ -380,7 +373,7 @@ class TreeRouteStack extends SimpleRouteStack
             return $this->baseUrl . $route->assemble(array_merge($this->defaultParams, $params), $options);
         }
 
-        if (! isset($options['uri'])) {
+        if (! isset($options['uri']) || ! $options['uri'] instanceof HttpUri) {
             $uri = new HttpUri();
 
             if (isset($options['force_canonical']) && $options['force_canonical']) {
@@ -449,6 +442,9 @@ class TreeRouteStack extends SimpleRouteStack
     /**
      * Set the base URL.
      *
+     * @deprecated Since 3.19.0. This method will be removed in 4.0 and you will be expected to pass
+     * the base url via parameters to the {@link assemble()} method.
+     *
      * @param  string $baseUrl
      * @return self
      */
@@ -461,6 +457,8 @@ class TreeRouteStack extends SimpleRouteStack
     /**
      * Get the base URL.
      *
+     * @deprecated Since 3.19.0. This method will be removed in 4.0 without replacement
+     *
      * @return string
      */
     public function getBaseUrl()
@@ -470,6 +468,9 @@ class TreeRouteStack extends SimpleRouteStack
 
     /**
      * Set the request URI.
+     *
+     * @deprecated Since 3.19.0. This method will be removed in 4.0 and you will be expected to pass
+     * parameters to the {@link assemble()} method.
      *
      * @return TreeRouteStack
      */
@@ -481,6 +482,8 @@ class TreeRouteStack extends SimpleRouteStack
 
     /**
      * Get the request URI.
+     *
+     * @deprecated Since 3.19.0. This method will be removed in 4.0 without replacement
      *
      * @return HttpUri
      */

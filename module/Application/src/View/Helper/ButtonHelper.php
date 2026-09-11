@@ -24,7 +24,7 @@ class ButtonHelper extends AbstractHelper //implements ServiceLocatorAwareInterf
 	{  
 		$routeMatch = $this->_container->get('Application')->getMvcEvent()->getRouteMatch();
 		$routeName = $routeMatch->getMatchedRouteName();
-		$arr = explode('/', $routeName);
+		$arr = explode('/', (string) $routeName);
 		$routeName = $arr[0];
 		$routeAction = $routeMatch->getParam('action');	
 		$routeParamID = $routeMatch->getParam('id');
@@ -32,7 +32,7 @@ class ButtonHelper extends AbstractHelper //implements ServiceLocatorAwareInterf
 		$acl_id = $this->aclTable->getColumn(array('route'=>$routeName, 'resource' => $routeResource, 'action'=>$routeAction),'id');
 		$user_id= $this->view->identity()->id;	
 		$user_role= $this->view->identity()->role;	
-		$user_roles = explode(',', $user_role);
+		$user_roles = explode(',', (string) $user_role);
 		$highestRole = $this->aclTable->getHighestRole();
 		$status = ($status==NULL)?'0':$status;
 		switch($btn_type):

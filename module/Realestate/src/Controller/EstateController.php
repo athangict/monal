@@ -21,6 +21,7 @@ use Administration\Model As Administration;
 use Realestate\Model As Realestate;
 class EstateController extends AbstractActionController
 {   
+	protected $_login_id;
     private $_container;
     protected $_table;      // database table 
     protected $_user;       // user detail

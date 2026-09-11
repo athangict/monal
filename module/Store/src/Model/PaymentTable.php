@@ -29,8 +29,8 @@ class PaymentTable extends AbstractTableGateway
 	    $select = $sql->select();
 	    $select->from(array('sp'=>$this->table))
 	    	   ->join(array('p'=>'fa_party'),'p.id = sp.party', array('party'=>'code','party_id' => 'id'))
-	    	   ->join(array('l'=>'sys_location'),'l.id = sp.location', array('location'=>'location','location_id' => 'id'))
-	           ->join(array('a'=>'sys_activity'),'a.id = sp.activity', array('activity'=>'activity','activity_id' => 'id'))
+	    	   ->join(array('l'=>'adm_location'),'l.id = sp.location', array('location'=>'location','location_id' => 'id'))
+	           ->join(array('a'=>'adm_activity'),'a.id = sp.activity', array('activity'=>'activity','activity_id' => 'id'))
 	    	   ->order(array('id DESC'));
 	    $selectString = $sql->getSqlStringForSqlObject($select);
 	    $results = $adapter->query($selectString, $adapter::QUERY_MODE_EXECUTE)->toArray();
@@ -73,8 +73,8 @@ class PaymentTable extends AbstractTableGateway
 		$sql = new Sql($adapter);
 		$select = $sql->select();
 		$select->from(array('sp' => $this->table))
-	    	   ->join(array('l'=>'sys_location'),'l.id = sp.location', array('location'=>'location','location_id' => 'id'))
-	           ->join(array('a'=>'sys_activity'),'a.id = sp.cost_center', array('cost_center'=>'activity','activity_id' => 'id'))
+	    	   ->join(array('l'=>'adm_location'),'l.id = sp.location', array('location'=>'location','location_id' => 'id'))
+	           ->join(array('a'=>'adm_activity'),'a.id = sp.cost_center', array('cost_center'=>'activity','activity_id' => 'id'))
 	           ->join(array('g'=>'in_item_group'),'g.id = sp.item_group', array('item_group'=>'name','item_group_id' => 'id'))
 	           ->where($where)
 	    	   ->order(array('id DESC'));

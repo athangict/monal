@@ -23,9 +23,14 @@ use const E_USER_NOTICE;
 /**
  * Class for Laminas\View\Renderer\PhpRenderer to help enforce private constructs.
  *
+ * @deprecated Since 2.40.0 This class will be removed in 3.0. Variables can be assigned directly to models or during
+ *             rendering. It is unnecessary for another wrapper or intermediary object to exist.
+ *
  * @todo       Allow specifying string names for manager, filter chain, variables
  * @todo       Move escaping into variables object
  * @todo       Move strict variables into variables object
+ * @extends ArrayObject<string, mixed>
+ * @final
  */
 class Variables extends ArrayObject
 {
@@ -40,8 +45,8 @@ class Variables extends ArrayObject
     /**
      * Constructor
      *
-     * @param  array $variables
-     * @param  array $options
+     * @param array<string, mixed> $variables
+     * @param array<string, mixed> $options
      */
     public function __construct(array $variables = [], array $options = [])
     {
@@ -57,7 +62,7 @@ class Variables extends ArrayObject
     /**
      * Configure object
      *
-     * @param  array $options
+     * @param  array<string, mixed> $options
      * @return Variables
      */
     public function setOptions(array $options)
@@ -101,7 +106,7 @@ class Variables extends ArrayObject
     /**
      * Assign many values at once
      *
-     * @param  array|object $spec
+     * @param  array<string, mixed>|object $spec
      * @return Variables
      * @throws Exception\InvalidArgumentException
      */
@@ -135,23 +140,23 @@ class Variables extends ArrayObject
      *
      * Otherwise, returns _escaped_ version of the value.
      *
-     * @param  mixed $key
+     * @param string $offset
      * @return mixed
      */
     #[ReturnTypeWillChange]
-    public function offsetGet($key)
+    public function offsetGet($offset)
     {
-        if (! $this->offsetExists($key)) {
+        if (! $this->offsetExists($offset)) {
             if ($this->isStrict()) {
                 trigger_error(sprintf(
                     'View variable "%s" does not exist',
-                    $key
+                    $offset
                 ), E_USER_NOTICE);
             }
             return;
         }
 
-        $return = parent::offsetGet($key);
+        $return = parent::offsetGet($offset);
 
         // If we have a closure/functor, invoke it, and return its return value
         if (is_object($return) && is_callable($return)) {

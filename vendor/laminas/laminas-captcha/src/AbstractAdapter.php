@@ -3,6 +3,7 @@
 namespace Laminas\Captcha;
 
 use Laminas\Validator\AbstractValidator;
+use Override;
 use Traversable;
 
 use function in_array;
@@ -50,6 +51,7 @@ abstract class AbstractAdapter extends AbstractValidator implements AdapterInter
      *
      * @return string
      */
+    #[Override]
     public function getName()
     {
         return $this->name;
@@ -61,6 +63,7 @@ abstract class AbstractAdapter extends AbstractValidator implements AdapterInter
      * @param string $name
      * @return AbstractAdapter Provides a fluent interface
      */
+    #[Override]
     public function setName($name)
     {
         $this->name = $name;
@@ -71,10 +74,9 @@ abstract class AbstractAdapter extends AbstractValidator implements AdapterInter
      * Set single option for the object
      *
      * @param  string $key
-     * @param  mixed $value
      * @return $this Provides a fluent interface
      */
-    public function setOption($key, $value)
+    public function setOption($key, mixed $value)
     {
         if (in_array(strtolower($key), $this->skipOptions)) {
             return $this;
@@ -94,6 +96,7 @@ abstract class AbstractAdapter extends AbstractValidator implements AdapterInter
     }
 
     /** @inheritDoc */
+    #[Override]
     public function setOptions($options = [])
     {
         if (! is_array($options) && ! $options instanceof Traversable) {
@@ -107,6 +110,7 @@ abstract class AbstractAdapter extends AbstractValidator implements AdapterInter
     }
 
     /** @inheritDoc */
+    #[Override]
     public function getOptions()
     {
         return $this->options;
@@ -119,6 +123,7 @@ abstract class AbstractAdapter extends AbstractValidator implements AdapterInter
      *
      * @return string
      */
+    #[Override]
     public function getHelperName()
     {
         return '';

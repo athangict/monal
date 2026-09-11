@@ -86,7 +86,7 @@ class NumbertoWords extends AbstractHelper
 		$string = $fraction = null;
 	   
 		if (strpos($number, '.') !== false) {
-			list($number, $fraction) = explode('.', $number);
+			list($number, $fraction) = explode('.', (string) $number);
 		}
 	   
 		switch (true) {

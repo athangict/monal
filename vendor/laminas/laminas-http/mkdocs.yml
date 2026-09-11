@@ -1,0 +1,19 @@
+docs_dir: docs/book
+site_dir: docs/html
+nav:
+    - Home: index.md
+    - Introduction: intro.md
+    - Request: request.md
+    - Response: response.md
+    - Headers: headers.md
+    - "HTTP Client":
+        - Introduction: client/intro.md
+        - "Connection Adapters": client/adapters.md
+        - "Static Usage": client/static.md
+        - "Client Cookies": client/cookies.md
+        - "Advanced Usage": client/advanced.md
+site_name: laminas-http
+site_description: HTTP message and header abstractions, and HTTP client implementation.  (Not a PSR-7 implementation; see <a href="//docs.laminas.dev/laminas-diactoros">Diactoros</a> for PSR-7 support.
+repo_url: 'https://github.com/laminas/laminas-http'
+extra:
+    project: Components

@@ -27,7 +27,7 @@ class ModuleManagerFactory implements FactoryInterface
      * @param  null|array $options
      * @return ModuleManager
      */
-    public function __invoke(ContainerInterface $container, $name, array $options = null)
+    public function __invoke(ContainerInterface $container, $name, ?array $options = null)
     {
         $configuration    = $container->get('ApplicationConfig');
         $listenerOptions  = new ListenerOptions($configuration['module_listener_options']);
@@ -37,32 +37,32 @@ class ModuleManagerFactory implements FactoryInterface
         $serviceListener->addServiceManager(
             $container,
             'service_manager',
-            'Laminas\ModuleManager\Feature\ServiceProviderInterface',
+            \Laminas\ModuleManager\Feature\ServiceProviderInterface::class,
             'getServiceConfig'
         );
 
         $serviceListener->addServiceManager(
             'ControllerManager',
             'controllers',
-            'Laminas\ModuleManager\Feature\ControllerProviderInterface',
+            \Laminas\ModuleManager\Feature\ControllerProviderInterface::class,
             'getControllerConfig'
         );
         $serviceListener->addServiceManager(
             'ControllerPluginManager',
             'controller_plugins',
-            'Laminas\ModuleManager\Feature\ControllerPluginProviderInterface',
+            \Laminas\ModuleManager\Feature\ControllerPluginProviderInterface::class,
             'getControllerPluginConfig'
         );
         $serviceListener->addServiceManager(
             'ViewHelperManager',
             'view_helpers',
-            'Laminas\ModuleManager\Feature\ViewHelperProviderInterface',
+            \Laminas\ModuleManager\Feature\ViewHelperProviderInterface::class,
             'getViewHelperConfig'
         );
         $serviceListener->addServiceManager(
             'RoutePluginManager',
             'route_manager',
-            'Laminas\ModuleManager\Feature\RouteProviderInterface',
+            \Laminas\ModuleManager\Feature\RouteProviderInterface::class,
             'getRouteConfig'
         );
 

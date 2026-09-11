@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Laminas\Paginator;
 
-use Iterator;
 use OuterIterator;
 use ReturnTypeWillChange;
 
@@ -15,16 +14,14 @@ use function is_int;
 /**
  * Class allowing for the continuous iteration of a Laminas\Paginator\Paginator instance.
  * Useful for representing remote paginated data sources as a single Iterator
+ *
+ * @template TKey of int
+ * @template TValue
+ * @implements OuterIterator<TKey, TValue>
+ * @final
  */
 class PaginatorIterator implements OuterIterator
 {
-    /**
-     * Internal Paginator for iteration
-     *
-     * @var Paginator $paginator
-     */
-    protected $paginator;
-
     /**
      * Value for valid method
      *
@@ -32,9 +29,12 @@ class PaginatorIterator implements OuterIterator
      */
     protected $valid = true;
 
-    public function __construct(Paginator $paginator)
-    {
-        $this->paginator = $paginator;
+    /**
+     * @param Paginator<TKey, TValue> $paginator Internal Paginator for iteration
+     */
+    public function __construct(
+        protected Paginator $paginator
+    ) {
     }
 
     /**
@@ -42,7 +42,7 @@ class PaginatorIterator implements OuterIterator
      *
      * @link http://php.net/manual/en/iterator.current.php
      *
-     * @return mixed Can return any type.
+     * @return TValue Can return any type.
      */
     #[ReturnTypeWillChange]
     public function current()
@@ -82,7 +82,7 @@ class PaginatorIterator implements OuterIterator
      *
      * @link http://php.net/manual/en/iterator.key.php
      *
-     * @return mixed scalar on success, or null on failure.
+     * @return TKey|null scalar on success, or null on failure.
      */
     #[ReturnTypeWillChange]
     public function key()
@@ -90,6 +90,7 @@ class PaginatorIterator implements OuterIterator
         $innerKey = $this->getInnerIterator()->key();
         assert(is_int($innerKey));
         ++$innerKey; //Laminas\Paginator\Paginator normalizes 0 to 1
+        assert(is_int($innerKey));
 
         $this->paginator->getCurrentPageNumber();
         return ($this->paginator->getAbsoluteItemNumber(
@@ -134,7 +135,7 @@ class PaginatorIterator implements OuterIterator
      *
      * @link http://php.net/manual/en/outeriterator.getinneriterator.php
      *
-     * @return Iterator The inner iterator for the current entry.
+     * @return iterable<TKey, TValue> The inner iterator for the current entry.
      */
     #[ReturnTypeWillChange]
     public function getInnerIterator()

@@ -14,6 +14,7 @@ use Stock\Model As Stock;
 use Purchase\Model As Purchase;
 class ClaimsreportController extends AbstractActionController
 {   
+	protected $_connection;
 	private $_container;
 	protected $_table; 		// database table 
     protected $_user; 		// user detail

@@ -1,11 +1,13 @@
 <?xml version="1.0"?>
 <psalm
     errorLevel="1"
-    findUnusedPsalmSuppress="true"
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xmlns="https://getpsalm.org/schema/config"
     xsi:schemaLocation="https://getpsalm.org/schema/config vendor/vimeo/psalm/config.xsd"
     errorBaseline="psalm-baseline.xml"
+    findUnusedPsalmSuppress="true"
+    findUnusedBaselineEntry="true"
+    findUnusedCode="true"
 >
     <projectFiles>
         <directory name="src"/>
@@ -13,26 +15,24 @@
         <ignoreFiles>
             <directory name="test/TestAsset"/>
             <directory name="vendor"/>
+            <!-- can be removed once PHP8.0 support dropped -->
+            <directory name="test/Strategy/TestAsset"/>
         </ignoreFiles>
     </projectFiles>
-
     <issueHandlers>
-        <InternalMethod>
+        <ClassMustBeFinal>
             <errorLevel type="suppress">
-                <referencedMethod name="PHPUnit\Framework\MockObject\Builder\InvocationMocker::method"/>
+                <directory name="src" />
             </errorLevel>
+        </ClassMustBeFinal>
+        <MissingOverrideAttribute>
             <errorLevel type="suppress">
-                <referencedMethod name="PHPUnit\Framework\MockObject\Builder\InvocationMocker::willReturn"/>
+                <directory name="src" />
+                <directory name="test" />
             </errorLevel>
-            <errorLevel type="suppress">
-                <referencedMethod name="PHPUnit\Framework\MockObject\Builder\InvocationMocker::with"/>
-            </errorLevel>
-        </InternalMethod>
-
-        <PropertyNotSetInConstructor>
-            <errorLevel type="suppress">
-                <file name="test/Strategy/ScalarTypeStrategyTest.php"/>
-            </errorLevel>
-        </PropertyNotSetInConstructor>
+        </MissingOverrideAttribute>
     </issueHandlers>
+    <plugins>
+        <pluginClass class="Psalm\PhpUnitPlugin\Plugin"/>
+    </plugins>
 </psalm>

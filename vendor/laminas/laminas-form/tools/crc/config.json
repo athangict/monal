@@ -1,0 +1,30 @@
+{
+    "symbol-whitelist":[
+        "IntlDateFormatter",
+        "Locale",
+        "Doctrine\\Common\\Annotations\\AnnotationReader",
+        "Laminas\\Captcha\\AdapterInterface",
+        "Laminas\\Captcha\\Dumb",
+        "Laminas\\Captcha\\Factory",
+        "Laminas\\Captcha\\Figlet",
+        "Laminas\\Captcha\\Image",
+        "Laminas\\Captcha\\ReCaptcha",
+        "Laminas\\EventManager\\AbstractListenerAggregate",
+        "Laminas\\EventManager\\Event",
+        "Laminas\\EventManager\\EventInterface",
+        "Laminas\\EventManager\\EventManager",
+        "Laminas\\EventManager\\EventManagerAwareInterface",
+        "Laminas\\EventManager\\EventManagerInterface",
+        "Laminas\\EventManager\\ListenerAggregateInterface",
+        "Laminas\\I18n\\Validator\\IsFloat",
+        "Laminas\\I18n\\View\\Helper\\AbstractTranslatorHelper",
+        "Laminas\\ModuleManager\\Feature\\FormElementProviderInterface",
+        "Laminas\\ModuleManager\\ModuleManager",
+        "Laminas\\View\\Helper\\AbstractHelper",
+        "Laminas\\View\\Helper\\Doctype",
+        "Laminas\\View\\Helper\\EscapeHtml",
+        "Laminas\\View\\Helper\\EscapeHtmlAttr",
+        "Laminas\\View\\Helper\\HelperInterface",
+        "Laminas\\View\\Renderer\\PhpRenderer"
+    ]
+}

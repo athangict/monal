@@ -7,7 +7,8 @@
 <?php 
 	$getRoute = $this->getroute_helper()->getMatchedRouteName();
 	$getAction = $this->getroute_helper()->getParam('action');
-	$arr = explode('/', $getRoute);
+	$getId = $this->getroute_helper()->getParam('id');
+	$arr = explode('/', (string) $getRoute);
 	$getRoute = $arr[0];
 	$getResource = $this->getresource_helper($getRoute);
 ?>	
@@ -97,6 +98,16 @@
 												</a>
 												<b class="arrow"></b>
 											</li>
+													<?php if($route == 'user' && $submenuItem['action'] == 'view'):?>
+														<?php $settingsActive = ($condition1 && $condition2 && $getAction == 'view' && $getId == 'branding'); ?>
+														<li class="<?php echo $settingsActive ? 'active' : '';?>">
+															<a href="<?php echo $this->url('user', array('action' => 'view', 'id' => 'branding')); ?>">
+																<i class="menu-icon fa fa-caret-right"></i>
+																Settings
+															</a>
+															<b class="arrow"></b>
+														</li>
+													<?php endif;?>
 										<?php endforeach;?>
 									</ul>
 									<!-- /.nav-second-level -->

@@ -1,0 +1,125 @@
+<?php
+/**
+ * 
+ * View -- of Stock/MasterController/adduomAction
+ * 
+ */
+?>
+<?php foreach($postbox as $postboxs);?>
+<form id="#form" method="post" action="<?php echo $this->url('postbox', array('action' => 'editponumber','id'=>$postboxs['id'])); ?>"  enctype="multipart/form-data" >
+    <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+        <h4 class="modal-title"> <i class="fa fa-asterisk"></i> Edit post box size</h4>
+    </div>  <!-- /modal-header -->
+    <div class="modal-body">
+		<div class="panel panel-default">                       
+			<div class="panel-body">   
+				<div class="form-group">
+					<label for="post_box_size" class="control-label">Post-box size</label>
+				</div>
+				<div class="form-group">
+				<input type="hidden"  name="po_id" id="po_id" value="<?php echo $postboxs['id'];?>">
+					<label for="region" class="control-label">Region</label>
+					<select class="form-control" name="region" id="region" data-placeholder="select" >
+						<option value=""></option>
+							<?php foreach($region as $regions):?>
+								<option value="<?php echo $regions['id'];?>" <?php echo ($postboxs['region']==$regions['id'])?'selected':'';?>>
+									<?php echo $regions['region'];?></option>
+							<?php endforeach;?>							
+					</select>
+				</div>
+				  <div class="form-group">
+					<label for="location" class="control-label">Location</label>
+					<select id="location" name="location" class="form-control" data-placeholder="Select" required>
+						<option value=""></option>
+						<?php foreach($location as $locations):?>
+								<option value="<?php echo $locations['id'];?>" <?php echo ($postboxs['region']==$locations['id'])?'selected':'';?>>
+									<?php echo $locations['location'];?></option>
+							<?php endforeach;?>
+					</select> 
+				</div>
+				<div class="form-group">
+					<label for="postbox_no" class="control-label">Postbox No.</label>
+					<input type="text" class="form-control" name="postbox_no" id="postbox_no" value="<?php echo $postboxs['po_number'];?>" required>
+				</div>
+				 <div class="form-group">
+					<label for="post_box_size" class="control-label">Postbox size</label>
+					<select class="form-control" name="post_box_size" id="post_box_size" data-placeholder="Select" > 
+						<option value=""></option>
+						<?php foreach($this->postsizeObj->getAll() as $size):?>
+								<option value="<?php echo $size['id'];?>" <?php echo ($postboxs['po_size']==$size['id'])?'selected':'';?>>
+									<?php echo $size['post_box_size'];?></option>
+							<?php endforeach;?>	
+					</select>
+				</div>
+			</div>
+		</div>
+    </div> <!-- /modal-body -->
+    <div class="modal-footer">
+        <button type="submit" class="btn btn-success"><i class="fa fa-check"></i> Save </button>
+        <button type="button" class="btn btn-warning" data-dismiss="modal" ><i class="fa fa-times"></i> Cancel </button> 
+    </div>  
+</form>
+<script>
+$('document').ready(function(){
+	$("#region").change(function() {
+		$.post(
+			"<?php echo $this->url('postbox', array('action' => 'getlocation'));?>",
+			{
+				regId: $('#region').val(),
+			},
+			function(data){
+				//console.log(data);	
+				$('select#location').html(data.location);
+				$('select#location').trigger('chosen:updated');
+			},
+			'json'
+		);	
+	});
+	
+	const fv = FormValidation.formValidation(document.getElementById('#form'), {
+		fields: {
+			region: {
+				validators: {
+					notEmpty: {
+						message: 'Please select region.'
+					}
+				}
+			},
+			location: {
+				validators: {
+					notEmpty: {
+						message: 'Please select location'
+					},
+				}
+			},
+			postbox_no: {
+				validators: {
+					notEmpty: {
+						message: 'Please provide postbox number'
+					},
+				}
+			},
+		},
+		plugins: {
+			trigger: new FormValidation.plugins.Trigger(),
+			bootstrap3: new FormValidation.plugins.Bootstrap3(),
+			submitButton: new FormValidation.plugins.SubmitButton(),
+			defaultSubmit: new FormValidation.plugins.DefaultSubmit(),
+		},
+	}).on('core.element.validated', function (e) {
+		if (e.valid) {
+			$('div#'+ e.field.replace('[]','') +'_chosen').removeClass('is-invalid');
+			$('div#'+ e.field.replace('[]','') +'_chosen').addClass('is-valid');
+		} else {
+			$('div#'+ e.field.replace('[]','') +'_chosen').removeClass('is-valid');
+			$('div#'+ e.field.replace('[]','') +'_chosen').addClass('is-invalid');
+		}
+	});
+	$('form select').chosen().change(function () {
+		fv.revalidateField($(this).attr('name'));
+	});
+});
+
+
+</script>

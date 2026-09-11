@@ -756,7 +756,7 @@ class TransporterController extends AbstractActionController
 				endforeach;
 				$next_serial = max($pltp_no_list) + 1;
 					
-				switch(strlen($next_serial)){
+				switch(strlen((string)($next_serial))){
 					case 1: $next_dc_serial = "000".$next_serial; break;
 					case 2: $next_dc_serial = "00".$next_serial;  break;
 					case 3: $next_dc_serial = "0".$next_serial;   break;

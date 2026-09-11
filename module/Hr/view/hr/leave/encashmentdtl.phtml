@@ -143,7 +143,7 @@ if(sizeof($checkleaveOfficial) >0 && sizeof($this->encashDtls)>0){
 									<i class="fa fa-times"></i> Cancel  </button>	
 								  </form>	<?php
 								 elseif($this->userID == $flow['role_id'] && $row['status']!=8):							      
-									$actions = explode('|', $flow['action']);
+									$actions = explode('|', (string) $flow['action']);
 									for($i=0; $i < sizeof($actions); $i++):
 										$buttons = $this->flowactionObj->get($actions[$i]);
 										foreach($buttons as $button):?>

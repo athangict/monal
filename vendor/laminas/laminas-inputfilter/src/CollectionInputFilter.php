@@ -8,15 +8,15 @@ use Laminas\Validator\NotEmpty;
 use Traversable;
 
 use function count;
-use function get_class;
-use function gettype;
+use function get_debug_type;
 use function is_array;
 use function is_iterable;
-use function is_object;
 use function sprintf;
 
 /**
  * @psalm-import-type InputFilterSpecification from InputFilterInterface
+ * @template TFilteredValues
+ * @extends InputFilter<TFilteredValues>
  */
 class CollectionInputFilter extends InputFilter
 {
@@ -60,7 +60,7 @@ class CollectionInputFilter extends InputFilter
                 '%s expects an instance of %s; received "%s"',
                 __METHOD__,
                 BaseInputFilter::class,
-                is_object($inputFilter) ? get_class($inputFilter) : gettype($inputFilter)
+                get_debug_type($inputFilter)
             ));
         }
 
@@ -144,7 +144,7 @@ class CollectionInputFilter extends InputFilter
             throw new Exception\InvalidArgumentException(sprintf(
                 '%s expects an array or Traversable collection; invalid collection of type %s provided',
                 __METHOD__,
-                is_object($data) ? get_class($data) : gettype($data)
+                get_debug_type($data)
             ));
         }
 
@@ -161,11 +161,10 @@ class CollectionInputFilter extends InputFilter
                 '%s expects each item in a collection to be an array or Traversable; '
                 . 'invalid item in collection of type %s detected',
                 __METHOD__,
-                is_object($item) ? get_class($item) : gettype($item)
+                get_debug_type($item)
             ));
         }
 
-        /** @psalm-suppress InvalidPropertyAssignmentValue */
         $this->data = $data;
         return $this;
     }
@@ -221,7 +220,7 @@ class CollectionInputFilter extends InputFilter
             $valid = false;
         }
 
-        if (! $this->data) {
+        if ($this->data === null) {
             $this->clearValues();
             $this->clearRawValues();
 
@@ -268,6 +267,7 @@ class CollectionInputFilter extends InputFilter
 
     /**
      * @return array<array-key, array>
+     * @psalm-return TFilteredValues
      */
     public function getValues()
     {
@@ -315,7 +315,7 @@ class CollectionInputFilter extends InputFilter
      */
     public function getUnknown()
     {
-        if (! $this->data) {
+        if ($this->data === null) {
             throw new Exception\RuntimeException(sprintf(
                 '%s: no data present!',
                 __METHOD__

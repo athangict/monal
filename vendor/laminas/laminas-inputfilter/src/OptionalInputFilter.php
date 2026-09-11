@@ -4,10 +4,17 @@ declare(strict_types=1);
 
 namespace Laminas\InputFilter;
 
+use Laminas\Stdlib\ArrayUtils;
+
+use function is_iterable;
+
 /**
  * InputFilter which only checks the containing Inputs when non-empty data is set,
  * else it reports valid
  * This is analog to {@see Input} with the option ->setRequired(false)
+ *
+ * @template TFilteredValues
+ * @extends InputFilter<TFilteredValues>
  */
 class OptionalInputFilter extends InputFilter
 {
@@ -21,7 +28,7 @@ class OptionalInputFilter extends InputFilter
      */
     public function setData($data)
     {
-        parent::setData($data ?: []);
+        parent::setData($this->isEmpty($data) ? [] : $data);
 
         return $this;
     }
@@ -33,7 +40,7 @@ class OptionalInputFilter extends InputFilter
      */
     public function isValid($context = null)
     {
-        if ($this->data) {
+        if (! $this->isEmpty($this->data)) {
             return parent::isValid($context);
         }
 
@@ -46,10 +53,19 @@ class OptionalInputFilter extends InputFilter
      *     which would likely cause failures later on in your program
      * Fallbacks for the inputs are not respected by design
      *
-     * @return array<string, mixed>|null
+     * @return TFilteredValues|null
      */
     public function getValues()
     {
-        return $this->data ? parent::getValues() : null;
+        return ! $this->isEmpty($this->data)
+            ? parent::getValues()
+            : null;
+    }
+
+    private function isEmpty(iterable|null $data): bool
+    {
+        $data = is_iterable($data) ? ArrayUtils::iteratorToArray($data) : $data;
+
+        return $data === [] || $data === null;
     }
 }

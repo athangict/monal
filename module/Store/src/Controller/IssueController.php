@@ -17,6 +17,8 @@ use Store\Model As Store;
 use Stock\Model As Stock;
 class IssueController extends AbstractActionController
 {   
+	protected $_connection;
+	protected $_userloc;
 	private $_container;
 	protected $_table; 		// database table 
     protected $_user; 		// user detail
@@ -369,7 +371,7 @@ class IssueController extends AbstractActionController
 	public function viewissueAction()
 	{
 		$this->init();		
-		$params = explode("-", $this->_id);
+		$params = explode("-", (string) $this->_id);
 		//echo "<pre>"; print_r($params); exit;
 		if($params['1'] == '1' && $params['2'] > 0){
 			$flag = $this->getDefinedTable(Acl\NotifyTable::class)->getColumn($params['2'], 'flag'); 

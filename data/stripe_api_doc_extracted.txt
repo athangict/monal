@@ -1,0 +1,484 @@
+
+
+===== PAGE 1 =====
+
+    
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+Stripe  Payment  Processing  API  Documentation  
+Version  2.0.0                     Prepared  by:  Nima  Tenzin  Thinley 
+  
+
+
+===== PAGE 2 =====
+
+    
+ Overview  
+The  Stripe  Payment  Processing  API  provides  a  comprehensive  solution  for  
+handling
+ 
+online
+ 
+payments
+ 
+through
+ 
+Stripe's
+ 
+secure
+ 
+checkout
+ 
+system.
+ 
+The
+ 
+API
+ 
+consists
+ 
+of
+ 
+two
+ 
+main
+ 
+endpoints:
+ 
+1.  Create  Stripe  Checkout  Session  -  Initiates  payment  processing  with  
+automatic
+ 
+fee
+ 
+calculation
+ 
+and
+ 
+merchant
+ 
+validation
+ 2.  Check  Application  Status  -  Verifies  payment  completion  status  for  
+applications
+ 
+The  API  automatically  calculates  processing  fees,  validates  merchant  credentials,  
+and
+ 
+provides
+ 
+secure
+ 
+redirect
+ 
+URLs
+ 
+for
+ 
+payment
+ 
+completion.
+ 
+All
+ 
+transactions
+ 
+are
+ 
+processed
+ 
+through
+ 
+Stripe's
+ 
+PCI-compliant
+ 
+infrastructure.
+ 
+ 
+Supported  Features  
+●  Currency :  USD  only  (additional  currencies  coming  soon)  ●  Payment  Methods :  All  Stripe-supported  payment  methods  ●  Minimum  Transaction :  $1.00  USD  ●  Maximum  Transaction :  No  limit  (subject  to  merchant  account  limits)  
+ 
+UAT  System  Availability  
+Important  System  Access  Schedule:  
+●  Weekdays  (Mon-Fri):  9:00  AM  -  5:00  PM  Bhutan  Time  (BT)  ●  Weekends  (Sat-Sun/Govt  Holidays):  System  is  NOT  available  ●  Beyond  working  hours  testing:  Requires  advance  internal  approval  
+ 
+ 
+  
+
+
+===== PAGE 3 =====
+
+    
+Base  URL(UAT)   https://internal-gateway.sit.digitalkidu.bt:8082/uat/stripe/ 
+ 
+Authentication  
+All  API  requests  require  authentication  using  the  following  header:  
+Header  Value  X-Gravitee-Api-Key  69716f2b-9148-4065-a6c8-934e32f57456 
+Example  Header  
+X-Gravitee-Api-Key:  69716f2b-9148-4065-a6c8-934e32f57456  Content-Type:  application/json   
+  
+
+
+===== PAGE 4 =====
+
+    
+Process  flow  
+ 
+       
+  
+
+
+===== PAGE 5 =====
+
+    
+API  Endpoints  
+Create  Checkout  Session  
+Creates  a  secure  Stripe  checkout  session  with  automatic  fee  calculation  and  
+merchant
+ 
+validation.
+ 
+Endpoint  Details  
+●  Method:  POST  ●  URL: /checkout  
+ 
+Request  Parameters  
+Name  Type  Required  Description  Validation  amount  decimal  ✅  Base  payment  amount  (minimum  1)  
+Minimum:  1.00  
+currency  string  ✅  Currency  code  (only  "usd"  supported)  
+Must  be  "usd"  
+agency_name  string  ✅  Name  of  the  agency  processing  the  payment  
+Non-empty  string  
+application_no  
+string  ✅  Unique  application  number  for  tracking  
+Must  be  unique  
+submerchant_id  
+string  ✅  Sub-merchant  identifier  for  validation  
+Must  exist  in  system  
+  
+
+
+===== PAGE 6 =====
+
+    
+dk_account  string  ✅  DK  account  identifier  for  merchant  validation  
+Must  exist  in  system  
+success_url  string  ✅  URL  to  redirect  after  successful  payment  (must  be  valid  HTTPS  URL)  
+Must  be  valid  HTTPS  URL  
+cancel_url  string  ✅  URL  to  redirect  if  payment  is  cancelled  (must  be  valid  HTTPS  URL)   
+Must  be  valid  HTTPS  URL  
+Sample  Request 
+{  
+  "amount":  100.00,  
+  "currency":  "usd",  
+  "agency_name":  "Digital  Services  Agency",  
+  "application_no":  "APP20250812001",  
+  "submerchant_id":  "MERCHANT_001",  
+  "dk_account":  "MERCHANT_001",  
+  "success_url":  "https://yourdomain.com/payment/success",  
+  "cancel_url":  "https://yourdomain.com/payment/cancel"  
+}  
+  
+
+
+===== PAGE 7 =====
+
+    
+ 
+Success  Response  (200  OK)   {    "response_code":  "0000",    "response_message":  "Success",    "response_description":  "Stripe  checkout  session  created  successfully",    "response_data":  {      "session_id":  
+"cs_test_a1RWNeorlFfEnmu8lK32XCMzMv9L5R4vzCY5oDeyKJMox86g7T4z
+bsLT8s",
+     "session_url":  
+"https://checkout.stripe.com/c/pay/cs_test_a1RWNeorlFfEnmu8lK32XCMzMv9L
+5R4vzCY5oDeyKJMox86g7T4zbsLT8s"
+   }  Response  Parameters  
+Root-Level  Fields  
+Field  Type  Description  response_code  string  Status  code  of  the  API  call  (0000  for  success)  response_message  string  Message  summarizing  the  result  response_description  string  Additional  description  of  the  response  response_data  string  Contains  session  details  for  successful  requests   
+ 
+ 
+  
+
+
+===== PAGE 8 =====
+
+    
+Checkout  Session  Object  Fields  (response_data)  
+Field  Type  Description  session_id  string  Unique  Stripe  checkout  session  identifier  session_url  string  Stripe  checkout  URL  for  payment  completion   
+Error  Responses  
+400  Bad  Request  –  Validation  errors   {      "response_code":  "4001",      "response_message":  "Validation  error",      "response_description":  "Invalid  input:  The  payment  amount  must  be  at  least  1  
+unit"
+ }   
+400  Bad  Request  –  Invalid  currency   {      "response_code":  "4001",      "response_message":  "Validation  error",      "response_description":  "Invalid  currency:  eur.  Only  'usd'  is  supported."  }   
+ 
+ 
+ 
+  
+
+
+===== PAGE 9 =====
+
+    
+400  Bad  Request  –  Invalid  merchant   {      "response_code":  "4001",      "response_message":  "Invalid  sub  merchant  ID",      "response_description":  "sub  merchant  ID  cannot  be  null  or  empty"  }   
+400  Bad  Request  –  Invalid  request  to  Stripe   {    "response_code":  "4002",    "response_message":  "Invalid  request",    "response_description":  "Invalid  request  to  Stripe:  [detailed  message  from  
+Stripe]"
+ }  
+404  Not  Found  –  Merchant  not  found   {      "response_code":  "4004",      "response_message":  "Merchant  not  found",      "response_description":  "Merchant  does  not  exist  in  merchant  table.  
+Please
+ 
+verify
+ 
+your
+ 
+merchant
+ 
+details."
+ }       
+ 
+ 
+  
+
+
+===== PAGE 10 =====
+
+    
+409  Conflict  –  Duplicate  request   {      "response_code":  "4003",      "response_message":  "Duplicate  request",      "response_description":  "Duplicate  request  detected  for  application  
+number
+ 
+APP12345.
+ 
+Please
+ 
+try
+ 
+again
+ 
+with
+ 
+a
+ 
+different
+ 
+request."
+ }   
+429  Too  Many  Requests  {      "response_code":  "4029",      "response_message":  "Rate  limit  exceeded",      "response_description":  "Too  many  requests.  Please  try  again  later."  }   
+500  Internal  Server  Error   {      "response_code":  "5000",      "response_message":  "Internal  server  error",      "response_description":  "Internal  server  error  occurred.  Please  try  again  
+later."
+ }        
+ 
+  
+
+
+===== PAGE 11 =====
+
+    
+500  Internal  Server  Error  –  Verification  service  error   {    "response_code":  "5006",    "response_message":  "Verification  service  error",    "response_description":  "An  error  occurred  while  verifying  merchant  details.  
+Please
+ 
+try
+ 
+again
+ 
+later."
+ }   
+ 
+500  Internal  Server  Error  –  Merchant  service  timeout    {    "response_code":  "5003",    "response_message":  "Service  timeout",    "response_description":  "Merchant  verification  service  is  temporarily  slow.  
+Please
+ 
+try
+ 
+again
+ 
+in
+ 
+a
+ 
+few
+ 
+moments."
+ }  
+500  Internal  Server  Error  –  Merchant  service  connection  failure   {    "response_code":  "5004",    "response_message":  "Connection  timeout",    "response_description":  "Unable  to  connect  to  merchant  verification  service.  
+Please
+ 
+try
+ 
+again
+ 
+later."
+ }   
+ 
+ 
+   
+
+
+===== PAGE 12 =====
+
+    
+500  Internal  Server  Error  –  Merchant  network  error   {    "response_code":  "5005",    "response_message":  "Network  error",    "response_description":  "Network  error  occurred  while  verifying  merchant.  
+Please
+ 
+try
+ 
+again
+ 
+later."
+ }   
+501  Authentication  Error   {      "response_code":  "5001",      "response_message":  "Authentication  error",      "response_description":  "Payment  service  authentication  error"  }  
+502  Service  Unavailable   {      "response_code":  "5002",      "response_message":  "Service  unavailable",      "response_description":  "Payment  service  temporarily  unavailable.  Please  try  
+again
+ 
+later."
+ }             
+
+
+===== PAGE 13 =====
+
+    
+Check  Application  Status  
+Checks  if  the  payment  is  successful  or  not.  
+Endpoint  
+●  Method :  GET  ●  URL :  /check-application-status  
+ 
+Query  Parameters   Name  Type  Required  Description  application_no  string  ✅  Application  number  to  check  for  payment  completion    
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+   
+
+
+===== PAGE 14 =====
+
+    
+Usage  Examples  
+Check  if  application  payment  is  completed: /check-application-status?application_no=APP12345  
+Response  Parameters  
+Root-Level  Fields  
+Field  Type  Description  response_code  string  Status  code  of  the  API  call  (0000  for  success)  response_message  string  Message  summarizing  the  result  response_description  string  Additional  description  of  the  response  response_data  boolean  True  if  payment  completed,  false  if  not  completed  
+ 
+Success  Response  
+200  OK  –  Application  Found  and  Completed  {      "response_code":  "0000",      "response_message":  "Application  Found",      "response_description":  "Application  number  exists  with  checkout  session  
+completed
+ 
+status.",
+     "response_data":  true  }   
+  
+
+
+===== PAGE 15 =====
+
+    
+200  OK  –  Application  Not  Found  or  Not  Completed  {      "response_code":  "4004",      "response_message":  "Application  Not  Found",       "response_description":  "Application  number  does  not  exist  or  checkout  
+session
+ 
+is
+ 
+not
+ 
+completed.",
+     "response_data":  false  }   
+Error  Responses  
+400  Bad  Request  –  Missing  application  number   {      "response_code":  "4000",      "response_message":  "Invalid  Input",      "response_description":  "Application  number  is  required  and  cannot  be  empty."  }   
+400  Bad  Request  –  Validation  error   {      "response_code":  "4001",      "response_message":  "Validation  error",      "response_description":  "Invalid  input:  [specific  validation  error]"  }   
+500  Internal  Server  Error  {      "response_code":  "5000",      "response_message":  "Internal  Server  Error",      "response_description":  "An  error  occurred  while  checking  the  application."  }    
+
+
+===== PAGE 16 =====
+
+    
+Important  Notes 
+Payment  Success  Criteria  
+Key  Requirement  
+Treat  the  payment  as  successful  ONLY  when  response_data  is  true.  All  other  responses  (including  false  or  error  responses)  should  be  considered  as  payment  not  completed.  
+  
+Merchant  Usage  &  Service  Policy  
+Important  -  Applies  to  All  Merchants  Integrated  with  DK  Stripe  •     If  a  merchant's  transaction  causes,  or  could  potentially  cause,  harm  to  the  company's  reputation,  or  poses  a  risk  to  transactions  via  Stripe,  the  company  reserves  the  right  to  suspend  or  discontinue  services  for  that  merchant.  •     All  customer  refund  requests  must  be  directed  to  DK  Bank's  operations  team  for  processing.  •     Non-compliance  with  these  guidelines  may  result  in  temporary  suspension  of  services  until  resolved,  as  per  company  terms  and  conditions.  
+ 
+ 
+ 
+ 
+ 
+  
+
+
+===== PAGE 17 =====
+
+    
+Error  Code  Reference   Response  Code  Message  Description  0000  Success  Request  completed  successfully  4000  Invalid  Input  General  input  validation  error  4001  Validation  error  Specific  validation  error  with  details  4002  Invalid  request  Invalid  request  to  Stripe  payment  service  4003  Duplicate  request  Duplicate  request  detected  4004  Not  found  Merchant  or  application  not  found  4029  Rate  limit  exceeded  Too  many  requests  sent  5000  Internal  server  error  General  server  error  5001  Authentication  error  Payment  service  authentication  failed  5002  Service  unavailable  Payment  service  temporarily  unavailable     
+Transaction  Fee  Calculation  
+Fee  Structure  
+The  API  automatically  calculates  and  applies  the  following  fees  to  all  
+transactions:
+ 
+  
+
+
+===== PAGE 18 =====
+
+    
+●  Stripe  Fee:  4.15%  of  transaction  amount  ●  DK  Fee:  0.7%  of  transaction  amount  ●  Fixed  Fee:  $0.60  per  transaction  
+Fee  Calculation  Process  
+The  API  performs  the  following  steps  for  fee  calculation:  
+1.  Calculate  Total  Percentage  Fee:  (Amount  ×  4.85%)  ○  Stripe  Fee:  4.15%  ○  DK  Fee:  0.7%  ○  Combined:  4.85%  2.  Add  Fixed  Fee:  +  $0.60  3.  Calculate  Final  Amount:  Base  Amount  +  Total  Fees  4.  Convert  to  Cents:  Final  amount  converted  to  cents  for  Stripe  
+processing
+ 
+Rounding:  All  monetary  calculations  use  ROUND_HALF_UP  rounding  to  2  
+decimal
+ 
+places.
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+Fee  Examples  
+$100  Transaction  Breakdown  
+●  Base  Amount:  $100.00    
+
+
+===== PAGE 19 =====
+
+    
+●  Fee  Calculation:  ○  Stripe  Fee:  $100.00  ×  4.15%  =  $4.15  ○  DK  Fee:  $100.00  ×  0.7%  =  $0.70  ○  Fixed  Fee:  $0.60  ○  Total  Fees:  $4.15  +  $0.70  +  $0.60  =  $5.45  ●  Final  Amount:  $100.00  +  $5.45  =  $105.45  ●  Customer  pays:  $105.45  
+Customer  Display  
+The  customer  will  see  the  final  amount  including  all  fees  during  the  Stripe  
+checkout
+ 
+process.
+ 
+ 
+ 
+Notes
+ 
+●  All  fees  are  automatically  calculated  by  the  API  ●  Fees  are  included  in  the  checkout  session  amount  ●  The  merchant  receives  the  base  amount  minus  processing  costs  ●  Duplicate  Prevention:  Idempotency  keys  prevent  duplicate  charges  for  
+the
+ 
+same
+ 
+application
+ ●  Merchant  Validation:  Both  submerchant_id  and  dk_account  are  
+validated
+ 
+against
+ 
+the
+ 
+merchant
+ 
+database
+ 
+before
+ 
+processing
+ 
+ 
+  

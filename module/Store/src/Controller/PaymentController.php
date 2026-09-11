@@ -10,10 +10,13 @@ use Accounts\Model As Accounts;
 use Acl\Model As Acl;
 use Administration\Model As Administration;
 use Hr\Model As Hr;
+use Purchase\Model As Purchase;
 use Store\Model As Store;
+use Stock\Model As Stock;
 
 class PaymentController extends AbstractActionController
 {   
+	protected $_connection;
 	private $_container;
 	protected $_table; 		// database table 
     protected $_user; 		// user detail
@@ -80,6 +83,7 @@ class PaymentController extends AbstractActionController
 		//$this->_safedataObj = $this->SafeDataPlugin();
 		$this->_safedataObj = $this->safedata();
 		$this->_connection = $this->_container->get('Laminas\Db\Adapter\Adapter')->getDriver()->getConnection();
+		$this->_dbAdapter = $this->_connection;
 
 
 	}
@@ -130,6 +134,8 @@ class PaymentController extends AbstractActionController
 	public function addpaymentAction()
 	{
 		$this->init();		
+		$pur_receipt = array();
+		$pur_order = array();
 		if($this->getRequest()->isPost()):
 			$form = $this->getRequest()->getPost();
 			$preceipt_id = $form['preceipt'];
@@ -213,9 +219,9 @@ class PaymentController extends AbstractActionController
 				endif;
 				}
 		    else{
-			$pur_receipt = $this->getDefinedTable(Store\PurchaseReceiptTable::class)->get(array('pr.id'=>$form['preceipt'],'status'=>3));
+			$pur_receipt = $this->getDefinedTable(Purchase\PurchaseReceiptTable::class)->get(array('id'=>$form['preceipt'],'status'=>4));
 			foreach($pur_receipt as $row);
-			$pur_order = $this->getDefinedTable(Store\PurchaseOrderTable::class)->get(array('po.id'=>$row['purchase_order'],'status'=>array(2,3)));
+			$pur_order = $this->getDefinedTable(Purchase\PurchaseOrderTable::class)->get(array('id'=>$row['purchase_order'],'status'=>4));
 			}
 		endif;
 		return new ViewModel(array(
@@ -226,8 +232,8 @@ class PaymentController extends AbstractActionController
 				'locationObj' 	=> $this->getDefinedTable(Administration\LocationTable::class),
 				'activities'  	=> $this->getDefinedTable(Administration\ActivityTable::class)->getAll(),
 				'uomObj'	    => $this->getDefinedTable(Stock\UomTable::class),
-				'pur_receiptObj'=> $this->getDefinedTable(Store\PurchaseReceiptTable::class),
-				'pur_ordertObj'=> $this->getDefinedTable(Store\PurchaseOrderTable::class),
+				'pur_receiptObj'=> $this->getDefinedTable(Purchase\PurchaseReceiptTable::class),
+				'pur_ordertObj'=> $this->getDefinedTable(Purchase\PurchaseOrderTable::class),
 				'activities'    => $this->getDefinedTable(Administration\ActivityTable::class)->getAll(),
 				'groupObj'      => $this->getDefinedTable(Store\GroupTable::class),
 		));
@@ -275,7 +281,7 @@ class PaymentController extends AbstractActionController
 	{
 		$this->init();
 		$ViewModel = new ViewModel(array(
-			'purchasereceipts' => $this->getDefinedTable(Store\PurchaseReceiptTable::class)->get(array('status' =>3,'payment_status'=>0)),
+			'purchasereceipts' => $this->getDefinedTable(Purchase\PurchaseReceiptTable::class)->get(array('status' =>4)),
 		));
 		$ViewModel->setTerminal(True);
 		return $ViewModel;
@@ -290,7 +296,7 @@ class PaymentController extends AbstractActionController
 		
 		return new ViewModel(array(
 				'payment'	       => $this->getDefinedTable(Store\PaymentTable::class)->get($this->_id),
-				'userTable'        	=> $this->getDefinedTable(Acl\UsersTable::class),
+				'userTable'        	=> $this->getDefinedTable(Administration\UsersTable::class),
 				'paymentdetailsObj'	=> $this->getDefinedTable(Store\PaymentDtlTable::class),
 				'purchasereceiptObj'	=> $this->getDefinedTable(Store\PurchaseReceiptTable::class),
 				'activityObj' => $this->getDefinedTable(Administration\ActivityTable::class),

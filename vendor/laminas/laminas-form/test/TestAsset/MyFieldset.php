@@ -1,0 +1,30 @@
+<?php
+
+declare(strict_types=1);
+
+namespace LaminasTest\Form\TestAsset;
+
+use Laminas\Form\Fieldset;
+use Laminas\InputFilter\InputFilterProviderInterface;
+
+final class MyFieldset extends Fieldset implements InputFilterProviderInterface
+{
+    public function __construct()
+    {
+        parent::__construct('my-fieldset');
+        $this->add([
+            'type' => 'Email',
+            'name' => 'email',
+        ]);
+    }
+
+    /** @inheritDoc */
+    public function getInputFilterSpecification()
+    {
+        return [
+            'email' => [
+                'required' => false,
+            ],
+        ];
+    }
+}

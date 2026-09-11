@@ -4,24 +4,27 @@ declare(strict_types=1);
 
 namespace Laminas\Filter;
 
-use Traversable;
-
-use function get_class;
-use function gettype;
-use function is_object;
+use function get_debug_type;
 use function is_scalar;
 use function is_string;
 use function sprintf;
 
+/**
+ * @psalm-type Options = array{
+ *     suffix?: null|string,
+ * }
+ * @extends AbstractFilter<Options>
+ * @final
+ */
 class StringSuffix extends AbstractFilter
 {
-    /** @var array<string, string|null> */
+    /** @var Options */
     protected $options = [
         'suffix' => null,
     ];
 
     /**
-     * @param string|array|Traversable $options
+     * @param Options|iterable|null $options
      */
     public function __construct($options = null)
     {
@@ -33,6 +36,8 @@ class StringSuffix extends AbstractFilter
     /**
      * Set the suffix string
      *
+     * @deprecated Since 2.38.0 All option setters and getters will be removed in version 3.0
+     *
      * @param string $suffix
      * @return self
      * @throws Exception\InvalidArgumentException
@@ -43,7 +48,7 @@ class StringSuffix extends AbstractFilter
             throw new Exception\InvalidArgumentException(sprintf(
                 '%s expects "suffix" to be string; received "%s"',
                 __METHOD__,
-                is_object($suffix) ? get_class($suffix) : gettype($suffix)
+                get_debug_type($suffix),
             ));
         }
 
@@ -54,6 +59,8 @@ class StringSuffix extends AbstractFilter
 
     /**
      * Returns the suffix string, which is appended at the end of the input value
+     *
+     * @deprecated Since 2.38.0 All option setters and getters will be removed in version 3.0
      *
      * @return string
      * @throws Exception\InvalidArgumentException

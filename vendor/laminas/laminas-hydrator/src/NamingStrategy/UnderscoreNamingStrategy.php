@@ -7,6 +7,9 @@ namespace Laminas\Hydrator\NamingStrategy;
 use Laminas\Hydrator\NamingStrategy\UnderscoreNamingStrategy\CamelCaseToUnderscoreFilter;
 use Laminas\Hydrator\NamingStrategy\UnderscoreNamingStrategy\UnderscoreToCamelCaseFilter;
 
+/**
+ * @final
+ */
 class UnderscoreNamingStrategy implements NamingStrategyInterface
 {
     private static ?CamelCaseToUnderscoreFilter $camelCaseToUnderscoreFilter = null;

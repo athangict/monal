@@ -97,7 +97,7 @@ class LazyControllerAbstractFactory implements AbstractFactoryInterface
      *
      * @return DispatchableInterface
      */
-    public function __invoke(ContainerInterface $container, $requestedName, array $options = null)
+    public function __invoke(ContainerInterface $container, $requestedName, ?array $options = null)
     {
         $reflectionClass = new ReflectionClass($requestedName);
 
@@ -176,7 +176,7 @@ class LazyControllerAbstractFactory implements AbstractFactoryInterface
             }
 
             $type = $parameterType->getName();
-            $type = isset($this->aliases[$type]) ? $this->aliases[$type] : $type;
+            $type = $this->aliases[$type] ?? $type;
 
             if (! $container->has($type)) {
                 throw new ServiceNotFoundException(sprintf(

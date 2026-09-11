@@ -1,502 +1,490 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<files psalm-version="4.24.0@06dd975cb55d36af80f242561738f16c5f58264f">
+<files psalm-version="6.13.1@1e3b7f0a8ab32b23197b91107adc0a7ed8a05b51">
   <file src="src/Acl.php">
-    <InvalidCatch occurrences="2"/>
-    <InvalidNullableReturnType occurrences="1">
-      <code>bool</code>
-    </InvalidNullableReturnType>
-    <InvalidScalarArgument occurrences="2">
-      <code>$e-&gt;getCode()</code>
-      <code>$e-&gt;getCode()</code>
-    </InvalidScalarArgument>
-    <MixedArgument occurrences="15">
-      <code>$child</code>
-      <code>$childId</code>
-      <code>$dfs['stack']</code>
-      <code>$dfs['stack']</code>
-      <code>$privilege</code>
-      <code>$privilege</code>
-      <code>$resource</code>
-      <code>$resource</code>
-      <code>$resource</code>
-      <code>$resource</code>
-      <code>$resource</code>
-      <code>$role</code>
-      <code>$role</code>
-      <code>$role</code>
-      <code>$visitor</code>
+    <MixedArgument>
+      <code><![CDATA[$child]]></code>
+      <code><![CDATA[$childId]]></code>
+      <code><![CDATA[$dfs['stack']]]></code>
+      <code><![CDATA[$dfs['stack']]]></code>
+      <code><![CDATA[$privilege]]></code>
+      <code><![CDATA[$privilege]]></code>
+      <code><![CDATA[$resource]]></code>
+      <code><![CDATA[$resource]]></code>
+      <code><![CDATA[$resource]]></code>
+      <code><![CDATA[$resource]]></code>
+      <code><![CDATA[$resource]]></code>
+      <code><![CDATA[$role]]></code>
+      <code><![CDATA[$role]]></code>
+      <code><![CDATA[$role]]></code>
+      <code><![CDATA[$visitor]]></code>
     </MixedArgument>
-    <MixedArrayAccess occurrences="27">
-      <code>$rule['assert']</code>
-      <code>$rule['assert']</code>
-      <code>$rule['type']</code>
-      <code>$rule['type']</code>
-      <code>$rules['allPrivileges']['type']</code>
-      <code>$rules['byPrivilegeId'][$privilege]['type']</code>
-      <code>$this-&gt;resources[$id]['children']</code>
-      <code>$this-&gt;resources[$parentId]['parent']</code>
-      <code>$this-&gt;resources[$resource-&gt;getResourceId()]['parent']</code>
-      <code>$this-&gt;resources[$resource-&gt;getResourceId()]['parent']</code>
-      <code>$this-&gt;resources[$resourceId]['children']</code>
-      <code>$this-&gt;resources[$resourceId]['instance']</code>
-      <code>$this-&gt;resources[$resourceId]['parent']</code>
-      <code>$this-&gt;resources[$resourceId]['parent']</code>
-      <code>$this-&gt;resources[$resourceParent-&gt;getResourceId()]['children']</code>
-      <code>$this-&gt;rules['allResources']['byRoleId']</code>
-      <code>$this-&gt;rules['allResources']['byRoleId']</code>
-      <code>$this-&gt;rules['allResources']['byRoleId']</code>
-      <code>$this-&gt;rules['allResources']['byRoleId']</code>
-      <code>$this-&gt;rules['byResourceId'][$resourceIdCurrent]</code>
-      <code>$this-&gt;rules['byResourceId'][$resourceIdCurrent]</code>
-      <code>$this-&gt;rules['byResourceId'][$resourceIdCurrent]</code>
-      <code>$this-&gt;rules['byResourceId'][$resourceId]</code>
-      <code>$this-&gt;rules['byResourceId'][$resourceId]</code>
-      <code>$visitor['allRoles']</code>
-      <code>$visitor['byRoleId']</code>
-      <code>$visitor['byRoleId'][$roleId]</code>
+    <MixedArrayAccess>
+      <code><![CDATA[$rule['assert']]]></code>
+      <code><![CDATA[$rule['assert']]]></code>
+      <code><![CDATA[$rule['type']]]></code>
+      <code><![CDATA[$rule['type']]]></code>
+      <code><![CDATA[$rules['allPrivileges']['type']]]></code>
+      <code><![CDATA[$rules['byPrivilegeId'][$privilege]['type']]]></code>
+      <code><![CDATA[$this->resources[$id]['children']]]></code>
+      <code><![CDATA[$this->resources[$parentId]['parent']]]></code>
+      <code><![CDATA[$this->resources[$resource->getResourceId()]['parent']]]></code>
+      <code><![CDATA[$this->resources[$resource->getResourceId()]['parent']]]></code>
+      <code><![CDATA[$this->resources[$resourceId]['children']]]></code>
+      <code><![CDATA[$this->resources[$resourceId]['instance']]]></code>
+      <code><![CDATA[$this->resources[$resourceId]['parent']]]></code>
+      <code><![CDATA[$this->resources[$resourceId]['parent']]]></code>
+      <code><![CDATA[$this->resources[$resourceParent->getResourceId()]['children']]]></code>
+      <code><![CDATA[$this->rules['allResources']['byRoleId']]]></code>
+      <code><![CDATA[$this->rules['allResources']['byRoleId']]]></code>
+      <code><![CDATA[$this->rules['allResources']['byRoleId']]]></code>
+      <code><![CDATA[$this->rules['allResources']['byRoleId']]]></code>
+      <code><![CDATA[$this->rules['allResources']['byRoleId'][$roleIdCurrent]]]></code>
+      <code><![CDATA[$this->rules['allResources']['byRoleId'][$roleIdCurrent]]]></code>
+      <code><![CDATA[$this->rules['byResourceId'][$resourceIdCurrent]]]></code>
+      <code><![CDATA[$this->rules['byResourceId'][$resourceIdCurrent]]]></code>
+      <code><![CDATA[$this->rules['byResourceId'][$resourceIdCurrent]]]></code>
+      <code><![CDATA[$this->rules['byResourceId'][$resourceIdCurrent]['byRoleId']]]></code>
+      <code><![CDATA[$this->rules['byResourceId'][$resourceIdCurrent]['byRoleId']]]></code>
+      <code><![CDATA[$this->rules['byResourceId'][$resourceIdCurrent]['byRoleId'][$roleIdCurrent]]]></code>
+      <code><![CDATA[$this->rules['byResourceId'][$resourceIdCurrent]['byRoleId'][$roleIdCurrent]]]></code>
+      <code><![CDATA[$this->rules['byResourceId'][$resourceId]]]></code>
+      <code><![CDATA[$this->rules['byResourceId'][$resourceId]]]></code>
+      <code><![CDATA[$visitor['allRoles']]]></code>
+      <code><![CDATA[$visitor['byRoleId']]]></code>
+      <code><![CDATA[$visitor['byRoleId'][$roleId]]]></code>
     </MixedArrayAccess>
-    <MixedArrayAssignment occurrences="8">
-      <code>$dfs['stack'][]</code>
-      <code>$dfs['stack'][]</code>
-      <code>$dfs['visited'][$role-&gt;getRoleId()]</code>
-      <code>$dfs['visited'][$role-&gt;getRoleId()]</code>
-      <code>$this-&gt;resources[$resourceParentId]['children']</code>
-      <code>$this-&gt;rules['byResourceId'][$resourceId]</code>
-      <code>$visitor['allRoles']</code>
-      <code>$visitor['byRoleId']</code>
+    <MixedArrayAssignment>
+      <code><![CDATA[$dfs['stack'][]]]></code>
+      <code><![CDATA[$dfs['stack'][]]]></code>
+      <code><![CDATA[$dfs['visited'][$role->getRoleId()]]]></code>
+      <code><![CDATA[$dfs['visited'][$role->getRoleId()]]]></code>
+      <code><![CDATA[$this->resources[$resourceParentId]['children']]]></code>
+      <code><![CDATA[$this->resources[$resourceParentId]['children'][$resourceId]]]></code>
+      <code><![CDATA[$this->rules['byResourceId'][$resourceId]]]></code>
+      <code><![CDATA[$visitor['allRoles']]]></code>
+      <code><![CDATA[$visitor['byRoleId']]]></code>
+      <code><![CDATA[$visitor['byRoleId'][$roleId]]]></code>
     </MixedArrayAssignment>
-    <MixedArrayOffset occurrences="12">
-      <code>$dfs['visited'][$role-&gt;getRoleId()]</code>
-      <code>$dfs['visited'][$role-&gt;getRoleId()]</code>
-      <code>$rules['byPrivilegeId'][$privilege]</code>
-      <code>$rules['byPrivilegeId'][$privilege]</code>
-      <code>$rules['byPrivilegeId'][$privilege]</code>
-      <code>$this-&gt;resources[$parentId]</code>
-      <code>$this-&gt;resources[$parentId]</code>
-      <code>$this-&gt;resources[$resourceParent-&gt;getResourceId()]</code>
-      <code>$this-&gt;rules['allResources']['byRoleId'][$roleIdCurrent]</code>
-      <code>$this-&gt;rules['byResourceId'][$resourceIdCurrent]</code>
-      <code>$this-&gt;rules['byResourceId'][$resourceIdCurrent]</code>
-      <code>$this-&gt;rules['byResourceId'][$resourceIdCurrent]</code>
+    <MixedArrayOffset>
+      <code><![CDATA[$dfs['visited'][$role->getRoleId()]]]></code>
+      <code><![CDATA[$dfs['visited'][$role->getRoleId()]]]></code>
+      <code><![CDATA[$rules['byPrivilegeId'][$privilege]]]></code>
+      <code><![CDATA[$rules['byPrivilegeId'][$privilege]]]></code>
+      <code><![CDATA[$rules['byPrivilegeId'][$privilege]]]></code>
+      <code><![CDATA[$this->resources[$parentId]]]></code>
+      <code><![CDATA[$this->resources[$parentId]]]></code>
+      <code><![CDATA[$this->resources[$resourceParent->getResourceId()]]]></code>
+      <code><![CDATA[$this->rules['allResources']['byRoleId'][$roleIdCurrent]]]></code>
+      <code><![CDATA[$this->rules['byResourceId'][$resourceIdCurrent]]]></code>
+      <code><![CDATA[$this->rules['byResourceId'][$resourceIdCurrent]]]></code>
+      <code><![CDATA[$this->rules['byResourceId'][$resourceIdCurrent]]]></code>
+      <code><![CDATA[$this->rules['byResourceId'][$resourceIdCurrent]['byRoleId'][$roleIdCurrent]]]></code>
     </MixedArrayOffset>
-    <MixedAssignment occurrences="44">
-      <code>$child</code>
-      <code>$child</code>
-      <code>$childId</code>
-      <code>$children</code>
-      <code>$dfs['stack'][]</code>
-      <code>$dfs['stack'][]</code>
-      <code>$parentId</code>
-      <code>$parentId</code>
-      <code>$privilege</code>
-      <code>$privilege</code>
-      <code>$privilege</code>
-      <code>$privilege</code>
-      <code>$resource</code>
-      <code>$resource</code>
-      <code>$resource</code>
-      <code>$resource</code>
-      <code>$resourceIdCurrent</code>
-      <code>$resourceIdCurrent</code>
-      <code>$resourceIdCurrent</code>
-      <code>$resourceIdRemoved</code>
-      <code>$resourceParent</code>
-      <code>$resourcesRemoved[]</code>
-      <code>$role</code>
-      <code>$role</code>
-      <code>$role</code>
-      <code>$roleIdCurrent</code>
-      <code>$roleIdCurrent</code>
-      <code>$roleIdCurrent</code>
-      <code>$roleIdCurrent</code>
-      <code>$roleParent</code>
-      <code>$roleParent</code>
-      <code>$rule</code>
-      <code>$rule</code>
-      <code>$rule</code>
-      <code>$rule</code>
-      <code>$rules</code>
-      <code>$rules</code>
-      <code>$rules</code>
-      <code>$rules</code>
-      <code>$rules</code>
-      <code>$visitor</code>
-      <code>$visitor</code>
-      <code>$visitor</code>
-      <code>$visitor</code>
+    <MixedAssignment>
+      <code><![CDATA[$child]]></code>
+      <code><![CDATA[$child]]></code>
+      <code><![CDATA[$childId]]></code>
+      <code><![CDATA[$children]]></code>
+      <code><![CDATA[$dfs['stack'][]]]></code>
+      <code><![CDATA[$dfs['stack'][]]]></code>
+      <code><![CDATA[$parentId]]></code>
+      <code><![CDATA[$parentId]]></code>
+      <code><![CDATA[$privilege]]></code>
+      <code><![CDATA[$privilege]]></code>
+      <code><![CDATA[$privilege]]></code>
+      <code><![CDATA[$privilege]]></code>
+      <code><![CDATA[$resource]]></code>
+      <code><![CDATA[$resource]]></code>
+      <code><![CDATA[$resource]]></code>
+      <code><![CDATA[$resource]]></code>
+      <code><![CDATA[$resourceIdCurrent]]></code>
+      <code><![CDATA[$resourceIdCurrent]]></code>
+      <code><![CDATA[$resourceIdCurrent]]></code>
+      <code><![CDATA[$resourceIdRemoved]]></code>
+      <code><![CDATA[$resourceParent]]></code>
+      <code><![CDATA[$resourcesRemoved[]]]></code>
+      <code><![CDATA[$role]]></code>
+      <code><![CDATA[$role]]></code>
+      <code><![CDATA[$role]]></code>
+      <code><![CDATA[$roleIdCurrent]]></code>
+      <code><![CDATA[$roleIdCurrent]]></code>
+      <code><![CDATA[$roleIdCurrent]]></code>
+      <code><![CDATA[$roleIdCurrent]]></code>
+      <code><![CDATA[$roleParent]]></code>
+      <code><![CDATA[$roleParent]]></code>
+      <code><![CDATA[$rule]]></code>
+      <code><![CDATA[$rule]]></code>
+      <code><![CDATA[$rule]]></code>
+      <code><![CDATA[$rule]]></code>
+      <code><![CDATA[$rules]]></code>
+      <code><![CDATA[$rules]]></code>
+      <code><![CDATA[$rules]]></code>
+      <code><![CDATA[$rules]]></code>
+      <code><![CDATA[$rules]]></code>
+      <code><![CDATA[$visitor]]></code>
+      <code><![CDATA[$visitor]]></code>
     </MixedAssignment>
-    <MixedInferredReturnType occurrences="3">
-      <code>ResourceInterface</code>
-      <code>array|null</code>
-      <code>string|null</code>
-    </MixedInferredReturnType>
-    <MixedMethodCall occurrences="5">
-      <code>getResourceId</code>
-      <code>getResourceId</code>
-      <code>getResourceId</code>
-      <code>getRoleId</code>
-      <code>getRoleId</code>
+    <MixedMethodCall>
+      <code><![CDATA[getResourceId]]></code>
+      <code><![CDATA[getResourceId]]></code>
+      <code><![CDATA[getResourceId]]></code>
+      <code><![CDATA[getRoleId]]></code>
+      <code><![CDATA[getRoleId]]></code>
     </MixedMethodCall>
-    <MixedReturnStatement occurrences="4">
-      <code>$rule['type']</code>
-      <code>$this-&gt;resources[$resourceId]['instance']</code>
-      <code>$visitor['allRoles']</code>
-      <code>$visitor['byRoleId'][$roleId]</code>
+    <MixedReturnStatement>
+      <code><![CDATA[$rule['type']]]></code>
+      <code><![CDATA[$this->resources[$resourceId]['instance']]]></code>
+      <code><![CDATA[$visitor['allRoles']]]></code>
+      <code><![CDATA[$visitor['allRoles']]]></code>
+      <code><![CDATA[$visitor['byRoleId'][$roleId]]]></code>
+      <code><![CDATA[$visitor['byRoleId'][$roleId]]]></code>
     </MixedReturnStatement>
-    <PossiblyInvalidPropertyAssignmentValue occurrences="2">
-      <code>$resource</code>
-      <code>$role</code>
+    <PossiblyInvalidPropertyAssignmentValue>
+      <code><![CDATA[$resource]]></code>
+      <code><![CDATA[$role]]></code>
     </PossiblyInvalidPropertyAssignmentValue>
-    <PossiblyNullArgument occurrences="2">
-      <code>$dfs['stack']</code>
-      <code>$dfs['stack']</code>
+    <PossiblyNullArgument>
+      <code><![CDATA[$dfs['stack']]]></code>
+      <code><![CDATA[$dfs['stack']]]></code>
     </PossiblyNullArgument>
-    <PossiblyNullArrayAccess occurrences="2">
-      <code>$dfs['stack']</code>
-      <code>$dfs['stack']</code>
+    <PossiblyNullArrayAccess>
+      <code><![CDATA[$dfs['stack']]]></code>
+      <code><![CDATA[$dfs['stack']]]></code>
     </PossiblyNullArrayAccess>
-    <PossiblyNullArrayAssignment occurrences="2">
-      <code>$rules['allPrivileges']</code>
-      <code>$rules['byPrivilegeId']</code>
+    <PossiblyNullArrayAssignment>
+      <code><![CDATA[$rules['allPrivileges']]]></code>
+      <code><![CDATA[$rules['byPrivilegeId']]]></code>
     </PossiblyNullArrayAssignment>
-    <PossiblyNullReference occurrences="2">
-      <code>getResourceId</code>
-      <code>getResourceId</code>
+    <PossiblyNullReference>
+      <code><![CDATA[getResourceId]]></code>
+      <code><![CDATA[getResourceId]]></code>
     </PossiblyNullReference>
-    <PossiblyUndefinedVariable occurrences="1">
-      <code>$resourceParentId</code>
+    <PossiblyUndefinedVariable>
+      <code><![CDATA[$resourceParentId]]></code>
     </PossiblyUndefinedVariable>
-    <RedundantCastGivenDocblockType occurrences="2">
-      <code>(string) $resource</code>
-      <code>(string) $resource</code>
+    <PossiblyUnusedMethod>
+      <code><![CDATA[getChildResources]]></code>
+    </PossiblyUnusedMethod>
+    <PossiblyUnusedReturnValue>
+      <code><![CDATA[Acl]]></code>
+      <code><![CDATA[Acl]]></code>
+    </PossiblyUnusedReturnValue>
+    <RedundantCastGivenDocblockType>
+      <code><![CDATA[(string) $resource]]></code>
+      <code><![CDATA[(string) $resource]]></code>
     </RedundantCastGivenDocblockType>
-    <TooManyArguments occurrences="1">
-      <code>roleDFSAllPrivileges</code>
-    </TooManyArguments>
-    <UnusedForeachValue occurrences="9">
-      <code>$child</code>
-      <code>$resource</code>
-      <code>$rule</code>
-      <code>$rule</code>
-      <code>$rules</code>
-      <code>$rules</code>
-      <code>$rules</code>
-      <code>$rules</code>
-      <code>$rules</code>
+    <UnsupportedPropertyReferenceUsage>
+      <code><![CDATA[$visitor =& $this->rules['allResources']]]></code>
+      <code><![CDATA[$visitor =& $this->rules['byResourceId'][$resourceId]]]></code>
+    </UnsupportedPropertyReferenceUsage>
+    <UnsupportedReferenceUsage>
+      <code><![CDATA[$rules =& $this->getRules($resource, $role)]]></code>
+      <code><![CDATA[$rules =& $this->getRules($resource, $role, true)]]></code>
+    </UnsupportedReferenceUsage>
+    <UnusedForeachValue>
+      <code><![CDATA[$child]]></code>
+      <code><![CDATA[$resource]]></code>
+      <code><![CDATA[$rule]]></code>
+      <code><![CDATA[$rule]]></code>
+      <code><![CDATA[$rules]]></code>
+      <code><![CDATA[$rules]]></code>
+      <code><![CDATA[$rules]]></code>
+      <code><![CDATA[$rules]]></code>
+      <code><![CDATA[$rules]]></code>
     </UnusedForeachValue>
-    <UnusedVariable occurrences="1">
-      <code>$ruleTypeOnePrivilege</code>
+    <UnusedVariable>
+      <code><![CDATA[$rules]]></code>
     </UnusedVariable>
   </file>
   <file src="src/Assertion/AssertionAggregate.php">
-    <MixedAssignment occurrences="1">
-      <code>$assertion</code>
+    <MixedAssignment>
+      <code><![CDATA[$assertion]]></code>
     </MixedAssignment>
-    <MixedMethodCall occurrences="2">
-      <code>assert</code>
-      <code>new $assertion()</code>
+    <MixedMethodCall>
+      <code><![CDATA[assert]]></code>
+      <code><![CDATA[new $assertion()]]></code>
     </MixedMethodCall>
-    <MixedOperand occurrences="1">
-      <code>$assertion</code>
+    <MixedOperand>
+      <code><![CDATA[$assertion]]></code>
     </MixedOperand>
   </file>
   <file src="src/Assertion/AssertionManager.php">
-    <MissingReturnType occurrences="1">
-      <code>validatePlugin</code>
+    <MissingReturnType>
+      <code><![CDATA[validatePlugin]]></code>
     </MissingReturnType>
-    <NonInvariantDocblockPropertyType occurrences="1">
-      <code>$instanceOf</code>
+    <NonInvariantDocblockPropertyType>
+      <code><![CDATA[$instanceOf]]></code>
     </NonInvariantDocblockPropertyType>
+    <PossiblyUnusedMethod>
+      <code><![CDATA[validatePlugin]]></code>
+    </PossiblyUnusedMethod>
   </file>
   <file src="src/Assertion/ExpressionAssertion.php">
-    <InvalidNullableReturnType occurrences="1">
-      <code>bool</code>
+    <InvalidNullableReturnType>
+      <code><![CDATA[bool]]></code>
     </InvalidNullableReturnType>
-    <MissingReturnType occurrences="2">
-      <code>validateOperand</code>
-      <code>validateOperator</code>
+    <MissingReturnType>
+      <code><![CDATA[validateOperand]]></code>
+      <code><![CDATA[validateOperator]]></code>
     </MissingReturnType>
-    <MixedArgument occurrences="12">
-      <code>$contextProperty</code>
-      <code>$contextProperty</code>
-      <code>$contextProperty</code>
-      <code>$expression['operator']</code>
-      <code>$left</code>
-      <code>$left</code>
-      <code>$object</code>
-      <code>$object</code>
-      <code>$right</code>
-      <code>$right</code>
-      <code>$right</code>
-      <code>$right</code>
+    <MixedArgument>
+      <code><![CDATA[$expression['operator']]]></code>
+      <code><![CDATA[$left]]></code>
+      <code><![CDATA[$left]]></code>
+      <code><![CDATA[$right]]></code>
+      <code><![CDATA[$right]]></code>
+      <code><![CDATA[$right]]></code>
+      <code><![CDATA[$right]]></code>
     </MixedArgument>
-    <MixedArrayOffset occurrences="1">
-      <code>$context[$contextProperty]</code>
-    </MixedArrayOffset>
-    <MixedAssignment occurrences="4">
-      <code>$contextProperty</code>
-      <code>$left</code>
-      <code>$object</code>
-      <code>$right</code>
+    <MixedAssignment>
+      <code><![CDATA[$left]]></code>
+      <code><![CDATA[$right]]></code>
     </MixedAssignment>
-    <MixedPropertyFetch occurrences="1">
-      <code>$object-&gt;$field</code>
-    </MixedPropertyFetch>
-    <NullableReturnStatement occurrences="1">
-      <code>static::evaluateExpression($left, $this-&gt;operator, $right)</code>
+    <NullableReturnStatement>
+      <code><![CDATA[static::evaluateExpression($left, $this->operator, $right)]]></code>
     </NullableReturnStatement>
   </file>
   <file src="src/Resource/GenericResource.php">
-    <RedundantCastGivenDocblockType occurrences="1">
-      <code>(string) $resourceId</code>
+    <RedundantCastGivenDocblockType>
+      <code><![CDATA[(string) $resourceId]]></code>
     </RedundantCastGivenDocblockType>
   </file>
   <file src="src/Role/GenericRole.php">
-    <RedundantCastGivenDocblockType occurrences="1">
-      <code>(string) $roleId</code>
+    <RedundantCastGivenDocblockType>
+      <code><![CDATA[(string) $roleId]]></code>
     </RedundantCastGivenDocblockType>
   </file>
   <file src="src/Role/Registry.php">
-    <InvalidCatch occurrences="2"/>
-    <InvalidPropertyAssignmentValue occurrences="1">
-      <code>$this-&gt;roles</code>
+    <InvalidPropertyAssignmentValue>
+      <code><![CDATA[$this->roles]]></code>
     </InvalidPropertyAssignmentValue>
-    <InvalidScalarArgument occurrences="2">
-      <code>$e-&gt;getCode()</code>
-      <code>$e-&gt;getCode()</code>
-    </InvalidScalarArgument>
-    <MixedArgument occurrences="3">
-      <code>$parentId</code>
-      <code>$roleParentId</code>
-      <code>$roleParentId</code>
+    <MixedArgument>
+      <code><![CDATA[$parentId]]></code>
+      <code><![CDATA[$roleParentId]]></code>
+      <code><![CDATA[$roleParentId]]></code>
     </MixedArgument>
-    <MixedArrayAccess occurrences="2">
-      <code>$this-&gt;roles[$childId]['parents'][$roleId]</code>
-      <code>$this-&gt;roles[$parentId]['children'][$roleId]</code>
+    <MixedArrayAccess>
+      <code><![CDATA[$this->roles[$childId]['parents'][$roleId]]]></code>
+      <code><![CDATA[$this->roles[$parentId]['children'][$roleId]]]></code>
     </MixedArrayAccess>
-    <MixedArrayAssignment occurrences="1">
-      <code>$this-&gt;roles[$roleParentId]['children'][$roleId]</code>
+    <MixedArrayAssignment>
+      <code><![CDATA[$this->roles[$roleParentId]['children'][$roleId]]]></code>
     </MixedArrayAssignment>
-    <MixedArrayOffset occurrences="4">
-      <code>$roleParents[$roleParentId]</code>
-      <code>$this-&gt;roles[$childId]</code>
-      <code>$this-&gt;roles[$parentId]</code>
-      <code>$this-&gt;roles[$roleParentId]</code>
+    <MixedArrayOffset>
+      <code><![CDATA[$roleParents[$roleParentId]]]></code>
+      <code><![CDATA[$this->roles[$childId]]]></code>
+      <code><![CDATA[$this->roles[$parentId]]]></code>
+      <code><![CDATA[$this->roles[$roleParentId]]]></code>
+      <code><![CDATA[$this->roles[$roleParentId]]]></code>
     </MixedArrayOffset>
-    <MixedArrayTypeCoercion occurrences="1">
-      <code>$this-&gt;roles[$roleParentId]</code>
+    <MixedArrayTypeCoercion>
+      <code><![CDATA[$this->roles[$roleParentId]]]></code>
     </MixedArrayTypeCoercion>
-    <MixedAssignment occurrences="8">
-      <code>$child</code>
-      <code>$childId</code>
-      <code>$parent</code>
-      <code>$parent</code>
-      <code>$parent</code>
-      <code>$parentId</code>
-      <code>$parentId</code>
-      <code>$roleParentId</code>
+    <MixedAssignment>
+      <code><![CDATA[$child]]></code>
+      <code><![CDATA[$childId]]></code>
+      <code><![CDATA[$parent]]></code>
+      <code><![CDATA[$parent]]></code>
+      <code><![CDATA[$parent]]></code>
+      <code><![CDATA[$parentId]]></code>
+      <code><![CDATA[$parentId]]></code>
+      <code><![CDATA[$roleParentId]]></code>
     </MixedAssignment>
-    <MixedInferredReturnType occurrences="2">
-      <code>RoleInterface</code>
-      <code>array</code>
-    </MixedInferredReturnType>
-    <MixedPropertyTypeCoercion occurrences="1">
-      <code>$this-&gt;roles</code>
+    <MixedPropertyTypeCoercion>
+      <code><![CDATA[$this->roles]]></code>
     </MixedPropertyTypeCoercion>
-    <MixedReturnStatement occurrences="2">
-      <code>$this-&gt;roles[$roleId]['instance']</code>
-      <code>$this-&gt;roles[$roleId]['parents']</code>
+    <MixedReturnStatement>
+      <code><![CDATA[$this->roles[$roleId]['instance']]]></code>
+      <code><![CDATA[$this->roles[$roleId]['parents']]]></code>
     </MixedReturnStatement>
-    <PossiblyUndefinedVariable occurrences="1">
-      <code>$roleParentId</code>
+    <PossiblyUndefinedVariable>
+      <code><![CDATA[$roleParentId]]></code>
     </PossiblyUndefinedVariable>
-    <RedundantCastGivenDocblockType occurrences="2">
-      <code>(string) $role</code>
-      <code>(string) $role</code>
+    <RedundantCastGivenDocblockType>
+      <code><![CDATA[(string) $role]]></code>
+      <code><![CDATA[(string) $role]]></code>
     </RedundantCastGivenDocblockType>
-    <UndefinedInterfaceMethod occurrences="9">
-      <code>$this-&gt;roles[$childId]</code>
-      <code>$this-&gt;roles[$parentId]</code>
-      <code>$this-&gt;roles[$roleId]</code>
-      <code>$this-&gt;roles[$roleId]</code>
-      <code>$this-&gt;roles[$roleId]</code>
-      <code>$this-&gt;roles[$roleId]</code>
-      <code>$this-&gt;roles[$roleId]</code>
-      <code>$this-&gt;roles[$roleId]</code>
-      <code>$this-&gt;roles[$roleParentId]</code>
+    <UndefinedInterfaceMethod>
+      <code><![CDATA[$this->roles[$childId]]]></code>
+      <code><![CDATA[$this->roles[$parentId]]]></code>
+      <code><![CDATA[$this->roles[$roleId]]]></code>
+      <code><![CDATA[$this->roles[$roleId]]]></code>
+      <code><![CDATA[$this->roles[$roleId]]]></code>
+      <code><![CDATA[$this->roles[$roleId]]]></code>
+      <code><![CDATA[$this->roles[$roleId]]]></code>
+      <code><![CDATA[$this->roles[$roleId]]]></code>
+      <code><![CDATA[$this->roles[$roleParentId]]]></code>
+      <code><![CDATA[$this->roles[$roleParentId]]]></code>
     </UndefinedInterfaceMethod>
-    <UnusedForeachValue occurrences="3">
-      <code>$child</code>
-      <code>$parent</code>
-      <code>$parent</code>
+    <UnusedForeachValue>
+      <code><![CDATA[$child]]></code>
+      <code><![CDATA[$parent]]></code>
+      <code><![CDATA[$parent]]></code>
     </UnusedForeachValue>
   </file>
   <file src="test/AclTest.php">
-    <InvalidArgument occurrences="5">
-      <code>ExceptionInterface::class</code>
-      <code>ExceptionInterface::class</code>
-      <code>ExceptionInterface::class</code>
-      <code>new stdClass()</code>
-      <code>new stdClass()</code>
+    <InvalidArgument>
+      <code><![CDATA[new stdClass()]]></code>
+      <code><![CDATA[new stdClass()]]></code>
     </InvalidArgument>
-    <InvalidCatch occurrences="8"/>
-    <MissingReturnType occurrences="4">
-      <code>testAclResourcePermissionsAreInheritedWithMultilevelResourcesAndDenyPolicy</code>
-      <code>testAllowNullPermissionAfterResourcesExistShouldAllowAllPermissionsForRole</code>
-      <code>testRemoveDenyWithNullResourceAppliesToAllResources</code>
-      <code>testSetRuleWorksWithResourceInterface</code>
+    <MissingReturnType>
+      <code><![CDATA[testAclResourcePermissionsAreInheritedWithMultilevelResourcesAndDenyPolicy]]></code>
+      <code><![CDATA[testAllowNullPermissionAfterResourcesExistShouldAllowAllPermissionsForRole]]></code>
+      <code><![CDATA[testRemoveDenyWithNullResourceAppliesToAllResources]]></code>
+      <code><![CDATA[testSetRuleWorksWithResourceInterface]]></code>
     </MissingReturnType>
-    <MixedAssignment occurrences="2">
-      <code>$roleParent</code>
-      <code>$roleParent</code>
+    <MixedAssignment>
+      <code><![CDATA[$roleParent]]></code>
+      <code><![CDATA[$roleParent]]></code>
     </MixedAssignment>
-    <MixedMethodCall occurrences="1">
-      <code>getRoleId</code>
+    <MixedMethodCall>
+      <code><![CDATA[getRoleId]]></code>
     </MixedMethodCall>
-    <TooManyArguments occurrences="5">
-      <code>expectException</code>
-      <code>expectException</code>
-      <code>expectException</code>
-      <code>isAllowed</code>
-      <code>new Resource\GenericResource('profiles', 'gallery')</code>
+    <TooManyArguments>
+      <code><![CDATA[new Resource\GenericResource('profiles', 'gallery')]]></code>
     </TooManyArguments>
-    <UndefinedClass occurrences="2">
-      <code>$assertion-&gt;assertReturnValue</code>
-      <code>$assertion-&gt;assertReturnValue</code>
+    <UndefinedClass>
+      <code><![CDATA[$assertion->assertReturnValue]]></code>
+      <code><![CDATA[$assertion->assertReturnValue]]></code>
     </UndefinedClass>
-    <UndefinedDocblockClass occurrences="5">
-      <code>$assertion</code>
-      <code>$assertion</code>
-      <code>$assertion-&gt;lastAssertResource</code>
-      <code>$assertion-&gt;lastAssertRole</code>
-      <code>$assertion-&gt;lastAssertRole</code>
+    <UndefinedDocblockClass>
+      <code><![CDATA[$assertion]]></code>
+      <code><![CDATA[$assertion]]></code>
+      <code><![CDATA[$assertion->lastAssertResource]]></code>
+      <code><![CDATA[$assertion->lastAssertRole]]></code>
+      <code><![CDATA[$assertion->lastAssertRole]]></code>
     </UndefinedDocblockClass>
-    <UnusedForeachValue occurrences="2">
-      <code>$roleParent</code>
-      <code>$roleParent</code>
+    <UnusedForeachValue>
+      <code><![CDATA[$roleParent]]></code>
+      <code><![CDATA[$roleParent]]></code>
     </UnusedForeachValue>
   </file>
   <file src="test/Assertion/AssertionAggregateTest.php">
-    <DeprecatedMethod occurrences="6">
-      <code>setMethods</code>
-      <code>setMethods</code>
-      <code>setMethods</code>
-      <code>setMethods</code>
-      <code>setMethods</code>
-      <code>setMethods</code>
-    </DeprecatedMethod>
-    <MissingReturnType occurrences="1">
-      <code>testClearAssertions</code>
+    <MissingReturnType>
+      <code><![CDATA[testClearAssertions]]></code>
     </MissingReturnType>
-    <MixedArgument occurrences="4">
-      <code>$assertion</code>
-      <code>$assertion</code>
-      <code>$assertion</code>
-      <code>$assertion</code>
-    </MixedArgument>
-    <MixedArgumentTypeCoercion occurrences="1">
-      <code>$assertions</code>
-    </MixedArgumentTypeCoercion>
-    <MixedAssignment occurrences="4">
-      <code>$assertion</code>
-      <code>$assertion</code>
-      <code>$assertion</code>
-      <code>$assertion</code>
-    </MixedAssignment>
-    <MixedMethodCall occurrences="48">
-      <code>expects</code>
-      <code>expects</code>
-      <code>expects</code>
-      <code>expects</code>
-      <code>expects</code>
-      <code>expects</code>
-      <code>expects</code>
-      <code>expects</code>
-      <code>expects</code>
-      <code>expects</code>
-      <code>expects</code>
-      <code>expects</code>
-      <code>method</code>
-      <code>method</code>
-      <code>method</code>
-      <code>method</code>
-      <code>method</code>
-      <code>method</code>
-      <code>method</code>
-      <code>method</code>
-      <code>method</code>
-      <code>method</code>
-      <code>method</code>
-      <code>method</code>
-      <code>will</code>
-      <code>will</code>
-      <code>will</code>
-      <code>will</code>
-      <code>will</code>
-      <code>will</code>
-      <code>will</code>
-      <code>will</code>
-      <code>will</code>
-      <code>will</code>
-      <code>will</code>
-      <code>will</code>
-      <code>with</code>
-      <code>with</code>
-      <code>with</code>
-      <code>with</code>
-      <code>with</code>
-      <code>with</code>
-      <code>with</code>
-      <code>with</code>
-      <code>with</code>
-      <code>with</code>
-      <code>with</code>
-      <code>with</code>
-    </MixedMethodCall>
-    <PossiblyUndefinedVariable occurrences="5">
-      <code>$assertions</code>
-      <code>$assertions</code>
-      <code>$assertions</code>
-      <code>$assertions</code>
-      <code>$assertions</code>
-    </PossiblyUndefinedVariable>
   </file>
   <file src="test/Assertion/CallbackAssertionTest.php">
-    <MissingClosureParamType occurrences="9">
-      <code>$aclArg</code>
-      <code>$aclArg</code>
-      <code>$privilegeArg</code>
-      <code>$privilegeArg</code>
-      <code>$resourceArg</code>
-      <code>$resourceArg</code>
-      <code>$roleArg</code>
-      <code>$roleArg</code>
-      <code>$value</code>
+    <MissingClosureParamType>
+      <code><![CDATA[$aclArg]]></code>
+      <code><![CDATA[$aclArg]]></code>
+      <code><![CDATA[$privilegeArg]]></code>
+      <code><![CDATA[$privilegeArg]]></code>
+      <code><![CDATA[$resourceArg]]></code>
+      <code><![CDATA[$resourceArg]]></code>
+      <code><![CDATA[$roleArg]]></code>
+      <code><![CDATA[$roleArg]]></code>
+      <code><![CDATA[$value]]></code>
     </MissingClosureParamType>
-    <MissingClosureReturnType occurrences="3">
-      <code>function ($aclArg, $roleArg, $resourceArg, $privilegeArg) use ($value) {</code>
-      <code>function ($value) {</code>
-      <code>function () {</code>
+    <MissingClosureReturnType>
+      <code><![CDATA[static fn($aclArg, $roleArg, $resourceArg, $privilegeArg) => $value]]></code>
+      <code><![CDATA[static fn($value) => static fn($aclArg, $roleArg, $resourceArg, $privilegeArg) => $value]]></code>
     </MissingClosureReturnType>
-    <TooManyArguments occurrences="1">
-      <code>expectException</code>
-    </TooManyArguments>
-    <UnusedClosureParam occurrences="4">
-      <code>$aclArg</code>
-      <code>$privilegeArg</code>
-      <code>$resourceArg</code>
-      <code>$roleArg</code>
+    <UnusedClosureParam>
+      <code><![CDATA[$aclArg]]></code>
+      <code><![CDATA[$privilegeArg]]></code>
+      <code><![CDATA[$resourceArg]]></code>
+      <code><![CDATA[$roleArg]]></code>
     </UnusedClosureParam>
   </file>
   <file src="test/Assertion/ExpressionAssertionTest.php">
-    <MissingReturnType occurrences="1">
-      <code>testExpressionsEvaluation</code>
+    <MissingReturnType>
+      <code><![CDATA[testExpressionsEvaluation]]></code>
     </MissingReturnType>
   </file>
+  <file src="test/TestAsset/AssertionLaminas7973.php">
+    <ClassMustBeFinal>
+      <code><![CDATA[AssertionLaminas7973]]></code>
+    </ClassMustBeFinal>
+  </file>
+  <file src="test/TestAsset/ExpressionUseCase/BlogPost.php">
+    <ClassMustBeFinal>
+      <code><![CDATA[BlogPost]]></code>
+    </ClassMustBeFinal>
+    <PossiblyUnusedMethod>
+      <code><![CDATA[getAuthorName]]></code>
+      <code><![CDATA[getShortDescription]]></code>
+    </PossiblyUnusedMethod>
+    <PossiblyUnusedProperty>
+      <code><![CDATA[$content]]></code>
+      <code><![CDATA[$title]]></code>
+    </PossiblyUnusedProperty>
+  </file>
+  <file src="test/TestAsset/ExpressionUseCase/User.php">
+    <ClassMustBeFinal>
+      <code><![CDATA[User]]></code>
+    </ClassMustBeFinal>
+    <PossiblyUnusedMethod>
+      <code><![CDATA[isAdult]]></code>
+    </PossiblyUnusedMethod>
+  </file>
+  <file src="test/TestAsset/ExtendedAclLaminas2234.php">
+    <ClassMustBeFinal>
+      <code><![CDATA[ExtendedAclLaminas2234]]></code>
+    </ClassMustBeFinal>
+    <PossiblyUnusedReturnValue>
+      <code><![CDATA[bool|void]]></code>
+      <code><![CDATA[bool|void]]></code>
+      <code><![CDATA[bool|void]]></code>
+    </PossiblyUnusedReturnValue>
+  </file>
+  <file src="test/TestAsset/MockAssertion.php">
+    <ClassMustBeFinal>
+      <code><![CDATA[MockAssertion]]></code>
+    </ClassMustBeFinal>
+  </file>
+  <file src="test/TestAsset/OwnershipUseCase/Acl.php">
+    <ClassMustBeFinal>
+      <code><![CDATA[Acl]]></code>
+    </ClassMustBeFinal>
+  </file>
+  <file src="test/TestAsset/OwnershipUseCase/Author1.php">
+    <ClassMustBeFinal>
+      <code><![CDATA[Author1]]></code>
+    </ClassMustBeFinal>
+  </file>
+  <file src="test/TestAsset/OwnershipUseCase/Author2.php">
+    <ClassMustBeFinal>
+      <code><![CDATA[Author2]]></code>
+    </ClassMustBeFinal>
+  </file>
+  <file src="test/TestAsset/OwnershipUseCase/BlogPost.php">
+    <ClassMustBeFinal>
+      <code><![CDATA[BlogPost]]></code>
+    </ClassMustBeFinal>
+  </file>
+  <file src="test/TestAsset/OwnershipUseCase/Comment.php">
+    <ClassMustBeFinal>
+      <code><![CDATA[Comment]]></code>
+    </ClassMustBeFinal>
+  </file>
+  <file src="test/TestAsset/StandardUseCase/Acl.php">
+    <ClassMustBeFinal>
+      <code><![CDATA[Acl]]></code>
+    </ClassMustBeFinal>
+  </file>
+  <file src="test/TestAsset/StandardUseCase/BlogPost.php">
+    <ClassMustBeFinal>
+      <code><![CDATA[BlogPost]]></code>
+    </ClassMustBeFinal>
+  </file>
+  <file src="test/TestAsset/StandardUseCase/User.php">
+    <ClassMustBeFinal>
+      <code><![CDATA[User]]></code>
+    </ClassMustBeFinal>
+  </file>
   <file src="test/TestAsset/StandardUseCase/UserIsBlogPostOwnerAssertion.php">
-    <ParamNameMismatch occurrences="2">
-      <code>$blogPost</code>
-      <code>$user</code>
+    <ClassMustBeFinal>
+      <code><![CDATA[UserIsBlogPostOwnerAssertion]]></code>
+    </ClassMustBeFinal>
+    <ParamNameMismatch>
+      <code><![CDATA[$blogPost]]></code>
+      <code><![CDATA[$user]]></code>
     </ParamNameMismatch>
+    <PossiblyUnusedProperty>
+      <code><![CDATA[$lastAssertPrivilege]]></code>
+      <code><![CDATA[$lastAssertResource]]></code>
+      <code><![CDATA[$lastAssertRole]]></code>
+    </PossiblyUnusedProperty>
   </file>
 </files>

@@ -49,7 +49,7 @@ $this->headTitle($this->title);
 				</div>
 				<?php if($row['process']>0):
 					$process_permissions = $this->processObj->getColumn($row['process'],'permission_level');
-					$permission_array = explode(",", $process_permissions);
+					$permission_array = explode(",", (string) $process_permissions);
 					$permission_status = array();
 					for($i=0;$i<sizeof($permission_array);$i++):
 						$status_data = array(

@@ -14,6 +14,9 @@ use Hr\Model As Hr;
 
 class TravelController extends AbstractActionController
 {   
+	protected $_connection;
+	protected $_safedataObj;
+	protected $_userloc;
 	private $_container;
 	protected $_table; 		// database table
 	protected $_user; 		// user detail
@@ -217,8 +220,8 @@ class TravelController extends AbstractActionController
 				$halt     			= $form['halt'];
 				$purpose         	= $form['purpose'];
 				for($i=0; $i < sizeof($travel_mode); $i++):
-				$fromdate= explode('/', $from_date[$i]);
-				$todate= explode('/', $to_date[$i]);
+				$fromdate= explode('/', (string) $from_date[$i]);
+				$todate= explode('/', (string) $to_date[$i]);
 					$ta_details = array(
 		      					'ta' 				=> $result,
 					     		'from_station'      => $from_station[$i],
@@ -299,8 +302,8 @@ class TravelController extends AbstractActionController
 				$halt     			= $form['halt'];
 				$purpose         	= $form['purpose'];
 				for($i=0; $i < sizeof($id); $i++):
-				$fromdate= explode('/', $from_date[$i]);
-				$todate= explode('/', $to_date[$i]);
+				$fromdate= explode('/', (string) $from_date[$i]);
+				$todate= explode('/', (string) $to_date[$i]);
 					$ta_details = array(
 								'id'				=> $id[$i],
 		      					'ta' 				=> $result,
@@ -320,8 +323,8 @@ class TravelController extends AbstractActionController
 				endfor;
 				if(sizeof($id)<sizeof($travel_mode)){
 				for($i=sizeof($id); $i < sizeof($travel_mode); $i++):
-				$fromdate= explode('/', $from_date[$i]);
-				$todate= explode('/', $to_date[$i]);
+				$fromdate= explode('/', (string) $from_date[$i]);
+				$todate= explode('/', (string) $to_date[$i]);
 					$ta_details = array(
 		      					'ta' 				=> $result,
 					     		'from_station'      => $from_station[$i],
@@ -363,7 +366,7 @@ class TravelController extends AbstractActionController
 	public function viewtravelAction()
 	{
 		$this->init();
-		$params = explode("-", $this->_id);
+		$params = explode("-", (string) $this->_id);
 		if (isset($params['1']) && $params['1'] == '1' && isset($params['2']) && $params['2'] > 0) {
 			$flag = $this->getDefinedTable(Acl\NotifyTable::class)->getColumn($params['2'], 'flag'); 
 				if($flag == "0") {
@@ -518,7 +521,7 @@ class TravelController extends AbstractActionController
 				$remarks         	= $form['remarks'];
 				
 				for($i=0; $i < sizeof($from); $i++):
-				$date1= explode('/', $date[$i]);
+				$date1= explode('/', (string) $date[$i]);
 					$claim_details = array(
 		      					'claim' 			=> $result,
 								'date'           	=> $date1[2].'-'.$date1[0].'-'.$date1[1],
@@ -625,7 +628,7 @@ class TravelController extends AbstractActionController
 				$total         	= $form['total'];
 				$remarks         	= $form['remarks'];
 				for($i=0; $i < sizeof($id); $i++):
-				$date1= explode('/', $date[$i]);
+				$date1= explode('/', (string) $date[$i]);
 					$claim_details = array(
 						'id'				=> $id[$i],
 						'claim' 			=> $result,
@@ -647,7 +650,7 @@ class TravelController extends AbstractActionController
 				endfor;
 				if(sizeof($id)!=sizeof($from)){
 				for($i=sizeof($id); $i < sizeof($from); $i++):
-				$date1= explode('/', $date[$i]);
+				$date1= explode('/', (string) $date[$i]);
 					$claim_details = array(
 						'claim' 			=> $result,
 						'date'           	=> $date1[2].'-'.$date1[0].'-'.$date1[1],
@@ -748,7 +751,7 @@ class TravelController extends AbstractActionController
 	public function viewclaimAction()
 	{
 		$this->init();
-		$params = explode("-", $this->_id);
+		$params = explode("-", (string) $this->_id);
 		if (isset($params['1']) && $params['1'] == '1' && isset($params['2']) && $params['2'] > 0) {
 			$flag = $this->getDefinedTable(Acl\NotifyTable::class)->getColumn($params['2'], 'flag'); 
 				if($flag == "0") {
@@ -1052,7 +1055,7 @@ class TravelController extends AbstractActionController
 			//echo '<pre>';print_r($notification_data);exit;
 			$notificationResult = $this->getDefinedTable(Acl\NotificationTable::class)->save($notification_data);
 			if($notificationResult > 0 ){
-				$notification_array = explode("|", $flow['route_notification_to']);
+				$notification_array = explode("|", (string) $flow['route_notification_to']);
 				if(sizeof($notification_array)>0){
 					for($k=0;$k<sizeof($notification_array);$k++){
 						$focalusers=$this->getDefinedTable(Administration\FlowTransactionTable::class)->get(array('id'=>$flow_result));
@@ -1421,7 +1424,7 @@ class TravelController extends AbstractActionController
 			//echo '<pre>';print_r($notification_data);exit;
 			$notificationResult = $this->getDefinedTable(Acl\NotificationTable::class)->save($notification_data);
 			if($notificationResult > 0 ){
-				$notification_array = explode("|", $flow['route_notification_to']);
+				$notification_array = explode("|", (string) $flow['route_notification_to']);
 				if(sizeof($notification_array)>0){
 					for($k=0;$k<sizeof($notification_array);$k++){
 						$focalusers=$this->getDefinedTable(Administration\FlowTransactionTable::class)->get(array('id'=>$flow_result));

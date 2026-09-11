@@ -13,13 +13,14 @@ interface FilterInterface
      * Execute the filter chain
      *
      * @param  string|object $context
-     * @param  array $params
      * @return mixed
      */
     public function run($context, array $params = []);
 
     /**
      * Attach an intercepting filter
+     *
+     * @return callable
      */
     public function attach(callable $callback);
 

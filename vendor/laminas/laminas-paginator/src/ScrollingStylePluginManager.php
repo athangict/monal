@@ -6,16 +6,11 @@ namespace Laminas\Paginator;
 
 use Laminas\Paginator\ScrollingStyle\ScrollingStyleInterface;
 use Laminas\ServiceManager\AbstractPluginManager;
+use Laminas\ServiceManager\ConfigInterface;
 use Laminas\ServiceManager\Exception\InvalidServiceException;
 use Laminas\ServiceManager\Factory\InvokableFactory;
-use Zend\Paginator\ScrollingStyle\All;
-use Zend\Paginator\ScrollingStyle\Elastic;
-use Zend\Paginator\ScrollingStyle\Jumping;
-use Zend\Paginator\ScrollingStyle\Sliding;
 
-use function get_class;
-use function gettype;
-use function is_object;
+use function get_debug_type;
 use function sprintf;
 
 /**
@@ -25,14 +20,19 @@ use function sprintf;
  * ScrollingStyleInterface. Additionally, it registers a number
  * of default adapters available.
  *
+ * @deprecated Since 2.22.0 This plugin manager will be removed in 3.0 in favour of simpler tools and a better
+ * system for project-wide defaults
+ *
  * @extends AbstractPluginManager<ScrollingStyleInterface>
+ * @psalm-import-type FactoriesConfigurationType from ConfigInterface
+ * @final
  */
 class ScrollingStylePluginManager extends AbstractPluginManager
 {
     /**
      * Default set of adapters
      *
-     * @var array
+     * @var array<array-key, string>
      */
     protected $aliases = [
         'all'     => ScrollingStyle\All::class,
@@ -45,10 +45,10 @@ class ScrollingStylePluginManager extends AbstractPluginManager
         'Sliding' => ScrollingStyle\Sliding::class,
 
         // Legacy Zend Framework aliases
-        All::class     => ScrollingStyle\All::class,
-        Elastic::class => ScrollingStyle\Elastic::class,
-        Jumping::class => ScrollingStyle\Jumping::class,
-        Sliding::class => ScrollingStyle\Sliding::class,
+        'Zend\Paginator\ScrollingStyle\All'     => ScrollingStyle\All::class,
+        'Zend\Paginator\ScrollingStyle\Elastic' => ScrollingStyle\Elastic::class,
+        'Zend\Paginator\ScrollingStyle\Jumping' => ScrollingStyle\Jumping::class,
+        'Zend\Paginator\ScrollingStyle\Sliding' => ScrollingStyle\Sliding::class,
 
         // v2 normalized FQCNs
         'zendpaginatorscrollingstyleall'     => ScrollingStyle\All::class,
@@ -60,7 +60,7 @@ class ScrollingStylePluginManager extends AbstractPluginManager
     /**
      * Default set of adapter factories
      *
-     * @var array
+     * @var FactoriesConfigurationType
      */
     protected $factories = [
         ScrollingStyle\All::class     => InvokableFactory::class,
@@ -75,7 +75,7 @@ class ScrollingStylePluginManager extends AbstractPluginManager
         'laminaspaginatorscrollingstylesliding' => InvokableFactory::class,
     ];
 
-    /** @var string */
+    /** @inheritDoc */
     protected $instanceOf = ScrollingStyleInterface::class;
 
     /**
@@ -90,7 +90,7 @@ class ScrollingStylePluginManager extends AbstractPluginManager
         if (! $instance instanceof $this->instanceOf) {
             throw new InvalidServiceException(sprintf(
                 'Plugin of type %s is invalid; must implement %s',
-                is_object($instance) ? get_class($instance) : gettype($instance),
+                get_debug_type($instance),
                 ScrollingStyleInterface::class
             ));
         }
@@ -99,12 +99,11 @@ class ScrollingStylePluginManager extends AbstractPluginManager
     /**
      * Validate a plugin (v2)
      *
-     * @param mixed $plugin
      * @throws Exception\InvalidArgumentException
      * @return void
      * @psalm-assert ScrollingStyleInterface $instance
      */
-    public function validatePlugin($plugin)
+    public function validatePlugin(mixed $plugin)
     {
         try {
             $this->validate($plugin);

@@ -11,9 +11,16 @@ use function is_string;
 use function preg_replace;
 use function strlen;
 
+/**
+ * @psalm-type Options = array{
+ *     charlist?: string|null,
+ * }
+ * @extends AbstractFilter<Options>
+ * @final
+ */
 class StringTrim extends AbstractFilter
 {
-    /** @var array */
+    /** @var Options */
     protected $options = [
         'charlist' => null,
     ];
@@ -21,7 +28,7 @@ class StringTrim extends AbstractFilter
     /**
      * Sets filter options
      *
-     * @param  string|array|Traversable $charlistOrOptions
+     * @param  string|Options|iterable|null $charlistOrOptions
      */
     public function __construct($charlistOrOptions = null)
     {
@@ -36,6 +43,9 @@ class StringTrim extends AbstractFilter
 
     /**
      * Sets the charList option
+     *
+     * @deprecated Since 2.38.0 Getters and setters will be removed in 3.0 in favour of passing options
+     *             to the constructor
      *
      * @param  string $charList
      * @return self Provides a fluent interface
@@ -54,6 +64,9 @@ class StringTrim extends AbstractFilter
     /**
      * Returns the charList option
      *
+     * @deprecated Since 2.38.0 Getters and setters will be removed in 3.0 in favour of passing options
+     *              to the constructor
+     *
      * @return string|null
      */
     public function getCharList()
@@ -66,8 +79,9 @@ class StringTrim extends AbstractFilter
      *
      * Returns the string $value with characters stripped from the beginning and end
      *
-     * @param  string $value
-     * @return string
+     * @param  mixed $value
+     * @return string|mixed
+     * @psalm-return ($value is string ? string : mixed)
      */
     public function filter($value)
     {
@@ -76,11 +90,13 @@ class StringTrim extends AbstractFilter
         }
         $value = (string) $value;
 
-        if (null === $this->options['charlist']) {
+        $charlist = $this->options['charlist'];
+
+        if ($charlist === null) {
             return $this->unicodeTrim($value);
         }
 
-        return $this->unicodeTrim($value, $this->options['charlist']);
+        return $this->unicodeTrim($value, $charlist);
     }
 
     /**

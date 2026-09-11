@@ -16,6 +16,9 @@ use Hr\Model As Hr;
 
 class AssetController extends AbstractActionController
 {   
+	protected $_connection;
+	protected $_highest_role;
+	protected $_lowest_role;
 	private $_container;
 	protected $_table; 		// database table 
     protected $_user; 		// user detail
@@ -244,7 +247,7 @@ class AssetController extends AbstractActionController
      public function editassetAction()
     {
         $this->init();
-		$params = explode("_", $this->_id);
+		$params = explode("_", (string) $this->_id);
 		$asset_id =  $params['0'];
 		//echo '<pre>';print_r($asset_id);exit;
         if($this->getRequest()->isPost())

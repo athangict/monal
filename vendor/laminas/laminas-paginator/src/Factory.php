@@ -9,12 +9,16 @@ use Traversable;
 
 use function is_array;
 
+/**
+ * @deprecated Since 2.22.0. This class will be replaced by `PaginatorFactory` in 3.0. The new class will not be a
+ *             drop-in replacement and will require refactoring of usage.
+ */
 abstract class Factory
 {
     /**
      * Adapter plugin manager
      *
-     * @var AdapterPluginManager
+     * @var AdapterPluginManager|null
      */
     protected static $adapters;
 
@@ -52,11 +56,9 @@ abstract class Factory
     /**
      * Get adapter from manager if necessary, and return paginator
      *
-     * @param mixed $items
-     * @param mixed $adapter
      * @return Paginator
      */
-    protected static function getAdapterFromManager($items, $adapter)
+    protected static function getAdapterFromManager(mixed $items, mixed $adapter)
     {
         if ($adapter instanceof AdapterInterface || $adapter instanceof AdapterAggregateInterface) {
             return new Paginator($adapter);
@@ -68,11 +70,9 @@ abstract class Factory
     /**
      * Create paginator with items and adapter
      *
-     * @param mixed $items
-     * @param mixed $adapter
      * @return Paginator
      */
-    public static function factory($items, $adapter = null)
+    public static function factory(mixed $items, mixed $adapter = null)
     {
         if (null === $adapter) {
             return static::createAdapterFromItems($items);

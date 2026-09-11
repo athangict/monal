@@ -10,17 +10,19 @@ use function array_shift;
 use function array_unshift;
 use function is_array;
 
+/**
+ * @deprecated This class will be removed without replacement in version 3.0.
+ *
+ * @see https://docs.laminas.dev/laminas-session/v2/migration/preparing-for-v3/
+ *
+ * The validator list will be built in the {@see SessionManager} itself, based of the provided configuration.
+ */
 class ValidatorChain extends EventManager
 {
-    /** @var StorageInterface */
-    protected $storage;
-
-    public function __construct(StorageInterface $storage)
+    public function __construct(protected StorageInterface $storage)
     {
         parent::__construct();
-
-        $this->storage = $storage;
-        $validators    = $storage->getMetadata('_VALID');
+        $validators = $storage->getMetadata('_VALID');
         if ($validators) {
             foreach ($validators as $validator => $data) {
                 $this->attachValidator('session.validate', [new $validator($data), 'isValid'], 1);
@@ -35,9 +37,9 @@ class ValidatorChain extends EventManager
      * @param int      $priority
      * @return callable
      */
-    public function attach($eventName, callable $callback, $priority = 1)
+    public function attach($eventName, callable $listener, $priority = 1)
     {
-        return $this->attachValidator($eventName, $callback, $priority);
+        return $this->attachValidator($eventName, $listener, $priority);
     }
 
     /**

@@ -1,0 +1,131 @@
+<?php
+/**
+ * View -- Administration/UserController/viewAction (branding settings)
+ */
+$this->headTitle($this->title);
+$settings = isset($settings) ? $settings : [];
+$appName = !empty($settings['app_name']) ? $settings['app_name'] : 'Monal-ERP';
+$appLogo = !empty($settings['app_logo']) ? $settings['app_logo'] : 'images/logo.png';
+$appLogoSrc = $this->basePath('/' . ltrim((string) $appLogo, '/'));
+$appTemplate = !empty($settings['app_template']) ? $settings['app_template'] : 'ace';
+$mailFromEmail = !empty($settings['mail_from_email']) ? $settings['mail_from_email'] : '';
+$mailFromName = !empty($settings['mail_from_name']) ? $settings['mail_from_name'] : '';
+$smtpHost = !empty($settings['smtp_host']) ? $settings['smtp_host'] : '';
+$smtpPort = !empty($settings['smtp_port']) ? (int) $settings['smtp_port'] : 587;
+$smtpEncryption = !empty($settings['smtp_encryption']) ? strtolower((string) $settings['smtp_encryption']) : 'tls';
+$smtpUsername = !empty($settings['smtp_username']) ? $settings['smtp_username'] : '';
+$smtpPassword = !empty($settings['smtp_password']) ? $settings['smtp_password'] : '';
+$supportEmail = !empty($settings['support_email']) ? $settings['support_email'] : '';
+$supportPhone = !empty($settings['support_phone']) ? $settings['support_phone'] : '';
+if ($appTemplate === 'default') {
+    $appTemplate = 'ace';
+} elseif ($appTemplate === 'ocean') {
+    $appTemplate = 'ace-skin-1';
+} elseif ($appTemplate === 'sunset') {
+    $appTemplate = 'ace-skin-2';
+}
+?>
+
+<div class="card">
+    <div class="card-header">
+        <h3 class="card-title">Application Settings</h3>
+    </div>
+    <div class="card-body">
+        <form method="post" enctype="multipart/form-data" action="<?php echo $this->url('user', array('action' => 'view', 'id' => 'branding')); ?>">
+            <div class="row">
+                <div class="form-group col-md-6">
+                    <label for="app_name" class="control-label">Application Name</label>
+                    <input type="text" class="form-control" id="app_name" name="app_name" value="<?php echo $this->escapeHtmlAttr($appName); ?>" required>
+                </div>
+                <div class="form-group col-md-6">
+                    <label for="app_template" class="control-label">Template</label>
+                    <select id="app_template" name="app_template" class="form-control" required>
+                        <option value="ace" <?php echo ($appTemplate === 'ace') ? 'selected' : ''; ?>>Ace Default</option>
+                        <option value="ace-skin-1" <?php echo ($appTemplate === 'ace-skin-1') ? 'selected' : ''; ?>>Ace Skin 1</option>
+                        <option value="ace-skin-2" <?php echo ($appTemplate === 'ace-skin-2') ? 'selected' : ''; ?>>Ace Skin 2</option>
+                        <option value="ace-skin-3" <?php echo ($appTemplate === 'ace-skin-3') ? 'selected' : ''; ?>>Ace Skin 3</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="form-group col-md-6">
+                    <label for="app_logo" class="control-label">Logo</label>
+                    <input type="file" class="form-control" id="app_logo" name="app_logo" accept=".jpg,.jpeg,.png,.gif,.webp">
+                    <small class="text-muted">Allowed types: jpg, jpeg, png, gif, webp</small>
+                </div>
+                <div class="form-group col-md-6">
+                    <label class="control-label">Current Logo</label>
+                    <div style="padding:10px; border:1px solid #ddd; border-radius:4px; min-height:70px;">
+                        <img src="<?php echo $appLogoSrc; ?>" alt="Logo" style="max-height:60px; max-width:220px;">
+                    </div>
+                    <small class="text-muted">Saved path: <?php echo $this->escapeHtml($appLogo); ?></small>
+                </div>
+            </div>
+
+            <div class="form-group" style="margin-top: 10px;">
+                <h4>Email Settings (SMTP)</h4>
+            </div>
+
+            <div class="row">
+                <div class="form-group col-md-6">
+                    <label for="mail_from_email" class="control-label">From Email</label>
+                    <input type="email" class="form-control" id="mail_from_email" name="mail_from_email" value="<?php echo $this->escapeHtmlAttr($mailFromEmail); ?>" placeholder="no-reply@yourdomain.com">
+                </div>
+                <div class="form-group col-md-6">
+                    <label for="mail_from_name" class="control-label">From Name</label>
+                    <input type="text" class="form-control" id="mail_from_name" name="mail_from_name" value="<?php echo $this->escapeHtmlAttr($mailFromName); ?>" placeholder="Application Name">
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="form-group col-md-6">
+                    <label for="smtp_host" class="control-label">SMTP Host</label>
+                    <input type="text" class="form-control" id="smtp_host" name="smtp_host" value="<?php echo $this->escapeHtmlAttr($smtpHost); ?>" placeholder="smtp.example.com">
+                </div>
+                <div class="form-group col-md-3">
+                    <label for="smtp_port" class="control-label">SMTP Port</label>
+                    <input type="number" class="form-control" id="smtp_port" name="smtp_port" value="<?php echo $this->escapeHtmlAttr((string) $smtpPort); ?>" min="1" max="65535">
+                </div>
+                <div class="form-group col-md-3">
+                    <label for="smtp_encryption" class="control-label">Encryption</label>
+                    <select id="smtp_encryption" name="smtp_encryption" class="form-control">
+                        <option value="tls" <?php echo ($smtpEncryption === 'tls') ? 'selected' : ''; ?>>TLS</option>
+                        <option value="ssl" <?php echo ($smtpEncryption === 'ssl') ? 'selected' : ''; ?>>SSL</option>
+                        <option value="none" <?php echo ($smtpEncryption === 'none') ? 'selected' : ''; ?>>None</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="form-group col-md-6">
+                    <label for="smtp_username" class="control-label">SMTP Username</label>
+                    <input type="text" class="form-control" id="smtp_username" name="smtp_username" value="<?php echo $this->escapeHtmlAttr($smtpUsername); ?>" placeholder="SMTP account username">
+                </div>
+                <div class="form-group col-md-6">
+                    <label for="smtp_password" class="control-label">SMTP Password</label>
+                    <input type="text" class="form-control" id="smtp_password" name="smtp_password" value="<?php echo $this->escapeHtmlAttr($smtpPassword); ?>" placeholder="SMTP account password">
+                </div>
+            </div>
+
+            <div class="form-group" style="margin-top: 10px;">
+                <h4>Contact Details (Email Footer)</h4>
+            </div>
+
+            <div class="row">
+                <div class="form-group col-md-6">
+                    <label for="support_email" class="control-label">Support Email</label>
+                    <input type="email" class="form-control" id="support_email" name="support_email" value="<?php echo $this->escapeHtmlAttr($supportEmail); ?>" placeholder="support@yourdomain.com">
+                </div>
+                <div class="form-group col-md-6">
+                    <label for="support_phone" class="control-label">Support Phone</label>
+                    <input type="text" class="form-control" id="support_phone" name="support_phone" value="<?php echo $this->escapeHtmlAttr($supportPhone); ?>" placeholder="+975 (02) 333849">
+                </div>
+            </div>
+
+            <div class="form-group" style="margin-top: 10px;">
+                <button type="submit" class="btn btn-success"><i class="fa fa-check"></i> Save Settings</button>
+            </div>
+        </form>
+    </div>
+</div>

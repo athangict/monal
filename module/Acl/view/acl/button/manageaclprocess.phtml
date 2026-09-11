@@ -83,7 +83,7 @@ $this->headTitle($this->title);
 				<div class="row">
 					<div class="form-group col-lg-12">
 						<label class="control-label" for="permission_level">Permission Level</label>
-						<?php $status_array = explode(",", $row['permission_level']);?>
+						<?php $status_array = explode(",", (string) $row['permission_level']);?>
 						<select multiple="" class="form-control" name="permission_level[]" id="permission_level" data-placeholder="Select" >
 							<?php foreach($status as $srow):?>
 								<option value="<?php echo $srow['id'];?>" <?php echo (in_array($srow['id'],$status_array))?'selected':'';?>>

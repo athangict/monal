@@ -15,6 +15,7 @@ use Administration\Model As Administration;
 use Stock\Model As Stock;
 class GoodsrequestController extends AbstractActionController
 {   
+	protected $_userloc;
 	private $_container;
 	protected $_table; 		// database table 
     protected $_user; 		// user detail
@@ -431,7 +432,7 @@ class GoodsrequestController extends AbstractActionController
 	public function viewgoodsrequestAction()
 	{
 		$this->init();		
-		$params = explode("-", $this->_id);
+		$params = explode("-", (string) $this->_id);
 		if (isset($params['1']) && $params['1'] == '1' && isset($params['2']) && $params['2'] > 0) {
 			$flag = $this->getDefinedTable(Acl\NotifyTable::class)->getColumn($params['2'], 'flag'); 
 				if($flag == "0") {

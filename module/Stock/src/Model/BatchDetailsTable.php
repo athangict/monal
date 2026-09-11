@@ -196,7 +196,7 @@ class BatchDetailsTable extends AbstractTableGateway
 	 * @param String $column
 	 * @return String | Int
 	 */
-	public function getLSUM($where=NULL, $column)
+	public function getLSUM($where=NULL, $column = NULL)
 	{
 		
 		$sub0 = new Select(array("dd"=>"st_dispatch_details"));
@@ -259,7 +259,7 @@ class BatchDetailsTable extends AbstractTableGateway
 	 * @param String $column
 	 * @return String | Int
 	 */
-	public function getSUM($where=NULL, $column)
+	public function getSUM($where=NULL, $column = NULL)
 	{
 		$adapter = $this->adapter;
 		$sql = new Sql($adapter);

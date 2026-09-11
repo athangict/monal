@@ -12,6 +12,11 @@ use Hr\Model As Hr;
 
 class PayrollReportController extends AbstractActionController
 {   
+	protected $_connection;
+	protected $_highest_role;
+	protected $_lowest_role;
+	protected $_permissionObj;
+	protected $_safedataObj;
 	private $_container;
 	protected $_table; 		// database table
 	protected $_user; 		// user detail
@@ -128,7 +133,7 @@ class PayrollReportController extends AbstractActionController
 			$location = '-1';
 			$department = '-1';
 		}
-		//list($region, $location, $department, $year, $month) = explode("-", $this->_id . '-0-0-0-0-0');
+		//list($region, $location, $department, $year, $month) = explode("-", (string) $this->_id . '-0-0-0-0-0');
 		$data = array(
 				'year' => $year,
 				'month' => $month,
@@ -689,7 +694,7 @@ class PayrollReportController extends AbstractActionController
 	public function tdscertificateAction()
 	{
 		$this->init();
-		$arr = explode('-',$this->_id);
+		$arr = explode('-', (string) $this->_id);
 		return new ViewModel(array(
 				'title' 			=> 'Salary Slip',
 				'empId' 			=> $arr[0],
@@ -732,7 +737,7 @@ class PayrollReportController extends AbstractActionController
 			$month =  date('m');
 			$year = date('Y');
 			if($this->_id > 0):
-				list($employee, $year, $month) = explode('-', $this->_id);
+				list($employee, $year, $month) = explode('-', (string) $this->_id);
 				$location = $this->getDefinedTable(Hr\EmployeeTable::class)->getColumn($employee,'location');
 				$region = $this->getDefinedTable(Administration\LocationTable::class)->getColumn($location,'region');
 			endif;

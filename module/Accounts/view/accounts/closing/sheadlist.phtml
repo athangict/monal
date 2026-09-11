@@ -11,7 +11,6 @@
 							<th>Sub Ledger/SubHead</th>
 							<th>Location</th>
 							<th>Reference</th>
-							<th>Opening_SDR</th>
 							<th>Opening Debit</th>
 							<th>Opening Credit</th>
 						</tr>
@@ -26,14 +25,12 @@
 							foreach( $result as $dtl);		
 							$location = $dtl['location'] ;
 							$reference = $dtl['reference'] ;
-							$closing_sdr = $dtl['closing_sdr'];			
 							$closing_credit = $dtl['closing_cr'];
 							$closing_debit = $dtl['closing_dr'] ;
 							$id = $dtl['id'];
 						else:
 						    $location = '-1';
 							$reference = '0';
-							$closing_sdr = '0.00';
 						    $closing_credit = "0.00";
 							$closing_debit = "0.00";
 							$id = 0;
@@ -56,7 +53,6 @@
 								</select> 
 							</td>
 							<td><div class="form-group"> <input type="text" name="reference[]" id="reference" class="form-control" value="<?php echo $reference; ?>" step="0.001" required></div></td>
-							<td><div class="form-group"> <input type="text" name="closing_sdr[]" id="debit" class="form-control" value="<?php echo $closing_sdr; ?>" step="0.001" required></div></td>
 							<td><div class="form-group"> <input type="text" name="closing_dr[]" id="debit" class="form-control" value="<?php echo $closing_debit; ?>" step="0.001" required></div></td>
 							<td><div class="form-group"> <input type="text" name="closing_cr[]" id="credit" class="form-control" value="<?php echo $closing_credit; ?>" step="0.001"  required></div></td>
 						</tr>

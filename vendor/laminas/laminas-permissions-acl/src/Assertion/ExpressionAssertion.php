@@ -13,17 +13,19 @@ use ReflectionProperty;
 
 use function array_flip;
 use function array_intersect_key;
+use function assert;
 use function count;
 use function explode;
 use function in_array;
 use function is_array;
+use function is_object;
 use function is_string;
 use function method_exists;
 use function preg_match;
 use function property_exists;
 use function sprintf;
+use function str_contains;
 use function str_replace;
-use function strpos;
 use function strtolower;
 use function ucwords;
 
@@ -68,7 +70,7 @@ final class ExpressionAssertion implements AssertionInterface
     public const OPERATOR_NSAME  = '!==';
 
     /** @var list<string> */
-    private static $validOperators = [
+    private static array $validOperators = [
         self::OPERATOR_EQ,
         self::OPERATOR_NEQ,
         self::OPERATOR_LT,
@@ -83,15 +85,6 @@ final class ExpressionAssertion implements AssertionInterface
         self::OPERATOR_NSAME,
     ];
 
-    /** @var mixed */
-    private $left;
-
-    /** @var string */
-    private $operator;
-
-    /** @var mixed */
-    private $right;
-
     /**
      * Constructor
      *
@@ -102,11 +95,8 @@ final class ExpressionAssertion implements AssertionInterface
      * @param string $operator One of the OPERATOR constants (or their values)
      * @param mixed|array $right See the class description for valid values.
      */
-    private function __construct($left, $operator, $right)
+    private function __construct(private $left, private $operator, private $right)
     {
-        $this->left     = $left;
-        $this->operator = $operator;
-        $this->right    = $right;
     }
 
     /**
@@ -246,9 +236,12 @@ final class ExpressionAssertion implements AssertionInterface
         }
 
         $contextProperty = $operand[self::OPERAND_CONTEXT_PROPERTY];
+        assert(is_string($contextProperty));
 
-        if (strpos($contextProperty, '.') !== false) { // property path?
-            [$objectName, $objectField] = explode('.', $contextProperty, 2);
+        if (str_contains($contextProperty, '.')) { // property path?
+            $parts = explode('.', $contextProperty, 2);
+            assert(count($parts) >= 2);
+            [$objectName, $objectField] = $parts;
             return $this->getObjectFieldValue($context, $objectName, $objectField);
         }
 
@@ -282,19 +275,19 @@ final class ExpressionAssertion implements AssertionInterface
 
         $object        = $context[$objectName];
         $accessors     = ['get', 'is'];
-        $fieldAccessor = false === strpos($field, '_')
+        $fieldAccessor = ! str_contains($field, '_')
             ? $field
             : str_replace(' ', '', ucwords(str_replace('_', ' ', $field)));
 
         foreach ($accessors as $accessor) {
             $accessor .= $fieldAccessor;
 
-            if (method_exists($object, $accessor)) {
+            if (is_object($object) && method_exists($object, $accessor)) {
                 return $object->$accessor();
             }
         }
 
-        if (! $this->propertyExists($object, $field)) {
+        if (! is_object($object) || ! $this->propertyExists($object, $field)) {
             throw new RuntimeException(sprintf(
                 "'%s' property cannot be resolved on the '%s' object",
                 $field,
@@ -306,13 +299,11 @@ final class ExpressionAssertion implements AssertionInterface
     }
 
     /**
-     * @param mixed $left
      * @param string $operator
-     * @param mixed $right
      * @return bool|void
      * @throws RuntimeException If operand is not supported.
      */
-    private static function evaluateExpression($left, $operator, $right)
+    private static function evaluateExpression(mixed $left, $operator, mixed $right)
     {
         // phpcs:disable SlevomatCodingStandard.Operators.DisallowEqualOperators
         switch ($operator) {

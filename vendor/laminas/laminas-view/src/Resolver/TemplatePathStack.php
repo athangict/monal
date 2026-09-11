@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Laminas\View\Resolver;
 
+use Laminas\Stdlib\ArrayUtils;
 use Laminas\Stdlib\SplStack;
 use Laminas\View\Exception;
 use Laminas\View\Renderer\RendererInterface as Renderer;
@@ -11,14 +12,14 @@ use Laminas\View\Stream;
 use SplFileInfo;
 use Traversable;
 
+use function array_change_key_case;
 use function count;
 use function file_exists;
-use function get_class;
+use function get_debug_type;
 use function gettype;
 use function in_array;
 use function ini_get;
 use function is_array;
-use function is_object;
 use function is_string;
 use function ltrim;
 use function pathinfo;
@@ -28,7 +29,6 @@ use function sprintf;
 use function stream_get_wrappers;
 use function stream_wrapper_register;
 use function strpos;
-use function strtolower;
 
 use const DIRECTORY_SEPARATOR;
 use const PATHINFO_EXTENSION;
@@ -37,10 +37,19 @@ use const PATHINFO_EXTENSION;
  * Resolves view scripts based on a stack of paths
  *
  * @psalm-type PathStack = SplStack<string>
+ * @psalm-type Options = array{
+ *     lfi_protection?: bool,
+ *     script_paths?: list<string>,
+ *     default_suffix?: string,
+ *     use_stream_wrapper?: bool,
+ * }
+ * @final
  */
 class TemplatePathStack implements ResolverInterface
 {
-    public const FAILURE_NO_PATHS  = 'TemplatePathStack_Failure_No_Paths';
+    /** @deprecated */
+    public const FAILURE_NO_PATHS = 'TemplatePathStack_Failure_No_Paths';
+    /** @deprecated */
     public const FAILURE_NOT_FOUND = 'TemplatePathStack_Failure_Not_Found';
 
     /**
@@ -58,6 +67,8 @@ class TemplatePathStack implements ResolverInterface
     /**
      * Reason for last lookup failure
      *
+     * @deprecated This property will be removed in v3.0 of this component.
+     *
      * @var false|string
      */
     protected $lastLookupFailure = false;
@@ -73,18 +84,22 @@ class TemplatePathStack implements ResolverInterface
      * Flags used to determine if a stream wrapper should be used for enabling short tags
      */
 
-    /** @var bool */
+    /**
+     * @deprecated Stream wrapper functionality will be removed in version 3.0 of this component
+     *
+     * @var bool
+     */
     protected $useViewStream = false;
-    /** @var bool */
+    /**
+     * @deprecated Stream wrapper functionality will be removed in version 3.0 of this component
+     *
+     * @var bool
+     */
     protected $useStreamWrapper = false;
 
     /**@-*/
 
-    /**
-     * Constructor
-     *
-     * @param  null|array<string, mixed>|Traversable<string, mixed> $options
-     */
+    /** @param  null|Options|Traversable<string, mixed> $options */
     public function __construct($options = null)
     {
         $this->useViewStream = (bool) ini_get('short_open_tag');
@@ -106,7 +121,10 @@ class TemplatePathStack implements ResolverInterface
     /**
      * Configure object
      *
-     * @param  array<string, mixed>|Traversable<string, mixed> $options
+     * @deprecated Since 2.40.0 This method will be removed in 3.0 and options must be provided to the constructor. A
+     *             factory will be provided to ease this process
+     *
+     * @param  Options|Traversable<string, mixed> $options
      * @return void
      * @throws Exception\InvalidArgumentException
      */
@@ -116,36 +134,38 @@ class TemplatePathStack implements ResolverInterface
         if (! is_array($options) && ! $options instanceof Traversable) {
             throw new Exception\InvalidArgumentException(sprintf(
                 'Expected array or Traversable object; received "%s"',
-                is_object($options) ? get_class($options) : gettype($options)
+                get_debug_type($options),
             ));
         }
 
-        foreach ($options as $key => $value) {
-            switch (strtolower($key)) {
-                case 'lfi_protection':
-                    $this->setLfiProtection($value);
-                    break;
-                case 'script_paths':
-                    $this->addPaths($value);
-                    break;
-                case 'use_stream_wrapper':
-                    /** @psalm-suppress DeprecatedMethod */
-                    $this->setUseStreamWrapper($value);
-                    break;
-                case 'default_suffix':
-                    $this->setDefaultSuffix($value);
-                    break;
-                default:
-                    break;
-            }
+        $options = $options instanceof Traversable ? ArrayUtils::iteratorToArray($options) : $options;
+        $options = array_change_key_case($options);
+
+        if (isset($options['lfi_protection'])) {
+            $this->setLfiProtection($options['lfi_protection']);
+        }
+
+        if (isset($options['script_paths'])) {
+            $this->addPaths($options['script_paths']);
+        }
+
+        if (isset($options['use_stream_wrapper'])) {
+            $this->setUseStreamWrapper($options['use_stream_wrapper']);
+        }
+
+        if (isset($options['default_suffix'])) {
+            $this->setDefaultSuffix($options['default_suffix']);
         }
     }
 
     /**
      * Set default file suffix
      *
-     * @param  string $defaultSuffix
-     * @return TemplatePathStack
+     * @deprecated Since 2.40.0 Runtime mutation of options will not be possible in version 3.0 and options must be
+     *             passed to the constructor instead
+     *
+     * @param string $defaultSuffix
+     * @return $this
      */
     public function setDefaultSuffix($defaultSuffix)
     {
@@ -156,6 +176,8 @@ class TemplatePathStack implements ResolverInterface
 
     /**
      * Get default file suffix
+     *
+     * @deprecated  Since 2.40.0 This method will be removed in 3.0 without replacement
      *
      * @return string
      */
@@ -168,7 +190,7 @@ class TemplatePathStack implements ResolverInterface
      * Add many paths to the stack at once
      *
      * @param  list<string> $paths
-     * @return TemplatePathStack
+     * @return $this
      */
     public function addPaths(array $paths)
     {
@@ -179,7 +201,7 @@ class TemplatePathStack implements ResolverInterface
     }
 
     /**
-     * Rest the path stack to the paths provided
+     * Reset the path stack to the paths provided
      *
      * @param  PathStack|list<string> $paths
      * @return TemplatePathStack
@@ -209,7 +231,9 @@ class TemplatePathStack implements ResolverInterface
     /**
      * Normalize a path for insertion in the stack
      *
-     * @param  string $path
+     * @deprecated  Since 2.40.0 This method is internal and will be removed in 3.0 without replacement
+     *
+     * @param string $path
      * @return string
      */
     public static function normalizePath($path)
@@ -224,7 +248,7 @@ class TemplatePathStack implements ResolverInterface
      * Add a single path to the stack
      *
      * @param  string $path
-     * @return TemplatePathStack
+     * @return $this
      * @throws Exception\InvalidArgumentException
      */
     public function addPath($path)
@@ -235,7 +259,7 @@ class TemplatePathStack implements ResolverInterface
                 gettype($path)
             ));
         }
-        $this->paths[] = static::normalizePath($path);
+        $this->paths->push(static::normalizePath($path));
         return $this;
     }
 
@@ -264,7 +288,10 @@ class TemplatePathStack implements ResolverInterface
     /**
      * Set LFI protection flag
      *
-     * @param  bool $flag
+     * @deprecated Since 2.40.0 Runtime mutation of options/behaviour is deprecated. Options should be passed to
+     *             the constructor instead.
+     *
+     * @param bool $flag
      * @return TemplatePathStack
      */
     public function setLfiProtection($flag)
@@ -275,6 +302,8 @@ class TemplatePathStack implements ResolverInterface
 
     /**
      * Return status of LFI protection flag
+     *
+     * @deprecated Since 2.40.0 This method will be removed in 3.0 without replacement
      *
      * @return bool
      */
@@ -331,6 +360,7 @@ class TemplatePathStack implements ResolverInterface
 
         if (! count($this->paths)) {
             $this->lastLookupFailure = static::FAILURE_NO_PATHS;
+            // @TODO In version 3, this should become an exception
             return false;
         }
 
@@ -361,11 +391,15 @@ class TemplatePathStack implements ResolverInterface
         }
 
         $this->lastLookupFailure = static::FAILURE_NOT_FOUND;
+        // @TODO This should become an exception in v3.0
         return false;
     }
 
     /**
      * Get the last lookup failure message, if any
+     *
+     * @deprecated In version 3.0, this resolver will throw exceptions instead of
+     *             incorrectly returning false from resolve()
      *
      * @return false|string
      */

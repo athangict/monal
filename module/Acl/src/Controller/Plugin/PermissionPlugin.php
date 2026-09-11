@@ -13,6 +13,7 @@ use Laminas\Http\Response;
 use Interop\Container\ContainerInterface;
 
 class PermissionPlugin extends AbstractPlugin{
+	protected $dbAdapter;
 	protected $_container;
 	
 	public function __construct(ContainerInterface $container)
@@ -28,16 +29,19 @@ class PermissionPlugin extends AbstractPlugin{
 		$this->dbAdapter = $this->_container->get('Laminas\Db\Adapter\Adapter');
 		if ($auth->hasIdentity()) {
 			$login_id = $auth->getIdentity()->id;
-		
-			$login_role_array = explode(',',$auth->getIdentity()->role);
-			$login_role = (sizeof($login_role_array)>0)?$auth->getIdentity()->role:0;
 
-			$admin_location = explode(',',$auth->getIdentity()->admin_location);
+			$login_role_array = array_values(array_filter(array_map('trim', explode(',', (string) $auth->getIdentity()->role)), function ($role) {
+				return $role !== '' && ctype_digit($role);
+			}));
+			$login_role = (sizeof($login_role_array) > 0) ? implode(',', $login_role_array) : '0';
+
+			$admin_location = explode(',',(string) $auth->getIdentity()->admin_location);
 		
-			$admin_activity = explode(',',$auth->getIdentity()->admin_activity);
+			$admin_activity = explode(',',(string) $auth->getIdentity()->admin_activity);
 		}else{
 			$login_id = 0;
 			$login_role = 1;
+			$login_role_array = array(1);
 			$admin_location = array(0);	
 			$admin_activity = array(0);	
 		}
@@ -58,16 +62,15 @@ class PermissionPlugin extends AbstractPlugin{
 		$actionName = strtolower($routeMatch->getParam('action', 'not-found'));	/** get the action name **/
 		
 		$controllerName = $routeMatch->getParam('controller', 'not-found');	/** get the controller name **/
-		$controllerName = explode("\\", $controllerName);
+		$controllerName = explode("\\", (string) $controllerName);
 		$controllerName = strtolower(array_pop($controllerName));
 		$controllerName = substr($controllerName, 0, -10);
 		
 		$routeName = $routeMatch->getMatchedRouteName();
 		$routeName = (strpos($routeName, '/') !== false)?substr($routeName, 0, strpos($routeName, "/")):$routeName;
 		
-		$routeParamID = $routeMatch->getParam('id');
-		$routeParamID = explode('_', $routeParamID);
-		$id = $routeParamID[0];
+		$routeParamID = explode('_', (string) $routeMatch->getParam('id'));
+		$id = (isset($routeParamID[0]) && ctype_digit((string) $routeParamID[0])) ? (int) $routeParamID[0] : 0;
 		
 		$aclQuery = "SELECT * FROM `sys_acl` WHERE `route`='".$routeName."' AND `controller`='".$controllerName."' AND `action`='".$actionName."' AND `resource` IN (SELECT `id` FROM `sys_modules` WHERE `module`='".$moduleName."')";
 		$acl_stmt = $this->dbAdapter->query($aclQuery);
@@ -91,7 +94,7 @@ class PermissionPlugin extends AbstractPlugin{
 				$roleprocessQuery = "SELECT * FROM `sys_role_process` WHERE `process`='".$process_id."' AND `role` IN (".$login_role.")";
 				$roleprocess_stmt = $this->dbAdapter->query($roleprocessQuery);
 				$roleprocess = $roleprocess_stmt->execute();
-				if($id != 0): /** start -- if id!=0 **/
+				if($id > 0): /** start -- if id!=0 **/
 					$idQuery = "SELECT * FROM `".$table_name."` WHERE `id`=".$id;
 					$idStmt = $this->dbAdapter->query($idQuery);
 					$records = $idStmt->execute();
@@ -230,7 +233,7 @@ class PermissionPlugin extends AbstractPlugin{
 				$processdetails = $process_stmt->execute();
 				foreach($processdetails as $prow);
 				$table_name = $prow['table_name'];
-				if($id != 0):
+				if($id > 0):
 					$idQuery = "SELECT * FROM `".$table_name."` WHERE `id`=".$id;
 					$idStmt = $this->dbAdapter->query($idQuery);
 					$records = $idStmt->execute();
@@ -269,7 +272,7 @@ class PermissionPlugin extends AbstractPlugin{
 		if ($auth->hasIdentity()) {
 			$login_id = $auth->getIdentity()->id;
 		
-			$login_role_array = explode(',',$auth->getIdentity()->role);
+			$login_role_array = explode(',',(string) $auth->getIdentity()->role);
 			$login_role = (sizeof($login_role_array)>0)?$auth->getIdentity()->role:0;
 		}else{
 			$login_id = 0;
@@ -304,8 +307,8 @@ class PermissionPlugin extends AbstractPlugin{
 	public function getregion(){
 		$auth = new AuthenticationService();
 		if ($auth->hasIdentity()) {
-			$login_role_array = explode(',',$auth->getIdentity()->role);
-			$admin_location_array = explode(',',$auth->getIdentity()->admin_location);
+			$login_role_array = explode(',',(string) $auth->getIdentity()->role);
+			$admin_location_array = explode(',',(string) $auth->getIdentity()->admin_location);
 			$admin_location = (sizeof($admin_location_array)>0 && !empty($admin_location_array))?$auth->getIdentity()->admin_location:0;
 		}else{
 			$login_role_array = array(0);
@@ -342,8 +345,8 @@ class PermissionPlugin extends AbstractPlugin{
 	public function getlocation($region_data = 0){
 		$auth = new AuthenticationService();
 		if ($auth->hasIdentity()) {
-			$login_role_array = explode(',',$auth->getIdentity()->role);
-			$admin_location_array = explode(',',$auth->getIdentity()->admin_location);
+			$login_role_array = explode(',',(string) $auth->getIdentity()->role);
+			$admin_location_array = explode(',',(string) $auth->getIdentity()->admin_location);
 			$admin_location = (sizeof($admin_location_array)>0 && !empty($admin_location_array))?$auth->getIdentity()->admin_location:0;
 		}else{
 			$login_role_array = array(0);
@@ -382,8 +385,8 @@ class PermissionPlugin extends AbstractPlugin{
 	public function getlocationCount($region_data = 0, $user_location = 0){
 		$auth = new AuthenticationService();
 		if ($auth->hasIdentity()) {
-			$login_role_array = explode(',',$auth->getIdentity()->role);
-			$admin_location_array = explode(',',$auth->getIdentity()->admin_location);
+			$login_role_array = explode(',',(string) $auth->getIdentity()->role);
+			$admin_location_array = explode(',',(string) $auth->getIdentity()->admin_location);
 			$admin_location = (sizeof($admin_location_array)>0 && !empty($admin_location_array))?$auth->getIdentity()->admin_location:0;
 		}else{
 			$login_role_array = array(0);
@@ -421,8 +424,8 @@ class PermissionPlugin extends AbstractPlugin{
 	public function getactivity(){
 		$auth = new AuthenticationService();
 		if ($auth->hasIdentity()) {
-			$login_role_array = explode(',',$auth->getIdentity()->role);
-			$admin_activity_array = explode(',',$auth->getIdentity()->admin_activity);
+			$login_role_array = explode(',',(string) $auth->getIdentity()->role);
+			$admin_activity_array = explode(',',(string) $auth->getIdentity()->admin_activity);
 			$admin_activity = (sizeof($admin_activity_array)>0 && !empty($admin_activity_array))?$auth->getIdentity()->admin_activity:0;
 		}else{
 			$login_role_array = array(0);
@@ -459,8 +462,8 @@ class PermissionPlugin extends AbstractPlugin{
 	public function getactivityCount(){
 		$auth = new AuthenticationService();
 		if ($auth->hasIdentity()) {
-			$login_role_array = explode(',',$auth->getIdentity()->role);
-			$admin_activity_array = explode(',',$auth->getIdentity()->admin_activity);
+			$login_role_array = explode(',',(string) $auth->getIdentity()->role);
+			$admin_activity_array = explode(',',(string) $auth->getIdentity()->admin_activity);
 			$admin_activity = (sizeof($admin_activity_array)>0 && !empty($admin_activity_array))?$auth->getIdentity()->admin_activity:0;
 		}else{
 			$login_role_array = array(0);

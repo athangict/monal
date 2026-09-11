@@ -5,7 +5,10 @@ declare(strict_types=1);
 namespace Laminas\View\Helper;
 
 use Laminas\View\Exception;
+use Laminas\View\Helper\Placeholder\Container\AbstractContainer;
+use Laminas\View\Helper\Placeholder\Container\AbstractStandalone;
 
+use function assert;
 use function implode;
 use function in_array;
 
@@ -13,13 +16,21 @@ use function in_array;
  * Helper for setting and retrieving title element for HTML head.
  *
  * Duck-types against Laminas\I18n\Translator\TranslatorAwareInterface.
+ *
+ * @extends AbstractStandalone<int, string>
+ * @method HeadTitle set(string $string)
+ * @method HeadTitle prepend(string $string)
+ * @method HeadTitle append(string $string)
+ * @final
  */
-class HeadTitle extends Placeholder\Container\AbstractStandalone
+class HeadTitle extends AbstractStandalone
 {
     use TranslatorAwareTrait;
 
     /**
      * Default title rendering order (i.e. order in which each title attached)
+     *
+     * @deprecated Since 2.38.0 This property will be removed in 3.0 without replacement
      *
      * @var string|null
      */
@@ -36,14 +47,14 @@ class HeadTitle extends Placeholder\Container\AbstractStandalone
     {
         if (null === $setType) {
             $setType = $this->getDefaultAttachOrder()
-                ?? Placeholder\Container\AbstractContainer::APPEND;
+                ?? AbstractContainer::APPEND;
         }
 
         $title = (string) $title;
         if ($title !== '') {
-            if ($setType === Placeholder\Container\AbstractContainer::SET) {
+            if ($setType === AbstractContainer::SET) {
                 $this->set($title);
-            } elseif ($setType === Placeholder\Container\AbstractContainer::PREPEND) {
+            } elseif ($setType === AbstractContainer::PREPEND) {
                 $this->prepend($title);
             } else {
                 $this->append($title);
@@ -61,9 +72,10 @@ class HeadTitle extends Placeholder\Container\AbstractStandalone
      */
     public function toString($indent = null)
     {
-        $indent = null !== $indent
-                ? $this->getWhitespace($indent)
-                : $this->getIndent();
+        $container = $this->getContainer();
+        $indent    = null !== $indent
+                ? $container->getWhitespace($indent)
+                : $container->getIndent();
 
         $output = $this->renderTitle();
 
@@ -80,44 +92,46 @@ class HeadTitle extends Placeholder\Container\AbstractStandalone
         $items = [];
 
         $itemCallback = $this->getTitleItemCallback();
-        foreach ($this as $item) {
+        $container    = $this->getContainer();
+        foreach ($container as $item) {
             $items[] = $itemCallback($item);
         }
 
-        $separator = $this->getSeparator();
+        $separator = $container->getSeparator();
         $output    = '';
 
-        $prefix = $this->getPrefix();
+        $prefix = $container->getPrefix();
         if ($prefix) {
             $output .= $prefix;
         }
 
         $output .= implode($separator, $items);
 
-        $postfix = $this->getPostfix();
+        $postfix = $container->getPostfix();
         if ($postfix) {
             $output .= $postfix;
         }
 
-        $output = $this->autoEscape ? $this->escape($output) : $output;
-
-        return $output;
+        return $this->autoEscape ? $this->escape($output) : $output;
     }
 
     /**
      * Set a default order to add titles
      *
+     * @deprecated Since 2.38.0 This method will be removed in 3.0. You should instead use the `append` or `prepend`
+     *             methods
+     *
      * @param  string $setType
      * @throws Exception\DomainException
-     * @return HeadTitle
+     * @return $this
      */
     public function setDefaultAttachOrder($setType)
     {
         if (
             ! in_array($setType, [
-                Placeholder\Container\AbstractContainer::APPEND,
-                Placeholder\Container\AbstractContainer::SET,
-                Placeholder\Container\AbstractContainer::PREPEND,
+                AbstractContainer::APPEND,
+                AbstractContainer::SET,
+                AbstractContainer::PREPEND,
             ], true)
         ) {
             throw new Exception\DomainException(
@@ -131,6 +145,8 @@ class HeadTitle extends Placeholder\Container\AbstractStandalone
 
     /**
      * Get the default attach order, if any.
+     *
+     * @deprecated Since 2.38.0 This method will be removed in 3.0 without replacement
      *
      * @return string|null
      */
@@ -146,7 +162,7 @@ class HeadTitle extends Placeholder\Container\AbstractStandalone
      * callable that simply returns the provided item; otherwise, returns a
      * callable that returns a translation of the provided item.
      *
-     * @return callable
+     * @return callable(string): string
      */
     private function getTitleItemCallback()
     {
@@ -155,6 +171,7 @@ class HeadTitle extends Placeholder\Container\AbstractStandalone
         }
 
         $translator = $this->getTranslator();
+        assert($translator !== null);
         $textDomain = $this->getTranslatorTextDomain();
         return static fn($item) => $translator->translate($item, $textDomain);
     }

@@ -15,6 +15,7 @@ use Psr\Container\ContainerInterface;
 use function assert;
 use function is_array;
 
+/** @final */
 class InputFilterAbstractServiceFactory implements AbstractFactoryInterface
 {
     /** @var Factory|null */
@@ -22,7 +23,6 @@ class InputFilterAbstractServiceFactory implements AbstractFactoryInterface
 
     /**
      * @param string                  $rName
-     * @param array                   $options
      * @return InputFilterInterface
      */
     public function __invoke(ContainerInterface $services, $rName, ?array $options = null)

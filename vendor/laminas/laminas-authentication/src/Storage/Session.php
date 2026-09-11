@@ -6,6 +6,7 @@ namespace Laminas\Authentication\Storage;
 
 use Laminas\Session\Container as SessionContainer;
 use Laminas\Session\ManagerInterface as SessionManager;
+use Override;
 
 class Session implements StorageInterface
 {
@@ -29,22 +30,22 @@ class Session implements StorageInterface
     /**
      * Session namespace
      *
-     * @var mixed
+     * @var string
      */
     protected $namespace = self::NAMESPACE_DEFAULT;
 
     /**
      * Session object member
      *
-     * @var mixed
+     * @var string
      */
     protected $member = self::MEMBER_DEFAULT;
 
     /**
      * Sets session storage options and initializes session namespace object
      *
-     * @param  mixed $namespace
-     * @param  mixed $member
+     * @param  string|null $namespace
+     * @param  string|null $member
      */
     public function __construct($namespace = null, $member = null, ?SessionManager $manager = null)
     {
@@ -82,6 +83,7 @@ class Session implements StorageInterface
      *
      * @return bool
      */
+    #[Override]
     public function isEmpty()
     {
         return ! isset($this->session->{$this->member});
@@ -92,6 +94,7 @@ class Session implements StorageInterface
      *
      * @return mixed
      */
+    #[Override]
     public function read()
     {
         return $this->session->{$this->member};
@@ -103,6 +106,7 @@ class Session implements StorageInterface
      * @param  mixed $contents
      * @return void
      */
+    #[Override]
     public function write($contents)
     {
         $this->session->{$this->member} = $contents;
@@ -113,6 +117,7 @@ class Session implements StorageInterface
      *
      * @return void
      */
+    #[Override]
     public function clear()
     {
         unset($this->session->{$this->member});

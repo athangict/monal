@@ -73,7 +73,7 @@
 						<label for="status" class="control-label">status</label>
 						<select multiple="" class="form-control" name="status[]" id="status" data-placeholder="Select" >
 									<option value="-1">All</option>
-							<?php //$status_array = explode(',',$data['status']);
+							<?php //$status_array = explode(',',(string) $data['status']);
 							foreach($this->statusObj->getarray([1,19,22,23]) as $sta):
 								$selected = (in_array($sta['id'] ,$data['status']))?'selected':'';?>
 							<option value="<?php echo $sta['id'];?>"<?php echo $selected;?>>

@@ -6,12 +6,12 @@ namespace Laminas\Test\PHPUnit\Constraint;
 
 use Exception;
 use Laminas\Test\PHPUnit\Controller\AbstractControllerTestCase;
+use Override;
 use PHPUnit\Framework\Constraint\Constraint;
 use PHPUnit\Framework\ExpectationFailedException;
 use SebastianBergmann\Comparator\ComparisonFailure;
 use Throwable;
 
-use function get_class;
 use function implode;
 use function sprintf;
 
@@ -32,11 +32,10 @@ abstract class LaminasConstraint extends Constraint
     }
 
     /**
-     * @param mixed $other
-     * @param string $description
      * @psalm-return never
      */
-    final public function fail($other, $description, ?ComparisonFailure $comparisonFailure = null): void
+    #[Override]
+    final public function fail(mixed $other, string $description, ?ComparisonFailure $comparisonFailure = null): never
     {
         try {
             parent::fail($other, $description, $comparisonFailure);
@@ -55,7 +54,7 @@ abstract class LaminasConstraint extends Constraint
 
         $controllerManager = $this->activeTestCase->getApplicationServiceLocator()->get('ControllerManager');
 
-        return get_class($controllerManager->get($controllerIdentifier));
+        return $controllerManager->get($controllerIdentifier)::class;
     }
 
     /**
@@ -78,7 +77,7 @@ abstract class LaminasConstraint extends Constraint
         do {
             $messages[] = sprintf(
                 "Exception '%s' with message '%s' in %s:%d",
-                get_class($exception),
+                $exception::class,
                 $exception->getMessage(),
                 $exception->getFile(),
                 $exception->getLine()

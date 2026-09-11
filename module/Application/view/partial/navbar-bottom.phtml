@@ -4,11 +4,14 @@
  * chophel@athang.com
  */
 ?>
+<?php
+$appName = $this->appsetting('app_name', 'Monal-ERP');
+?>
 <div class="footer">
 	<div class="footer-inner">
 		<div class="footer-content">
 			<span class="bigger-110">
-				<span class="blue bolder">Monal-ERP</span>
+				<span class="blue bolder"><?php echo $this->escapeHtml($appName); ?></span>
 				&copy; 2014-<?php echo date('Y');?>
 			</span>
 		</div>

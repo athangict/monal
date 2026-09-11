@@ -6,6 +6,10 @@ namespace Laminas\Router;
 
 /**
  * Register with a laminas-mvc application.
+ *
+ * @deprecated Use ConfigProvider instead; removed in v4.0
+ *
+ * @final
  */
 class Module
 {

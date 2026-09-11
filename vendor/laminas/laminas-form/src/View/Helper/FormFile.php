@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Laminas\Form\View\Helper;
 
 use Laminas\Form\ElementInterface;
@@ -10,6 +12,7 @@ use function is_array;
 use function is_string;
 use function sprintf;
 
+/** @final */
 class FormFile extends FormInput
 {
     /**
@@ -18,24 +21,22 @@ class FormFile extends FormInput
      * @var array
      */
     protected $validTagAttributes = [
-        'name'           => true,
-        'accept'         => true,
-        'autofocus'      => true,
-        'disabled'       => true,
-        'form'           => true,
-        'multiple'       => true,
-        'required'       => true,
-        'type'           => true,
+        'name'      => true,
+        'accept'    => true,
+        'autofocus' => true,
+        'disabled'  => true,
+        'form'      => true,
+        'multiple'  => true,
+        'required'  => true,
+        'type'      => true,
     ];
 
     /**
      * Render a form <input> element from the provided $element
      *
-     * @param  ElementInterface $element
      * @throws Exception\DomainException
-     * @return string
      */
-    public function render(ElementInterface $element)
+    public function render(ElementInterface $element): string
     {
         $name = $element->getName();
         if ($name === null || $name === '') {
@@ -45,9 +46,9 @@ class FormFile extends FormInput
             ));
         }
 
-        $attributes          = $element->getAttributes();
-        $attributes['type']  = $this->getType($element);
-        $attributes['name']  = $name;
+        $attributes         = $element->getAttributes();
+        $attributes['type'] = $this->getType($element);
+        $attributes['name'] = $name;
         if (array_key_exists('multiple', $attributes) && $attributes['multiple']) {
             $attributes['name'] .= '[]';
         }
@@ -68,11 +69,8 @@ class FormFile extends FormInput
 
     /**
      * Determine input type to use
-     *
-     * @param  ElementInterface $element
-     * @return string
      */
-    protected function getType(ElementInterface $element)
+    protected function getType(ElementInterface $element): string
     {
         return 'file';
     }

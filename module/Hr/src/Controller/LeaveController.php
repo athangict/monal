@@ -14,6 +14,9 @@ use Accounts\Model As Accounts;
 
 class LeaveController extends AbstractActionController
 {   
+	protected $_connection;
+	protected $_safedataObj;
+	protected $_userloc;
 	private $_container;
 	protected $_table; 		// database table
 	protected $_user; 		// user detail
@@ -558,7 +561,7 @@ class LeaveController extends AbstractActionController
 		/*leave application Detail*/
 	public function leavedetailAction(){
 		$this->init();
-		$params = explode("-", $this->_id);
+		$params = explode("-", (string) $this->_id);
 		if (isset($params['1']) && $params['1'] == '1' && isset($params['2']) && $params['2'] > 0) {
 			$flag = $this->getDefinedTable(Acl\NotifyTable::class)->getColumn($params['2'], 'flag'); 
 				if($flag == "0") {
@@ -967,7 +970,7 @@ class LeaveController extends AbstractActionController
 			);
 			$notificationResult = $this->getDefinedTable(Acl\NotificationTable::class)->save($notification_data);
 			if($notificationResult > 0 ){
-				$notification_array = explode("|", $flow['route_notification_to']);
+				$notification_array = explode("|", (string) $flow['route_notification_to']);
 				if(sizeof($notification_array)>0){
 					for($k=0;$k<sizeof($notification_array);$k++){
 						$focalusers=$this->getDefinedTable(Administration\FlowTransactionTable::class)->get(array('id'=>$flow_result));
@@ -1033,7 +1036,7 @@ class LeaveController extends AbstractActionController
 			//echo '<pre>';print_r($notification_data);exit;
 			$notificationResult = $this->getDefinedTable(Acl\NotificationTable::class)->save($notification_data);
 			if($notificationResult > 0 ){
-				$notification_array = explode("|", $flow['route_notification_to']);
+				$notification_array = explode("|", (string) $flow['route_notification_to']);
 				if(sizeof($notification_array)>0){
 					for($k=0;$k<sizeof($notification_array);$k++){
 						$focalusers=$this->getDefinedTable(Administration\FlowTransactionTable::class)->get(array('id'=>$flow_result));
@@ -1626,7 +1629,7 @@ class LeaveController extends AbstractActionController
 	
 	public function encashmentdtlAction(){
 		$this->init();
-		$params = explode("-", $this->_id);
+		$params = explode("-", (string) $this->_id);
 		if (isset($params['1']) && $params['1'] == '1' && isset($params['2']) && $params['2'] > 0) {
 			$flag = $this->getDefinedTable(Acl\NotifyTable::class)->getColumn($params['2'], 'flag'); 
 				if($flag == "0") {
@@ -1803,7 +1806,7 @@ class LeaveController extends AbstractActionController
 	{
 		{	
 			$this->init();
-			$array_id = explode("_", $this->_id);
+			$array_id = explode("_", (string) $this->_id);
 		
 			$region = (sizeof($array_id)>1)?$array_id[1]:'-1';
 			$location = (sizeof($array_id)>1)?$array_id[2]:'-1';
@@ -1863,7 +1866,7 @@ class LeaveController extends AbstractActionController
 	{
 		{	
 			$this->init();
-			$array_id = explode("_", $this->_id);
+			$array_id = explode("_", (string) $this->_id);
 			$department = (sizeof($array_id)>1)?$array_id[0]:'-1';
 			$region = (sizeof($array_id)>1)?$array_id[1]:'-1';
 			$location = (sizeof($array_id)>1)?$array_id[2]:'-1';
@@ -1927,7 +1930,7 @@ class LeaveController extends AbstractActionController
 	{
 		{	
 			$this->init();
-			$array_id = explode("_", $this->_id);
+			$array_id = explode("_", (string) $this->_id);
 			$department = (sizeof($array_id)>1)?$array_id[0]:'-1';
 			$region = (sizeof($array_id)>1)?$array_id[1]:'-1';
 			$location = (sizeof($array_id)>1)?$array_id[2]:'-1';

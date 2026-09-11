@@ -9,9 +9,11 @@ use ReflectionProperty;
 
 use function array_fill_keys;
 use function array_map;
-use function get_class;
 use function get_object_vars;
 
+/**
+ * @final
+ */
 class ObjectPropertyHydrator extends AbstractHydrator
 {
     /** @var (null|array)[] indexed by class name and then property name */
@@ -57,7 +59,7 @@ class ObjectPropertyHydrator extends AbstractHydrator
      */
     public function hydrate(array $data, object $object)
     {
-        $properties = &self::$skippedPropertiesCache[get_class($object)] ?? null;
+        $properties = &self::$skippedPropertiesCache[$object::class] ?? null;
 
         if (null === $properties) {
             $reflection = new ReflectionClass($object);

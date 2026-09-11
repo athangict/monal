@@ -53,7 +53,7 @@
 					<td class="text-center"><?php echo ($row['status']=='1')?"<span class='ace-icon fa fa-check fa-lg green'></span>":"<span class='ace-icon fa fa-times fa-lg red'></span>"; ?></td>
 					<td><?php 
 						if(!empty($row['permission_level'])):
-							$status_array = explode(',',$row['permission_level']);
+							$status_array = explode(',',(string) $row['permission_level']);
 							for($i=0;$i<sizeof($status_array);$i++):
 								echo $this->status($status_array[$i])."&nbsp;";
 						endfor;else: echo "-"; endif;?></td>

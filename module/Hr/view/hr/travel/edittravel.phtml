@@ -97,7 +97,7 @@
 										<td class="col-lg-2 input-cell">
 											<div class="form-group" >
 												<div class="date input-group" id="from_date" data-date="<?php echo date('Y-m-d');?>" data-date-format="yyyy-mm-dd" >
-												<?php $fromdate= explode('-', $row['from_date']);?>
+												<?php $fromdate= explode('-', (string) $row['from_date']);?>
 														<input class="form-control span2 tr_from_date" name="from_date[]" id="from_date" type="text" value="<?php echo $fromdate[1]."/".$fromdate[2]."/".$fromdate[0];?>" placeholder="From Date"  >
 													</div>
 											</div>
@@ -115,7 +115,7 @@
 													<input type="text" id="to_station" name="to_station[]" class="form-control tr_to_station" value="<?php echo $row['to_station'];?>" placeholder="Enter TO Station">
 												</div>
 										</td>
-										<?php $todate= explode('-', $row['to_date']);?>
+										<?php $todate= explode('-', (string) $row['to_date']);?>
 										<td class="col-lg-2 input-cell">
 											<div class="form-group">
 												<div class="date input-group" id="to_date" data-date="<?php echo date('Y-m-d');?>" data-date-format="yyyy-mm-dd" >

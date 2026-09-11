@@ -13,6 +13,7 @@ use function is_string;
 
 use const PHP_EOL;
 
+/** @final */
 class HtmlObject extends AbstractHtmlElement
 {
     /**
@@ -22,7 +23,7 @@ class HtmlObject extends AbstractHtmlElement
      * @param  string $type    Data file type
      * @param  array  $attribs Attribs for the object tag
      * @param  array  $params  Params for in the object tag
-     * @param  string $content Alternative content for object
+     * @param  string|list<string>|null $content Alternative content for object
      * @throws InvalidArgumentException
      * @return string
      */

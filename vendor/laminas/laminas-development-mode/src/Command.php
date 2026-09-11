@@ -11,12 +11,12 @@ use function fwrite;
 use const PHP_EOL;
 use const STDERR;
 
+/** @final */
 class Command
 {
     /**
      * Handle the CLI arguments.
      *
-     * @param array $arguments
      * @return int
      */
     public function __invoke(array $arguments)

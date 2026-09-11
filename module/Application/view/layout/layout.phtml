@@ -4,11 +4,26 @@
  * chophel@athang.com
  */
 ?>
+<?php
+$appSettings = $this->appsetting();
+$appName = !empty($appSettings['app_name']) ? $appSettings['app_name'] : 'Monal-ERP';
+$appTemplate = !empty($appSettings['app_template']) ? $appSettings['app_template'] : 'ace';
+$skinClassMap = [
+	'ace' => '',
+	'default' => '',
+	'ace-skin-1' => 'skin-1',
+	'ace-skin-2' => 'skin-2',
+	'ace-skin-3' => 'skin-3',
+	'ocean' => 'skin-1',
+	'sunset' => 'skin-2',
+];
+$skinClass = isset($skinClassMap[$appTemplate]) ? $skinClassMap[$appTemplate] : '';
+?>
 <?= $this->doctype() ?>
 <html lang="en">
     <head>
         <meta charset="utf-8">
-        <?= $this->headTitle('MONAL ')->setSeparator(' - ')->setAutoEscape(false) ?>
+		<?= $this->headTitle($appName . ' ')->setSeparator(' - ')->setAutoEscape(false) ?>
 
         <?= $this->headMeta()
             ->appendName('viewport', 'width=device-width, initial-scale=1.0, viewport-fit=cover')
@@ -17,6 +32,7 @@
 		
         <!-- Le styles -->
         <?php echo $this->headLink(array('rel' => 'shortcut icon', 'type' => 'image/vnd.microsoft.icon', 'href' => $this->basePath() . '/images/favicon.png'))
+			->prependStylesheet($this->basePath() . '/css/app-templates.css')
 		
 			->prependStylesheet($this->basePath() . '/css/athang.css')
 			->prependStylesheet($this->basePath() . '/leaflet.fullscreen/leaflet.fullscreen.css')
@@ -56,7 +72,7 @@
 			->prependFile($this->basePath() . '/js/jquery-2.2.4.min.js')
 			->prependFile($this->basePath() . '/tinymce/tinymce.min.js');?>
     </head>
-	<body class="<?php echo ($user = $this->Identity())?'no-skin':'login-layout light-login patern-bg';?>">
+	<body class="<?php echo ($user = $this->Identity()) ? trim('no-skin ' . $skinClass) : trim('login-layout light-login patern-bg ' . $skinClass);?>">
 		<?php if ($user = $this->Identity()) {  ?>
 			<!-- topbar menu  -->    
 			<?php echo $this->partial('partial/navbar-top.phtml'); ?>

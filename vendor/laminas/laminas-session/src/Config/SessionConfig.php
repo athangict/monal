@@ -3,20 +3,22 @@
 namespace Laminas\Session\Config;
 
 use Laminas\Session\Exception;
+use Laminas\Session\SaveHandler\SaveHandlerInterface;
 use SessionHandlerInterface;
 
 use function array_merge;
 use function array_search;
 use function array_shift;
+use function assert;
 use function class_exists;
 use function explode;
-use function get_class;
 use function hash_algos;
 use function implode;
 use function in_array;
 use function ini_get;
 use function ini_set;
 use function is_a;
+use function is_array;
 use function is_numeric;
 use function is_string;
 use function ob_get_clean;
@@ -30,7 +32,7 @@ use function session_status;
 use function session_write_close;
 use function set_error_handler;
 use function sprintf;
-use function strpos;
+use function str_contains;
 use function strtolower;
 use function trigger_error;
 use function trim;
@@ -89,7 +91,7 @@ class SessionConfig extends StandardConfig
      * built-in save handler name, or the name of a SessionHandlerInterface
      * class being used as a save handler.
      *
-     * @var null|string
+     * @var null|string|SaveHandlerInterface
      */
     protected $saveHandler;
 
@@ -202,26 +204,23 @@ class SessionConfig extends StandardConfig
      */
     public function getStorageOption($storageOption)
     {
-        switch ($storageOption) {
-            case 'remember_me_seconds':
-                // No remote storage option; just return the current value
-                return $this->rememberMeSeconds;
-            case 'url_rewriter_tags':
-                return ini_get('url_rewriter.tags');
+        return match ($storageOption) {
+             // No remote storage option; just return the current value
+            'remember_me_seconds' => $this->rememberMeSeconds,
+
+            'url_rewriter_tags' => ini_get('url_rewriter.tags'),
+
             // The following all need a transformation on the retrieved value;
             // however they use the same key naming scheme
-            case 'use_cookies':
-            case 'use_only_cookies':
-            case 'use_trans_sid':
-            case 'cookie_httponly':
-                return (bool) ini_get('session.' . $storageOption);
-            case 'save_handler':
-                // Save handlers must be treated differently due to changes
-                // introduced in PHP 7.2.
-                return $this->saveHandler ?: $this->sessionModuleName();
-            default:
-                return ini_get('session.' . $storageOption);
-        }
+            'use_cookies',
+            'use_only_cookies',
+            'use_trans_sid',
+            'cookie_httponly' => (bool) ini_get('session.' . $storageOption),
+
+            'save_handler' => $this->saveHandler ?? $this->sessionModuleName(),
+
+            default => ini_get('session.' . $storageOption),
+        };
     }
 
     /**
@@ -369,6 +368,8 @@ class SessionConfig extends StandardConfig
     /**
      * Set session.sid_bits_per_character
      *
+     * @deprecated see https://wiki.php.net/rfc/deprecations_php_8_4#sessionsid_length_and_sessionsid_bits_per_character
+     *
      * @param  int $sidBitsPerCharacter
      * @return SessionConfig
      * @throws Exception\InvalidArgumentException
@@ -445,8 +446,9 @@ class SessionConfig extends StandardConfig
         }
 
         $content = array_shift($matches);
+        assert(is_string($content));
 
-        $handlers = false !== strpos($content, '</td>')
+        $handlers = str_contains($content, '</td>')
             ? $this->parseSaveHandlersFromHtml($content)
             : $this->parseSaveHandlersFromPlainText($content);
 
@@ -524,14 +526,14 @@ class SessionConfig extends StandardConfig
         if (! $phpSaveHandler instanceof SessionHandlerInterface) {
             throw new Exception\InvalidArgumentException(sprintf(
                 'Invalid save handler specified ("%s"); must implement %s',
-                get_class($phpSaveHandler),
+                $phpSaveHandler::class,
                 SessionHandlerInterface::class
             ));
         }
 
         session_set_save_handler($phpSaveHandler);
 
-        return get_class($phpSaveHandler);
+        return $phpSaveHandler::class;
     }
 
     /**
@@ -548,7 +550,10 @@ class SessionConfig extends StandardConfig
 
         ob_start();
         $phpinfo(INFO_MODULES);
-        return ob_get_clean();
+        $ret = ob_get_clean();
+        assert(is_string($ret));
+
+        return $ret;
     }
 
     /**
@@ -566,7 +571,9 @@ class SessionConfig extends StandardConfig
         }
 
         $handlers = trim($matches['handlers']);
-        return preg_split('#\s+#', $handlers);
+        $ret      = preg_split('#\s+#', $handlers);
+        assert(is_array($ret));
+        return $ret;
     }
 
     /**
@@ -581,7 +588,9 @@ class SessionConfig extends StandardConfig
     {
         [$prefix, $handlers] = explode('=>', $content);
         $handlers            = trim($handlers);
-        return preg_split('#\s+#', $handlers);
+        $ret                 = preg_split('#\s+#', $handlers);
+        assert(is_array($ret));
+        return $ret;
     }
 
     /** @return false|string */

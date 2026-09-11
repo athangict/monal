@@ -1,10 +1,6 @@
 <?php
 /**
- * Zend Framework (http://framework.zend.com/)
- *
- * @link      http://github.com/zendframework/ZendSkeletonApplication for the canonical source repository
- * @copyright Copyright (c) 2005-2013 Zend Technologies USA Inc. (http://www.zend.com)
- * @license   http://framework.zend.com/license/new-bsd New BSD License
+ * Laminas MVC Application Controller
  */
 
 namespace Application\Controller;
@@ -30,7 +26,7 @@ class PdfxlsController extends AbstractActionController
     protected $_lowest_role;// loweset user role
     
 	/**
-	 * Zend Default TableGateway
+	 * Laminas Default TableGateway
 	 * Table name as the parameter
 	 * returns obj
 	 */
@@ -141,7 +137,7 @@ class PdfxlsController extends AbstractActionController
 	{
 		$this->init();
 		//echo $this->_id;exit;
-        list($employee, $year, $month,$location, $region) = explode('&', $this->_id);
+        list($employee, $year, $month,$location, $region) = explode('&', (string) $this->_id);
      
 		if(is_numeric($this->_id)):		
 			$payroll = $this->getDefinedTable('Hr\PayrollTable')->get($this->_id);
@@ -164,13 +160,13 @@ class PdfxlsController extends AbstractActionController
 		endif;	
       
 		$ViewModel = new ViewModel(array(
-				'title'         => 'Salary Slip Details',			
-				'employeeObj'   => $this->getDefinedTable('Hr\EmployeeTable'),
-				'emphistoryObj' => $this->getDefinedTable('Hr\EmpHistoryTable'),
-				'payheadObj'    => $this->getDefinedTable('Hr\PayheadTable'),
-				'payroll'       => $payrolls,
-				'paydetailObj'  => $this->getDefinedTable('Hr\PaydetailTable'),
-				'paystructureObj' => $this->getDefinedTable('Hr\PaystructureTable'),
+			'title'         => 'Salary Slip Details',			
+			'employeeObj'   => $this->getDefinedTable('Hr\EmployeeTable'),
+			'emphistoryObj' => $this->getDefinedTable('Hr\EmpHistoryTable'),
+			'payheadObj'    => $this->getDefinedTable('Hr\PayheadTable'),
+			'payroll'       => $payrolls,
+			'paydetailObj'  => $this->getDefinedTable('Hr\PaydetailTable'),
+			'paystructureObj' => $this->getDefinedTable('Hr\PaystructureTable'),
 		));
 		$ViewModel->setTerminal(True);
 		return $ViewModel;

@@ -4,8 +4,8 @@
  * chophel@athang.com 
  */
 namespace Application\View\Helper;
-use Zend\View\Helper\AbstractHelper;
-use Zend\Mvc\Plugin\FlashMessenger\FlashMessenger;
+use Laminas\View\Helper\AbstractHelper;
+use Laminas\Mvc\Plugin\FlashMessenger\FlashMessenger;
 
 class FlashMessage extends AbstractHelper
 {  
@@ -19,8 +19,8 @@ class FlashMessage extends AbstractHelper
             $alertMessages = "";
             foreach ($flashMessage as $message):
                 $title = substr($message, 0, strpos($message, '^'));
-                $message = strlen($title) > 0 ? substr($message, strpos($message, '^') + 1) : $message;
-                $title = strlen($title) > 0 ? $title : 'error';
+                $message = strlen((string)($title)) > 0 ? substr($message, strpos($message, '^') + 1) : $message;
+                $title = strlen((string)($title)) > 0 ? $title : 'error';
                 $display_title = ucfirst($title);	
                 echo <<<EOF
                     <script type="text/javascript">

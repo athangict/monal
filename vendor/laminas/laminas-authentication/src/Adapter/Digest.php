@@ -5,13 +5,14 @@ declare(strict_types=1);
 namespace Laminas\Authentication\Adapter;
 
 use Laminas\Authentication\Result as AuthenticationResult;
-use Laminas\Crypt\Utils as CryptUtils;
 use Laminas\Stdlib\ErrorHandler;
+use Override;
 
 use function fgets;
 use function fopen;
+use function hash_equals;
 use function md5;
-use function strpos;
+use function str_starts_with;
 use function substr;
 use function trim;
 
@@ -156,6 +157,7 @@ class Digest extends AbstractAdapter
      * @throws Exception\ExceptionInterface
      * @return AuthenticationResult
      */
+    #[Override]
     public function authenticate()
     {
         $optionsRequired = ['filename', 'realm', 'identity', 'credential'];
@@ -188,9 +190,9 @@ class Digest extends AbstractAdapter
             if (empty($line)) {
                 break;
             }
-            if (0 === strpos($line, $id)) {
+            if (str_starts_with($line, $id)) {
                 if (
-                    CryptUtils::compareStrings(
+                    hash_equals(
                         substr($line, -32),
                         md5("$this->identity:$this->realm:$this->credential")
                     )

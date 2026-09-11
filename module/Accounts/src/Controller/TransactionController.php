@@ -30,6 +30,8 @@ class TransactionController extends AbstractActionController
     protected $_auth; 		// checking authentication
     protected $_safedataObj; //safedata controller plugin
 	protected $_connection; //Transaction connection
+		protected $_login_location_type;
+
     
 	
 	public function __construct(ContainerInterface $container)
@@ -107,6 +109,97 @@ class TransactionController extends AbstractActionController
 		$this->_safedataObj = $this->safedata();
 		$this->_connection = $this->_container->get('Laminas\Db\Adapter\Adapter')->getDriver()->getConnection();
 
+	}
+
+	/**
+	 * Normalize submitted detail IDs from dynamic row forms.
+	 * Returns unique positive integer IDs only.
+	 */
+	protected function normalizeSubmittedDetailIds($ids)
+	{
+		$normalized = array();
+		if (!is_array($ids)) {
+			return $normalized;
+		}
+
+		foreach ($ids as $id) {
+			if (is_numeric($id) && (int) $id > 0) {
+				$normalized[] = (int) $id;
+			}
+		}
+
+		return array_values(array_unique($normalized));
+	}
+
+	/**
+	 * Delete only rows that belong to the given transaction and were removed in UI.
+	 * Returns false if submitted IDs include rows that do not belong to this transaction.
+	 */
+	protected function removeMissingTransactionDetails($transactionId, $submittedIds)
+	{
+		$detailTable = $this->getDefinedTable(Accounts\TransactiondetailTable::class);
+		// Restrict cleanup to user-entered rows only, and ignore rows inserted in this request.
+		$existingRows = $detailTable->get(array('transaction' => $transactionId, 'td.type' => 1));
+		$existingIds = array();
+
+		foreach ($existingRows as $row) {
+			if (isset($row['created']) && $row['created'] === $this->_created) {
+				continue;
+			}
+			$existingIds[(int) $row['id']] = true;
+		}
+
+		$submittedDetailIds = $this->normalizeSubmittedDetailIds($submittedIds);
+		$invalidIds = array_diff($submittedDetailIds, array_keys($existingIds));
+		if (!empty($invalidIds)) {
+			return false;
+		}
+
+		$deleteIds = array_diff(array_keys($existingIds), $submittedDetailIds);
+		foreach ($deleteIds as $deleteId) {
+			$detailTable->remove((int) $deleteId);
+		}
+
+		return true;
+	}
+
+	protected function getCurrentRoleIds()
+	{
+		$roles = array();
+		foreach (explode(',', (string) $this->_login_role) as $role) {
+			$role = trim($role);
+			if ($role !== '' && ctype_digit($role)) {
+				$roles[] = (int) $role;
+			}
+		}
+		return $roles;
+	}
+
+	protected function isPrivilegedUser()
+	{
+		$roles = $this->getCurrentRoleIds();
+		return in_array(99, $roles, true) || in_array(100, $roles, true);
+	}
+
+	protected function getTransactionRow($transactionId)
+	{
+		$rows = $this->getDefinedTable(Accounts\TransactionTable::class)->get($transactionId);
+		foreach ($rows as $row) {
+			return $row;
+		}
+		return null;
+	}
+
+	protected function canAccessTransaction($transactionId)
+	{
+		$transaction = $this->getTransactionRow($transactionId);
+		if ($transaction === null) {
+			return false;
+		}
+		if ($this->isPrivilegedUser()) {
+			return true;
+		}
+		return isset($transaction['author']) && (int) $transaction['author'] === (int) $this->_login_id;
 	}
 	
 	/**
@@ -224,7 +317,7 @@ class TransactionController extends AbstractActionController
 			foreach($results as $result):
 				array_push($pltp_no_list, substr($result['voucher_no'], -5));
 			endforeach;
-			$next_serial = max($pltp_no_list) + 1; 
+			$next_serial = !empty($pltp_no_list) ? (max($pltp_no_list) + 1) : 1;
 				
 			switch(strlen($next_serial)){
 				case 1: $next_dc_serial = "0000".$next_serial; break;
@@ -366,9 +459,9 @@ class TransactionController extends AbstractActionController
 			}
 		}
 		$user_region= $this->getDefinedTable(Administration\UsersTable::class)->getColumn($this->_login_id,'region');
-		$role=explode(",",$this->_login_role);//Multiple Role
+		$role=explode(",", (string) ($this->_login_role ?? ''));//Multiple Role
 		$user_region= $this->getDefinedTable(Administration\UsersTable::class)->getColumn($this->_login_id,'region');
-		if($this->_login_role ==100|| $this->_login_role==99 || $this->_login_role==8|| $this->_login_role==6|| $role==array(2,17)|| $role==array(2,12,17)|| $role==array(5,6)):
+		if($this->_login_role ==100|| $this->_login_role==99 || $this->_login_role==8|| $this->_login_role==6|| $role==array(2,17)|| $role==array(2,5,7)|| $role==array(2,12,17)|| $role==array(5,6)):
 		   $regions=$this->getDefinedTable(Administration\RegionTable::class)->getAll();
 		else:
 		   $regions=$this->getDefinedTable(Administration\RegionTable::class)->get(array('id'=>$user_region));
@@ -395,10 +488,16 @@ class TransactionController extends AbstractActionController
 	public function deletejournalAction()
 	{
 		$this->init();
+		if (!$this->canAccessTransaction((int) $this->_id)) {
+			$this->flashMessenger()->addMessage("error^ You are not allowed to delete this transaction");
+			return $this->redirect()->toRoute('transaction', array('action' => 'index'));
+		}
 		if($this->getRequest()->isPost()){
 			$form = $this->getRequest()->getPost();
 			$voucher = $this->getDefinedTable(Accounts\TransactionTable::class)->getColumn($this->_id,'voucher_type');
 			$transactiondetails_id = $this->getDefinedTable(Accounts\TransactiondetailTable::class)->get(array('td.transaction'=>$this->_id));
+			$result = false;
+			$result2 = 0;
 			foreach($transactiondetails_id as $transactiondetails_ids):
 				$result = $this->getDefinedTable(Accounts\TransactiondetailTable::class)->remove($transactiondetails_ids['id']);
 			endforeach;
@@ -430,6 +529,10 @@ class TransactionController extends AbstractActionController
 	public function edittransactionAction()
 	{
 		$this->init();
+		if (!$this->canAccessTransaction((int) $this->_id)) {
+			$this->flashMessenger()->addMessage("error^ You are not allowed to edit this transaction");
+			return $this->redirect()->toRoute('transaction', array('action' => 'index'));
+		}
 		if($this->getRequest()->isPost()){
 			$form = $this->getRequest()->getpost();
 			$loc = $this->getDefinedTable(Administration\LocationTable::class)->getColumn($this->_user->location, 'location_code');
@@ -457,19 +560,20 @@ class TransactionController extends AbstractActionController
 			$this->_connection->beginTransaction();
 			$result = $this->getDefinedTable(Accounts\TransactionTable::class)->save($data1);
 			if($result > 0){
-				$tdetails_id = $form['id'];
+				$tdetails_id = (isset($form['id']) && is_array($form['id'])) ? $form['id'] : array();
+				$submitted_detail_ids = isset($form['id']) ? $form['id'] : array();
 				$location= $form['location'];
 				$head= $form['head'];
 				$sub_head= $form['sub_head'];
-				$cheque_no= $form['cheque_no1'];
+				$cheque_no= isset($form['cheque_no1']) ? trim($form['cheque_no1']) : '';
 				$debit= $form['debit'];
 				$credit= $form['credit'];
 				$reference= $form['reference'];
 				$bank_ref_type='DFT2024';
-				$delete_rows = $this->getDefinedTable(Accounts\TransactiondetailTable::class)->getNotInDtl($tdetails_id, array('transaction' => $result));
+				$result1 = 1;
 				for($i=0; $i < sizeof($location); $i++):
 					if(isset($location[$i]) && is_numeric($location[$i])):
-						if($tdetails_id[$i]>0):
+						if(isset($tdetails_id[$i]) && is_numeric($tdetails_id[$i]) && $tdetails_id[$i] > 0):
 							$tdetailsdata = array(
 								'id' => $tdetails_id[$i],
 								'transaction' => $result,
@@ -508,12 +612,22 @@ class TransactionController extends AbstractActionController
 							);
 						endif;
 						$tdetailsdata = $this->_safedataObj->rteSafe($tdetailsdata);
-						$result1 = $this->getDefinedTable(Accounts\TransactiondetailTable::class)->save($tdetailsdata);				
+						$result1 = $this->getDefinedTable(Accounts\TransactiondetailTable::class)->save($tdetailsdata);
+						if($result1 <= 0):
+							break;
+						endif;
 					endif;
 				endfor;
-				foreach($delete_rows as $delete_row):
-					$this->getDefinedTable(Accounts\TransactiondetailTable::class)->remove($delete_row['id']);
-				endforeach;
+				if($result1 <= 0):
+					$this->_connection->rollback();
+					$this->flashMessenger()->addMessage("error^ Failed to save one or more transaction detail rows.");
+					return $this->redirect()->toRoute('transaction', array('action' =>'viewtransaction', 'id' => $this->_id));
+				endif;
+				if (!$this->removeMissingTransactionDetails($result, $submitted_detail_ids)):
+					$this->_connection->rollback();
+					$this->flashMessenger()->addMessage("error^ Invalid detail row selection detected. Please reload and try again.");
+					return $this->redirect()->toRoute('transaction', array('action' =>'viewtransaction', 'id' => $this->_id));
+				endif;
 				$this->_connection->commit(); 
 				$this->flashMessenger()->addMessage("success^ Transaction successfully updated | ".$voucher_no);
 				return $this->redirect()->toRoute('transaction', array('action' =>'viewtransaction', 'id' => $this->_id));
@@ -525,7 +639,7 @@ class TransactionController extends AbstractActionController
 				return $this->redirect()->toRoute('transaction', array('action' =>'viewtransaction', 'id' => $this->_id));
 			}
 		}
-		$role=explode(",",$this->_login_role);//Multiple Role
+		$role=explode(",", (string) ($this->_login_role ?? ''));//Multiple Role
 		$user_region= $this->getDefinedTable(Administration\UsersTable::class)->getColumn($this->_login_id,'region');
 		if($this->_login_role ==100|| $this->_login_role==99 || $role==array(2,17)|| $role==8):
 		   $regions=$this->getDefinedTable(Administration\RegionTable::class)->getAll();
@@ -723,7 +837,7 @@ class TransactionController extends AbstractActionController
 			foreach($results as $result):
 				array_push($pltp_no_list, substr($result['voucher_no'],-5));
 			endforeach;
-			$next_serial = max($pltp_no_list) + 1; 
+			$next_serial = !empty($pltp_no_list) ? (max($pltp_no_list) + 1) : 1;
 			//echo '<pre>';print_r($next_serial);exit;
 				
 			switch(strlen($next_serial)){
@@ -869,7 +983,7 @@ class TransactionController extends AbstractActionController
 				return $this->redirect()->toRoute('transaction');
 			}
 		}
-		$role=explode(",",$this->_login_role);//Multiple Role
+		$role=explode(",", (string) ($this->_login_role ?? ''));//Multiple Role
 		$user_region= $this->getDefinedTable(Administration\UsersTable::class)->getColumn($this->_login_id,'region');
 		if($this->_login_role ==100|| $this->_login_role==99 || $role==array(2,17)|| $role==array(2,4,17)):
 		   $regions=$this->getDefinedTable(Administration\RegionTable::class)->getAll();
@@ -931,19 +1045,20 @@ class TransactionController extends AbstractActionController
 			$this->_connection->beginTransaction(); //***Transaction begins here***//
 			$result = $this->getDefinedTable(Accounts\TransactionTable::class)->save($data1);
 			if($result > 0){
-				$tdetails_id = $form['id'];
+				$tdetails_id = (isset($form['id']) && is_array($form['id'])) ? $form['id'] : array();
+				$submitted_detail_ids = isset($form['id']) ? $form['id'] : array();
 				$location= $form['location'];
 				$activity= $form['location'];//they dont wanted activity but it is used in process
 				$head= $form['head']; 
 				$sub_head= $form['sub_head'];
-				$cheque_no= $form['cheque_no1'];
+				$cheque_no= isset($form['cheque_no1']) ? trim($form['cheque_no1']) : '';
 				$debit= $form['debit'];
 				$credit= $form['credit'];
 				$reference= $form['reference'];
-				$delete_rows = $this->getDefinedTable(Accounts\TransactiondetailTable::class)->getNotInDtl($tdetails_id, array('transaction' => $result));
+				$result1 = 1;
 				for($i=0; $i < sizeof($location); $i++):
 					if(isset($location[$i]) && is_numeric($location[$i])):
-						if($tdetails_id[$i]>0):
+						if(isset($tdetails_id[$i]) && is_numeric($tdetails_id[$i]) && $tdetails_id[$i] > 0):
 							$tdetailsdata = array(
 								'id' => $tdetails_id[$i],
 								'transaction' => $result,
@@ -954,7 +1069,7 @@ class TransactionController extends AbstractActionController
 								'head' => $head[$i],
 								'sub_head' => $sub_head[$i],
 								'bank_ref_type' => '',
-								'cheque_no' => $cheque_no[$i],
+								'cheque_no' => (!empty($cheque_no)) ? $cheque_no : 'DFT-',
 								'debit' => (isset($debit[$i]))? $debit[$i]:'0.00',
 								'credit' => (isset($credit[$i]))? $credit[$i]:'0.00',
 								'ref_no'=> $reference[$i], 
@@ -972,7 +1087,7 @@ class TransactionController extends AbstractActionController
 								'head' => $head[$i],
 								'sub_head' => $sub_head[$i],
 								'bank_ref_type' => '',
-								'cheque_no' => $cheque_no[$i],
+								'cheque_no' => (!empty($cheque_no)) ? $cheque_no : 'DFT-',
 								'debit' => (isset($debit[$i]))? $debit[$i]:'0.00',
 								'credit' => (isset($credit[$i]))? $credit[$i]:'0.00',
 								'ref_no'=> $reference[$i], 
@@ -983,13 +1098,22 @@ class TransactionController extends AbstractActionController
 							);  
 						endif;
 						$tdetailsdata = $this->_safedataObj->rteSafe($tdetailsdata);
-						$result1 = $this->getDefinedTable(Accounts\TransactiondetailTable::class)->save($tdetailsdata);				
+						$result1 = $this->getDefinedTable(Accounts\TransactiondetailTable::class)->save($tdetailsdata);
+						if($result1 <= 0):
+							break;
+						endif;
 					endif;
 				endfor;
-				//deleting deleted table rows form database table
-				foreach($delete_rows as $delete_row):
-					$this->getDefinedTable(Accounts\TransactiondetailTable::class)->remove($delete_row['id']);
-				endforeach;
+				if($result1 <= 0):
+					$this->_connection->rollback();
+					$this->flashMessenger()->addMessage("error^ Failed to save one or more transaction detail rows.");
+					return $this->redirect()->toRoute('transaction', array('action' =>'viewcredit', 'id' => $this->_id));
+				endif;
+				if (!$this->removeMissingTransactionDetails($result, $submitted_detail_ids)):
+					$this->_connection->rollback();
+					$this->flashMessenger()->addMessage("error^ Invalid detail row selection detected. Please reload and try again.");
+					return $this->redirect()->toRoute('transaction', array('action' =>'viewcredit', 'id' => $this->_id));
+				endif;
 				$this->_connection->commit(); // commit transaction on success
 				$this->flashMessenger()->addMessage("success^ Requisition successfully updated | ".$voucher_no);
 				return $this->redirect()->toRoute('transaction', array('action' =>'viewcredit', 'id' => $this->_id));
@@ -1002,7 +1126,7 @@ class TransactionController extends AbstractActionController
 			}
 		}
 		$user_region= $this->getDefinedTable(Administration\UsersTable::class)->getColumn($this->_login_id,'region');
-		if($this->_login_role ==100|| $this->_login_role==99 ||  $this->_login_role==5):
+		if($this->_login_role ==100|| $this->_login_role==99 ||  $this->_login_role==5|| $role==array(2,17)):
 		   $regions=$this->getDefinedTable(Administration\RegionTable::class)->getAll();
 		else:
 		   $regions=$this->getDefinedTable(Administration\RegionTable::class)->get(array('id'=>$user_region));
@@ -1029,7 +1153,7 @@ class TransactionController extends AbstractActionController
 		$this->init();
 		$application_id = $this->_id;
 		/**--Disapearing the notification--*/
-		$params = explode("-", $this->_id);
+		$params = explode("-", (string) ($this->_id ?? ''));
 		if (isset($params['1']) && $params['1'] == '1' && isset($params['2']) && $params['2'] > 0) {
 			$flag = $this->getDefinedTable(Acl\NotifyTable::class)->getColumn($params['2'], 'flag'); 
 				if($flag == "0") {
@@ -1160,7 +1284,7 @@ class TransactionController extends AbstractActionController
 			foreach($results as $result):
 				array_push($pltp_no_list, substr($result['voucher_no'], -5));
 			endforeach;
-			$next_serial = max($pltp_no_list) + 1; 
+			$next_serial = !empty($pltp_no_list) ? (max($pltp_no_list) + 1) : 1;
 				
 			switch(strlen($next_serial)){
 				case 1: $next_dc_serial = "0000".$next_serial; break;
@@ -1304,27 +1428,29 @@ class TransactionController extends AbstractActionController
 			$this->_connection->beginTransaction(); //***Transaction begins here***//
 			$result = $this->getDefinedTable(Accounts\TransactionTable::class)->save($data1);
 			if($result > 0){
-				$tdetails_id = $form['id'];
-				$location= $form['location'];
-				$activity= $form['activity'];
+				$tdetails_id = (isset($form['id']) && is_array($form['id'])) ? $form['id'] : array();
+				$submitted_detail_ids = isset($form['id']) ? $form['id'] : array();
+				$location= (isset($form['location']) && is_array($form['location'])) ? $form['location'] : array();
+				$activity= (isset($form['activity']) && is_array($form['activity'])) ? $form['activity'] : $location;
 				$head= $form['head']; 
 				$sub_head= $form['sub_head'];
-				$cheque_no= $form['cheque_no1'];
+				$cheque_no= isset($form['cheque_no1']) ? trim($form['cheque_no1']) : '';
 				$debit= $form['debit'];
 				$credit= $form['credit'];
-				$delete_rows = $this->getDefinedTable(Accounts\TransactiondetailTable::class)->getNotInDtl($tdetails_id, array('transaction' => $result));
-				for($i=0; $i < sizeof($activity); $i++):
-					if(isset($activity[$i]) && is_numeric($activity[$i])):
-						if($tdetails_id[$i]>0):
+				$result1 = 1;
+				for($i=0; $i < sizeof($location); $i++):
+					if(isset($location[$i]) && is_numeric($location[$i])):
+						$activity_value = (isset($activity[$i]) && is_numeric($activity[$i])) ? $activity[$i] : $location[$i];
+						if(isset($tdetails_id[$i]) && is_numeric($tdetails_id[$i]) && $tdetails_id[$i] > 0):
 							$tdetailsdata = array(
 								'id' => $tdetails_id[$i],
 								'transaction' => $result,
 								'location' => $location[$i],
-								'activity' => $activity[$i],
+								'activity' => $activity_value,
 								'head' => $head[$i],
 								'sub_head' => $sub_head[$i],
 								'bank_ref_type' => '',
-								'cheque_no' => $cheque_no[$i],
+								'cheque_no' => (!empty($cheque_no)) ? $cheque_no : 'DFT-',
 								'debit' => (isset($debit[$i]))? $debit[$i]:'0.00',
 								'credit' => (isset($credit[$i]))? $credit[$i]:'0.00',
 								'ref_no'=> '', 
@@ -1335,11 +1461,11 @@ class TransactionController extends AbstractActionController
 							$tdetailsdata = array(
 								'transaction' => $result,
 								'location' => $location[$i],
-								'activity' => $activity[$i],
+								'activity' => $activity_value,
 								'head' => $head[$i],
 								'sub_head' => $sub_head[$i],
 								'bank_ref_type' => '',
-								'cheque_no' => $cheque_no[$i],
+								'cheque_no' => (!empty($cheque_no)) ? $cheque_no : 'DFT-',
 								'debit' => (isset($debit[$i]))? $debit[$i]:'0.00',
 								'credit' => (isset($credit[$i]))? $credit[$i]:'0.00',
 								'ref_no'=> '', 
@@ -1350,12 +1476,22 @@ class TransactionController extends AbstractActionController
 							);  
 						endif;
 						$tdetailsdata = $this->_safedataObj->rteSafe($tdetailsdata);
-						$result1 = $this->getDefinedTable(Accounts\TransactiondetailTable::class)->save($tdetailsdata);				
+						$result1 = $this->getDefinedTable(Accounts\TransactiondetailTable::class)->save($tdetailsdata);
+						if($result1 <= 0):
+							break;
+						endif;
 					endif;
 				endfor;
-				foreach($delete_rows as $delete_row):
-					$this->getDefinedTable(Accounts\TransactiondetailTable::class)->remove($delete_row['id']);
-				endforeach;
+				if($result1 <= 0):
+					$this->_connection->rollback();
+					$this->flashMessenger()->addMessage("error^ Failed to save one or more transaction detail rows.");
+					return $this->redirect()->toRoute('transaction', array('action' =>'viewexpense', 'id' => $this->_id));
+				endif;
+				if (!$this->removeMissingTransactionDetails($result, $submitted_detail_ids)):
+					$this->_connection->rollback();
+					$this->flashMessenger()->addMessage("error^ Invalid detail row selection detected. Please reload and try again.");
+					return $this->redirect()->toRoute('transaction', array('action' =>'viewexpense', 'id' => $this->_id));
+				endif;
 				$this->_connection->commit(); // commit transaction on success
 				$this->flashMessenger()->addMessage("success^ Transaction successfully updated | ".$voucher_no);
 				return $this->redirect()->toRoute('transaction', array('action' =>'viewexpense', 'id' => $this->_id));
@@ -1730,7 +1866,7 @@ class TransactionController extends AbstractActionController
 	/**
 	 * Notification Action
 	 */
-	public function notify($application_id,$privilege_id,$remarks = NULL,$role_id)
+	public function notify($application_id,$privilege_id,$role_id,$remarks = NULL)
 	{
 		$userlists='';
 		$applications = $this->getDefinedTable(Accounts\TransactionTable::class)->get($application_id);
@@ -1901,7 +2037,7 @@ class TransactionController extends AbstractActionController
 			foreach($results as $result):
 				array_push($pltp_no_list, substr($result['voucher_no'], -5));
 			endforeach;
-			$next_serial = max($pltp_no_list) + 1; 
+			$next_serial = !empty($pltp_no_list) ? (max($pltp_no_list) + 1) : 1;
 				
 			switch(strlen($next_serial)){
 				case 1: $next_dc_serial = "0000".$next_serial; break;
@@ -1987,7 +2123,7 @@ class TransactionController extends AbstractActionController
 			}
 		}
 		//$user_region= $this->getDefinedTable(Administration\UsersTable::class)->getColumn($this->_login_id,'region');
-		$role=explode(",",$this->_login_role);//Multiple Role
+		$role=explode(",", (string) ($this->_login_role ?? ''));//Multiple Role
 		$user_region= $this->getDefinedTable(Administration\UsersTable::class)->getColumn($this->_login_id,'region');
 		if($this->_login_role ==100|| $this->_login_role==99 || $this->_login_role==8|| $this->_login_role==6|| $role==array(2,17)|| $role==array(5,6)):
 		   $regions=$this->getDefinedTable(Administration\RegionTable::class)->getAll();
@@ -2034,7 +2170,7 @@ class TransactionController extends AbstractActionController
 				'doc_id' => $form['doc_id'],
 				'doc_type' => $form['doc_type'],
 				/*'voucher_no' => $voucher_no,*/
-				'voucher_amount' => str_replace( ",", "",$form['voucher_amount']),
+				'voucher_amount' => $form['voucher_amount'],
 				'cheque_no' => $form['cheque_no1'],
 				'remark' => $form['remark'],
 				'author' => $created_author,
@@ -2045,19 +2181,20 @@ class TransactionController extends AbstractActionController
 			$this->_connection->beginTransaction(); //***Transaction begins here***//
 			$result = $this->getDefinedTable(Accounts\TransactionTable::class)->save($data1);
 			if($result > 0){
-				$tdetails_id = $form['id'];
+				$tdetails_id = (isset($form['id']) && is_array($form['id'])) ? $form['id'] : array();
+				$submitted_detail_ids = isset($form['id']) ? $form['id'] : array();
 				$location= $form['location'];
 				//$activity= $form['activity'];
 				$head= $form['head'];
 				$sub_head= $form['sub_head'];
-				$cheque_no= $form['cheque_no1'];
+				$cheque_no= isset($form['cheque_no1']) ? trim($form['cheque_no1']) : '';
 				$debit= $form['debit'];
 				$credit= $form['credit'];
 				$bank_trans_journal= $form['bank_journal'];
-				$delete_rows = $this->getDefinedTable(Accounts\TransactiondetailTable::class)->getNotInDtl($tdetails_id, array('transaction' => $result));
-				for($i=0; $i < sizeof(location); $i++):
+				$result1 = 1;
+				for($i=0; $i < sizeof($location); $i++):
 					if(isset($location[$i]) && is_numeric($location[$i])):
-						if($tdetails_id[$i]>0):
+						if(isset($tdetails_id[$i]) && is_numeric($tdetails_id[$i]) && $tdetails_id[$i] > 0):
 							$tdetailsdata = array(
 								'id' => $tdetails_id[$i],
 								'transaction' => $result,
@@ -2066,8 +2203,8 @@ class TransactionController extends AbstractActionController
 								'head' => $head[$i],
 								'sub_head' => $sub_head[$i],
 								'bank_ref_type' => '',
-								'cheque_no' => $cheque_no[$i],
-								'bank_trans_journal' => $bank_trans_journal[$i],
+								'cheque_no' => (!empty($cheque_no)) ? $cheque_no : 'DFT-',
+								'bank_trans_journal' => (isset($bank_trans_journal[$i]))? $bank_trans_journal[$i]:'',
 								'debit' => (isset($debit[$i]))? $debit[$i]:'0.00',
 								'credit' => (isset($credit[$i]))? $credit[$i]:'0.00',
 								'voucher_dates' => $form['voucher_date'],
@@ -2084,8 +2221,8 @@ class TransactionController extends AbstractActionController
 								'head' => $head[$i],
 								'sub_head' => $sub_head[$i],
 								'bank_ref_type' => '',
-								'bank_trans_journal' => $bank_trans_journal[$i],
-								'cheque_no' => $cheque_no[$i],
+								'bank_trans_journal' => (isset($bank_trans_journal[$i]))? $bank_trans_journal[$i]:'',
+								'cheque_no' => (!empty($cheque_no)) ? $cheque_no : 'DFT-',
 								'debit' => (isset($debit[$i]))? $debit[$i]:'0.00',
 								'credit' => (isset($credit[$i]))? $credit[$i]:'0.00',
 								'voucher_dates' => $form['voucher_date'],
@@ -2097,14 +2234,24 @@ class TransactionController extends AbstractActionController
 								'modified' =>$this->_modified,
 							);
 						endif;
+						//echo '';print_r($tdetailsdata);exit;
 						$tdetailsdata = $this->_safedataObj->rteSafe($tdetailsdata);
-						$result1 = $this->getDefinedTable(Accounts\TransactiondetailTable::class)->save($tdetailsdata);				
+						$result1 = $this->getDefinedTable(Accounts\TransactiondetailTable::class)->save($tdetailsdata);
+						if($result1 <= 0):
+							break;
+						endif;
 					endif;
 				endfor;
-				//deleting deleted table rows form database table
-				foreach($delete_rows as $delete_row):
-					$this->getDefinedTable(Accounts\TransactiondetailTable::class)->remove($delete_row['id']);
-				endforeach;
+				if($result1 <= 0):
+					$this->_connection->rollback();
+					$this->flashMessenger()->addMessage("error^ Failed to save one or more transaction detail rows.");
+					return $this->redirect()->toRoute('transaction', array('action' =>'viewdebit', 'id' => $this->_id));
+				endif;
+				if (!$this->removeMissingTransactionDetails($result, $submitted_detail_ids)):
+					$this->_connection->rollback();
+					$this->flashMessenger()->addMessage("error^ Invalid detail row selection detected. Please reload and try again.");
+					return $this->redirect()->toRoute('transaction', array('action' =>'viewdebit', 'id' => $this->_id));
+				endif;
 				$this->_connection->commit(); // commit transaction on success
 				$this->flashMessenger()->addMessage("success^ Receipt successfully updated | ".$voucher_no);
 				return $this->redirect()->toRoute('transaction', array('action' =>'viewdebit', 'id' => $this->_id));
@@ -2272,10 +2419,16 @@ class TransactionController extends AbstractActionController
 	public function deletecontraAction()
 	{
 		$this->init();
+		if (!$this->canAccessTransaction((int) $this->_id)) {
+			$this->flashMessenger()->addMessage("error^ You are not allowed to delete this transaction");
+			return $this->redirect()->toRoute('transaction', array('action' => 'contra'));
+		}
 		if($this->getRequest()->isPost()){
 			$form = $this->getRequest()->getPost();
 			$voucher = $this->getDefinedTable(Accounts\TransactionTable::class)->getColumn($this->_id,'voucher_type');
 			$transactiondetails_id = $this->getDefinedTable(Accounts\TransactiondetailTable::class)->get(array('td.transaction'=>$this->_id));
+			$result = false;
+			$result2 = 0;
 			foreach($transactiondetails_id as $transactiondetails_ids):
 				$result = $this->getDefinedTable(Accounts\TransactiondetailTable::class)->remove($transactiondetails_ids['id']);
 			endforeach;
@@ -2321,7 +2474,7 @@ class TransactionController extends AbstractActionController
 			foreach($results as $result):
 				array_push($pltp_no_list, substr($result['voucher_no'], -5));
 			endforeach;
-			$next_serial = max($pltp_no_list) + 1; 
+			$next_serial = !empty($pltp_no_list) ? (max($pltp_no_list) + 1) : 1;
 				
 			switch(strlen($next_serial)){
 				case 1: $next_dc_serial = "0000".$next_serial; break;
@@ -2429,7 +2582,7 @@ class TransactionController extends AbstractActionController
 			}
 		}
 		$user_region= $this->getDefinedTable(Administration\UsersTable::class)->getColumn($this->_login_id,'region');
-		$role=explode(",",$this->_login_role);//Multiple Role
+		$role=explode(",", (string) ($this->_login_role ?? ''));//Multiple Role
 		if($this->_login_role ==100|| $this->_login_role==99 ||$this->_login_role==6 ||$this->_login_role==8||$role==array(5,6)):
 		   $regions=$this->getDefinedTable(Administration\RegionTable::class)->getAll();
 		else:
@@ -2486,18 +2639,19 @@ class TransactionController extends AbstractActionController
 			$this->_connection->beginTransaction(); //***Transaction begins here***//
 			$result = $this->getDefinedTable(Accounts\TransactionTable::class)->save($data1);
 			if($result > 0){
-				$tdetails_id = $form['id'];
+				$tdetails_id = (isset($form['id']) && is_array($form['id'])) ? $form['id'] : array();
+				$submitted_detail_ids = isset($form['id']) ? $form['id'] : array();
 				$location= $form['location'];
 				//$activity= $form['activity'];
 				$head= $form['head'];
 				$sub_head= $form['sub_head'];
-				$cheque_no= $form['cheque_no1'];
+				$cheque_no= isset($form['cheque_no1']) ? trim($form['cheque_no1']) : '';
 				$debit= $form['debit'];
 				$credit= $form['credit'];
-				$delete_rows = $this->getDefinedTable(Accounts\TransactiondetailTable::class)->getNotInDtl($tdetails_id, array('transaction' => $result));
+				$result1 = 1;
 				for($i=0; $i < sizeof($location); $i++):
 					if(isset($location[$i]) && is_numeric($location[$i])):
-						if($tdetails_id[$i]>0):
+						if(isset($tdetails_id[$i]) && is_numeric($tdetails_id[$i]) && $tdetails_id[$i] > 0):
 							$tdetailsdata = array(
 								'id' => $tdetails_id[$i],
 								'transaction' => $result,
@@ -2506,7 +2660,7 @@ class TransactionController extends AbstractActionController
 								'head' => $head[$i],
 								'sub_head' => $sub_head[$i],
 								'bank_ref_type' => '',
-								'cheque_no' => $cheque_no[$i],
+								'cheque_no' => (!empty($cheque_no)) ? $cheque_no : 'DFT-',
 								'debit' => (isset($debit[$i]))? $debit[$i]:'0.00',
 								'credit' => (isset($credit[$i]))? $credit[$i]:'0.00',
 								'voucher_dates' => $form['voucher_date'],
@@ -2524,7 +2678,7 @@ class TransactionController extends AbstractActionController
 								'head' => $head[$i],
 								'sub_head' => $sub_head[$i],
 								'bank_ref_type' => '',
-								'cheque_no' => $cheque_no[$i],
+								'cheque_no' => (!empty($cheque_no)) ? $cheque_no : 'DFT-',
 								'debit' => (isset($debit[$i]))? $debit[$i]:'0.00',
 								'credit' => (isset($credit[$i]))? $credit[$i]:'0.00',
 								'voucher_dates' => $form['voucher_date'],
@@ -2538,13 +2692,22 @@ class TransactionController extends AbstractActionController
 							);
 						endif;
 						$tdetailsdata = $this->_safedataObj->rteSafe($tdetailsdata);
-						$result1 = $this->getDefinedTable(Accounts\TransactiondetailTable::class)->save($tdetailsdata);				
+						$result1 = $this->getDefinedTable(Accounts\TransactiondetailTable::class)->save($tdetailsdata);
+						if($result1 <= 0):
+							break;
+						endif;
 					endif;
 				endfor;
-				//deleting deleted table rows form database table
-				foreach($delete_rows as $delete_row):
-					$this->getDefinedTable(Accounts\TransactiondetailTable::class)->remove($delete_row['id']);
-				endforeach;
+				if($result1 <= 0):
+					$this->_connection->rollback();
+					$this->flashMessenger()->addMessage("error^ Failed to save one or more transaction detail rows.");
+					return $this->redirect()->toRoute('transaction', array('action' =>'viewcontra', 'id' => $this->_id));
+				endif;
+				if (!$this->removeMissingTransactionDetails($result, $submitted_detail_ids)):
+					$this->_connection->rollback();
+					$this->flashMessenger()->addMessage("error^ Invalid detail row selection detected. Please reload and try again.");
+					return $this->redirect()->toRoute('transaction', array('action' =>'viewcontra', 'id' => $this->_id));
+				endif;
 				$this->_connection->commit(); // commit transaction on success
 				$this->flashMessenger()->addMessage("success^ Contra successfully updated | ".$voucher_no);
 				return $this->redirect()->toRoute('transaction', array('action' =>'viewcontra', 'id' => $this->_id));
@@ -2639,6 +2802,28 @@ class TransactionController extends AbstractActionController
 			'transactiondetails' => $this->getDefinedTable(Accounts\TransactiondetailTable::class)->get(array('transaction' => $this->_id)),
 			'transactiondetailsObj' => $this->getDefinedTable(Accounts\TransactiondetailTable::class),
 		));
+	}
+	/**
+	 * Backward compatibility for Reference Voucher menu/routes.
+	 */
+	public function referenceAction()
+	{
+		return $this->againstAction();
+	}
+
+	public function addreferenceAction()
+	{
+		return $this->addagainstcreditAction();
+	}
+
+	public function editreferenceAction()
+	{
+		return $this->editagainstAction();
+	}
+
+	public function viewreferenceAction()
+	{
+		return $this->viewagainstAction();
 	}
 	/**---------------------------RECEIPT------------------------------------------------------------- */
 	/**
@@ -2747,7 +2932,7 @@ class TransactionController extends AbstractActionController
 			foreach($results as $result):
 				array_push($pltp_no_list, substr($result['voucher_no'], -5));
 			endforeach;
-			$next_serial = max($pltp_no_list) + 1; 
+			$next_serial = !empty($pltp_no_list) ? (max($pltp_no_list) + 1) : 1;
 				
 			switch(strlen($next_serial)){
 				case 1: $next_dc_serial = "0000".$next_serial; break;
@@ -2855,7 +3040,7 @@ class TransactionController extends AbstractActionController
 	    /* role=8-Western Union User
            role=6-casher*/	
 		   
-		$role=explode(",",$this->_login_role);//Multiple Role
+		$role=explode(",", (string) ($this->_login_role ?? ''));//Multiple Role
 		if($this->_login_role ==100|| $this->_login_role==99 || $this->_login_role==5|| $this->_login_role==8 || $this->_login_role==6 || $role==array(2,17)):
 		   $regions=$this->getDefinedTable(Administration\RegionTable::class)->getAll();
 		else:
@@ -2918,18 +3103,19 @@ class TransactionController extends AbstractActionController
 			$this->_connection->beginTransaction(); //***Transaction begins here***//
 			$result = $this->getDefinedTable(Accounts\TransactionTable::class)->save($data1);
 			if($result > 0){
-				$tdetails_id = $form['id'];
+				$tdetails_id = (isset($form['id']) && is_array($form['id'])) ? $form['id'] : array();
+				$submitted_detail_ids = isset($form['id']) ? $form['id'] : array();
 				$location= $form['location'];
 				//$activity= $form['activity'];
 				$head= $form['head']; 
 				$sub_head= $form['sub_head'];
-				$cheque_no= $form['cheque_no1'];
+				$cheque_no= isset($form['cheque_no1']) ? trim($form['cheque_no1']) : '';
 				$debit= $form['debit'];
 				$credit= $form['credit'];
-				$delete_rows = $this->getDefinedTable(Accounts\TransactiondetailTable::class)->getNotInDtl($tdetails_id, array('transaction' => $result));
+				$result1 = 1;
 				for($i=0; $i < sizeof($location); $i++):
 					if(isset($location[$i]) && is_numeric($location[$i])):
-						if($tdetails_id[$i]>0):
+						if(isset($tdetails_id[$i]) && is_numeric($tdetails_id[$i]) && $tdetails_id[$i] > 0):
 							$tdetailsdata = array(
 								'id' => $tdetails_id[$i],
 								'transaction' => $result,
@@ -2938,7 +3124,7 @@ class TransactionController extends AbstractActionController
 								'head' => $head[$i],
 								'sub_head' => $sub_head[$i],
 								'bank_ref_type' => '',
-								'cheque_no' => $cheque_no[$i],
+								'cheque_no' => (!empty($cheque_no)) ? $cheque_no : 'DFT-',
 								'debit' => (isset($debit[$i]))? $debit[$i]:'0.00',
 								'credit' => (isset($credit[$i]))? $credit[$i]:'0.00',
 								'voucher_dates' => $form['voucher_date'],
@@ -2956,7 +3142,7 @@ class TransactionController extends AbstractActionController
 								'head' => $head[$i],
 								'sub_head' => $sub_head[$i],
 								'bank_ref_type' => '',
-								'cheque_no' => $cheque_no[$i],
+								'cheque_no' => (!empty($cheque_no)) ? $cheque_no : 'DFT-',
 								'debit' => (isset($debit[$i]))? $debit[$i]:'0.00',
 								'credit' => (isset($credit[$i]))? $credit[$i]:'0.00',
 								'voucher_dates' => $form['voucher_date'],
@@ -2970,13 +3156,22 @@ class TransactionController extends AbstractActionController
 							);  
 						endif;
 						$tdetailsdata = $this->_safedataObj->rteSafe($tdetailsdata);
-						$result1 = $this->getDefinedTable(Accounts\TransactiondetailTable::class)->save($tdetailsdata);				
+						$result1 = $this->getDefinedTable(Accounts\TransactiondetailTable::class)->save($tdetailsdata);
+						if($result1 <= 0):
+							break;
+						endif;
 					endif;
 				endfor;
-				//deleting deleted table rows form database table
-				foreach($delete_rows as $delete_row):
-					$this->getDefinedTable(Accounts\TransactiondetailTable::class)->remove($delete_row['id']);
-				endforeach;
+				if($result1 <= 0):
+					$this->_connection->rollback();
+					$this->flashMessenger()->addMessage("error^ Failed to save one or more transaction detail rows.");
+					return $this->redirect()->toRoute('transaction', array('action' =>'viewagainst', 'id' => $this->_id));
+				endif;
+				if (!$this->removeMissingTransactionDetails($result, $submitted_detail_ids)):
+					$this->_connection->rollback();
+					$this->flashMessenger()->addMessage("error^ Invalid detail row selection detected. Please reload and try again.");
+					return $this->redirect()->toRoute('transaction', array('action' =>'viewagainst', 'id' => $this->_id));
+				endif;
 				$this->_connection->commit(); // commit transaction on success
 				$this->flashMessenger()->addMessage("success^ Transaction successfully updated | ".$voucher_no);
 				return $this->redirect()->toRoute('transaction', array('action' =>'viewagainst', 'id' => $this->_id));
@@ -3175,7 +3370,7 @@ class TransactionController extends AbstractActionController
 			foreach($results as $result):
 				array_push($pltp_no_list, substr($result['voucher_no'], -5));
 			endforeach;
-			$next_serial = max($pltp_no_list) + 1; 
+			$next_serial = !empty($pltp_no_list) ? (max($pltp_no_list) + 1) : 1;
 				
 			switch(strlen($next_serial)){
 				case 1: $next_dc_serial = "0000".$next_serial; break;
@@ -3328,6 +3523,8 @@ class TransactionController extends AbstractActionController
 			$this->_connection->beginTransaction(); //***Transaction begins here***//
 			$result = $this->getDefinedTable(Accounts\TransactionTable::class)->save($data1);
 			if($result > 0){
+				$submitted_detail_ids = isset($form['id']) ? $form['id'] : array();
+				$result1 = 1;
 				if($form['doc_id']=="Payroll"){
 					foreach( $this->getDefinedTable(Accounts\TransactiondetailTable::class)->get(array('td.transaction'=>$result)) as $td):
 						$tdata=array(
@@ -3337,22 +3534,24 @@ class TransactionController extends AbstractActionController
 							'modified' =>$this->_modified,
 						);
 						$tdata = $this->_safedataObj->rteSafe($tdata);
-						$result1 = $this->getDefinedTable(Accounts\TransactiondetailTable::class)->save($tdata);		
+						$result1 = $this->getDefinedTable(Accounts\TransactiondetailTable::class)->save($tdata);
+						if($result1 <= 0):
+							break;
+						endif;
 					endforeach;
 				}
 				else{
-				$tdetails_id = $form['id'];
+				$tdetails_id = (isset($form['id']) && is_array($form['id'])) ? $form['id'] : array();
 				$location= $form['location'];
 				//$activity= $form['activity'];
 				$head= $form['head']; 
 				$sub_head= $form['sub_head'];
-				$cheque_no= $form['cheque_no1'];
+				$cheque_no= isset($form['cheque_no1']) ? trim($form['cheque_no1']) : '';
 				$debit= $form['debit'];
 				$credit= $form['credit'];
-				$delete_rows = $this->getDefinedTable(Accounts\TransactiondetailTable::class)->getNotInDtl($tdetails_id, array('transaction' => $result));
 				for($i=0; $i < sizeof($location); $i++):
 					if(isset($location[$i]) && is_numeric($location[$i])):
-						if($tdetails_id[$i]>0):
+						if(isset($tdetails_id[$i]) && is_numeric($tdetails_id[$i]) && $tdetails_id[$i] > 0):
 							$tdetailsdata = array(
 								'id' => $tdetails_id[$i],
 								'transaction' => $result,
@@ -3361,7 +3560,7 @@ class TransactionController extends AbstractActionController
 								'head' => $head[$i],
 								'sub_head' => $sub_head[$i],
 								'bank_ref_type' => '',
-								'cheque_no' => $cheque_no[$i],
+								'cheque_no' => (!empty($cheque_no)) ? $cheque_no : 'DFT-',
 								'debit' => (isset($debit[$i]))? $debit[$i]:'0.00',
 								'credit' => (isset($credit[$i]))? $credit[$i]:'0.00',
 								'ref_no'=> '', 
@@ -3377,7 +3576,7 @@ class TransactionController extends AbstractActionController
 								'head' => $head[$i],
 								'sub_head' => $sub_head[$i],
 								'bank_ref_type' => '',
-								'cheque_no' => $cheque_no[$i],
+								'cheque_no' => (!empty($cheque_no)) ? $cheque_no : 'DFT-',
 								'debit' => (isset($debit[$i]))? $debit[$i]:'0.00',
 								'credit' => (isset($credit[$i]))? $credit[$i]:'0.00',
 								'ref_no'=> '', 
@@ -3389,14 +3588,23 @@ class TransactionController extends AbstractActionController
 							);  
 						endif;
 						$tdetailsdata = $this->_safedataObj->rteSafe($tdetailsdata);
-						$result1 = $this->getDefinedTable(Accounts\TransactiondetailTable::class)->save($tdetailsdata);				
+						$result1 = $this->getDefinedTable(Accounts\TransactiondetailTable::class)->save($tdetailsdata);
+						if($result1 <= 0):
+							break;
+						endif;
 					endif;
 				endfor;
 			}
-				//deleting deleted table rows form database table
-				foreach($delete_rows as $delete_row):
-					$this->getDefinedTable(Accounts\TransactiondetailTable::class)->remove($delete_row['id']);
-				endforeach;
+				if($result1 <= 0):
+					$this->_connection->rollback();
+					$this->flashMessenger()->addMessage("error^ Failed to save one or more transaction detail rows.");
+					return $this->redirect()->toRoute('transaction', array('action' =>'viewagainstdebit', 'id' => $this->_id));
+				endif;
+				if($form['doc_id']!="Payroll" && !$this->removeMissingTransactionDetails($result, $submitted_detail_ids)):
+					$this->_connection->rollback();
+					$this->flashMessenger()->addMessage("error^ Invalid detail row selection detected. Please reload and try again.");
+					return $this->redirect()->toRoute('transaction', array('action' =>'viewagainstdebit', 'id' => $this->_id));
+				endif;
 				$this->_connection->commit(); // commit transaction on success
 				$this->flashMessenger()->addMessage("success^ Transaction successfully updated | ".$voucher_no);
 				return $this->redirect()->toRoute('transaction', array('action' =>'viewagainstdebit', 'id' => $this->_id));
@@ -3656,7 +3864,7 @@ class TransactionController extends AbstractActionController
 			foreach($results as $result):
 				array_push($pltp_no_list, substr($result['voucher_no'], -5));
 			endforeach;
-			$next_serial = max($pltp_no_list) + 1; 
+			$next_serial = !empty($pltp_no_list) ? (max($pltp_no_list) + 1) : 1;
 				
 			switch(strlen($next_serial)){
 				case 1: $next_dc_serial = "0000".$next_serial; break;
@@ -3802,19 +4010,20 @@ class TransactionController extends AbstractActionController
 			$this->_connection->beginTransaction(); //***Transaction begins here***//
 			$result = $this->getDefinedTable(Accounts\TransactionTable::class)->save($data1);
 			if($result > 0){
-				$tdetails_id = $form['id'];
+				$tdetails_id = (isset($form['id']) && is_array($form['id'])) ? $form['id'] : array();
+				$submitted_detail_ids = isset($form['id']) ? $form['id'] : array();
 				$location= $form['location'];
 				//$activity= $form['activity'];
 				$head= $form['head'];
 				$sub_head= $form['sub_head'];
-				$cheque_no= $form['cheque_no1'];
+				$cheque_no= isset($form['cheque_no1']) ? trim($form['cheque_no1']) : '';
 				$debit= $form['debit'];
 			    $ref_no= $form['ref_no'];
 				$credit= $form['credit'];
-				$delete_rows = $this->getDefinedTable(Accounts\TransactiondetailTable::class)->getNotInDtl($tdetails_id, array('transaction' => $result));
+				$result1 = 1;
 				for($i=0; $i < sizeof($location); $i++):
 					if(isset($location[$i]) && is_numeric($location[$i])):
-						if($tdetails_id[$i]>0):
+						if(isset($tdetails_id[$i]) && is_numeric($tdetails_id[$i]) && $tdetails_id[$i] > 0):
 							$tdetailsdata = array(
 								'id' => $tdetails_id[$i],
 								'transaction' => $result,
@@ -3823,7 +4032,7 @@ class TransactionController extends AbstractActionController
 								'head' => $head[$i],
 								'sub_head' => $sub_head[$i],
 								'bank_ref_type' => '',
-								'cheque_no' => $cheque_no[$i],
+								'cheque_no' => (!empty($cheque_no)) ? $cheque_no : 'DFT-',
 								'debit' => (isset($debit[$i]))? $debit[$i]:'0.00',
 								'credit' => (isset($credit[$i]))? $credit[$i]:'0.00',
 								'voucher_dates' => $form['voucher_date'],
@@ -3841,7 +4050,7 @@ class TransactionController extends AbstractActionController
 								'head' => $head[$i],
 								'sub_head' => $sub_head[$i],
 								'bank_ref_type' => '',
-								'cheque_no' => $cheque_no[$i],
+								'cheque_no' => (!empty($cheque_no)) ? $cheque_no : 'DFT-',
 								'debit' => (isset($debit[$i]))? $debit[$i]:'0.00',
 								'credit' => (isset($credit[$i]))? $credit[$i]:'0.00',
 								'voucher_dates' => $form['voucher_date'],
@@ -3855,13 +4064,22 @@ class TransactionController extends AbstractActionController
 							);
 						endif;
 						$tdetailsdata = $this->_safedataObj->rteSafe($tdetailsdata);
-						$result1 = $this->getDefinedTable(Accounts\TransactiondetailTable::class)->save($tdetailsdata);				
+						$result1 = $this->getDefinedTable(Accounts\TransactiondetailTable::class)->save($tdetailsdata);
+						if($result1 <= 0):
+							break;
+						endif;
 					endif;
 				endfor;
-				//deleting deleted table rows form database table
-				foreach($delete_rows as $delete_row):
-					$this->getDefinedTable(Accounts\TransactiondetailTable::class)->remove($delete_row['id']);
-				endforeach;
+				if($result1 <= 0):
+					$this->_connection->rollback();
+					$this->flashMessenger()->addMessage("error^ Failed to save one or more transaction detail rows.");
+					return $this->redirect()->toRoute('transaction', array('action' =>'viewiwr', 'id' => $this->_id));
+				endif;
+				if (!$this->removeMissingTransactionDetails($result, $submitted_detail_ids)):
+					$this->_connection->rollback();
+					$this->flashMessenger()->addMessage("error^ Invalid detail row selection detected. Please reload and try again.");
+					return $this->redirect()->toRoute('transaction', array('action' =>'viewiwr', 'id' => $this->_id));
+				endif;
 				$this->_connection->commit(); // commit transaction on success
 				$this->flashMessenger()->addMessage("success^ Payment IWR successfully updated | ".$voucher_no);
 				return $this->redirect()->toRoute('transaction', array('action' =>'viewiwr', 'id' => $this->_id));
@@ -4038,7 +4256,7 @@ class TransactionController extends AbstractActionController
 			foreach($results as $result):
 				array_push($pltp_no_list, substr($result['voucher_no'], -5));
 			endforeach;
-			$next_serial = max($pltp_no_list) + 1; 
+			$next_serial = !empty($pltp_no_list) ? (max($pltp_no_list) + 1) : 1;
 				
 			switch(strlen($next_serial)){
 				case 1: $next_dc_serial = "0000".$next_serial; break;
@@ -4134,6 +4352,19 @@ class TransactionController extends AbstractActionController
 				$decimal= $form['decimal'];
 				$remitance= $form['remitance'];
 				$a_commission= $form['actual_commission'];
+				
+				/*--DATA PRESET for MONEY-GRAM*/
+				$MG = ($sub_head === '3276') ? '1'    : '0';
+				/*--INCOME*/
+				$HI  = ($sub_head === '3276') ? '267' : '185';
+				$SHI = ($sub_head === '3276') ? '3275' : '378';
+				
+				$HID  = ($sub_head === '3276') ? '267' : '185';
+				$SHID = ($sub_head === '3276') ? '3277' : '377';
+				/*--EXPENSE*/
+				$HE  = ($sub_head === '3276') ? '268' : '193';
+				$SHE = ($sub_head === '3276') ? '3274' : '1566';
+				
 				for($i=0; $i < sizeof($location); $i++):
 					if(isset($location[$i]) && is_numeric($location[$i])):
 						$commissiondata = array(
@@ -4145,6 +4376,7 @@ class TransactionController extends AbstractActionController
 							'commission_amt' => (!empty($commission[$i]))? $commission[$i]:'0.000',
 							'decimal_amt' => (!empty($decimal[$i]))? $decimal[$i]:'0.000',
 							'remitance_amt' => (!empty($remitance[$i]))? $remitance[$i]:'0.000',
+							'money_gram' => $MG,
 							'status' => 2, // status initiated
 							'author' =>$this->_author,
 							'created' =>$this->_created,
@@ -4168,8 +4400,8 @@ class TransactionController extends AbstractActionController
 							'location' => $location[$i],
 							'activity' => $location[$i],
 							'against' =>1,
-							'head' => 185,
-							'sub_head' =>377,
+							'head' => $HID,
+							'sub_head' =>$SHID,
 							'bank_ref_type' => '',
 							'cheque_no' => (!empty($cheque_no[$i]))? $cheque_no[$i]:'DFT01102023',
 							'debit' => '0.000',
@@ -4195,8 +4427,8 @@ class TransactionController extends AbstractActionController
 							'location' => $location[$i],
 							'activity' => $location[$i],
 							'against' =>1,
-							'head' => 185,
-							'sub_head' =>378,
+							'head' => $HI,
+							'sub_head' =>$SHI,
 							'bank_ref_type' => '',
 							'cheque_no' => (!empty($cheque_no[$i]))? $cheque_no[$i]:'DFT01102023',
 							'debit' => '0.000',
@@ -4222,8 +4454,8 @@ class TransactionController extends AbstractActionController
 							'location' => $location[$i],
 							'activity' => $location[$i],
 							'against' =>1,
-							'head' => 193,
-							'sub_head' => 1566,
+							'head' => $HE,
+							'sub_head' => $SHE,
 							'bank_ref_type' => '',
 							'cheque_no' => (!empty($cheque_no[$i]))? $cheque_no[$i]:'DFT01102023',
 							'debit' => (!empty($remitance[$i]))? $remitance[$i]:'0.000',
@@ -4310,18 +4542,20 @@ class TransactionController extends AbstractActionController
 			$this->_connection->beginTransaction(); //***Transaction begins here***//
 			$result = $this->getDefinedTable(Accounts\TransactionTable::class)->save($data1);
 			if($result > 0){
-				$tdetails_id = $form['id'];
+				$tdetails_id = (isset($form['id']) && is_array($form['id'])) ? $form['id'] : array();
+				$submitted_detail_ids = isset($form['id']) ? $form['id'] : array();
 				$location= $form['location'];
 				//$activity= $form['activity'];
 				$head= $form['head'];
 				$sub_head= $form['sub_head'];
-				$cheque_no= $form['cheque_no1'];
+				$cheque_no= isset($form['cheque_no1']) ? trim($form['cheque_no1']) : '';
 				$debit= $form['debit'];
 				$credit= $form['credit'];
-				$delete_rows = $this->getDefinedTable(Accounts\TransactiondetailTable::class)->getNotInDtl($tdetails_id, array('transaction' => $result));
+				$result1 = 1;
 				for($i=0; $i < sizeof($location); $i++):
 					if(isset($location[$i]) && is_numeric($location[$i])):
-						if($tdetails_id[$i]>0):
+						$activity_value = $location[$i];
+						if(isset($tdetails_id[$i]) && is_numeric($tdetails_id[$i]) && $tdetails_id[$i] > 0):
 							$tdetailsdata = array(
 								'id' => $tdetails_id[$i],
 								'transaction' => $result,
@@ -4330,7 +4564,7 @@ class TransactionController extends AbstractActionController
 								'head' => $head[$i],
 								'sub_head' => $sub_head[$i],
 								'bank_ref_type' => '',
-								'cheque_no' => $cheque_no[$i],
+								'cheque_no' => (!empty($cheque_no)) ? $cheque_no : 'DFT-',
 								'debit' => (isset($debit[$i]))? $debit[$i]:'0.00',
 								'credit' => (isset($credit[$i]))? $credit[$i]:'0.00',
 								'ref_no'=> '', 
@@ -4342,11 +4576,11 @@ class TransactionController extends AbstractActionController
 							$tdetailsdata = array(
 								'transaction' => $result,
 								'location' => $location[$i],
-								'activity' => $activity[$i],
+								'activity' => $activity_value,
 								'head' => $head[$i],
 								'sub_head' => $sub_head[$i],
 								'bank_ref_type' => '',
-								'cheque_no' => $cheque_no[$i],
+								'cheque_no' => (!empty($cheque_no)) ? $cheque_no : 'DFT-',
 								'debit' => (isset($debit[$i]))? $debit[$i]:'0.00',
 								'credit' => (isset($credit[$i]))? $credit[$i]:'0.00',
 								'ref_no'=> '', 
@@ -4358,12 +4592,22 @@ class TransactionController extends AbstractActionController
 							);
 						endif;
 						$tdetailsdata = $this->_safedataObj->rteSafe($tdetailsdata);
-						$result1 = $this->getDefinedTable(Accounts\TransactiondetailTable::class)->save($tdetailsdata);				
+						$result1 = $this->getDefinedTable(Accounts\TransactiondetailTable::class)->save($tdetailsdata);
+						if($result1 <= 0):
+							break;
+						endif;
 					endif;
 				endfor;
-				foreach($delete_rows as $delete_row):
-					$this->getDefinedTable(Accounts\TransactiondetailTable::class)->remove($delete_row['id']);
-				endforeach;
+				if($result1 <= 0):
+					$this->_connection->rollback();
+					$this->flashMessenger()->addMessage("error^ Failed to save one or more transaction detail rows.");
+					return $this->redirect()->toRoute('transaction', array('action' =>'viewiwrreceipt', 'id' => $this->_id));
+				endif;
+				if (!$this->removeMissingTransactionDetails($result, $submitted_detail_ids)):
+					$this->_connection->rollback();
+					$this->flashMessenger()->addMessage("error^ Invalid detail row selection detected. Please reload and try again.");
+					return $this->redirect()->toRoute('transaction', array('action' =>'viewiwrreceipt', 'id' => $this->_id));
+				endif;
 				$this->_connection->commit(); 
 				$this->flashMessenger()->addMessage("success^ Payment IWR successfully updated | ".$voucher_no);
 				return $this->redirect()->toRoute('transaction', array('action' =>'viewiwrreceipt', 'id' => $this->_id));

@@ -11,6 +11,11 @@ use Administration\Model As Administration;
 use Hr\Model As Hr;
 class HreportController extends AbstractActionController
 {   
+	protected $_connection;
+	protected $_highest_role;
+	protected $_lowest_role;
+	protected $_permissionObj;
+	protected $_safedataObj;
 	private $_container;
 	protected $_table; 		// database table
 	protected $_user; 		// user detail

@@ -134,6 +134,7 @@ return [
 		'aliases' => [
 			'getresource_helper' 	=> View\Helper\GetresourceHelper::class,
 			'getroute_helper' 		=> View\Helper\GetrouteHelper::class,
+            'appsetting' 			=> View\Helper\AppSettingHelper::class,
 			'menu_helper' 			=> View\Helper\MenuHelper::class,
 			'button' 				=> View\Helper\ButtonHelper::class,
 			'breadcrumb' 			=> View\Helper\BreadcrumbHelper::class,

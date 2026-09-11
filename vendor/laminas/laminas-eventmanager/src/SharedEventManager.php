@@ -4,9 +4,7 @@ namespace Laminas\EventManager;
 
 use function array_keys;
 use function array_merge;
-use function get_class;
-use function gettype;
-use function is_object;
+use function get_debug_type;
 use function is_string;
 use function sprintf;
 
@@ -16,6 +14,8 @@ use function sprintf;
  * Allows attaching to EMs composed by other classes without having an instance first.
  * The assumption is that the SharedEventManager will be injected into EventManager
  * instances, and then queried for additional listeners when triggering an event.
+ *
+ * @final This class should not be extended
  */
 class SharedEventManager implements SharedEventManagerInterface
 {
@@ -64,14 +64,14 @@ class SharedEventManager implements SharedEventManagerInterface
         if (! is_string($identifier) || empty($identifier)) {
             throw new Exception\InvalidArgumentException(sprintf(
                 'Invalid identifier provided; must be a string; received "%s"',
-                is_object($identifier) ? get_class($identifier) : gettype($identifier)
+                get_debug_type($identifier),
             ));
         }
 
         if (! is_string($event) || empty($event)) {
             throw new Exception\InvalidArgumentException(sprintf(
                 'Invalid event provided; must be a non-empty string; received "%s"',
-                is_object($event) ? get_class($event) : gettype($event)
+                get_debug_type($event),
             ));
         }
 
@@ -94,7 +94,7 @@ class SharedEventManager implements SharedEventManagerInterface
         if (! is_string($identifier) || empty($identifier)) {
             throw new Exception\InvalidArgumentException(sprintf(
                 'Invalid identifier provided; must be a string, received %s',
-                is_object($identifier) ? get_class($identifier) : gettype($identifier)
+                get_debug_type($identifier),
             ));
         }
 
@@ -113,7 +113,7 @@ class SharedEventManager implements SharedEventManagerInterface
         if (! is_string($eventName) || empty($eventName)) {
             throw new Exception\InvalidArgumentException(sprintf(
                 'Invalid event name provided; must be a string, received %s',
-                is_object($eventName) ? get_class($eventName) : gettype($eventName)
+                get_debug_type($eventName),
             ));
         }
 

@@ -15,6 +15,8 @@ use Hr\Model as Hr;
 
 class BuildingController extends AbstractActionController
 {
+	protected $_login_id;
+	protected $_userloc;
     private $_container;
     protected $_table; // database table
     protected $_user; // user detail

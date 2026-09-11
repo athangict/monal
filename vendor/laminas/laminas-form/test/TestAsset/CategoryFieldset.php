@@ -1,0 +1,41 @@
+<?php
+
+declare(strict_types=1);
+
+namespace LaminasTest\Form\TestAsset;
+
+use Laminas\Form\Fieldset;
+use Laminas\Hydrator\ClassMethodsHydrator;
+use Laminas\InputFilter\InputFilterProviderInterface;
+use LaminasTest\Form\TestAsset\Entity\Category;
+
+final class CategoryFieldset extends Fieldset implements InputFilterProviderInterface
+{
+    public function __construct()
+    {
+        parent::__construct('category');
+        $this
+            ->setHydrator(new ClassMethodsHydrator())
+            ->setObject(new Category());
+
+        $this->add([
+            'name'       => 'name',
+            'options'    => [
+                'label' => 'Name of the category',
+            ],
+            'attributes' => [
+                'required' => 'required',
+            ],
+        ]);
+    }
+
+    /** @inheritDoc */
+    public function getInputFilterSpecification()
+    {
+        return [
+            'name' => [
+                'required' => true,
+            ],
+        ];
+    }
+}

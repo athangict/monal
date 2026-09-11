@@ -111,7 +111,7 @@ class ClosingController extends AbstractActionController
 		$min_year = date('Y', strtotime($this->getDefinedTable(Accounts\TransactionTable::class)->getMin('voucher_date')));
 		if($this->getRequest()->isPost()):
 			$form = $this->getRequest()->getPost();
-			$year = $form['year'];
+			$year = (!empty($form['year']) && is_numeric($form['year'])) ? (int) $form['year'] : (int) date('Y') - 1;
 			$head = $form['head'];
 			$group = $form['group'];
 			if($form['task']=='1'):
@@ -141,7 +141,7 @@ class ClosingController extends AbstractActionController
 				endif;
 			endif;
 		else:
-			$year = date('Y');
+			$year = date('Y') - 1;
 			$head='';
 			$group='';
 		endif;
@@ -175,7 +175,6 @@ class ClosingController extends AbstractActionController
 			$closing_cr =$form['closing_cr'];	
 			$location =$form['location'];
 			$reference_no =$form['reference'];
-			$closing_sdr =$form['closing_sdr'];
             for($i=0;$i<sizeof($closing_sub_head);$i++){
 			  //if($closing_dr[$i] != 0 || $closing_cr[$i] != 0):
 				if($closing_id[$i] > 0 ){
@@ -184,7 +183,7 @@ class ClosingController extends AbstractActionController
 					   'id'  => $closing_id[$i],
 					   'head'  =>$closing_head[$i],
 					   'sub_head'  =>$closing_sub_head[$i],
-					   'closing_sdr'  => $closing_sdr[$i],
+					   'closing_sdr'  => '0.000',
 					   'closing_dr'  => $closing_dr[$i],
 					   'closing_cr'  => $closing_cr[$i],
 					   'location'  => $location[$i],
@@ -199,7 +198,7 @@ class ClosingController extends AbstractActionController
 					   'head'  =>$closing_head[$i],
 					   'sub_head'  =>$closing_sub_head[$i],
 					   'year'       => $form['year'],
-					   'closing_sdr'  => $closing_sdr[$i],
+					   'closing_sdr'  => '0.000',
 					   'closing_dr'  => $closing_dr[$i],
 					   'closing_cr'  => $closing_cr[$i],
 					   'location'  => $location[$i],
@@ -233,7 +232,7 @@ class ClosingController extends AbstractActionController
 	public function sheadlistAction()
 	{
 		$this->init();		
-		$param = explode('-',$this->_id);
+		$param = explode('-',(string) $this->_id);
 		$head = $param['1'];
 		$year = $param['0']; 
 		$ViewModel = new ViewModel(array(

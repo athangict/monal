@@ -6,7 +6,8 @@ namespace Laminas\Router\Http;
 
 use Laminas\Router\Exception;
 use Laminas\Stdlib\ArrayUtils;
-use Laminas\Stdlib\RequestInterface as Request;
+use Laminas\Stdlib\RequestInterface;
+use Override;
 use Traversable;
 
 use function is_array;
@@ -17,16 +18,11 @@ use function strpos;
 
 /**
  * Literal route.
+ *
+ * @final
  */
-class Literal implements RouteInterface
+class Literal implements HttpRouteInterface
 {
-    /**
-     * RouteInterface to match.
-     *
-     * @var string
-     */
-    protected $route;
-
     /**
      * Default values.
      *
@@ -46,23 +42,22 @@ class Literal implements RouteInterface
      * Create a new literal route.
      *
      * @param  string $route
-     * @param  array  $defaults
      */
-    public function __construct($route, array $defaults = [])
-    {
-        $this->route    = $route;
+    public function __construct(
+        /**
+         * RouteInterface to match.
+         */
+        protected $route,
+        array $defaults = []
+    ) {
         $this->defaults = $defaults;
     }
 
     /**
-     * factory(): defined by RouteInterface interface.
-     *
-     * @see    \Laminas\Router\RouteInterface::factory()
-     *
-     * @param  array|Traversable $options
-     * @return Literal
+     * @inheritDoc
      * @throws Exception\InvalidArgumentException
      */
+    #[Override]
     public static function factory($options = [])
     {
         if ($options instanceof Traversable) {
@@ -86,14 +81,11 @@ class Literal implements RouteInterface
     }
 
     /**
-     * match(): defined by RouteInterface interface.
-     *
-     * @see    \Laminas\Router\RouteInterface::match()
-     *
-     * @param  integer|null $pathOffset
-     * @return RouteMatch|null
+     * @inheritDoc
+     * @param int|null $pathOffset
      */
-    public function match(Request $request, $pathOffset = null)
+    #[Override]
+    public function match(RequestInterface $request, $pathOffset = null)
     {
         if (! method_exists($request, 'getUri')) {
             return null;
@@ -105,7 +97,7 @@ class Literal implements RouteInterface
         if ($pathOffset !== null) {
             if ($pathOffset >= 0 && strlen((string) $path) >= $pathOffset && ! empty($this->route)) {
                 if (strpos($path, $this->route, $pathOffset) === $pathOffset) {
-                    return new RouteMatch($this->defaults, strlen($this->route));
+                    return new HttpRouteMatch($this->defaults, strlen($this->route));
                 }
             }
 
@@ -113,33 +105,29 @@ class Literal implements RouteInterface
         }
 
         if ($path === $this->route) {
-            return new RouteMatch($this->defaults, strlen($this->route));
+            return new HttpRouteMatch($this->defaults, strlen($this->route));
         }
 
         return null;
     }
 
     /**
-     * assemble(): Defined by RouteInterface interface.
-     *
-     * @see    \Laminas\Router\RouteInterface::assemble()
-     *
-     * @param  array $params
-     * @param  array $options
-     * @return mixed
+     * @inheritDoc
      */
+    #[Override]
     public function assemble(array $params = [], array $options = [])
     {
         return $this->route;
     }
 
     /**
-     * getAssembledParams(): defined by RouteInterface interface.
+     * @deprecated Since 3.19.0. This method will be removed in 4.0 and assembled parameters
+     * will be available on the value object that will be returned from assemble().
+     * There is not a forward compatible way to replace usage of this method.
      *
-     * @see    RouteInterface::getAssembledParams
-     *
-     * @return array
+     * @inheritDoc
      */
+    #[Override]
     public function getAssembledParams()
     {
         return [];

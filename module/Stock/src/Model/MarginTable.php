@@ -130,7 +130,7 @@ class MarginTable extends AbstractTableGateway
 	 * @param String $column
 	 * @return String | Int
 	 */
-	public function getSUM($where=NULL, $column)
+	public function getSUM($where=NULL, $column = NULL)
 	{
 		$adapter = $this->adapter;
 		$sql = new Sql($adapter);

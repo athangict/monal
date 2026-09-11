@@ -12,6 +12,7 @@ use Accounts\Model As Accounts;
 
 class ChartaccountController extends AbstractActionController
 {   
+	protected $_connection;
 	private $_container;
 	protected $_table; 		// database table 
     protected $_user; 		// user detail
@@ -160,7 +161,7 @@ class ChartaccountController extends AbstractActionController
 	{
 		$this->init();
 		$id = $this->_id;
-		$array_id = explode("_", $id);
+		$array_id = explode("_", (string) $id);
 		$class_id = $array_id[0];
 		$page = (sizeof($array_id)>1)?$array_id[1]:'';
 		if($this->getRequest()->isPost())

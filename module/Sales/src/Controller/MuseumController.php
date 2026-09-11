@@ -14,6 +14,7 @@ use Sales\Model As Sales;
 use Hr\Model As Hr;
 class MuseumController extends AbstractActionController
 {   
+	protected $_connection;
 	private $_container;
 	protected $_table; 		// database table 
     protected $_user; 		// user detail
@@ -494,7 +495,7 @@ class MuseumController extends AbstractActionController
 	public function reportAction()
 	{
 		$this->init();
-			$array_id = explode("_", $this->_id);
+			$array_id = explode("_", (string) $this->_id);
 			$category = (sizeof($array_id)>1)?$array_id[0]:'-1';
 			if($this->getRequest()->isPost())
 			{

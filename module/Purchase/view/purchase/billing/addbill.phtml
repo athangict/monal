@@ -1,4 +1,4 @@
-<?php
+  <?php
 /**
  *
  * View -- of Purchase/BillingController/addbillAction
@@ -64,6 +64,8 @@ $this->headTitle($this->title);
 												<th>Receipt Amount</th>
 												<th>Discount</th>
 												<th>Net </th>
+												<th>GST Amt </th>
+												<th>Total </th>
 												<th>Reference No.</th>
 											</tr>
 										</thead>
@@ -86,7 +88,17 @@ $this->headTitle($this->title);
 												</td>
 												<td>
 													<div class="form-group">
-														<input type="text" class="form-control" name="ref_no" id="ref_no" />
+														<input type="text" class="form-control" name="sup_gst" id="sup_gst" value="0.00" />
+													</div>
+												</td>
+												<td>
+													<div class="form-group">
+														<input type="text" class="form-control" name="sup_total" id="sup_total"  readonly/>
+													</div>
+												</td>
+												<td>
+													<div class="form-group">
+														<input type="text" class="form-control" name="ref_no" id="ref_no"  />
 													</div>
 												</td>
 											</tr>
@@ -105,11 +117,19 @@ $this->headTitle($this->title);
 								<?php endforeach;?>
 								</select>
 							</div>
-							<div class="col-lg-3">
+							<div class="col-lg-2">
 								<label class="control-label" for="freight">Amount</label>
 								<input class="form-control" name="freight" id="freight" value="0.00">
 							</div>
-							<div class="col-lg-3">
+							<div class="col-lg-2">
+								<label class="control-label" for="freight_gst">Gst Amt</label>
+								<input class="form-control" name="freight_gst" id="freight_gst" value="0.00">
+							</div>
+							<div class="col-lg-2">
+								<label class="control-label" for="freight_total">Total</label>
+								<input class="form-control" name="freight_total" id="freight_total" value="0.00" readonly>
+							</div>
+							<div class="col-lg-2">
 								<label class="control-label" for="freight_ref">Reference No</label>
 								<input class="form-control" name="freight_ref" id="freight_ref">
 							</div>
@@ -124,20 +144,37 @@ $this->headTitle($this->title);
 								<?php endforeach;?>
 								</select>
 							</div>
-							<div class="col-lg-3">
+							<div class="col-lg-2">
 								<label class="control-label" for="tax">Amount </label>
 								<input class="form-control" name="tax" id="tax" value="0.00">
 							</div>
-							<div class="col-lg-3">
+							<div class="col-lg-2">
+								<label class="control-label" for="tax_gst">Gst Amt</label>
+								<input class="form-control" name="tax_gst" id="tax_gst" value="0.00">
+							</div>
+							<div class="col-lg-2">
+								<label class="control-label" for="tax_total">Total</label>
+								<input class="form-control" name="tax_total" id="tax_total" value="0.00" readonly>
+							</div>
+							<div class="col-lg-2">
 								<label class="control-label" for="tax_ref">Reference No</label>
 								<input class="form-control" name="tax_ref" id="tax_ref">
 							</div>
 						</div>
+						<br>
 						<div class="row">
-							<div class="col-lg-9"></div>
-							<div class="col-lg-3">
+							<div class="col-lg-6"></div>
+							<div class="col-lg-2">
 								<label class="control-label" for="total">Total: </label>
 								<input class="form-control" name="total" id="total" readonly>
+							</div>
+							<div class="col-lg-2">
+								<label class="control-label" for="total_gst">Total GST: </label>
+								<input class="form-control" name="total_gst" id="total_gst" readonly>
+							</div>
+							<div class="col-lg-2">
+								<label class="control-label" for="grand_total">Grand Total: </label>
+								<input class="form-control" name="grand_total" id="grand_total" readonly>
 							</div>
 						</div>
 						<div class="row">
@@ -180,6 +217,7 @@ $(document).ready(function (){
 				$("#receipt_amt").val(data.sum);	
 				$("#net").val(data.sum);	
 				$("#total").val(data.sum);	
+				calculateSupTotal();
 			},
 			'json'
 		);	
@@ -189,29 +227,94 @@ $(document).ready(function (){
 	var discountInput = $('#discount');
 	var taxInput = $('#tax');
 	var freightInput = $('#freight');
+	var supgstInput = $('#sup_gst');
+	var taxgstInput = $('#tax_gst');
+	var freigthgstInput = $('#freight_gst');
 
 	prnamInput.on('input', calculateTotal);
 	discountInput.on('input', calculateTotal);
 	taxInput.on('input', calculateTotal);
 	freightInput.on('input', calculateTotal);
+	taxInput.on('input', calculateTaxTotal);
+	freightInput.on('input', calculateFreightTotal);
+	supgstInput.on('input', calculateSupTotal);
+	taxgstInput.on('input', calculateTaxTotal);
+	freigthgstInput.on('input', calculateFreightTotal);
 
 	function calculateTotal() {
 		var prnamInputValue = prnamInput.val();
-		var prnam = parseFloat(prnamInputValue.replace(/,/g, '')) || 0;
+		var prnam = parseFloat(prnamInputValue) || 0;
 		var discount = parseFloat(discountInput.val()) || 0;
 		var tax = parseFloat(taxInput.val()) || 0;
 		var freight = parseFloat(freightInput.val()) || 0;
 
-		var gross = prnam + tax + freight;
+		
 		var net = prnam - discount;
-
+var gross = net + tax + freight;
 		if (isNaN(gross) || isNaN(net)) {
 			// Handle invalid input values
 			return;
 		}
 
-		$('#total').val(gross.toFixed(2));
 		$('#net').val(net.toFixed(2));
+		$('#total').val(gross.toFixed(2));
+		calculateSupTotal();
+		
+	}
+	function calculateSupTotal() {
+	
+		var gstamt = parseFloat($('#sup_gst').val()) || 0;
+		var net = parseFloat($('#net').val()) || 0;
+	
+		var tot = gstamt + net;
+		
+		$('#sup_total').val(tot.toFixed(2));
+		calculateGSTTotal();
+		
+	}
+	function calculateFreightTotal() {
+	
+		var gstamt = parseFloat($('#freight_gst').val()) || 0;
+		var net = parseFloat($('#freight').val()) || 0;
+	
+		var tot = gstamt + net;
+		
+		$('#freight_total').val(tot.toFixed(2));
+		calculateGSTTotal();
+		
+	}
+	function calculateTaxTotal() {
+	
+		var gstamt = parseFloat($('#tax_gst').val()) || 0;
+		var net = parseFloat($('#tax').val()) || 0;
+	
+		var tot = gstamt + net;
+		
+		$('#tax_total').val(tot.toFixed(2));
+		calculateGSTTotal();
+		
+	}
+	function calculateGSTTotal() {
+	
+		var gstamt = parseFloat($('#sup_gst').val()) || 0;
+		var freight_gst = parseFloat($('#freight_gst').val()) || 0;
+		var tax_gst = parseFloat($('#tax_gst').val()) || 0;
+	
+		var tot = gstamt + freight_gst + tax_gst;
+		
+		$('#total_gst').val(tot.toFixed(2));
+		calculateGrandTotal();
+		
+	}
+	function calculateGrandTotal() {
+	
+		var gstamt = parseFloat($('#total_gst').val()) || 0;
+		var net = parseFloat($('#total').val()) || 0;
+	
+		var tot = gstamt + net;
+		
+		$('#grand_total').val(tot.toFixed(2));
+		
 	}
 	/*** form validation***/ 
 	const fv = FormValidation.formValidation(document.getElementById('#form'), {

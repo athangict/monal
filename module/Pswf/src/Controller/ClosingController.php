@@ -234,7 +234,7 @@ class ClosingController extends AbstractActionController
 	public function sheadlistAction()
 	{
 		$this->init();		
-		$param = explode('-',$this->_id);
+		$param = explode('-',(string) $this->_id);
 		$head = $param['1'];
 		$year = $param['0']; 
 		$ViewModel = new ViewModel(array(

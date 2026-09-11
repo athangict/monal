@@ -16,6 +16,7 @@ use Purchase\Model As Purchase;
 use Accounts\Model As Accounts;
 class CostingController extends AbstractActionController
 {   
+	protected $_userloc;
     private $_container;
 	protected $_table; 		// database table 
     protected $_user; 		// user detail
@@ -97,7 +98,7 @@ class CostingController extends AbstractActionController
 	public function resetelcAction()
 	{
 	   $this->init();
-	   $param = explode("-",$this->_id);
+	   $param = explode("-", (string) $this->_id);
 	   $cost_sheet_id = $param['0'];
 	   $cost_item_id = $param['1'];
 	   
@@ -1167,7 +1168,7 @@ class CostingController extends AbstractActionController
 		$this->init();
 		$param = $this->params()->fromRoute('param', '');
 
-		$params = explode("-", $param);
+		$params = explode("-", (string) $param);
 		
 		$po_inv_no =123; $params[0];
    		$po_inv =1; $params[1];
@@ -1212,7 +1213,7 @@ class CostingController extends AbstractActionController
 	public function getpartyAction()
 	{
 		$this->init();
-		$params = explode("-", $this->_id);
+		$params = explode("-", (string) $this->_id);
 		$po_inv_no =123; $params['0'];
 		$po_inv = 1;$params['1'];
 		
@@ -1322,7 +1323,7 @@ class CostingController extends AbstractActionController
 	public function suppinvlistAction()
 	{
 		$this->init();		
-		$params = explode("-", $this->_id);
+		$params = explode("-", (string) $this->_id);
 		$po_inv_no = 123;//$params['0'];  
 		$po_inv = 1;//$params['1'];		
 		if($po_inv == "1"):

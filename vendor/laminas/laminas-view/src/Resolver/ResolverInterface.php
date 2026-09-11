@@ -12,7 +12,7 @@ interface ResolverInterface
      * Resolve a template/pattern name to a resource the renderer can consume
      *
      * @param  string $name
-     * @return mixed
+     * @return string|false
      */
     public function resolve($name, ?Renderer $renderer = null);
 }

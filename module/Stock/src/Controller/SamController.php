@@ -18,6 +18,7 @@ use Purchase\Model As Purchase;
 use DateTime;
 class SamController extends AbstractActionController
 {   
+	protected $_userloc;
 	private $_container;
 	protected $_table; 		// database table 
     protected $_user; 		// user detail

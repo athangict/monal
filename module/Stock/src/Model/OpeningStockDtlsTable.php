@@ -154,7 +154,7 @@ class OpeningStockDtlsTable extends AbstractTableGateway
 	 * @param String $column
 	 * @return String | Int
 	 */
-	public function getSMSUM($where=NULL, $column)
+	public function getSMSUM($where=NULL, $column = NULL)
 	{
 		$adapter = $this->adapter;
 		$sql = new Sql($adapter);

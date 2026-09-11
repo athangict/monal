@@ -1,0 +1,210 @@
+<?php
+
+declare(strict_types=1);
+
+namespace LaminasTest\Validator;
+
+use Laminas\Validator\Exception\InvalidArgumentException;
+use Laminas\Validator\Regex;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\TestCase;
+use ReflectionProperty;
+
+use function array_keys;
+use function implode;
+
+final class RegexTest extends TestCase
+{
+    /**
+     * Ensures that the validator follows expected behavior
+     */
+    #[DataProvider('basicDataProvider')]
+    public function testBasic(array $options, string $input, bool $expected): void
+    {
+        $validator = new Regex(...$options);
+
+        self::assertSame($expected, $validator->isValid($input));
+    }
+
+    /**
+     * @psalm-return array<string, array{
+     *     0: string[]|array<array-key, array<string, string>>,
+     *     1: string,
+     *     2: bool
+     * }>
+     */
+    public static function basicDataProvider(): array
+    {
+        return [
+            // phpcs:disable
+            'valid; abc123' => [['/[a-z]/'], 'abc123', true],
+            'valid; foo'    => [['/[a-z]/'], 'foo',    true],
+            'valid; a'      => [['/[a-z]/'], 'a',      true],
+            'valid; z'      => [['/[a-z]/'], 'z',      true],
+
+            'valid; 123' => [['/[a-z]/'], '123', false],
+            'valid; A'   => [['/[a-z]/'], 'A',   false],
+
+            'valid; abc123; array' => [[['pattern' => '/[a-z]/']], 'abc123', true],
+            'valid; foo; array'    => [[['pattern' => '/[a-z]/']], 'foo', true],
+            'valid; a; array'      => [[['pattern' => '/[a-z]/']], 'a', true],
+            'valid; z; array'      => [[['pattern' => '/[a-z]/']], 'z', true],
+
+            'valid; 123; array' => [[['pattern' => '/[a-z]/']], '123', false],
+            'valid; A; array'   => [[['pattern' => '/[a-z]/']], 'A', false],
+            // phpcs:enable
+        ];
+    }
+
+    /**
+     * Ensures that getMessages() returns expected default value
+     */
+    public function testGetMessages(): void
+    {
+        $validator = new Regex('/./');
+
+        self::assertSame([], $validator->getMessages());
+    }
+
+    /**
+     * Ensures that getPattern() returns expected value
+     */
+    public function testGetPattern(): void
+    {
+        $validator = new Regex('/./');
+
+        self::assertSame('/./', $validator->getPattern());
+    }
+
+    /**
+     * Ensures that a bad pattern results in a thrown exception upon isValid() call
+     */
+    public function testBadPattern(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('Internal error parsing');
+
+        new Regex('/');
+    }
+
+    /**
+     * @Laminas-4352
+     */
+    public function testNonStringValidation(): void
+    {
+        $validator = new Regex('/./');
+
+        self::assertFalse($validator->isValid([1 => 1]));
+    }
+
+    /**
+     * @Laminas-11863
+     */
+    #[DataProvider('specialCharValidationProvider')]
+    public function testSpecialCharValidation(bool $expected, string $input): void
+    {
+        $validator = new Regex('/^[[:alpha:]\']+$/iu');
+
+        self::assertSame(
+            $expected,
+            $validator->isValid($input),
+            'Reason: ' . implode('', $validator->getMessages())
+        );
+    }
+
+    /**
+     * The elements of each array are, in order:
+     *      - expected validation result
+     *      - test input value
+     *
+     * @psalm-return array<array-key, array{0: bool, 1: string}>
+     */
+    public static function specialCharValidationProvider(): array
+    {
+        return [
+            [true, 'test'],
+            [true, 'òèùtestòò'],
+            [true, 'testà'],
+            [true, 'teààst'],
+            [true, 'ààòòìùéé'],
+            [true, 'èùòìiieeà'],
+            [false, 'test99'],
+        ];
+    }
+
+    public function testEqualsMessageTemplates(): void
+    {
+        $validator = new Regex('//');
+
+        self::assertSame(
+            [
+                Regex::INVALID,
+                Regex::NOT_MATCH,
+                Regex::ERROROUS,
+            ],
+            array_keys($validator->getMessageTemplates())
+        );
+        self::assertSame($validator->getOption('messageTemplates'), $validator->getMessageTemplates());
+    }
+
+    public function testEqualsMessageVariables(): void
+    {
+        $validator        = new Regex('//');
+        $messageVariables = [
+            'pattern' => 'pattern',
+        ];
+
+        self::assertSame($messageVariables, $validator->getOption('messageVariables'));
+    }
+
+    /**
+     * @psalm-return array<string, array{0: mixed, 1: non-empty-string}>
+     */
+    public static function invalidConstructorArgumentsProvider(): array
+    {
+        return [
+            'true'                     => [true, 'Invalid options provided to constructor'],
+            'false'                    => [false, 'Invalid options provided to constructor'],
+            'zero'                     => [0, 'Invalid options provided to constructor'],
+            'int'                      => [1, 'Invalid options provided to constructor'],
+            'zero-float'               => [0.0, 'Invalid options provided to constructor'],
+            'float'                    => [1.0, 'Invalid options provided to constructor'],
+            'object'                   => [(object) [], 'Invalid options provided to constructor'],
+            'empty-string'             => ['', 'Internal error parsing the pattern'],
+            'missing-pattern-key'      => [[], "Missing option 'pattern'"],
+            'pattern-key-not-string'   => [['pattern' => false], "Missing option 'pattern'"],
+            'pattern-key-empty-string' => [['pattern' => ''], "Missing option 'pattern'"],
+        ];
+    }
+
+    #[DataProvider('invalidConstructorArgumentsProvider')]
+    public function testConstructorRaisesExceptionWhenProvidedInvalidArguments(
+        mixed $options,
+        string $expectedMessage,
+    ): void {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage($expectedMessage);
+
+        new Regex($options);
+    }
+
+    public function testConstructorRaisesExceptionWhenProvidedWithInvalidOptionsArray(): void
+    {
+        $options = ['foo' => 'bar'];
+
+        $this->expectException(InvalidArgumentException::class);
+
+        new Regex($options);
+    }
+
+    public function testIsValidShouldReturnFalseWhenRegexPatternIsInvalid(): void
+    {
+        $validator = new Regex('//');
+        $pattern   = '/';
+
+        $r = new ReflectionProperty($validator, 'pattern');
+        $r->setValue($validator, $pattern);
+
+        self::assertFalse($validator->isValid('test'));
+    }
+}

@@ -1,6 +1,12 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Laminas\Form\Annotation;
+
+use Attribute;
+use Doctrine\Common\Annotations\Annotation;
+use Doctrine\Common\Annotations\Annotation\NamedArgumentConstructor;
 
 /**
  * Attributes annotation
@@ -9,16 +15,23 @@ namespace Laminas\Form\Annotation;
  * the related form object (element, fieldset, or form).
  *
  * @Annotation
+ * @NamedArgumentConstructor
  */
-class Attributes extends AbstractArrayAnnotation
+#[Attribute]
+final readonly class Attributes
 {
     /**
-     * Retrieve the attributes
-     *
-     * @return null|array
+     * Receive and process the contents of an annotation
      */
-    public function getAttributes()
+    public function __construct(private array $attributes)
     {
-        return $this->value;
+    }
+
+    /**
+     * Retrieve the attributes
+     */
+    public function getAttributes(): array
+    {
+        return $this->attributes;
     }
 }

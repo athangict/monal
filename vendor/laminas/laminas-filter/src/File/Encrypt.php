@@ -16,6 +16,9 @@ use function is_writable;
 
 /**
  * Encrypts a given file and stores the encrypted file content
+ *
+ * @deprecated Since 2.24.0. This filter will be removed in 3.0. You are encouraged to use an alternative encryption
+ *             library and write your own filter.
  */
 class Encrypt extends Filter\Encrypt
 {
@@ -89,14 +92,14 @@ class Encrypt extends Filter\Encrypt
         }
 
         $content = file_get_contents($value);
-        if (! $content) {
+        if ($content === false) {
             throw new Exception\RuntimeException("Problem while reading file '$value'");
         }
 
         $encrypted = parent::filter($content);
         $result    = file_put_contents($this->filename, $encrypted);
 
-        if (! $result) {
+        if ($result === false) {
             throw new Exception\RuntimeException("Problem while writing file '{$this->filename}'");
         }
 

@@ -11,6 +11,9 @@ use Acl\Model As Acl;
 
 class MasterController extends AbstractActionController
 {   
+	protected $_connection;
+	protected $_highest_role;
+	protected $_lowest_role;
 	private $_container;
 	protected $_table; 		// database table 
     protected $_user; 		// user detail
@@ -152,7 +155,7 @@ class MasterController extends AbstractActionController
 	{
 		$this->init();
 		$id = $this->_id;
-		$array_id = explode("_", $id);
+		$array_id = explode("_", (string) $id);
 		$currency_id = $array_id[0];
 		$page = (sizeof($array_id)>1)?$array_id[1]:'';
 		
@@ -245,7 +248,7 @@ class MasterController extends AbstractActionController
 	{
 		$this->init();
 		$id = $this->_id;
-		$array_id = explode("_", $id);
+		$array_id = explode("_", (string) $id);
 		$block_id = $array_id[0];
 		$page = (sizeof($array_id)>1)?$array_id[1]:'';
 		if($this->getRequest()->isPost()){

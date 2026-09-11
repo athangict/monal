@@ -6,8 +6,9 @@ namespace Laminas\Router\Http;
 
 use Laminas\Router\Exception;
 use Laminas\Stdlib\ArrayUtils;
-use Laminas\Stdlib\RequestInterface as Request;
+use Laminas\Stdlib\RequestInterface;
 use Laminas\Uri\UriInterface;
+use Override;
 use Traversable;
 
 use function array_merge;
@@ -21,13 +22,31 @@ use function strlen;
 
 /**
  * Hostname route.
+ *
+ * Note: the following type is recursive, but Psalm doesn't understand array shape recursion (yet). For now, we only
+ *       represented recursion of the 'optional' part type to 1 level, to ease analysis.
+ *
+ * @psalm-type Parts = list<
+ *     array{
+ *      'literal',
+ *      string,
+ *      string|null
+ *     }|array{
+ *      'parameter',
+ *      string
+ *     }|array{
+ *      'optional',
+ *      list<array{'literal', string, string|null}|array{'parameter', string}|array{'optional', array}>
+ *     }
+ * >
+ * @final
  */
-class Hostname implements RouteInterface
+class Hostname implements HttpRouteInterface
 {
     /**
      * Parts of the route.
      *
-     * @var array
+     * @var Parts
      */
     protected $parts;
 
@@ -55,16 +74,22 @@ class Hostname implements RouteInterface
     /**
      * List of assembled parameters.
      *
-     * @var array
+     * @var list<string>
      */
     protected $assembledParams = [];
+
+    /**
+     * @internal
+     * @deprecated Since 3.9.0 This property will be removed or made private in version 4.0
+     *
+     * @var int|null
+     */
+    public $priority;
 
     /**
      * Create a new hostname route.
      *
      * @param  string $route
-     * @param  array  $constraints
-     * @param  array  $defaults
      */
     public function __construct($route, array $constraints = [], array $defaults = [])
     {
@@ -74,14 +99,10 @@ class Hostname implements RouteInterface
     }
 
     /**
-     * factory(): defined by RouteInterface interface.
-     *
-     * @see    \Laminas\Router\RouteInterface::factory()
-     *
-     * @param  array|Traversable $options
-     * @return Hostname
+     * @inheritDoc
      * @throws Exception\InvalidArgumentException
      */
+    #[Override]
     public static function factory($options = [])
     {
         if ($options instanceof Traversable) {
@@ -112,7 +133,7 @@ class Hostname implements RouteInterface
      * Parse a route definition.
      *
      * @param  string $def
-     * @return array
+     * @return Parts
      * @throws Exception\RuntimeException
      */
     protected function parseRouteDefinition($def)
@@ -124,13 +145,13 @@ class Hostname implements RouteInterface
         $level      = 0;
 
         while ($currentPos < $length) {
-            if (! preg_match('(\G(?P<literal>[a-z0-9-.]*)(?P<token>[:{\[\]]|$))', $def, $matches, 0, $currentPos)) {
+            if (! preg_match('(\G(?P<literal>[a-z0-9-.]*)(?P<token>[:\[\]]|$))', $def, $matches, 0, $currentPos)) {
                 throw new Exception\RuntimeException('Matched hostname literal contains a disallowed character');
             }
 
             $currentPos += strlen($matches[0]);
 
-            if (! empty($matches['literal'])) {
+            if (isset($matches['literal']) && $matches['literal'] !== '') {
                 $levelParts[$level][] = ['literal', $matches['literal']];
             }
 
@@ -181,9 +202,8 @@ class Hostname implements RouteInterface
     /**
      * Build the matching regex from parsed parts.
      *
-     * @param  array   $parts
-     * @param  array   $constraints
-     * @param  int $groupIndex
+     * @param Parts $parts
+     * @param int   $groupIndex
      * @return string
      * @throws Exception\RuntimeException
      */
@@ -223,9 +243,9 @@ class Hostname implements RouteInterface
     /**
      * Build host.
      *
-     * @param  array   $parts
-     * @param  array   $mergedParams
-     * @param  bool    $isOptional
+     * @param Parts                 $parts
+     * @param array<string, string> $mergedParams
+     * @param bool                  $isOptional
      * @return string
      * @throws Exception\RuntimeException
      * @throws Exception\InvalidArgumentException
@@ -284,13 +304,10 @@ class Hostname implements RouteInterface
     }
 
     /**
-     * match(): defined by RouteInterface interface.
-     *
-     * @see    \Laminas\Router\RouteInterface::match()
-     *
-     * @return RouteMatch|null
+     * @inheritDoc
      */
-    public function match(Request $request)
+    #[Override]
+    public function match(RequestInterface $request)
     {
         if (! method_exists($request, 'getUri')) {
             return null;
@@ -314,18 +331,13 @@ class Hostname implements RouteInterface
             }
         }
 
-        return new RouteMatch(array_merge($this->defaults, $params));
+        return new HttpRouteMatch(array_merge($this->defaults, $params));
     }
 
     /**
-     * assemble(): Defined by RouteInterface interface.
-     *
-     * @see    \Laminas\Router\RouteInterface::assemble()
-     *
-     * @param  array $params
-     * @param  array $options
-     * @return mixed
+     * @inheritDoc
      */
+    #[Override]
     public function assemble(array $params = [], array $options = [])
     {
         $this->assembledParams = [];
@@ -345,12 +357,13 @@ class Hostname implements RouteInterface
     }
 
     /**
-     * getAssembledParams(): defined by RouteInterface interface.
+     * @deprecated Since 3.19.0. This method will be removed in 4.0 and assembled parameters
+     * will be available on the value object that will be returned from assemble().
+     * There is not a forward compatible way to replace usage of this method.
      *
-     * @see    RouteInterface::getAssembledParams
-     *
-     * @return array
+     * @inheritDoc
      */
+    #[Override]
     public function getAssembledParams()
     {
         return $this->assembledParams;

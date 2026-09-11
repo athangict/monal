@@ -10,10 +10,10 @@ use Laminas\ServiceManager\Config as ServiceConfig;
 use Laminas\ServiceManager\ConfigInterface as ServiceConfigInterface;
 use Laminas\ServiceManager\ServiceManager;
 use Laminas\Stdlib\ArrayUtils;
+use Override;
 use Traversable;
 
 use function class_exists;
-use function get_class;
 use function gettype;
 use function is_array;
 use function is_object;
@@ -36,13 +36,6 @@ class ServiceListener implements ServiceListenerInterface
     protected $listeners = [];
 
     /**
-     * Default service manager used to fulfill other SMs that need to be lazy loaded
-     *
-     * @var ServiceManager
-     */
-    protected $defaultServiceManager;
-
-    /**
      * Default service configuration for the application service manager.
      *
      * @var array
@@ -53,10 +46,13 @@ class ServiceListener implements ServiceListenerInterface
     protected $serviceManagers = [];
 
     /** @param null|array $configuration */
-    public function __construct(ServiceManager $serviceManager, $configuration = null)
-    {
-        $this->defaultServiceManager = $serviceManager;
-
+    public function __construct(
+        /**
+         * Default service manager used to fulfill other SMs that need to be lazy loaded
+         */
+        protected ServiceManager $defaultServiceManager,
+        $configuration = null
+    ) {
         if ($configuration !== null) {
             $this->setDefaultServiceConfig($configuration);
         }
@@ -66,6 +62,7 @@ class ServiceListener implements ServiceListenerInterface
      * @param  array $configuration
      * @return ServiceListener
      */
+    #[Override]
     public function setDefaultServiceConfig($configuration)
     {
         $this->defaultServiceConfig = $configuration;
@@ -73,6 +70,7 @@ class ServiceListener implements ServiceListenerInterface
     }
 
     /** {@inheritDoc} */
+    #[Override]
     public function addServiceManager($serviceManager, $key, $moduleInterface, $method)
     {
         if (is_string($serviceManager)) {
@@ -82,7 +80,7 @@ class ServiceListener implements ServiceListenerInterface
         } else {
             throw new Exception\RuntimeException(sprintf(
                 'Invalid service manager provided, expected ServiceManager or string, %s provided',
-                is_object($serviceManager) ? get_class($serviceManager) : gettype($serviceManager)
+                is_object($serviceManager) ? $serviceManager::class : gettype($serviceManager)
             ));
         }
 
@@ -105,6 +103,7 @@ class ServiceListener implements ServiceListenerInterface
      * @param  int $priority
      * @return ServiceListener
      */
+    #[Override]
     public function attach(EventManagerInterface $events, $priority = 1)
     {
         $this->listeners[] = $events->attach(ModuleEvent::EVENT_LOAD_MODULE, [$this, 'onLoadModule']);
@@ -113,6 +112,7 @@ class ServiceListener implements ServiceListenerInterface
     }
 
     /** @return void */
+    #[Override]
     public function detach(EventManagerInterface $events)
     {
         foreach ($this->listeners as $key => $listener) {
@@ -243,7 +243,7 @@ class ServiceListener implements ServiceListenerInterface
         if (! $config instanceof ServiceConfigInterface) {
             throw new Exception\RuntimeException(sprintf(
                 'Invalid service manager configuration class provided; received "%s", expected an instance of %s',
-                is_object($config) ? get_class($config) : (is_scalar($config) ? $config : gettype($config)),
+                is_object($config) ? $config::class : (is_scalar($config) ? $config : gettype($config)),
                 ServiceConfigInterface::class
             ));
         }
@@ -258,7 +258,7 @@ class ServiceListener implements ServiceListenerInterface
         if (! $config instanceof ServiceConfig) {
             throw new Exception\RuntimeException(sprintf(
                 'Invalid service manager configuration class provided; received "%s", expected an instance of %s',
-                is_object($config) ? get_class($config) : (is_scalar($config) ? $config : gettype($config)),
+                is_object($config) ? $config::class : (is_scalar($config) ? $config : gettype($config)),
                 ServiceConfig::class
             ));
         }

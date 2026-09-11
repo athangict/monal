@@ -80,14 +80,14 @@
 					<td><?php echo ($row['action_performed']=='0')?"Initial":$this->flowactionObj->getColumn($row['action_performed'],'action'); ?></td>
 					<td><?php echo $this->status($row['status_changed_to']); ?></td>
 					<td><?php echo ($row['route_to_role']=='0')?'-':$this->roleObj->getColumn($row['route_to_role'],'role');?></td>
-					<td><?php $btn_array = explode("|", $row['action']);
+					<td><?php $btn_array = explode("|", (string) $row['action']);
 						for($j=0;$j<sizeof($btn_array);$j++):
 							echo '"'.$this->flowactionObj->getColumn($btn_array[$j],'action').'"';
 							echo ($j != sizeof($btn_array)-1)?" | ":"";
 						endfor;
 					?></td>
 					<td><?php echo $row['description']; ?></td>
-					<td class="fst-italic"><?php $notification_array = explode("|", $row['route_notification_to']);
+					<td class="fst-italic"><?php $notification_array = explode("|", (string) $row['route_notification_to']);
 						for($k=0;$k<sizeof($notification_array);$k++):
 							if($notification_array[$k]):
 								echo $this->roleObj->getColumn($notification_array[$k],'role');

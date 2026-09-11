@@ -91,6 +91,8 @@
 											<th>Receipt Amount</th>
 											<th>Discount</th>
 											<th>Net Amount</th>
+											<th>GST Amount</th>
+											<th>Total Amount</th>
 										
 										</tr>
 									</thead>
@@ -99,6 +101,8 @@
 											<td><?php echo $receipt_amt;?></td>
 											<td><?php echo $discount?></td>
 											<td><?php echo $net_amount?></td>
+											<td><?php echo $sup_gst?></td>
+											<td><?php echo $sup_total?></td>
 										</tr>
 									</tbody>
 								</table>
@@ -106,46 +110,70 @@
 						</div>
 					</div>
 					<div class="row">
-						<div class="col-lg-3">
+						<div class="col-lg-2">
 							<label class="control-label" for="freight_party">Freight Party: </label>
 							<input class="form-control" name="freight_party" id="freight_party" value="<?php if($freight_party==-1){echo "";}else{echo $this->partyObj->getColumn($freight_party,'name');}?>" readonly>
 						</div>
-						<div class="col-lg-3">
+						<div class="col-lg-2">
 							<label class="control-label" for="freight">Amount: </label>
 							<input class="form-control" name="freight" id="freight" value="<?php echo $freight;?>" readonly>
 						</div>
-						<div class="col-lg-3">
+						<div class="col-lg-2">
+							<label class="control-label" for="freight_gst">GST: </label>
+							<input class="form-control" name="freight_gst" id="freight_gst" value="<?php echo $freight_gst;?>" readonly>
+						</div>
+						<div class="col-lg-2">
+							<label class="control-label" for="freight_total">Total: </label>
+							<input class="form-control" name="freight_total" id="freight_total" value="<?php echo $freight_total;?>" readonly>
+						</div>
+						<div class="col-lg-2">	
 							<label class="control-label" for="freight_ref">Reference No: </label>
 							<input class="form-control" name="freight_ref" id="freight_ref" value="<?php echo $freight_ref;?>" readonly>
 						</div>
 					</div>
 					<div class="row">
-						<div class="col-lg-3">
+						<div class="col-lg-2">
 							<label class="control-label" for="tax_party">Tax Party: </label>
 							<input class="form-control" name="tax_party" id="tax_party" value="<?php if($tax_party==-1){echo "";}else{echo $this->partyObj->getColumn($tax_party,'name');}?>" readonly>
 						</div>
-						<div class="col-lg-3">
+						<div class="col-lg-2">
 							<label class="control-label" for="tax">Amount: </label>
 							<input class="form-control" name="tax" id="tax" value="<?php echo $tax;?>" readonly>
 						</div>
-						<div class="col-lg-3">
+						<div class="col-lg-2">
+							<label class="control-label" for="tax_gst">GST: </label>
+							<input class="form-control" name="tax_gst" id="tax_gst" value="<?php echo $tax_gst;?>" readonly>
+						</div>
+						<div class="col-lg-2">
+							<label class="control-label" for="tax_total">Total: </label>
+							<input class="form-control" name="tax_total" id="tax_total" value="<?php echo $tax_total;?>" readonly>
+						</div>
+						<div class="col-lg-2">
 							<label class="control-label" for="tax_ref">Reference No: </label>
 							<input class="form-control" name="tax_ref" id="tax_ref" value="<?php echo $tax_ref;?>" readonly>
 						</div>
 					</div>
 					<br><br>
 					<div class="row">
-						<div class="col-lg-6"></div>
-						<div class="col-lg-3">
+						<div class="col-lg-4"></div>
+						<div class="col-lg-2">
 							<label class="control-label" for="gross">Total: </label>
 							<input class="form-control" name="gross" id="gross" value="<?php echo $total;?>" readonly>
+						</div>
+						<div class="col-lg-2">
+							<label class="control-label" for="gross">Total GST: </label>
+							<input class="form-control" name="gross" id="gross" value="<?php echo $total_gst;?>" readonly>
+						</div>
+						<div class="col-lg-2">
+							<label class="control-label" for="gross">Grand Total: </label>
+							<input class="form-control" name="gross" id="gross" value="<?php echo $grand_tot;?>" readonly>
 						</div>
 					</div>
 					<br>
 					<div class="row">
 						<div class="col-lg-12" style="text-align: right">		
 							<?php $role = $this->userTable->getColumn($userID,'role');?>
-							<?php if($status == '2' &&  $user_locs == $location && $role==2):?>
+							<?php if($status == '2' &&  $user_locs == $location):?>
 									<a href="<?php echo $this->url('billing', array('action'=>'editbill', 'id'=>$id));?>" class="btn btn-info"> <i class="fa fa-pencil"></i> Edit </a>
 									<a data-toggle="modal" data-target="#modal" href="<?php echo $this->url('billing', array('action'=>'processbill', 'id'=>$id.'-1'));?>" class="btn btn-success">
 									  <i class="fa fa-check-square-o"></i> Send Bill
@@ -160,7 +188,7 @@
 					</div>	
 					 <!-- Upload and Download file attachments -->			
 					 <?php   
-					   echo $this->partial('partial/attachment.phtml', array('process' => '703', 'process_id'=> $bill_no , 'status' => $status));
+					   echo $this->partial('partial/attachment.phtml', array('process' => '703', 'process_id'=> $id , 'status' => $status));
 					?>					
 				    <!-- End of attachment -->
 				</div>

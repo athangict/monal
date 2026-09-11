@@ -1,0 +1,12 @@
+docs_dir: docs/book
+site_dir: docs/html
+nav:
+    - Home: index.md
+    - Intro: intro.md
+    - Usage: usage.md
+    - Adapters: adapters.md
+site_name: laminas-captcha
+site_description: laminas-captcha
+repo_url: 'https://github.com/laminas/laminas-captcha'
+extra:
+    project: Components

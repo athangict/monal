@@ -168,7 +168,7 @@ if(sizeof($current_flow) > 0){
 										foreach($current_flow as $flow);
 										if($flow['actor']==$role):
 										//echo '<pre>';print_r($current_flow);
-										$actions = explode('|', $flow['action']);
+										$actions = explode('|', (string) $flow['action']);
 										for($i=0; $i < sizeof($actions); $i++):
 											$buttons = $this->flowactionObj->get($actions[$i]);
 											foreach($buttons as $button):?>

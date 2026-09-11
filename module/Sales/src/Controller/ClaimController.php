@@ -12,6 +12,8 @@ use Acl\Model As Acl;
 use Accounts\Model As Accounts;
 class ClaimController extends AbstractActionController
 {
+	protected $_connection;
+	protected $_safedataObj;
 	private $_container;
 	protected $_table; 		// database table
 	protected $_user; 		// user detail

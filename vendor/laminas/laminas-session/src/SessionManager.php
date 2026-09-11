@@ -9,10 +9,12 @@ use Traversable;
 
 use function array_key_exists;
 use function array_merge;
+use function assert;
 use function constant;
 use function defined;
 use function headers_sent;
 use function is_array;
+use function is_string;
 use function iterator_to_array;
 use function preg_match;
 use function register_shutdown_function;
@@ -30,6 +32,8 @@ use const PHP_SESSION_ACTIVE;
 
 /**
  * Session ManagerInterface implementation utilizing ext/session
+ *
+ * @final
  */
 class SessionManager extends AbstractManager
 {
@@ -38,6 +42,8 @@ class SessionManager extends AbstractManager
      * - send_expire_cookie: whether or not to send a cookie expiring the current session cookie
      * - clear_storage: whether or not to empty the storage object of any stored values
      *
+     * @deprecated This property will be removed in version 3.0
+     *
      * @var array
      */
     protected $defaultDestroyOptions = [
@@ -45,12 +51,20 @@ class SessionManager extends AbstractManager
         'clear_storage'      => false,
     ];
 
-    /** @var array Default session manager options */
+    /**
+     * @deprecated This property will be removed in version 3.0
+     *
+     * @var array Default session manager options
+     */
     protected $defaultOptions = [
         'attach_default_validators' => true,
     ];
 
-    /** @var array Default validators */
+    /**
+     * @deprecated This property will be removed in version 3.0
+     *
+     * @var array Default validators
+     */
     protected $defaultValidators = [
         Validator\Id::class,
     ];
@@ -64,8 +78,6 @@ class SessionManager extends AbstractManager
     /**
      * Constructor
      *
-     * @param  array                                 $validators
-     * @param  array                                 $options
      * @throws Exception\RuntimeException
      */
     public function __construct(
@@ -94,13 +106,16 @@ class SessionManager extends AbstractManager
         if (session_status() === PHP_SESSION_ACTIVE) {
             return true;
         }
+
+        /**
+         * @var string|false $sid
+         */
         $sid = defined('SID') ? constant('SID') : false;
+
         if ($sid !== false && $this->getId()) {
             return true;
         }
-        if (headers_sent()) {
-            return true;
-        }
+
         return false;
     }
 
@@ -169,6 +184,8 @@ class SessionManager extends AbstractManager
 
     /**
      * Create validators, insert reference value and add them to the validator chain
+     *
+     * @deprecated This method will be removed in version 3.0
      */
     protected function initializeValidatorChain()
     {
@@ -194,7 +211,9 @@ class SessionManager extends AbstractManager
      */
     public function destroy(?array $options = null)
     {
-        if (! $this->sessionExists()) {
+        // session_destroy() requires active session while method
+        // $this->sessionExists() includes other conditions
+        if (session_status() !== PHP_SESSION_ACTIVE) {
             return;
         }
 
@@ -205,7 +224,7 @@ class SessionManager extends AbstractManager
         }
 
         session_destroy();
-        if ($options['send_expire_cookie']) {
+        if (! headers_sent() && $options['send_expire_cookie']) {
             $this->expireSessionCookie();
         }
 
@@ -286,7 +305,10 @@ class SessionManager extends AbstractManager
             // validation routine; additionally, calling setName() after
             // session_start() can lead to issues, and often we just need the name
             // in order to do things such as setting cookies.
-            $this->name = session_name();
+            $name = session_name();
+            assert(is_string($name));
+
+            $this->name = $name;
         }
         return $this->name;
     }
@@ -319,7 +341,9 @@ class SessionManager extends AbstractManager
      */
     public function getId()
     {
-        return session_id();
+        $ret = session_id();
+        assert(is_string($ret));
+        return $ret;
     }
 
     /**
@@ -375,6 +399,8 @@ class SessionManager extends AbstractManager
      *
      * In most cases, you should use an instance of {@link ValidatorChain}.
      *
+     * @deprecated This method will be removed in version 3.0
+     *
      * @return SessionManager
      */
     public function setValidatorChain(EventManagerInterface $chain)
@@ -387,6 +413,8 @@ class SessionManager extends AbstractManager
      * Get the validator chain to use when validating a session
      *
      * By default, uses an instance of {@link ValidatorChain}.
+     *
+     * @deprecated This method will be removed in version 3.0
      *
      * @return EventManagerInterface
      */

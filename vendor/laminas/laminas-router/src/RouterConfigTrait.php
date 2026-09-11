@@ -9,13 +9,17 @@ use Psr\Container\ContainerInterface;
 use function class_exists;
 use function sprintf;
 
+/**
+ * @internal
+ *
+ * @final
+ */
 trait RouterConfigTrait
 {
     /**
      * Create and return a router instance, by calling the appropriate factory.
      *
      * @param string $class
-     * @param array $config
      * @return RouteInterface
      */
     private function createRouter($class, array $config, ContainerInterface $container)

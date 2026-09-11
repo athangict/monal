@@ -31,8 +31,8 @@ class PurchaseOrderTable extends AbstractTableGateway
 	    $sql = new Sql($adapter);
 	    $select = $sql->select();
 	    $select->from(array('po'=>$this->table))
-	    	   ->join(array('l'=>'sys_location'),'l.id = po.location', array('location'=>'location','location_id' => 'id'))
-	           ->join(array('a'=>'sys_activity'),'a.id = po.cost_center', array('cost_center'=>'activity','cost_center_id' => 'id'))
+	    	   ->join(array('l'=>'adm_location'),'l.id = po.location', array('location'=>'location','location_id' => 'id'))
+	           ->join(array('a'=>'adm_activity'),'a.id = po.cost_center', array('cost_center'=>'activity','cost_center_id' => 'id'))
 	    	   ->order(array('id DESC'));
 	    
 	    $selectString = $sql->getSqlStringForSqlObject($select);
@@ -81,8 +81,8 @@ class PurchaseOrderTable extends AbstractTableGateway
 		$sql = new Sql($adapter);
 		$select = $sql->select();
 		$select->from(array('po'=>$this->table))
-			    ->join(array('l'=>'sys_location'),'l.id = po.location', array('location'=>'location','location_id' => 'id'))
-			    ->join(array('a'=>'sys_activity'),'a.id = po.cost_center', array('cost_center'=>'activity','cost_center_id' => 'id'))
+			    ->join(array('l'=>'adm_location'),'l.id = po.location', array('location'=>'location','location_id' => 'id'))
+			    ->join(array('a'=>'adm_activity'),'a.id = po.cost_center', array('cost_center'=>'activity','cost_center_id' => 'id'))
 			    ->join(array('ig'=>'in_item_group'),'ig.id = po.item_group', array('item_group'=>'name','item_group_id' => 'id'))
 		        ->where($where)
 				->order(array('id DESC'));		

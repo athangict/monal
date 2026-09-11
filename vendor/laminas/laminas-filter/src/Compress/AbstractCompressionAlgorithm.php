@@ -12,14 +12,20 @@ use function method_exists;
 
 /**
  * Abstract compression adapter
+ *
+ * @deprecated Since 2.40.0 Compression adapters will be split into multiple interfaces to clearly separate the
+ *             capability of the underlying compression or archive format. For example, tar cannot compress strings and
+ *             GZ cannot be used to create multi-file archives.
+ *
+ * @template TOptions of array
  */
 abstract class AbstractCompressionAlgorithm implements CompressionAlgorithmInterface
 {
-    /** @var array */
+    /** @var TOptions */
     protected $options = [];
 
     /**
-     * @param null|array|Traversable $options (Optional) Options to set
+     * @param null|iterable $options (Optional) Options to set
      */
     public function __construct($options = null)
     {
@@ -37,6 +43,7 @@ abstract class AbstractCompressionAlgorithm implements CompressionAlgorithmInter
      *
      * @param  string|null $option Option to return
      * @return mixed
+     * @psalm-return ($option is null ? TOptions : mixed)
      */
     public function getOptions($option = null)
     {
@@ -54,7 +61,6 @@ abstract class AbstractCompressionAlgorithm implements CompressionAlgorithmInter
     /**
      * Sets all or one option
      *
-     * @param  array $options
      * @return self
      */
     public function setOptions(array $options)

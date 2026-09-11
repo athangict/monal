@@ -17,6 +17,9 @@ use Accounts\Model As Accounts;
 
 class AreportController extends AbstractActionController
 {   
+	protected $_connection;
+	protected $_highest_role;
+	protected $_lowest_role;
 	private $_container;
 	protected $_table; 		// database table 
     protected $_user; 		// user detail

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Laminas\Form;
 
 interface ElementAttributeRemovalInterface
@@ -7,23 +9,22 @@ interface ElementAttributeRemovalInterface
     /**
      * Remove a single element attribute
      *
-     * @param  string $key
-     * @return $this
+     * @return self
      */
-    public function removeAttribute($key);
+    public function removeAttribute(string $key);
 
     /**
      * Remove many attributes at once
      *
-     * @param array $keys
-     * @return $this
+     * @param list<string> $keys
+     * @return self
      */
     public function removeAttributes(array $keys);
 
     /**
      * Remove all attributes at once
      *
-     * @return $this
+     * @return self
      */
     public function clearAttributes();
 }

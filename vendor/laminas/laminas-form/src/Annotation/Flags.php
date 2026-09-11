@@ -1,6 +1,12 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Laminas\Form\Annotation;
+
+use Attribute;
+use Doctrine\Common\Annotations\Annotation;
+use Doctrine\Common\Annotations\Annotation\NamedArgumentConstructor;
 
 /**
  * Flags annotation
@@ -12,16 +18,23 @@ namespace Laminas\Form\Annotation;
  * The value should be an associative array.
  *
  * @Annotation
+ * @NamedArgumentConstructor
  */
-class Flags extends AbstractArrayAnnotation
+#[Attribute]
+final readonly class Flags
 {
     /**
-     * Retrieve the flags
-     *
-     * @return null|array
+     * Receive and process the contents of an annotation
      */
-    public function getFlags()
+    public function __construct(private array $flags)
     {
-        return $this->value;
+    }
+
+    /**
+     * Retrieve the flags
+     */
+    public function getFlags(): array
+    {
+        return $this->flags;
     }
 }

@@ -140,7 +140,7 @@ class AdvanceSalaryTable extends AbstractTableGateway
 	 * @param String $column
 	 * @return String | Int
 	 */
-	public function getMin($where = NULL, $column)
+	public function getMin($where = NULL, $column = NULL)
 	{
 		$adapter = $this->adapter;
 		$sql = new Sql($adapter);
@@ -168,7 +168,7 @@ class AdvanceSalaryTable extends AbstractTableGateway
 	 * @param String $column
 	 * @return String | Int
 	 */
-	public function getMax($where=NULL, $column)
+	public function getMax($where=NULL, $column = NULL)
 	{
 		$adapter = $this->adapter;
 		$sql = new Sql($adapter);

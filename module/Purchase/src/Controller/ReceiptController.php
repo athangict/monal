@@ -27,6 +27,7 @@ class ReceiptController extends AbstractActionController
     protected $_id; 		// route parameter id, usally used by crude
     protected $_auth; 		// checking authentication
     protected $_safedataObj; //safedata controller plugin
+	protected $_connection; // DB transaction connection
 
 	public function __construct(ContainerInterface $container)
     {
@@ -480,7 +481,8 @@ class ReceiptController extends AbstractActionController
 			foreach($this->getDefinedTable(Asset\AssettypeTable::class)->get(array('subhead'=>$podetails['subhead'])) as $asst);
 			//print_r($asst['id']);exit;
 			foreach($pur_receipt_details as $row){
-					$asset=array(
+					for($i=0;$i<$row['accept_qty'];$i++){
+						$asset=array(
 						'name'					=> $row['item'],
 						'code'					=> $row['item'],
 						'purchase_date'				=> $pr['prn_date'],
@@ -491,11 +493,13 @@ class ReceiptController extends AbstractActionController
 						'location'				=> $location,
 						'status'				=> 1, 
 						'author'	    		=> $this->_author,
+						'created'      		=> $this->_created,
 						'modified'      		=> $this->_modified,
 		
 					);
 					$asset=$this->_safedataObj->rteSafe($asset);
 					$asset = $this->getDefinedTable(Asset\AssetmanagementTable::class)->save($asset);
+				}
 				
 			}
 				

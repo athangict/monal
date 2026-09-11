@@ -40,14 +40,14 @@ class BreadcrumbHelper extends AbstractHelper //implements ServiceLocatorAwareIn
 	{  
 		$routeMatch = $this->_container->get('Application')->getMvcEvent()->getRouteMatch();
 		$routeName = $routeMatch->getMatchedRouteName();
-		$arr = explode('/', $routeName);
+		$arr = explode('/', (string) $routeName);
 		$routeName = $arr[0];
 		$routeAction = $routeMatch->getParam('action');	
 		$routeParamID = $routeMatch->getParam('id');
 		$routeResource = $this->aclTable->getColumn(array('route'=>$routeName),'resource');
 		$aclIndex = $this->aclTable->getColumn(array('route'=>$routeName, 'resource' => $routeResource, 'action'=>$routeAction),'tabindex');
 		$breadcrumb = array();
-		for($i = 1; $i <= strlen($aclIndex); $i++):
+		for($i = 1; $i <= strlen((string)($aclIndex)); $i++):
 			foreach($this->aclTable->get(array('tabindex'=>substr($aclIndex,0,$i))) as $menuitem);
 			array_push($breadcrumb, $menuitem);
 		endfor;

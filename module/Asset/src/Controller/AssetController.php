@@ -17,6 +17,9 @@ use Accounts\Model As Accounts;
 
 class AssetController extends AbstractActionController
 {   
+	protected $_connection;
+	protected $_highest_role;
+	protected $_lowest_role;
 	private $_container;
 	protected $_table; 		// database table 
     protected $_user; 		// user detail
@@ -685,7 +688,7 @@ class AssetController extends AbstractActionController
 	 public function generatedepAction()
     {
         $this->init();
-        $my = explode('-', $this->_id);
+        $my = explode('-', (string) $this->_id);
 		$last_day = date('t', strtotime("$my[0]-$my[1]"));
         $asset = $this->getDefinedTable(Asset\AssetmanagementTable::class)->get(array('a.depreciation'=>1,'a.status'=>[1,22]));
 		
@@ -742,7 +745,7 @@ class AssetController extends AbstractActionController
 	 {
 		 $this->init();
 		 if(isset($this->_id) & $this->_id!=0):
-			 $my = explode('-', $this->_id);
+			 $my = explode('-', (string) $this->_id);
 		 endif;
 		 if(sizeof($my)==0):
 			 $my = array('1'); //default selection
@@ -781,7 +784,7 @@ class AssetController extends AbstractActionController
 	public function submitAction()
 	{
 		$this->init(); 
-		$my = explode('-', $this->_id);
+		$my = explode('-', (string) $this->_id);
 		$assets=$this->getDefinedTable(Asset\DepreciationTable::Class)->getDepByMonth($my[0],$my[1],'-1');
 		$this->_connection->beginTransaction();
 		foreach($assets as $ast){

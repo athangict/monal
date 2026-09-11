@@ -12,6 +12,8 @@ use Hr\Model As Hr;
 
 class IndexController extends AbstractActionController
 {
+	protected $_connection;
+	protected $_safedataObj;
 	private $_container;
 	protected $_table; 		// database table
 	protected $_user; 		// user detail

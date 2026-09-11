@@ -12,6 +12,7 @@ use Sales\Model As Sales;
 use Administration\Model As Administration;
 class FundController extends AbstractActionController
 {   
+	protected $_userloc;
 	private $_container;
 	protected $_table; 		// database table 
     protected $_user; 		// user detail

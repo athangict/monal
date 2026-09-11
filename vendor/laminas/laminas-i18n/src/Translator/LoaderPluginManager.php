@@ -9,9 +9,7 @@ use Laminas\ServiceManager\AbstractPluginManager;
 use Laminas\ServiceManager\Exception\InvalidServiceException;
 use Laminas\ServiceManager\Factory\InvokableFactory;
 
-use function get_class;
-use function gettype;
-use function is_object;
+use function get_debug_type;
 use function sprintf;
 
 /**
@@ -56,10 +54,11 @@ use function sprintf;
  *
  * @template InstanceType of RemoteLoaderInterface|FileLoaderInterface
  * @extends AbstractPluginManager<InstanceType>
+ * @final
  */
 class LoaderPluginManager extends AbstractPluginManager
 {
-    /** @var array<string, class-string> */
+    /** @inheritDoc */
     protected $aliases = [
         'gettext'  => Loader\Gettext::class,
         'getText'  => Loader\Gettext::class,
@@ -80,7 +79,7 @@ class LoaderPluginManager extends AbstractPluginManager
         'zendi18ntranslatorloaderphparray' => Loader\PhpArray::class,
     ];
 
-    /** @var array<string, class-string> */
+    /** @inheritDoc */
     protected $factories = [
         Loader\Gettext::class  => InvokableFactory::class,
         Loader\Ini::class      => InvokableFactory::class,
@@ -113,7 +112,7 @@ class LoaderPluginManager extends AbstractPluginManager
 
         throw new InvalidServiceException(sprintf(
             'Plugin of type %s is invalid; must implement %s or %s',
-            is_object($plugin) ? get_class($plugin) : gettype($plugin),
+            get_debug_type($plugin),
             FileLoaderInterface::class,
             RemoteLoaderInterface::class
         ));
@@ -135,10 +134,10 @@ class LoaderPluginManager extends AbstractPluginManager
     {
         try {
             $this->validate($plugin);
-        } catch (InvalidServiceException $e) {
+        } catch (InvalidServiceException) {
             throw new Exception\RuntimeException(sprintf(
                 'Plugin of type %s is invalid; must implement %s or %s',
-                is_object($plugin) ? get_class($plugin) : gettype($plugin),
+                get_debug_type($plugin),
                 FileLoaderInterface::class,
                 RemoteLoaderInterface::class
             ));

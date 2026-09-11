@@ -71,7 +71,7 @@
 											<td class="col-lg-1 input-cell">
 												<div class="form-group" id="item_container">
 													<div class="date input-group" id="date" data-date="<?php echo date('Y-m-d');?>" data-date-format="yyyy-mm-dd" >
-													<?php $date= explode('-', $row['date']);?>
+													<?php $date= explode('-', (string) $row['date']);?>
 														<input class="form-control span2 tr_date" name="date[]" id="date" type="text" value="<?php echo $date[1]."/".$date[2]."/".$date[0];?>" placeholder="TA Claim Date"  >
 														
 													</div>

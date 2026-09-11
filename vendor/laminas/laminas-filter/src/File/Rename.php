@@ -13,6 +13,7 @@ use function basename;
 use function count;
 use function file_exists;
 use function is_array;
+use function is_bool;
 use function is_dir;
 use function is_scalar;
 use function is_string;
@@ -26,10 +27,21 @@ use function unlink;
 
 use const DIRECTORY_SEPARATOR;
 
+/**
+ * @psalm-type Options = array{
+ *     file?: array{source?: string, target?: string, overwrite?: bool, randomize?: bool},
+ *     ...
+ * }
+ * @template TOptions of Options
+ * @template-extends Filter\AbstractFilter<TOptions>
+ * @final
+ */
 class Rename extends Filter\AbstractFilter
 {
     /**
      * Internal array of array(source, target, overwrite)
+     *
+     * @var list<array{source: string, target: string, overwrite: bool, randomize: bool}>
      */
     protected $files = [];
 
@@ -62,7 +74,7 @@ class Rename extends Filter\AbstractFilter
     /**
      * Returns the files to rename and their new name and location
      *
-     * @return array
+     * @return list<array{source: string, target: string, overwrite: bool, randomize: bool}>
      */
     public function getFile()
     {
@@ -78,7 +90,7 @@ class Rename extends Filter\AbstractFilter
      * 'overwrite' => Shall existing files be overwritten?
      * 'randomize' => Shall target files have a random postfix attached?
      *
-     * @param  string|array $options Old file or directory to be rewritten
+     * @param  string|array{source?: string, target?: string, overwrite?: bool, randomize?: bool} $options
      * @return self
      */
     public function setFile($options)
@@ -98,7 +110,7 @@ class Rename extends Filter\AbstractFilter
      * 'overwrite' => Shall existing files be overwritten?
      * 'randomize' => Shall target files have a random postfix attached?
      *
-     * @param  string|array $options Old file or directory to be rewritten
+     * @param  string|array{source?: string, target?: string, overwrite?: bool, randomize?: bool} $options $options
      * @return Rename
      * @throws Exception\InvalidArgumentException
      */
@@ -166,9 +178,9 @@ class Rename extends Filter\AbstractFilter
      * Renames the file $value to the new name set before
      * Returns the file $value, removing all but digit characters
      *
-     * @param  string|array $value Full path of file to change or $_FILES data array
+     * @param  mixed $value Full path of file to change or $_FILES data array
      * @throws Exception\RuntimeException
-     * @return string|array The new filename which has been set
+     * @return mixed|string|array The new filename which has been set
      */
     public function filter($value)
     {
@@ -188,7 +200,7 @@ class Rename extends Filter\AbstractFilter
             $value        = $value['tmp_name'];
         }
 
-        $file = $this->getNewName($value, true);
+        $file = $this->getNewName((string) $value, true);
         if (is_string($file)) {
             if ($isFileUpload) {
                 return $uploadData;
@@ -221,7 +233,7 @@ class Rename extends Filter\AbstractFilter
      * Supports single and nested arrays
      *
      * @param  array $options
-     * @return array
+     * @return $this
      */
     // @codingStandardsIgnoreStart
     protected function _convertOptions($options)
@@ -256,23 +268,23 @@ class Rename extends Filter\AbstractFilter
             }
         }
 
-        if (empty($files)) {
+        if ($files === []) {
             return $this;
         }
 
-        if (empty($files['source'])) {
+        if (! is_string($files['source'] ?? null)) {
             $files['source'] = '*';
         }
 
-        if (empty($files['target'])) {
+        if (! is_string($files['target'] ?? null)) {
             $files['target'] = '*';
         }
 
-        if (empty($files['overwrite'])) {
+        if (! is_bool($files['overwrite'] ?? null)) {
             $files['overwrite'] = false;
         }
 
-        if (empty($files['randomize'])) {
+        if (! is_bool($files['randomize'] ?? null)) {
             $files['randomize'] = false;
         }
 

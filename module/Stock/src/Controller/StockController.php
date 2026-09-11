@@ -384,7 +384,7 @@ class StockController extends AbstractActionController
 				 $next_serial = 1;
 			}
 			
-			switch(strlen($next_serial)){
+			switch(strlen((string)($next_serial))){
 				case 1: $next_code_serial = "000".$next_serial; break;
 				case 2: $next_code_serial = "00".$next_serial;  break;
 				case 3: $next_code_serial = "0".$next_serial;   break;

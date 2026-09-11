@@ -93,7 +93,6 @@ return array(
 					),
 				),
 			),	
-					
 			'report' => array(
 				'type'    => 'Segment',
 				'options' => array(

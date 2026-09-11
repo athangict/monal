@@ -19,8 +19,9 @@
 								<label for="Year" class="control-label">Year</label>
 								<select id="year" name="year" class="form-control" data-placeholder="Select" required>
 									<option value=""></option>
-									<?php for($i=2023; $i < 2024; $i++):  ?>
-									    <option value="<?php echo $i; ?>"><?php echo $i; ?></option>
+									<?php for($i = date('Y'); $i >= (date('Y') - 2); $i--): ?>
+										<?php $selected = ($i == (date('Y') - 1)) ? 'selected' : ''; ?>
+									    <option value="<?php echo $i; ?>" <?php echo $selected; ?>><?php echo $i; ?></option>
 									<?php endfor; ?>
 								</select> 
 							</div>

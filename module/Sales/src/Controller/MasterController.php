@@ -13,6 +13,7 @@ use Sales\Model As Sales;
 
 class MasterController extends AbstractActionController
 {   
+	protected $_connection;
 	private $_container;
 	protected $_table; 		// database table 
     protected $_user; 		// user detail

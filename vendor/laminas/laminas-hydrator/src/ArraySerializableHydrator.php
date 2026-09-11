@@ -11,6 +11,9 @@ use function is_callable;
 use function method_exists;
 use function sprintf;
 
+/**
+ * @final
+ */
 class ArraySerializableHydrator extends AbstractHydrator
 {
     /**

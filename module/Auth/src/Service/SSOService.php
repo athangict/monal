@@ -1,0 +1,502 @@
+<?php
+namespace Auth\Service;
+
+use Firebase\JWT\JWT;
+use Firebase\JWT\Key;
+use Laminas\Http\Client;
+use Laminas\Http\Request;
+use Laminas\Json\Json;
+use Laminas\Session\Container;
+
+class SSOService
+{
+    private const REQUIRED_OPENID_KEYS = [
+        'authorization_endpoint',
+        'token_endpoint',
+        'userinfo_endpoint',
+        'jwks_uri',
+    ];
+
+    private array $config;
+    private Client $httpClient;
+    private Container $session;
+
+    public function __construct(array $config)
+    {
+        $this->httpClient = new Client();
+        $this->session    = new Container('sso_auth');
+        $this->config     = $config;
+
+        // Initialize nested config keys if not set
+        if (! isset($this->config['openid_config'])) {
+            $this->config['openid_config'] = [];
+        }
+
+        // Seed OpenID endpoints from local config so discovery is optional.
+        $this->applyConfiguredOpenIdFallbacks();
+    }
+
+    /**
+     * Lazy-load OpenID configuration from the SSO provider
+     * This is called only when needed, not during construction
+     */
+    private function ensureOpenIdConfigLoaded(): void
+    {
+        // Return early if required config is already loaded.
+        if ($this->hasRequiredOpenIdConfig()) {
+            return;
+        }
+
+        $discoveryUri = trim((string) ($this->config['sso']['openid_configuration_uri'] ?? ''));
+        if ($discoveryUri === '') {
+            throw new \Exception('OpenID discovery URI is missing and local openid_config is incomplete.');
+        }
+
+        try {
+            // Send request to fetch OpenID configuration
+            $request = new Request();
+            $request->setUri($discoveryUri);
+            $request->setMethod(Request::METHOD_GET);
+            $response = $this->httpClient->send($request);
+
+            if (! $response->isSuccess()) {
+                throw new \Exception('Failed to fetch OpenID configuration: ' . $response->getReasonPhrase());
+            }
+
+            // Decode response
+            $discovered = json_decode($response->getBody(), true);
+
+            // Add keys from discovered config without overwriting
+            foreach ($discovered as $key => $value) {
+                if (! array_key_exists($key, $this->config['openid_config'])) {
+                    $this->config['openid_config'][$key] = $value;
+                }
+            }
+
+            // Keep configured endpoint overrides and defaults in place.
+            $this->applyConfiguredOpenIdFallbacks();
+            if (! $this->hasRequiredOpenIdConfig()) {
+                throw new \Exception('OpenID configuration is missing required endpoints after discovery.');
+            }
+        } catch (\Exception $e) {
+            // If manual endpoints are configured, continue without discovery.
+            $this->applyConfiguredOpenIdFallbacks();
+            if ($this->hasRequiredOpenIdConfig()) {
+                return;
+            }
+
+            throw $e;
+        }
+    }
+
+    private function hasRequiredOpenIdConfig(): bool
+    {
+        foreach (self::REQUIRED_OPENID_KEYS as $key) {
+            if (empty($this->config['openid_config'][$key])) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    private function applyConfiguredOpenIdFallbacks(): void
+    {
+        $openid = $this->config['openid_config'] ?? [];
+        $sso    = $this->config['sso'] ?? [];
+
+        $map = [
+            'authorization_endpoint' => $sso['authorization_endpoint'] ?? null,
+            'token_endpoint' => $sso['token_endpoint'] ?? null,
+            'userinfo_endpoint' => $sso['userinfo_endpoint'] ?? null,
+            'jwks_uri' => $sso['jwks_uri'] ?? null,
+            'end_session_endpoint' => $sso['logoutEndpoint'] ?? ($sso['end_session_endpoint'] ?? null),
+        ];
+
+        foreach ($map as $key => $value) {
+            if (! empty($value) && empty($openid[$key])) {
+                $openid[$key] = $value;
+            }
+        }
+
+        if (empty($openid['response_types_supported'])) {
+            $openid['response_types_supported'] = ['code'];
+        }
+        if (empty($openid['scopes_supported'])) {
+            $openid['scopes_supported'] = ['openid profile email'];
+        }
+        if (empty($openid['code_challenge_methods_supported'])) {
+            $openid['code_challenge_methods_supported'] = ['S256'];
+        }
+
+        $this->config['openid_config'] = $openid;
+    }
+
+    private function resolveAuthorizationEndpoint(string $endpoint): string
+    {
+        $endpoint = trim($endpoint);
+        if ($endpoint === '') {
+            return $endpoint;
+        }
+
+        $parts = parse_url($endpoint);
+        $host = strtolower((string) ($parts['host'] ?? ''));
+        $path = (string) ($parts['path'] ?? '');
+
+        // Athang SSO tenant login route consistently preserves callback parameters.
+        if ($host === 'sso.athang.com' && strpos($path, '/protocol/openid-connect/auth') !== false) {
+            $tenantLoginPath = preg_replace('#^/api/(?:auth|console)/t/([^/]+)/protocol/openid-connect/auth$#', '/auth/t/$1/login', $path);
+            if ($tenantLoginPath === $path) {
+                $tenantLoginPath = preg_replace('#/protocol/openid-connect/auth$#', '/login', $path);
+            }
+            if (! empty($tenantLoginPath)) {
+                $scheme = (string) ($parts['scheme'] ?? 'https');
+                $port = isset($parts['port']) ? ':' . $parts['port'] : '';
+                return $scheme . '://' . $host . $port . $tenantLoginPath;
+            }
+        }
+
+        return $endpoint;
+    }
+
+    public function getAuthorizationUrl(string $state = null): string
+    {
+        // Ensure OpenID configuration is loaded before using it
+        $this->ensureOpenIdConfigLoaded();
+
+        $responseType = $this->config['openid_config']['response_types_supported'][0] ?? 'code';
+        $scope        = $this->config['openid_config']['scopes_supported'][0] ?? 'openid profile email';
+        $challenge    = $this->config['openid_config']['code_challenge_methods_supported'][0] ?? 'S256';
+
+        // Generate PKCE parameters
+        $pkce = $this->generatePkceParameters();
+
+        // Store in session for later verification
+        $this->session->state         = $state;
+        $this->session->code_verifier = $pkce['code_verifier'];
+
+        $params = [
+            'client_id'             => $this->getEffectiveClientId(),
+            'response_type'         => $responseType,
+            'scope'                 => $scope,
+            'redirect_uri'          => $this->config['sso']['redirect_uri'],
+            'state'                 => $state,
+            'code_challenge'        => $pkce['code_challenge'],
+            'code_challenge_method' => $challenge,
+        ];
+
+        if ($state) {
+            $params['state'] = $state;
+        }
+
+        $authorizationEndpoint = $this->resolveAuthorizationEndpoint((string) ($this->config['openid_config']['authorization_endpoint'] ?? ''));
+        $url = $authorizationEndpoint . '?' . http_build_query($params);
+        return $url;
+    }
+
+    public function generatePkceParameters(): array
+    {
+                                         // Generate a random 32-byte binary string
+        $randomBytes = random_bytes(32); // Safe: 32 bytes ≈ 43 characters when base64url encoded
+
+        // base64url-encode the code_verifier (RFC 7636)
+        $codeVerifier = $this->base64UrlEncode($randomBytes);
+
+        // Generate code_challenge: SHA256 → base64url
+        $codeChallenge = $this->base64UrlEncode(hash('sha256', $codeVerifier, true));
+
+        return [
+            'code_verifier'  => $codeVerifier,
+            'code_challenge' => $codeChallenge,
+        ];
+    }
+
+    /**
+     * Base64 URL encode
+     */
+    public function base64UrlEncode(string $data): string
+    {
+        return rtrim(strtr(base64_encode($data), '+/', '-_'), '=');
+    }
+
+    public function exchangeCodeForToken(string $code, string $codeVerifier): array
+    {
+        // Ensure OpenID configuration is loaded before using it
+        $this->ensureOpenIdConfigLoaded();
+
+        $this->httpClient->setUri($this->config['openid_config']['token_endpoint']);
+        $this->httpClient->setMethod('POST');
+        $postParams = [
+            'grant_type'    => 'authorization_code',
+            'client_id'     => $this->getEffectiveClientId(),
+            'code'          => $code,
+            'redirect_uri'  => $this->config['sso']['redirect_uri'],
+            'code_verifier' => $codeVerifier,
+        ];
+
+        if (! empty($this->config['sso']['client_secret'])) {
+            $postParams['client_secret'] = $this->config['sso']['client_secret'];
+        }
+
+        $this->httpClient->setParameterPost($postParams);
+
+        $response = $this->httpClient->send();
+
+        if (! $response->isSuccess()) {
+            throw new \Exception('Failed to exchange code for token: ' . $response->getBody());
+        }
+
+        return Json::decode($response->getBody(), Json::TYPE_ARRAY);
+    }
+
+    public function getUserInfo(string $accessToken): array
+    {
+        // Ensure OpenID configuration is loaded before using it
+        $this->ensureOpenIdConfigLoaded();
+
+        $this->httpClient->setUri($this->config['openid_config']['userinfo_endpoint']);
+        $this->httpClient->setMethod('GET');
+        $this->httpClient->setHeaders([
+            'Authorization' => 'Bearer ' . $accessToken,
+        ]);
+
+        $response = $this->httpClient->send();
+
+        if (! $response->isSuccess()) {
+            throw new \Exception('Failed to get user info: ' . $response->getBody());
+        }
+        return Json::decode($response->getBody(), Json::TYPE_ARRAY);
+    }
+
+    public function verifyJwtToken(string $token, string $secret): array
+    {
+        try {
+            $decoded = JWT::decode($token, new Key($secret, 'HS256'));
+            return (array) $decoded;
+        } catch (\Exception $e) {
+            throw new \Exception('Invalid JWT token: ' . $e->getMessage());
+        }
+    }
+
+    public function generateState(): string
+    {
+        return bin2hex(random_bytes(32));
+    }
+
+    public function getLogoutUrl(string $postLogoutRedirectUri = null): string
+    {
+        // Ensure OpenID configuration is loaded before using it
+        $this->ensureOpenIdConfigLoaded();
+
+        if (! isset($this->config['openid_config']['end_session_endpoint']) || empty($this->config['openid_config']['end_session_endpoint'])) {
+            return $postLogoutRedirectUri ?? '/';
+        }
+
+        $params = [
+            'client_id' => $this->getEffectiveClientId(),
+        ];
+
+        if ($postLogoutRedirectUri) {
+            $params['post_logout_redirect_uri'] = $postLogoutRedirectUri;
+        }
+
+        // Add ID token
+        $idToken = $this->session->offsetGet($this->config['session_keys']['id_token']);
+        if ($idToken) {
+            $params['id_token_hint'] = $idToken;
+        }
+
+        return $this->config['openid_config']['end_session_endpoint'] . '?' . http_build_query($params);
+    }
+
+    public function setClientId(?string $clientId): void
+    {
+        $clientId = trim((string) $clientId);
+        if ($clientId === '') {
+            $this->session->offsetUnset('client_id');
+            return;
+        }
+
+        $this->session->offsetSet('client_id', $clientId);
+    }
+
+    private function getEffectiveClientId(): string
+    {
+        $sessionClientId = trim((string) $this->session->offsetGet('client_id'));
+        if ($sessionClientId !== '') {
+            return $sessionClientId;
+        }
+
+        return trim((string) ($this->config['sso']['client_id'] ?? ''));
+    }
+
+    public function initializeConfig(array $config)
+    {
+        // This method is now superseded by lazy loading in ensureOpenIdConfigLoaded()
+        // But keeping it for backward compatibility
+        $this->config = $config;
+        
+        // Initialize config
+        if (! isset($this->config['openid_config'])) {
+            $this->config['openid_config'] = [];
+        }
+
+        try {
+            $this->ensureOpenIdConfigLoaded();
+        } catch (\Exception $e) {
+            // Log error but don't fail - OpenID config will be loaded on first use
+}
+
+        return $this->config;
+    }
+
+    public function getSSOLoginURL()
+    {
+
+        // Generate and store state for CSRF protection
+        $state = $this->generateState();
+        $this->session->state = $state;
+        
+
+        // Get authorization URL
+        $authUrl = $this->getAuthorizationUrl($state);
+        //echo '<pre>';print_r($authUrl);exit;
+        return $authUrl;
+
+    }
+
+    public function storeTokens(array $tokens): void
+    {
+        $keys = $this->config['session_keys'];
+
+        if (isset($tokens['access_token'])) {
+            $this->session->offsetSet($keys['access_token'], $tokens['access_token']);
+        }
+
+        if (isset($tokens['id_token'])) {
+            $this->session->offsetSet($keys['id_token'], $tokens['id_token']);
+        }
+
+        if (isset($tokens['refresh_token'])) {
+            $this->session->offsetSet($keys['refresh_token'], $tokens['refresh_token']);
+        }
+
+    }
+
+    public function getJwkEndpointContent(string $jwksUri): array
+    {
+        $this->httpClient->setUri($jwksUri);
+        $this->httpClient->setMethod('GET');
+
+        $response = $this->httpClient->send();
+
+        if (! $response->isSuccess()) {
+            throw new \Exception('Failed to fetch JWK set: ' . $response->getBody());
+        }
+
+        return Json::decode($response->getBody(), Json::TYPE_ARRAY);
+    }
+
+    public function jwkToPem(array $jwk): string
+    {
+        if (! isset($jwk['n'], $jwk['e'])) {
+            throw new \InvalidArgumentException("JWK must contain 'n' and 'e'.");
+        }
+
+        $modulus  = $this->base64UrlDecode($jwk['n']);
+        $exponent = $this->base64UrlDecode($jwk['e']);
+
+        // Build the DER-encoded ASN.1 structure
+        $modulus             = $this->encodeAsn1Integer($modulus);
+        $exponent            = $this->encodeAsn1Integer($exponent);
+        $sequence            = $this->encodeAsn1Sequence($modulus . $exponent);
+        $bitString           = $this->encodeAsn1BitString($sequence);
+        $algorithmIdentifier = hex2bin("300D06092A864886F70D0101010500"); // rsaEncryption OID
+
+        $publicKeyInfo = $this->encodeAsn1Sequence($algorithmIdentifier . $bitString);
+        $pem           = "-----BEGIN PUBLIC KEY-----\n" .
+        chunk_split(base64_encode($publicKeyInfo), 64, "\n") .
+            "-----END PUBLIC KEY-----\n";
+
+        return $pem;
+
+    }
+
+    private function base64UrlDecode(string $data): string
+    {
+
+        $remainder = strlen($data) % 4;
+        if ($remainder) {
+            $padLength = 4 - $remainder;
+            $data .= str_repeat('=', $padLength);
+        }
+        return base64_decode(strtr($data, '-_', '+/'));
+    }
+
+    public function encodeAsn1Integer(string $value): string
+    {
+        if (ord($value[0]) > 0x7f) {
+            $value = "\x00" . $value;
+        }
+        return "\x02" . $this->encodeLength(strlen($value)) . $value;
+    }
+
+    public function encodeAsn1BitString(string $value): string
+    {
+        return "\x03" . $this->encodeLength(strlen($value) + 1) . "\x00" . $value;
+    }
+
+    public function encodeAsn1Sequence(string $value): string
+    {
+        return "\x30" . $this->encodeLength(strlen($value)) . $value;
+    }
+
+    public function decodeJwtPayload(string $jwt): array
+    {
+        $parts   = $this->splitJwt($jwt);
+        $payload = json_decode($this->base64UrlDecode($parts['payload']), true);
+        return $payload;
+    }
+    public function splitJwt(string $jwt): array
+    {
+        $parts = explode('.', $jwt);
+        if (count($parts) !== 3) {
+            throw new \Exception("Invalid JWT structure.");
+        }
+        return [
+            'header'    => $parts[0],
+            'payload'   => $parts[1],
+            'signature' => $parts[2],
+        ];
+    }
+
+    public function encodeLength($length)
+    {
+        if ($length < 0x80) {
+            return chr($length);
+        }
+
+        $lenBytes = ltrim(pack('N', $length), "\x00");
+        return chr(0x80 | strlen($lenBytes)) . $lenBytes;
+    }
+
+    public function verifyJwtSignature(string $jwt, string $pemPublicKey): bool
+    {
+        $parts     = $this->splitJwt($jwt);
+        $data      = $parts['header'] . '.' . $parts['payload'];
+        $signature = $this->base64UrlDecode($parts['signature']);
+        $key = openssl_pkey_get_public($pemPublicKey);
+
+        if (! $key) {
+            throw new \Exception('Invalid public key');
+        }
+        $result = openssl_verify($data, $signature, $key, OPENSSL_ALGO_SHA256);
+        return $result === 1;
+    }
+
+    public function getSession(): Container
+    {
+        return $this->session;
+    }
+
+}

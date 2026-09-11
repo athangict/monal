@@ -12,6 +12,7 @@ use Sales\Model As Sales;
 use Stock\Model As Stock;
 class SalesreportController extends AbstractActionController
 {   
+	protected $_connection;
 	private $_container;
 	protected $_table; 		// database table 
     protected $_user; 		// user detail

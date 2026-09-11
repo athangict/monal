@@ -1486,14 +1486,14 @@
 		},spec);
 		var tr_id =0;
 		var parentObj = $(this);
-		parentObj.wrap("<div style='margin-bottom:5px; overflow-x:scroll;' id='jscroll_div'> </div>");		
+		parentObj.wrap("<div style='margin-bottom:5px; overflow-x:scroll; overflow-y:visible;' id='jscroll_div'> </div>");		
 		parentObj.find("tbody tr").each(function(){
 			$(this).attr('id',++tr_id);			
 			$(this).find('div.chosen-search input').each(function(){
 				$(this).addClass('ch-search');
 			});
 			$(this).find('div.chosen-container .chosen-drop').each(function(){
-				$(this).css({'position':'relative'});
+				$(this).css({'position':'absolute','z-index':'9999'});
 			});
 			$(this).find(':input').not('input.ch-search').each(function(){
 	            var old_id = $(this).attr('id');
@@ -1573,7 +1573,7 @@
 		bookpay_reset(clone);	        
 		$('form select').chosen();
 		clone.find('div.chosen-container .chosen-drop').each(function(){
-			$(this).css({'position':'relative'});
+			$(this).css({'position':'absolute','z-index':'9999'});
 		});
 		obj.find('select.tr-head').each(function(){
 				var id = $(this).closest('tr').attr('id');

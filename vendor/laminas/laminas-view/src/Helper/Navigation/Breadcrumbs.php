@@ -18,6 +18,8 @@ use function strlen;
 
 /**
  * Helper for printing breadcrumbs.
+ *
+ * @deprecated This class has been moved to the `Laminas\Navigation` component and will be removed in 3.0
  */
 class Breadcrumbs extends AbstractHelper
 {
@@ -111,9 +113,13 @@ class Breadcrumbs extends AbstractHelper
         } else {
             /** @var View\Helper\EscapeHtml $escaper */
             $escaper = $this->view->plugin('escapeHtml');
-            $html    = $escaper(
+            $label   = $escaper(
                 $this->translate($active->getLabel(), $active->getTextDomain())
             );
+            $attribs = [
+                'aria-current' => 'page',
+            ];
+            $html    = '<span' . $this->htmlAttribs($attribs) . '>' . $label . '</span>';
         }
 
         // walk back to root
@@ -255,7 +261,6 @@ class Breadcrumbs extends AbstractHelper
     /**
      * Render a partial with the given "model".
      *
-     * @param array                  $params
      * @param null|AbstractContainer $container
      * @param null|string|array      $partial
      * @return View\Helper\Partial|string

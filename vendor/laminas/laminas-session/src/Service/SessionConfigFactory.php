@@ -11,11 +11,16 @@ use Laminas\ServiceManager\ServiceLocatorInterface;
 use Laminas\Session\Config\ConfigInterface;
 use Laminas\Session\Config\SameSiteCookieCapableInterface;
 use Laminas\Session\Config\SessionConfig;
+use Laminas\Session\SaveHandler\SaveHandlerInterface;
 
 use function class_exists;
+use function get_debug_type;
 use function is_array;
 use function sprintf;
 
+/**
+ * @final
+ */
 class SessionConfigFactory implements FactoryInterface
 {
     /**
@@ -41,7 +46,14 @@ class SessionConfigFactory implements FactoryInterface
             );
         }
 
-        $class  = SessionConfig::class;
+        $class = SessionConfig::class;
+
+        /** @var array{
+         *     config_class?: string,
+         *     save_handler?: string|SaveHandlerInterface,
+         *     cookie_samesite: string
+         * } $config
+         */
         $config = $config['session_config'];
         if (isset($config['config_class'])) {
             if (! class_exists($config['config_class'])) {
@@ -53,6 +65,33 @@ class SessionConfigFactory implements FactoryInterface
             }
             $class = $config['config_class'];
             unset($config['config_class']);
+        }
+
+        // We set SaveHandlerInterface as default save_handler if it exists in the container, we do this
+        // because SessionManagerFactory does this, and this keeps the configuration consistent
+        if (! isset($config['save_handler']) && $container->has(SaveHandlerInterface::class)) {
+            $config['save_handler'] = SaveHandlerInterface::class;
+        }
+
+        if (isset($config['save_handler']) && $config['save_handler'] === SaveHandlerInterface::class) {
+            if (! $container->has($config['save_handler'])) {
+                throw new ServiceNotCreatedException(sprintf(
+                    'Class %s set as save_handler must be defined in the service manager',
+                    $config['save_handler']
+                ));
+            }
+
+            $saveHandler = $container->get($config['save_handler']);
+            if (! $saveHandler instanceof SaveHandlerInterface) {
+                throw new ServiceNotCreatedException(sprintf(
+                    'Class %s set as save_handler must implement %s; received "%s"',
+                    $saveHandler::class,
+                    SaveHandlerInterface::class,
+                    get_debug_type($saveHandler)
+                ));
+            }
+
+            $config['save_handler'] = $saveHandler;
         }
 
         $sessionConfig = new $class();
@@ -81,6 +120,7 @@ class SessionConfigFactory implements FactoryInterface
     }
 
     /**
+     * @deprecated This method will be removed in version 3.0
      * Create and return a config instance (v2 usage).
      *
      * @param null|string $canonicalName

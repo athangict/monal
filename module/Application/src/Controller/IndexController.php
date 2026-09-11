@@ -42,7 +42,7 @@ class IndexController extends AbstractActionController
         $this->_container = $container;
     }
 	/**
-	 * Zend Default TableGateway
+	 * Laminas Default TableGateway
 	 * Table name as the parameter
 	 * returns obj
 	 */
@@ -173,7 +173,7 @@ class IndexController extends AbstractActionController
 		$this->init();
 		
 		$id = $this->params()->fromRoute('id');	
-		$params = explode("-", $id);
+		$params = explode("-", (string) $id);
 		$process = $params['0'];
 		$process_id = $params['1'];		
 		$activitylogs = $this->getDefinedTable(Acl\ActivityLogTable::class)->get(array('process'=>$process, 'process_id'=>$process_id));		
@@ -245,7 +245,7 @@ class IndexController extends AbstractActionController
 	}
 	public function allnotificationAction(){
         $this->init();
-        //$params = explode("-", $this->_id);
+        //$params = explode("-", (string) $this->_id);
         // if(sizeof($params) ==2 ){
         //     $flag = $this->getDefinedTable(NotifyTable::class)->getColumn($params['1'], 'flag');
         //     if($flag == "0") {

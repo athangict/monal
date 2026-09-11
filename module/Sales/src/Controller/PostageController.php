@@ -27,6 +27,8 @@ class PostageController extends AbstractActionController
     protected $_auth; 		// checking authentication
     protected $_safedataObj; // safedata controller plugin
 	protected $_userloc; //location of the current user
+	protected $_connection; // DB transaction connection
+	protected $_login_location_type; // user location type
 	
 
 	public function __construct(ContainerInterface $container)
@@ -193,6 +195,30 @@ class PostageController extends AbstractActionController
 		$articlePresent = $this->getDefinedTable(Sales\PostageTable::class)->get(array('article_no'=>$form['article_no']));
 		foreach($articlePresent as $articlePresents);
 		if(sizeof($articlePresent)>0 && $articlePresents['status']!=5):return $this->redirect()->toRoute('postage', array('action'=>'addpostage'));else:
+		$location_prefix = $this->getDefinedTable(Administration\LocationTable::class)->getcolumn($location,'prefix');
+    		$date = date('m',strtotime(date('Y-m-d')));
+			$tmp_SLNo = $date;
+				$results = $this->getDefinedTable(Sales\PostageTable::class)->getInvoiceNo($tmp_SLNo,array('location'=>$location));
+			
+				if(sizeof($results) < 1 ):
+					$next_serial = "00001";
+				else:
+					$sheet_no_list = array();
+					foreach($results as $result):
+						array_push($sheet_no_list, substr($result['invoice_no'], -5));
+					endforeach;
+					//print_r(max($sheet_no_list));exit;
+					$next_serial = max($sheet_no_list) + 1;
+				endif;
+				switch(strlen($next_serial)){
+					case 1: $next_sl_serial = "0000".$next_serial; break;
+					case 2: $next_sl_serial = "000".$next_serial; break;
+					case 3: $next_sl_serial = "00".$next_serial;   break;
+					case 4: $next_sl_serial = "0".$next_serial;   break;
+					default: $next_sl_serial = $next_serial;      break;
+				}            			
+				$invoice_no = $tmp_SLNo.$next_sl_serial;
+				//echo '<pre>';print_r($invoice_no);exit;
 			$data = array(
 					'service' 	  	=> $form['service'],
 					'country' 	  	=> $country,
@@ -202,12 +228,7 @@ class PostageController extends AbstractActionController
 					'prepaid_mode'	=> $prepaid_mode,
 					'weight'     	=> $form['weight'],
 					'date'     		=>date('Y-m-d'),
-					//'money_value'         => $form['money_value'],
-					//'mo_cheque_cash'      => $cheque_cash,
-					//'mo_number'           => $mo_number,
-					//'mo_cheque_date'      => $form['cheque_date'],
-					//'mo_bank'             => $form['bank'],
-					//'mo_transmission_fee' => $form['transmission_fee'],
+					'invoice_no'	=> $invoice_no,
 					'from_name'     	 => strtoupper($form['from_name']),
 					'from_address'     	 => strtoupper($form['from_address']),
 					'from_email_address' => $form['from_email_address'],
@@ -237,6 +258,9 @@ class PostageController extends AbstractActionController
 					'location'			 => $location,
 					'bulk_no'		     => $bulk_no,
 					'merchandise'		 => $form['merchandise'],
+					'gst_rate'		 => $form['gst_rate'],
+					'gst_amt'		 => $form['gst_amt'],
+					'grand_tot'		 => $form['total'],
 					'status'			 => 2,
 					'author' 			 =>$this->_author,
 					'created' 			 =>$this->_created,
@@ -282,6 +306,7 @@ class PostageController extends AbstractActionController
 			'country' => $this->getDefinedTable(Administration\CountryTable::class)->getAll(),
 			'poffice' => $this->getDefinedTable(Sales\PostofficeTable::class)->getAll(),
 			'party' => $this->getDefinedTable(Accounts\PartyTable::class)->get(array('p.location'=>$admin_loc_array,'p.role'=>[11,12,13,14,15,16,17,18,19])),
+			'gst' => $this->getDefinedTable(Stock\GstRateTable::class)->getAll(),
 		));
 	}	
 	
@@ -315,6 +340,29 @@ class PostageController extends AbstractActionController
 			if(empty($form['party'])):$party=0;else:$party=$form['party'];endif;
 			$articlePresent = $this->getDefinedTable(Sales\PostageTable::class)->get(array('article_no'=>$form['article_no'],'status'=>4));
 			if(sizeof($articlePresent)>0):return $this->redirect()->toRoute('postage', array('action'=>'addpostage'));endif;
+			$location_prefix = $this->getDefinedTable(Administration\LocationTable::class)->getcolumn($location,'prefix');
+    		$date = date('m',strtotime(date('Y-m-d')));
+			$tmp_SLNo = $date;
+						$results = $this->getDefinedTable(Sales\PostageTable::class)->getInvoiceNo($tmp_SLNo,array('location'=>$location));
+					
+						if(sizeof($results) < 1 ):
+							$next_serial = "00001";
+						else:
+							$sheet_no_list = array(); 
+							foreach($results as $result):
+								array_push($sheet_no_list, substr($result['invoice_no'], -5));
+							endforeach;
+							//print_r(max($sheet_no_list));exit;
+							$next_serial = max($sheet_no_list) + 1;
+						endif;
+						switch(strlen($next_serial)){
+							case 1: $next_sl_serial = "0000".$next_serial; break;
+							case 2: $next_sl_serial = "000".$next_serial; break;
+							case 3: $next_sl_serial = "00".$next_serial;   break;
+							case 4: $next_sl_serial = "0".$next_serial;   break;
+							default: $next_sl_serial = $next_serial;      break;
+						}            			
+						$invoice_no = $tmp_SLNo.$next_sl_serial;
 			$data = array( 
 					'service' 	  	=> $form['service'],
 					'country' 	  	=> $country,
@@ -324,7 +372,7 @@ class PostageController extends AbstractActionController
 					'prepaid_mode'	=> $prepaid_mode,
 					'weight'     	=> $form['weight'],
 					'date'     		=>date('Y-m-d'),
-					//'money_value'     => $form['money_value'],
+					'invoice_no'     => $invoice_no,
 					//'mo_cheque_cash'     => $cheque_cash,
 					//'mo_number'     => $mo_number,
 					//'mo_cheque_date'     => $form['cheque_date'],
@@ -360,6 +408,9 @@ class PostageController extends AbstractActionController
 					'location'			 => $location,
 					'bulk_no'		     => $form['bulk_no'],
 					'merchandise'		 => $form['merchandise'],
+					'gst_rate'		 => $form['gst_rate'],
+					'gst_amt'		 => $form['gst_amt'],
+					'grand_tot'		 => $form['total'],
 					'status'			 => 2,
 					'author' 			 =>$this->_author,
 					'created' 			 =>$this->_created,
@@ -388,6 +439,7 @@ class PostageController extends AbstractActionController
 			'service' => $this->getDefinedTable(Sales\ServiceTable::class)->getAll(),
 			'country' => $this->getDefinedTable(Administration\CountryTable::class)->getAll(),
 			'poffice' => $this->getDefinedTable(Sales\PostofficeTable::class)->getAll(),
+			'gst' => $this->getDefinedTable(Stock\GstRateTable::class)->getAll(),
 			//'party' => $this->getDefinedTable(Accounts\SubheadTable::class)->get(array('head'=>[76,79,90,91,92,93,94,95,96,97,112,118])),
 			
 		));
@@ -441,48 +493,23 @@ class PostageController extends AbstractActionController
 					default: $next_dc_serial = $next_serial;       break;
 				}	
 				$voucher_no = $tmp_VCNo.$next_dc_serial;
+				$subhead=0;
 				if($form['cash']==0):
-					if($location==2){
-						$bankacc = $this->getDefinedTable(Accounts\BankaccountTable::class)->get(69);
-					}
-					else{
-						$bankacc = $this->getDefinedTable(Accounts\BankaccountTable::class)->get(array('ba.location'=>$location));
-					}
-					$subhead=0;
-					foreach($bankacc as $row):
-						$cash_subhead = $this->getDefinedTable(Accounts\SubheadTable::class)->get(array('ref_id'=>$row['id']));
-						//echo '<pre>';print_r($cash_subhead);	
-						foreach($cash_subhead  as $cash_subheads):
-							if(($cash_subheads['head_id']==24)||($cash_subheads['head_id']==25)||($cash_subheads['head_id']==26)||($cash_subheads['head_id']==27)||($cash_subheads['head_id']==28)){
-								$subhead=$cash_subheads['id'];	
-								$head=$cash_subheads['head_id'];	
-							}
-						endforeach;	
-					endforeach;
-				elseif($form['cash']==1):/**If paid deposited into Bank Account  */
-					$cashacc = $this->getDefinedTable(Accounts\CashaccountTable::class)->getCash(array('ca.location'=>$location));
-					$subhead=0;
-					$head=0;
-					foreach($cashacc as $row):
-						$cash_subhead = $this->getDefinedTable(Accounts\SubheadTable::class)->get(array('ref_id'=>$row['id']));
-						foreach($cash_subhead  as $cash_subheads):
-							if(($cash_subheads['head_id']==43)||($cash_subheads['head_id']==47)||($cash_subheads['head_id']==51)||($cash_subheads['head_id']==55)){
-								$subhead=$cash_subheads['id'];	
-								$head=$cash_subheads['head_id'];	
-							}
-							
-						endforeach;	
-					endforeach;
+					$subhead=$this->getDefinedTable(Accounts\SubheadTable::class)->getColumn(array('ref_id'=>$form['account_no'],'type'=>3),'id');
+					//print_r($subhead);
+				elseif($form['cash']==1):/**If paid deposited into Bank Account  */ 
+					$subhead=$this->getDefinedTable(Accounts\SubheadTable::class)->getColumn(array('ref_id'=>$form['account_no'],'type'=>6),'id');
+					//print_r($subhead);
 				else:
-				$ref=$form['party'];
+				$ref=$form['party']; 
 				$subhead = $this->getDefinedTable(Accounts\SubheadTable::class)->getColumn(array('ref_id'=>$ref,'type'=>2),'id');
-				$head = $this->getDefinedTable(Accounts\SubheadTable::class)->getColumn(array('id'=>$subhead),'head');
-				$location=$this->getDefinedTable(Accounts\PartyTable::class)->getColumn(array('id'=>$ref),'location');
 				endif;
+				//print_r($subhead);exit;
 				$data = array(
 					'id' 	             => $postages['id'],
 					'cash'				 => $form['cash'],
 					'party'				 => $subhead,
+					'account_no'		=> $form['account_no'],
 					'journal_no'		 => $form['journal_no'],
 					'phone'		 		 => $form['phone'],
 					'status'			 => 4,
@@ -497,7 +524,7 @@ class PostageController extends AbstractActionController
 						'voucher_type' 	  	=> 8,
 						'region' 	  		=> $region,
 						'voucher_no' 	  	=> $voucher_no,
-						'voucher_amount' 	=> $postages['total_amt'],
+						'voucher_amount' 	=> $postages['grand_tot'],
 						'status' 	  		=> 4,
 						'doc_id' 	  		=> "service",
 						'doc_type' 	  		=> " ",
@@ -513,11 +540,11 @@ class PostageController extends AbstractActionController
 						'voucher_dates' => $data2['voucher_date'],
 						'voucher_types' 	=> 8,
 						'location' 	  	=> $this->_user->location,
-						'head' 	  		=> '152',
+						'head' 	  		=> $this->getDefinedTable(Accounts\SubheadTable::class)->getColumn($sersubhead,'head'), 
 						'sub_head' 	  	=> $sersubhead,
 						'activity'		=>$this->_user->location,
 						'debit' 	  	=> 0,
-						'credit' 	  	=> $data2['voucher_amount'],
+						'credit' 	  	=> $postages['total_amt'],
 						'ref_no' 	  	=> 0,
 						'status' 	  		=> 4,
 						'against' 	  	=> 0,
@@ -527,7 +554,27 @@ class PostageController extends AbstractActionController
 					);
 					$data3 =  $this->_safedataObj->rteSafe($data3);
 					$result3 = $this->getDefinedTable(Accounts\TransactiondetailTable::class)->save($data3);
-					
+					if($postages['gst_amt']>0){
+						$gstdata = array(
+						'transaction' 	=> $result2,
+						'voucher_dates' => $data2['voucher_date'],
+						'voucher_types' 	=> 8,
+						'location' 	  	=> $this->_user->location,
+						'head' 	  		=> $this->getDefinedTable(Accounts\SubheadTable::class)->getColumn(3292,'head'), 
+						'sub_head' 	  	=> 3292,
+						'activity'		=>$this->_user->location,
+						'debit' 	  	=> 0,
+						'credit' 	  	=> $postages['gst_amt'],
+						'ref_no' 	  	=> 0,
+						'status' 	  		=> 4,
+						'against' 	  	=> 0,
+						'author' 			 =>$this->_author,
+						'created' 			 =>$this->_created,
+						'modified' 			 =>$this->_modified,
+					);
+					$gstdata =  $this->_safedataObj->rteSafe($gstdata);
+					$gstresult = $this->getDefinedTable(Accounts\TransactiondetailTable::class)->save($gstdata);
+					}
 						
 						$data4 = array(
 							'transaction' 	=> $result2,
@@ -537,7 +584,7 @@ class PostageController extends AbstractActionController
 							'activity'		=>$this->_user->location,
 							'head' 	  		=> $this->getDefinedTable(Accounts\SubheadTable::class)->getColumn($subhead,'head'),
 							'sub_head' 	  	=> $subhead,
-							'debit' 	  	=> $data2['voucher_amount'],
+							'debit' 	  	=> $postages['grand_tot'],
 							'credit' 	  	=> 0,
 							'status' 	  	=> 4,
 							'against' 	  	=> 0,
@@ -559,6 +606,84 @@ class PostageController extends AbstractActionController
 		
 				$this->_connection->commit(); // rollback transaction over failure
 				$this->flashMessenger()->addMessage("success^ successfully added new data");
+				/*IPScreate the XML file and Push to IPS*/
+				$articleNo = $postages['article_no'];
+				$itemId = $articleNo;
+				$exportRef = $result2;
+
+
+				$ClassCD= $this->getDefinedTable(Sales\ServiceTable::class)->getColumn($postages['service'],'code');
+				$officeCD= $this->getDefinedTable(Administration\LocationTable::class)->getColumn($postages['location'],'prefix');
+				$DestC= $this->getDefinedTable(Administration\CountryTable::class)->getColumn($postages['country'],'alpha_2');
+                if($postages['scope']==1){
+				    $DestC='BT';
+				}else{
+					$DestC= $this->getDefinedTable(Administration\CountryTable::class)->getColumn($postages['country'],'alpha_2');
+				}
+				$origCountryCd = 'BT';
+				$destCountryCd = $DestC;
+				$officeCd = 'BT'.$officeCD;
+				$tnCd = '1';
+				$classCd = $ClassCD;
+				$content = 'M'; 
+				$itemWeight = number_format($postages['weight'] / 1000, 2, '.', '');
+				$offset = '+06:00';
+				$timezone = new \DateTimeZone('+06:00');
+                $date = new \DateTime('now', $timezone);
+
+				$formattedDate = $date->format('Y-m-d\TH:i:sP'); 
+				$xml = new \SimpleXMLElement(
+					'<ips xmlns="http://upu.int/ips" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"></ips>'
+				);
+
+				$xml->addAttribute('ExportRef', $exportRef);
+
+				$mailItem = $xml->addChild('MailItem');
+				$mailItem->addAttribute('ItemId', $itemId);
+				$mailItem->addChild('ItemWeight', $itemWeight);
+				$mailItem->addChild('ClassCd', $classCd);
+				$mailItem->addChild('Content', $content);
+				$mailItem->addChild('OrigCountryCd', $origCountryCd);
+				$mailItem->addChild('DestCountryCd', $destCountryCd);
+
+				// ItemEvent section
+				$itemEvent = $mailItem->addChild('ItemEvent');
+				$itemEvent->addChild('TNCd', $tnCd);
+				$itemEvent->addChild('Date', $formattedDate);
+				$itemEvent->addChild('OfficeCd', $officeCd);
+
+				// Save XML
+				$filename = $articleNo . '.xml';
+				$localXmlPath = '/var/www/erp.bhutanpost.bt/public/temps/' . $filename;
+				$errorLogDir = '/var/www/erp.bhutanpost.bt/public/temps/error_logs/';
+
+
+				if (!file_exists(dirname($localXmlPath))) {
+					mkdir(dirname($localXmlPath), 0777, true);
+				}
+				if ($xml->asXML($localXmlPath)) {
+					error_log(" XML saved: $localXmlPath");
+				} else {
+					error_log(" Failed to save XML: $localXmlPath");
+				}
+				$ftpConfig = $this->_config['ftp'];
+				$ftp_server   = $ftpConfig['server'];
+				$ftp_username = $ftpConfig['username'];
+				$ftp_password = $ftpConfig['password'];
+				$remote_path  = $ftpConfig['remote_path'];
+				$conn_id = ftp_connect($ftp_server);
+				$login_result = ftp_login($conn_id, $ftp_username, $ftp_password);
+				if ($conn_id && $login_result) {
+					ftp_pasv($conn_id, true);
+					$remote_file = $remote_path . $filename;
+					if (ftp_put($conn_id, $remote_file, $localXmlPath, FTP_BINARY)) {
+						unlink($localXmlPath);
+						error_log(" FTP Upload Successful: $filename");
+					} else {}
+					ftp_close($conn_id);
+				} else {}
+				
+				/*IPScreate the XML file and Push to IPS*/
 			else:
 				$this->_connection->rollback(); // rollback transaction over failure
 				$this->flashMessenger()->addMessage("notice^ Failed to add new data");
@@ -653,7 +778,7 @@ class PostageController extends AbstractActionController
 	{ 
 		{	
 			$this->init();
-			$array_id = explode("_", $this->_id);
+			$array_id = explode("_", (string) ($this->_id ?? ''));
 			$scope = (sizeof($array_id)>1)?$array_id[0]:'-1';
 			$service = (sizeof($array_id)>1)?$array_id[1]:'-1';
 			$location = (sizeof($array_id)>1)?$array_id[2]:'-1';
@@ -720,30 +845,35 @@ class PostageController extends AbstractActionController
 		$this->init();
 		if($this->getRequest()->isPost()){
 			$form = $this->getRequest()->getPost();
+			$post_id = (int)$form['post_id'];
 			$postdata = array(
-					'id' => $form['post_id'],
+					'id' => $post_id,
 					'status' => 5,
 					'author' =>$this->_author,
 					'created' =>$this->_created,
 					'modified' =>$this->_modified,
 			);
 			$result = $this->getDefinedTable(Sales\PostageTable::class)->save($postdata);
-			$transaction_id = $this->getDefinedTable(Sales\PostageTable::class)->getColumn($form['post_id'],'transaction_id');
-			/**Delete from Transaction Table */
-			$transac_data = array(
-				'id' => $transaction_id,
-			);
-			$result2 = $this->getDefinedTable(Accounts\TransactionTable::class)->remove($transac_data);
-			$transactiondetails_id = $this->getDefinedTable(Accounts\TransactiondetailTable::class)->getTransaction(array('transaction'=>$transaction_id));
-			/**Delete from Transaction Details Table */	
-			foreach($transactiondetails_id as $transactiondetails_ids):
-				$transacdtls_data = array(
-					'id'=>$transactiondetails_ids['id'],
-					'transaction' => $transaction_id,
-				);
-				$result3 = $this->getDefinedTable(Accounts\TransactiondetailTable::class)->remove($transacdtls_data);
-			endforeach;
-			if($result3 > 0):
+			$transaction_id = (int)$this->getDefinedTable(Sales\PostageTable::class)->getColumn($post_id,'transaction_id');
+			$transactiondetails_id = array();
+			$result3 = 0;
+			$result2 = 0;
+
+			if($transaction_id > 0):
+				$transactiondetails_id = $this->getDefinedTable(Accounts\TransactiondetailTable::class)->getTransaction(array('transaction' => $transaction_id));
+				/**Delete from Transaction Details Table */
+				foreach($transactiondetails_id as $transactiondetails_ids):
+					$transactiondetails_row_id = (int)$transactiondetails_ids['id'];
+					if($transactiondetails_row_id > 0):
+						$result3 += $this->getDefinedTable(Accounts\TransactiondetailTable::class)->remove($transactiondetails_row_id);
+					endif;
+				endforeach;
+
+				/**Delete from Transaction Table */
+				$result2 = $this->getDefinedTable(Accounts\TransactionTable::class)->remove($transaction_id);
+			endif;
+
+			if($result > 0 && ($transaction_id <= 0 || $result2 > 0 || sizeof($transactiondetails_id) === 0)):
 				$this->flashMessenger()->addMessage("success^ successfully deleted the transactions");
 			else:
 				$this->flashMessenger()->addMessage("notice^ Failed to delete  the transactions");
@@ -764,7 +894,7 @@ class PostageController extends AbstractActionController
 	{
 		{	
 			$this->init();
-			$array_id = explode("_", $this->_id);
+			$array_id = explode("_", (string) ($this->_id ?? ''));
 			$scope = (sizeof($array_id)>1)?$array_id[0]:'-1';
 			$service = (sizeof($array_id)>1)?$array_id[1]:'-1';
 			if($this->getRequest()->isPost())
@@ -799,7 +929,7 @@ class PostageController extends AbstractActionController
 			$cashSum=$this->getDefinedTable(Sales\PostageTable::class)->getSum('total_amt',$data,$start_date,$end_date,array('cash'=>1));
 			$creditSum=$this->getDefinedTable(Sales\PostageTable::class)->getSum('total_amt',$data,$start_date,$end_date,array('cash'=>2));
 			$total=$this->getDefinedTable(Sales\PostageTable::class)->getSum('total_amt',$data,$start_date,$end_date);
-			//echo'<pre>';print_r($bankSum);exit;
+		//	echo'<pre>';print_r($serviceTarriffTable);exit;
 			
 			
 			return new ViewModel(array(
@@ -815,6 +945,54 @@ class PostageController extends AbstractActionController
 				'countryObj' => $this->getDefinedTable(Administration\CountryTable::class),
 				'cityObj' => $this->getDefinedTable(Administration\CityTable::class),
 				'userObj' => $this->getDefinedTable(Administration\UsersTable::class),
+				'locationObj' => $this->getDefinedTable(Administration\LocationTable::class),
+				'statusObj' => $this->getDefinedTable(Acl\StatusTable::class),
+				'postageObj' => $this->getDefinedTable(Sales\PostageTable::class),
+			)); 
+		} 
+
+		
+	}
+	/*
+	* Service Sales  Report 
+	*/
+	public function invoiceAction()
+	{
+		{	
+			$this->init();
+			if($this->getRequest()->isPost())
+			{
+				$form      	 = $this->getRequest()->getPost();
+				$start_date = $form['start_date'];
+				$end_date   = $form['end_date'];
+				$location   = $form['location'];
+			}else{
+				
+				$start_date =date('Y-m-d');
+				$end_date   = date('Y-m-d');
+				$location=$this->_userloc;
+			}
+
+			$data = array(
+				
+				'start_date' => $start_date,
+				'end_date'   => $end_date,
+				'location'=>$location,
+			);
+			
+			$service = $this->getDefinedTable(Sales\PostageTable::class)->getInvoice($start_date,$end_date,array('location'=>$data['location']));
+			
+			return new ViewModel(array(
+				'title' => 'Tax Invoice',
+				'service'       => $service,
+				'data'            => $data,
+				'serviceObj' => $this->getDefinedTable(Sales\ServiceTable::class),
+				'scopeObj' => $this->getDefinedTable(Sales\ScopeTable::class),
+				'countryObj' => $this->getDefinedTable(Administration\CountryTable::class),
+				'postofficeObj' => $this->getDefinedTable(Sales\PostofficeTable::class),
+				'cityObj' => $this->getDefinedTable(Administration\CityTable::class),
+				'userObj' => $this->getDefinedTable(Administration\UsersTable::class),
+				'location' => $this->getDefinedTable(Administration\LocationTable::class)->getAll(),
 				'locationObj' => $this->getDefinedTable(Administration\LocationTable::class),
 				'statusObj' => $this->getDefinedTable(Acl\StatusTable::class),
 				'postageObj' => $this->getDefinedTable(Sales\PostageTable::class),
@@ -855,7 +1033,7 @@ class PostageController extends AbstractActionController
 				'location'	=>$location,
 			);
 			
-			$serviceTarriffTable = $this->getDefinedTable(Accounts\TransactiondetailTable::class)->getInvoiceDue($data,$start_date,$end_date,array('status'=>4));
+			$serviceTarriffTable = $this->getDefinedTable(Accounts\TransactiondetailTable::class)->getInvoiceDue($data,$start_date,$end_date,array('t.status'=>4));
 			
 			return new ViewModel(array(
 				'title' => 'Invoice for due',
@@ -877,8 +1055,6 @@ class PostageController extends AbstractActionController
 				'party' => $this->getDefinedTable(Accounts\PartyTable::class)->get(array('p.role'=>[11,12,13,14,15,16,17,18,19])),
 			)); 
 		} 
-
-		
 	}
 	/**
 	 * Get Postage Rate
@@ -951,7 +1127,6 @@ class PostageController extends AbstractActionController
 					$rate2 += $additionalRate;
 					break;
 				} else {
-					
 					$additionalWeight = $reamiainingWeighreamiainingWeightFromFirstSlabtFromFirstSlab - $slab['upto'];
 					$additionalRate = ceil($slab['upto'] / $slab['for_every']) * $slab['rate'];
 					$rate2 += $additionalRate;
@@ -1065,96 +1240,6 @@ class PostageController extends AbstractActionController
 		));
 		exit;
 	}	
-	/**
-	 * Get Postage Rate
- *
-	public function getpostagerate2Action()
-	{		
-		$form = $this->getRequest()->getPost();
-		$subserviceId = $form['service'];
-		$packageWeight=$form['weight'];
-		$country=$form['country'];
-		$city=$form['city'];
-		$subservice = $this->getDefinedTable(Sales\ServiceTarriffTable::class)->get(array('service'=>$subserviceId,'country'=>$country,'city'=>$city));
-		if(!empty($subservice)):
-			foreach($subservice as $subservices);
-			$fixedslabs = $this->getDefinedTable(Sales\FixedslabTable::class)->get(array('tarrif_for_services_id'=>$subservices['id']));
-			$maxFixedId= $this->getDefinedTable(Sales\FixedslabTable::class)->getMax(array('tarrif_for_services_id'=>$subservices['id']),'id');
-			$maxFixedSlab = $this->getDefinedTable(Sales\FixedslabTable::class)->getColumn(array('id'=>$maxFixedId),'to');
-			$firstpropotionateslab = $this->getDefinedTable(Sales\PropotionateslabTable::class)->getMin(array('tarrif_for_services_id'=>$subservices['id']),'id');
-			$lastpropotionateslab = $this->getDefinedTable(Sales\PropotionateslabTable::class)->getMax(array('tarrif_for_services_id'=>$subservices['id']),'id');
-			$firstslab_weightlimit=$this->getDefinedTable(Sales\PropotionateslabTable::class)->getColumn(array('id'=>$firstpropotionateslab),'upto');
-			$lastslab_weightlimit=$this->getDefinedTable(Sales\PropotionateslabTable::class)->getColumn(array('id'=>$lastpropotionateslab),'upto');
-			$propotionateslab = $this->getDefinedTable(Sales\PropotionateslabTable::class)->get(array('tarrif_for_services_id'=>$subservices['id']));
-			$rate = 0; 
-			$rate2 = 0; // Variable to store the final rate
-			//calculation from fixed slab
-			if($packageWeight<$maxFixedSlab):
-					foreach ($fixedslabs as $fixedSlab) {
-						if ($packageWeight >= $fixedSlab['from'] && $packageWeight <= $fixedSlab['to']) {
-							$rate = $fixedSlab['rate'];
-							break;
-						}
-					}
-				else:
-					foreach ($fixedslabs as $fixedSlab) {
-						if ($packageWeight >= $fixedSlab['from'] && $packageWeight >= $fixedSlab['to']) {
-							$rate = $fixedSlab['rate'];
-							break;
-						}
-					}
-				endif;
-			if($packageWeight>$maxFixedSlab){
-				//Calculation from the Array[0] in the proptionate Slab
-				$slab1 = $propotionateslab[0];
-				if($packageWeight>$firstslab_weightlimit):
-					$remainingWeight=$firstslab_weightlimit-$maxFixedSlab;
-					$additionalRate = ceil($remainingWeight / $slab1['for_every']) * $slab1['rate'];
-					$rate2 += $additionalRate;
-					$reamiainingWeightFromFirstSlab=$packageWeight-$slab1['upto'];
-				else:
-					$remainingWeight=$packageWeight-$maxFixedSlab;
-					$additionalRate = ceil($remainingWeight / $slab1['for_every']) * $slab1['rate'];
-					$rate2 += $additionalRate;
-					$reamiainingWeightFromFirstSlab=0;
-				endif;
-				//Calculation for rest of the Array[$i] in the proptionate Slab
-				$count = count($propotionateslab);
-				for ($i = 1; $i < $count; $i++) {
-				if ($reamiainingWeightFromFirstSlab <= 0) :
-						break; // No more weight left to calculate rate
-				elseif($reamiainingWeightFromFirstSlab > 0 && $reamiainingWeightFromFirstSlab <=$lastslab_weightlimit):
-					
-					$slab = $propotionateslab[$i];
-
-					if($reamiainingWeightFromFirstSlab > 0):
-						if ($reamiainingWeightFromFirstSlab <= $slab['upto']) {
-							$additionalRate = ceil($reamiainingWeightFromFirstSlab / $slab['for_every']) * $slab['rate'];
-						$rate2 += $additionalRate;
-						break;
-					} else {
-						
-						$additionalWeight = $reamiainingWeighreamiainingWeightFromFirstSlabtFromFirstSlab - $slab['upto'];
-						$additionalRate = ceil($slab['upto'] / $slab['for_every']) * $slab['rate'];
-						$rate2 += $additionalRate;
-						$reamiainingWeightFromFirstSlab = $additionalWeight;
-					}
-					endif;
-				else:
-					$rate2=0;
-				endif;
-	
-				}
-			}
-		$postage_rate=$rate+$rate2;
-	else:$postage_rate=0;
-	endif;
-		
-	echo json_encode(array(
-				'postage_rate' => $postage_rate,
-		));
-		exit;
-	}*/	
 	/**
 	 * Get fixed  factors
 	 */
@@ -1508,5 +1593,36 @@ class PostageController extends AbstractActionController
 		));
 		exit;
 	}
+			/**
+	 * getacount - Get item based on location
+	 * **/
+	public function getBCAccountAction()
+	{
+		$form = $this->getRequest()->getPost();
+		$payment =$form['paymentId'];
+		$locationID=$form['locationId'];
+		if($payment==1){
+			$accountlist= $this->getDefinedTable(Accounts\CashaccountTable::class)->get(array('ca.location'=>$locationID,'ca.acc_type'=>1));
+		}
+		else if($payment==0){
+			$accountlist= $this->getDefinedTable(Accounts\BankaccountTable::class)->get(array('ba.location'=>$locationID,'ba.acc_type'=>1));	
 		
+		}
+		$acc = "<option value=''>None</option>";
+		foreach($accountlist as $accountlists):
+			if($payment==1){
+			$acc.="<option value='".$accountlists['id']."'>".$accountlists['cash_account_name']."</option>";
+			}
+			else if($payment==0){
+				$acc.="<option value='".$accountlists['id']."'>".$accountlists['code'].'-'.$accountlists['account']."</option>";
+			}
+			else{
+				$acc = "<option value='0'>None</option>";
+			}
+		endforeach;
+		echo json_encode(array(
+				'account' => $acc, 
+		));
+		exit;
+	}
 }

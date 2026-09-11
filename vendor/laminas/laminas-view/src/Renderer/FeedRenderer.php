@@ -10,16 +10,18 @@ use Laminas\View\Model\FeedModel;
 use Laminas\View\Model\ModelInterface as Model;
 use Laminas\View\Resolver\ResolverInterface as Resolver;
 
-use function get_class;
-use function gettype;
+use function get_debug_type;
 use function in_array;
-use function is_object;
 use function is_string;
 use function sprintf;
 use function strtolower;
 
 /**
  * Class for Laminas\View\Strategy\FeedStrategy compatible template engine implementations
+ *
+ * @deprecated Since 2.40.0 - Laminas\Feed related code will be removed in 3.0 and replaced by a standalone library
+ *
+ * @final
  */
 class FeedRenderer implements RendererInterface
 {
@@ -60,7 +62,7 @@ class FeedRenderer implements RendererInterface
      *
      * @todo   Determine what use case exists for accepting only $nameOrModel
      * @param  string|Model $nameOrModel The script/resource process, or a view model
-     * @param  null|array|ArrayAccess $values Values to use during rendering
+     * @param  null|array<string, mixed>|ArrayAccess<string, mixed> $values Values to use during rendering
      * @throws Exception\InvalidArgumentException
      * @return string The script output.
      */
@@ -88,14 +90,14 @@ class FeedRenderer implements RendererInterface
             throw new Exception\InvalidArgumentException(sprintf(
                 '%s expects a ViewModel or a string feed type as the first argument; received "%s"',
                 __METHOD__,
-                is_object($nameOrModel) ? get_class($nameOrModel) : gettype($nameOrModel)
+                get_debug_type($nameOrModel),
             ));
         }
 
         // Get feed and type
         $feed = $nameOrModel->getFeed();
         $type = $nameOrModel->getFeedType();
-        if (! $type) {
+        if (! is_string($type)) {
             $type = $this->getFeedType();
         } else {
             $this->setFeedType($type);

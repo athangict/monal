@@ -17,7 +17,6 @@ use Laminas\View\Exception\InvalidHelperException;
 use Laminas\View\Helper\HelperInterface;
 use Psr\Container\ContainerInterface;
 
-use function get_class;
 use function gettype;
 use function is_callable;
 use function is_object;
@@ -31,9 +30,9 @@ use function sprintf;
  * Helper\HelperInterface. Additionally, it registers a number of default
  * helpers.
  *
- * @template InstanceType of HelperInterface|callable
  * @extends AbstractPluginManager<HelperInterface|callable>
  * @psalm-import-type ServiceManagerConfiguration from ServiceManager
+ * @final
  */
 class HelperPluginManager extends AbstractPluginManager
 {
@@ -42,6 +41,8 @@ class HelperPluginManager extends AbstractPluginManager
      *
      * Most of these are present for legacy purposes, as v2 of the service
      * manager normalized names when fetching services.
+     *
+     * @deprecated Since 2.40.0
      *
      * @psalm-suppress DeprecatedClass, NonInvariantDocblockPropertyType
      * @var non-empty-array<string, class-string>
@@ -158,42 +159,42 @@ class HelperPluginManager extends AbstractPluginManager
          * @psalm-suppress DeprecatedClass
          * @codingStandardsIgnoreStart
          **/
-        \Zend\View\Helper\Asset::class => Helper\Asset::class,
-        \Zend\View\Helper\FlashMessenger::class => Helper\FlashMessenger::class,
-        \Zend\View\Helper\Identity::class => Helper\Identity::class,
-        \Zend\View\Helper\BasePath::class => Helper\BasePath::class,
-        \Zend\View\Helper\Cycle::class => Helper\Cycle::class,
-        \Zend\View\Helper\DeclareVars::class => Helper\DeclareVars::class,
-        \Zend\View\Helper\Doctype::class => Helper\Doctype::class,
-        \Zend\View\Helper\EscapeHtml::class => Helper\EscapeHtml::class,
-        \Zend\View\Helper\EscapeHtmlAttr::class => Helper\EscapeHtmlAttr::class,
-        \Zend\View\Helper\EscapeJs::class => Helper\EscapeJs::class,
-        \Zend\View\Helper\EscapeCss::class => Helper\EscapeCss::class,
-        \Zend\View\Helper\EscapeUrl::class => Helper\EscapeUrl::class,
-        \Zend\View\Helper\Gravatar::class => Helper\Gravatar::class,
-        \Zend\View\Helper\HtmlTag::class => Helper\HtmlTag::class,
-        \Zend\View\Helper\HeadLink::class => Helper\HeadLink::class,
-        \Zend\View\Helper\HeadMeta::class => Helper\HeadMeta::class,
-        \Zend\View\Helper\HeadScript::class => Helper\HeadScript::class,
-        \Zend\View\Helper\HeadStyle::class => Helper\HeadStyle::class,
-        \Zend\View\Helper\HeadTitle::class => Helper\HeadTitle::class,
-        \Zend\View\Helper\HtmlFlash::class => Helper\HtmlFlash::class,
-        \Zend\View\Helper\HtmlList::class => Helper\HtmlList::class,
-        \Zend\View\Helper\HtmlObject::class => Helper\HtmlObject::class,
-        \Zend\View\Helper\HtmlPage::class => Helper\HtmlPage::class,
-        \Zend\View\Helper\HtmlQuicktime::class => Helper\HtmlQuicktime::class,
-        \Zend\View\Helper\InlineScript::class => Helper\InlineScript::class,
-        \Zend\View\Helper\Json::class => Helper\Json::class,
-        \Zend\View\Helper\Layout::class => Helper\Layout::class,
-        \Zend\View\Helper\PaginationControl::class => Helper\PaginationControl::class,
-        \Zend\View\Helper\PartialLoop::class => Helper\PartialLoop::class,
-        \Zend\View\Helper\Partial::class => Helper\Partial::class,
-        \Zend\View\Helper\Placeholder::class => Helper\Placeholder::class,
-        \Zend\View\Helper\RenderChildModel::class => Helper\RenderChildModel::class,
-        \Zend\View\Helper\RenderToPlaceholder::class => Helper\RenderToPlaceholder::class,
-        \Zend\View\Helper\ServerUrl::class => Helper\ServerUrl::class,
-        \Zend\View\Helper\Url::class => Helper\Url::class,
-        \Zend\View\Helper\ViewModel::class => Helper\ViewModel::class,
+        'Zend\View\Helper\Asset' => Helper\Asset::class,
+        'Zend\View\Helper\FlashMessenger' => Helper\FlashMessenger::class,
+        'Zend\View\Helper\Identity' => Helper\Identity::class,
+        'Zend\View\Helper\BasePath' => Helper\BasePath::class,
+        'Zend\View\Helper\Cycle' => Helper\Cycle::class,
+        'Zend\View\Helper\DeclareVars' => Helper\DeclareVars::class,
+        'Zend\View\Helper\Doctype' => Helper\Doctype::class,
+        'Zend\View\Helper\EscapeHtml' => Helper\EscapeHtml::class,
+        'Zend\View\Helper\EscapeHtmlAttr' => Helper\EscapeHtmlAttr::class,
+        'Zend\View\Helper\EscapeJs' => Helper\EscapeJs::class,
+        'Zend\View\Helper\EscapeCss' => Helper\EscapeCss::class,
+        'Zend\View\Helper\EscapeUrl' => Helper\EscapeUrl::class,
+        'Zend\View\Helper\Gravatar' => Helper\Gravatar::class,
+        'Zend\View\Helper\HtmlTag' => Helper\HtmlTag::class,
+        'Zend\View\Helper\HeadLink' => Helper\HeadLink::class,
+        'Zend\View\Helper\HeadMeta' => Helper\HeadMeta::class,
+        'Zend\View\Helper\HeadScript' => Helper\HeadScript::class,
+        'Zend\View\Helper\HeadStyle' => Helper\HeadStyle::class,
+        'Zend\View\Helper\HeadTitle' => Helper\HeadTitle::class,
+        'Zend\View\Helper\HtmlFlash' => Helper\HtmlFlash::class,
+        'Zend\View\Helper\HtmlList' => Helper\HtmlList::class,
+        'Zend\View\Helper\HtmlObject' => Helper\HtmlObject::class,
+        'Zend\View\Helper\HtmlPage' => Helper\HtmlPage::class,
+        'Zend\View\Helper\HtmlQuicktime' => Helper\HtmlQuicktime::class,
+        'Zend\View\Helper\InlineScript' => Helper\InlineScript::class,
+        'Zend\View\Helper\Json' => Helper\Json::class,
+        'Zend\View\Helper\Layout' => Helper\Layout::class,
+        'Zend\View\Helper\PaginationControl' => Helper\PaginationControl::class,
+        'Zend\View\Helper\PartialLoop' => Helper\PartialLoop::class,
+        'Zend\View\Helper\Partial' => Helper\Partial::class,
+        'Zend\View\Helper\Placeholder' => Helper\Placeholder::class,
+        'Zend\View\Helper\RenderChildModel' => Helper\RenderChildModel::class,
+        'Zend\View\Helper\RenderToPlaceholder' => Helper\RenderToPlaceholder::class,
+        'Zend\View\Helper\ServerUrl' => Helper\ServerUrl::class,
+        'Zend\View\Helper\Url' => Helper\Url::class,
+        'Zend\View\Helper\ViewModel' => Helper\ViewModel::class,
         // @codingStandardsIgnoreEnd
 
         // v2 normalized FQCNs
@@ -242,6 +243,8 @@ class HelperPluginManager extends AbstractPluginManager
      * basepath and url are not very useful without their factories, however the doctype
      * helper works fine as an invokable. The factory for doctype simply checks for the
      * config value from the merged config.
+     *
+     * @deprecated Since 2.40.0
      *
      * @psalm-suppress DeprecatedClass
      *
@@ -327,8 +330,11 @@ class HelperPluginManager extends AbstractPluginManager
         'laminasviewhelperurl'                 => InvokableFactory::class,
         'laminasviewhelperviewmodel'           => InvokableFactory::class,
     ];
-
-    /** @var Renderer\RendererInterface|null */
+    /**
+     * @deprecated Since 2.40.0
+     *
+     * @var Renderer\RendererInterface|null
+     */
     protected $renderer;
 
     /**
@@ -356,6 +362,9 @@ class HelperPluginManager extends AbstractPluginManager
     /**
      * Set renderer
      *
+     * @deprecated Since 2.40.0. In 3.0, laminas-view will use dependency injection via constructors so this method
+     *             will become redundant.
+     *
      * @return HelperPluginManager
      */
     public function setRenderer(Renderer\RendererInterface $renderer)
@@ -368,6 +377,9 @@ class HelperPluginManager extends AbstractPluginManager
     /**
      * Retrieve renderer instance
      *
+     * @deprecated  Since 2.40.0. In 3.0, laminas-view will use dependency injection via constructors so this method
+     *              will become redundant.
+     *
      * @return null|Renderer\RendererInterface
      */
     public function getRenderer()
@@ -377,6 +389,9 @@ class HelperPluginManager extends AbstractPluginManager
 
     /**
      * Inject a helper instance with the registered renderer
+     *
+     * @deprecated Since 2.40.0. This method will be removed in 3.0 without replacement. If you have a view helper that
+     *             needs a reference to the `PhpRenderer`, use dependency injection
      *
      * @param ContainerInterface|HelperInterface $first helper instance
      *     under laminas-servicemanager v2, ContainerInterface under v3.
@@ -405,6 +420,9 @@ class HelperPluginManager extends AbstractPluginManager
     /**
      * Inject a helper instance with the registered translator
      *
+     * @deprecated Since 2.38.0 This method will be removed in 3.0 without replacement. If your view helper requires a
+     *             translator, you should instead create a factory and inject the translator into the helper constructor
+     *
      * @param ContainerInterface|HelperInterface $first helper instance
      *     under laminas-servicemanager v2, ContainerInterface under v3.
      * @param ContainerInterface|HelperInterface $second
@@ -432,14 +450,14 @@ class HelperPluginManager extends AbstractPluginManager
             return;
         }
 
-        if (! $container) {
+        if (! $container instanceof ContainerInterface) {
             // Under laminas-navigation v2.5, the navigation PluginManager is
             // always lazy-loaded, which means it never has a parent
             // container.
             return;
         }
 
-        if (method_exists($helper, 'hasTranslator') && $helper->hasTranslator()) {
+        if (method_exists($helper, 'hasTranslator') && $helper->hasTranslator() === true) {
             return;
         }
 
@@ -462,6 +480,10 @@ class HelperPluginManager extends AbstractPluginManager
     /**
      * Inject a helper instance with the registered event manager
      *
+     * @deprecated Since 2.40.0. This method will be removed in 3.0. If you need a reference to a global event manager,
+     *             Use a factory for your view helper and inject the `EventManager` into your helper at construction
+     *             time.
+     *
      * @param ContainerInterface|HelperInterface $first helper instance
      *     under laminas-servicemanager v2, ContainerInterface under v3.
      * @param ContainerInterface|HelperInterface $second
@@ -481,7 +503,7 @@ class HelperPluginManager extends AbstractPluginManager
             $helper    = $first;
         }
 
-        if (! $container) {
+        if (! $container instanceof ContainerInterface) {
             // Under laminas-navigation v2.5, the navigation PluginManager is
             // always lazy-loaded, which means it never has a parent
             // container.
@@ -520,7 +542,7 @@ class HelperPluginManager extends AbstractPluginManager
                     '%s can only create instances of %s and/or callables; %s is invalid',
                     static::class,
                     HelperInterface::class,
-                    is_object($instance) ? get_class($instance) : gettype($instance)
+                    is_object($instance) ? $instance::class : gettype($instance)
                 )
             );
         }

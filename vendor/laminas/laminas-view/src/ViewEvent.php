@@ -13,6 +13,22 @@ use Laminas\View\Renderer\RendererInterface as Renderer;
 
 use function is_array;
 
+/**
+ * @deprecated Since 2.40.0. This class will be removed in 3.0 without replacement when laminas-view removes support
+ *             for rendering strategies.
+ *
+ * @psalm-type EventParams = array{
+ *   model: Model|null,
+ *   renderer: Renderer|null,
+ *   request: Request|null,
+ *   response: Response|null,
+ *   result: mixed,
+ *   ...
+ * }
+ * @template TTarget of null|object|string
+ * @extends Event<TTarget, EventParams>
+ * @final
+ */
 class ViewEvent extends Event
 {
     /**#@+
@@ -169,11 +185,7 @@ class ViewEvent extends Event
         }
     }
 
-    /**
-     * Get all event parameters
-     *
-     * @return array|ArrayAccess
-     */
+    /** @inheritDoc */
     public function getParams()
     {
         $params             = parent::getParams();

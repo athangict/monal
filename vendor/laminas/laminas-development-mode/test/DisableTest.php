@@ -1,0 +1,162 @@
+<?php
+
+declare(strict_types=1);
+
+namespace LaminasTest\DevelopmentMode;
+
+use Laminas\DevelopmentMode\Disable;
+use org\bovigo\vfs\vfsStream;
+use org\bovigo\vfs\vfsStreamContainer;
+use PHPUnit\Framework\TestCase;
+
+use function fclose;
+use function file_exists;
+use function file_put_contents;
+use function fopen;
+use function fread;
+use function fseek;
+
+use const PHP_EOL;
+
+final class DisableTest extends TestCase
+{
+    use RemoveCacheFileTrait;
+
+    private vfsStreamContainer $projectDir;
+
+    /** @var resource */
+    private $errorStream;
+
+    private string $configStub;
+
+    private Disable $command;
+
+    protected function setUp(): void
+    {
+        $this->projectDir = vfsStream::setup('project', null, [
+            'config' => [
+                'autoload' => [],
+            ],
+            'cache'  => [],
+        ]);
+        $resource         = fopen('php://memory', 'w+');
+        self::assertNotFalse($resource);
+        $this->errorStream = $resource;
+        $this->configStub  = '<' . "?php\nreturn [];";
+        $this->command     = new Disable(vfsStream::url('project'), $this->errorStream);
+    }
+
+    protected function tearDown(): void
+    {
+        fclose($this->errorStream);
+    }
+
+    public function readErrorStream(): false|string
+    {
+        fseek($this->errorStream, 0);
+        return fread($this->errorStream, 4096);
+    }
+
+    public function testIndicatesDisabledWhenDevelopmentConfigFileNotFound(): void
+    {
+        $command = $this->command;
+        $this->expectOutputString('Development mode was already disabled.' . PHP_EOL);
+        self::assertSame(0, $command());
+    }
+
+    public function testRaisesErrorMessageIfApplicationConfigDoesNotReturnAnArrayDevelopmentModeIsNotDisabled(): void
+    {
+        file_put_contents(vfsStream::url('project/config/development.config.php'), $this->configStub);
+        vfsStream::newFile('config/application.config.php')
+            ->at($this->projectDir)
+            ->setContent('');
+        $command = $this->command;
+        self::assertSame(1, $command(), 'Did not get expected return value from invoking disable');
+        self::assertTrue(
+            file_exists(vfsStream::url('project') . '/config/development.config.php'),
+            'Distribution development config was removed'
+        );
+
+        fseek($this->errorStream, 0);
+        $output = fread($this->errorStream, 4096);
+        self::assertNotFalse($output);
+        self::assertStringContainsString(
+            'Invalid configuration returned from config/application.config.php',
+            $output,
+            'Unexpected error message'
+        );
+    }
+
+    public function testWillRemoveLocalAutoloadDistConfigIfPresent(): void
+    {
+        file_put_contents(vfsStream::url('project/config/development.config.php'), $this->configStub);
+        file_put_contents(vfsStream::url('project/config/autoload/development.local.php'), $this->configStub);
+        file_put_contents(vfsStream::url('project/config/application.config.php'), $this->configStub);
+        $command = $this->command;
+
+        $this->expectOutputString('Development mode is now disabled.' . PHP_EOL);
+        $result = $command();
+        self::assertSame(
+            0,
+            $result,
+            'Did not get expected return value from invoking disable; errors: ' . (string) $this->readErrorStream()
+        );
+        self::assertFalse(
+            file_exists(vfsStream::url('project/config/development.config.php')),
+            'Distribution development config was not removed'
+        );
+        self::assertFalse(
+            file_exists(vfsStream::url('project/config/autoload/development.local.php')),
+            'Distribution development local config was not removed'
+        );
+    }
+
+    public function testRemovesDefaultConfigCacheFileIfPresent(): void
+    {
+        file_put_contents(vfsStream::url('project/config/development.config.php'), $this->configStub);
+        $this->setUpDefaultCacheFile();
+        $command = $this->command;
+
+        $this->expectOutputString('Development mode is now disabled.' . PHP_EOL);
+        self::assertSame(0, $command(), 'Did not get expected return value from invoking disable');
+        self::assertFalse(
+            file_exists(vfsStream::url('project/config/development.config.php')),
+            'Distribution development config was not removed'
+        );
+        self::assertFalse(
+            file_exists(vfsStream::url('project') . '/cache/module-config-cache.php'),
+            'Config cache file was not removed'
+        );
+    }
+
+    public function testRemovesCustomConfigCacheFileIfPresent(): void
+    {
+        file_put_contents(vfsStream::url('project/config/development.config.php'), $this->configStub);
+        $this->setUpCustomCacheFile();
+        $command = $this->command;
+
+        $this->expectOutputString('Development mode is now disabled.' . PHP_EOL);
+        self::assertSame(0, $command(), 'Did not get expected return value from invoking disable');
+        self::assertFalse(
+            file_exists(vfsStream::url('project/config/development.config.php')),
+            'Distribution development config was not removed'
+        );
+        self::assertFalse(
+            file_exists(vfsStream::url('project') . '/cache/module-config-cache.custom.php'),
+            'Config cache file was not removed'
+        );
+    }
+
+    public function testDevelopmentModeDisabledWhenApplicationConfigNotFound(): void
+    {
+        file_put_contents(vfsStream::url('project/config/development.config.php'), $this->configStub);
+        $command = $this->command;
+
+        $this->expectOutputString('Development mode is now disabled.' . PHP_EOL);
+        self::assertSame(0, $command(), 'Did not get expected return value from invoking disable');
+        self::assertFalse(
+            file_exists(vfsStream::url('project/config/development.config.php')),
+            'Distribution development config was not removed'
+        );
+    }
+}

@@ -17,6 +17,7 @@ use Laminas\ServiceManager\ConfigInterface;
  * @see ConfigInterface
  *
  * @psalm-import-type ServiceManagerConfigurationType from ConfigInterface
+ * @final
  */
 class ConfigProvider
 {
@@ -48,6 +49,7 @@ class ConfigProvider
                 'RoutePluginManager' => RoutePluginManager::class,
 
                 // Legacy Zend Framework aliases
+                // @deprecated Legacy Zend Framework aliases removed in v4.0
                 'Zend\Router\Http\TreeRouteStack' => Http\TreeRouteStack::class,
                 'Zend\Router\RoutePluginManager'  => RoutePluginManager::class,
                 'Zend\Router\RouteStackInterface' => RouteStackInterface::class,
@@ -62,6 +64,8 @@ class ConfigProvider
 
     /**
      * Provide default route plugin manager configuration.
+     *
+     * @deprecated Configuration is consolidated in __invoke(); removed in v4.0
      *
      * @return array
      */

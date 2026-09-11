@@ -6,7 +6,10 @@ namespace Laminas\InputFilter;
 
 use Laminas\ServiceManager\ConfigInterface;
 
-/** @psalm-import-type ServiceManagerConfigurationType from ConfigInterface */
+/**
+ * @psalm-import-type ServiceManagerConfigurationType from ConfigInterface
+ * @final
+ */
 class ConfigProvider
 {
     /**
@@ -28,7 +31,8 @@ class ConfigProvider
     /**
      * Return dependency mappings for this component.
      *
-     * @return ServiceManagerConfigurationType
+     * @psalm-return ServiceManagerConfigurationType
+     * @return array
      */
     public function getDependencyConfig()
     {

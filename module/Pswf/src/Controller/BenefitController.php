@@ -13,6 +13,7 @@ use Pswf\Model As Pswf;
 use Acl\Model As Acl;
 class BenefitController extends AbstractActionController
 {   
+	protected $_connection;
 	private $_container;
 	protected $_table; 		// database table 
     protected $_user; 		// user detail
@@ -143,7 +144,7 @@ class BenefitController extends AbstractActionController
 	{
 		$this->init();
 		$id = $this->_id;
-		$array_id = explode("_", $id);
+		$array_id = explode("_", (string) $id);
 		$master_id = $array_id[0];
 		$page = (sizeof($array_id)>1)?$array_id[1]:'';
 		
@@ -430,7 +431,7 @@ class BenefitController extends AbstractActionController
 	public function viewbenefitAction()
 	{
 		$this->init();
-		$params = explode("-", $this->_id);
+		$params = explode("-", (string) $this->_id);
 		if (isset($params['1']) && $params['1'] == '1' && isset($params['2']) && $params['2'] > 0) {
 			$flag = $this->getDefinedTable(Acl\NotifyTable::class)->getColumn($params['2'], 'flag'); 
 				if($flag == "0") {
@@ -466,7 +467,7 @@ class BenefitController extends AbstractActionController
 		
 			if(empty($form['action'])):$action_id=0; else:$action_id = $form['action'];endif;
 			$benefit_id = $form['benefit'];
-			$remark = $form['remarks'];
+			$remark = $form['remarks']; 
 			$application_focal=$form['focal'];
 			$role= $this->getDefinedTable(Administration\UsersTable::class)->getColumn(array('id'=>$application_focal),'role');
 			$current_flow = $this->getDefinedTable(Administration\FlowTransactionTable::class)->get($flow_id);
@@ -643,7 +644,6 @@ class BenefitController extends AbstractActionController
 			endif;
 			return $this->redirect()->toRoute('benefit', array('action'=>'viewbenefit', 'id' => $benefit_id));
 		}
-
 		$login = array(
 			'login_id'      => $this->_login_id,
 			'login_role'    => $this->_login_role,
@@ -671,7 +671,7 @@ class BenefitController extends AbstractActionController
 	/**
 	 * Notification Action
 	 */
-	public function notify($benefit_id,$privilege_id,$remarks = NULL,$flow_result)
+	public function notify($benefit_id,$privilege_id,$flow_result,$remarks = NULL)
 	{
 		$userlists='';
 		$applications = $this->getDefinedTable(Pswf\BenefitTable::class)->get($benefit_id);
@@ -691,7 +691,7 @@ class BenefitController extends AbstractActionController
 			//echo '<pre>';print_r($notification_data);exit;
 			$notificationResult = $this->getDefinedTable(Acl\NotificationTable::class)->save($notification_data);
 			if($notificationResult > 0 ){
-				$notification_array = explode("|", $flow['route_notification_to']);
+				$notification_array = explode("|", (string) $flow['route_notification_to']);
 				if(sizeof($notification_array)>0){
 					for($k=0;$k<sizeof($notification_array);$k++){
 						$focalusers=$this->getDefinedTable(Administration\FlowTransactionTable::class)->get(array('id'=>$flow_result));
@@ -914,7 +914,7 @@ class BenefitController extends AbstractActionController
     {
        $this->init();
 		if(isset($this->_id) & $this->_id!=0):
-			$my = explode('-', $this->_id);
+			$my = explode('-', (string) $this->_id);
 		endif;
 		if(sizeof($my)==0):
 			$my = array('1'); //default selection
@@ -972,7 +972,7 @@ class BenefitController extends AbstractActionController
 	{
 		
 		$this->init();
-		$data = explode('-', $this->_id);
+		$data = explode('-', (string) $this->_id);
 		//echo '<pre>';print_r($data);exit;
 		$year=$data[0];
 		$month=$data[1];

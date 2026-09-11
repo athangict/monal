@@ -12,17 +12,57 @@ use Laminas\Authentication\Result;
 use Laminas\Mvc\MvcEvent;
 use Auth\Form\AuthForm;
 use Administration\Model as Administration;
+use News\Model as News;
+use Laminas\Mail\Message;
+use Laminas\Mail\Transport\Smtp;
+use Laminas\Mail\Transport\SmtpOptions;
+use DomesticPayment\Service\RmaPaymentService;
+use DomesticPayment\Model\PaymentTransactionTable;
+use DateTime;
+use Laminas\Json\Json;
+use Laminas\Http\Client;
+use Laminas\Http\Request;
+use Auth\Service\SSOService;
+use Laminas\Session\SessionManager;
+use Administration\Model\UsersTable;
+use Acl\Model as Acl;
 
 class AuthController extends AbstractActionController
 {
 	private $container;
     private $dbAdapter;
-    protected $_password;// password plugin
-
-    public function __construct(ContainerInterface $container)
+    protected $_password;
+    private $rmaPaymentService;
+    private $paymentTransactionTable;
+    private $ssoService;
+    private $session;
+    private $config;
+    public function __construct(
+        ContainerInterface $container,
+        ?RmaPaymentService $rmaPaymentService = null,
+        ?PaymentTransactionTable $paymentTransactionTable = null
+    )
     {
         $this->container = $container;
         $this->dbAdapter = $this->container->get(DbAdapter::class);
+        $this->rmaPaymentService = $rmaPaymentService
+            ?? ($this->container->has(RmaPaymentService::class) ? $this->container->get(RmaPaymentService::class) : null);
+        $this->paymentTransactionTable = $paymentTransactionTable
+            ?? ($this->container->has(PaymentTransactionTable::class) ? $this->container->get(PaymentTransactionTable::class) : null);
+        $this->ssoService = new SSOService($container->get('config'));
+        $this->session = $this->ssoService->getSession();
+        $this->config = $container->get('config');
+        // Always use current merged app config; ignore stale session-cached config.
+        if (isset($this->session->config)) {
+            unset($this->session->config);
+        }
+        $this->config = $this->ssoService->initializeConfig($this->config);
+    }
+
+    private function hasPaymentDependencies(): bool
+    {
+        return ($this->rmaPaymentService instanceof RmaPaymentService)
+            && ($this->paymentTransactionTable instanceof PaymentTransactionTable);
     }
 
     public function getDefinedTable($table)
@@ -31,13 +71,28 @@ class AuthController extends AbstractActionController
         return $definedTable;
     }
 
+    private function getApplicationNameForSubject()
+    {
+        $appName = 'Monal-ERP';
+        try {
+            $settings = $this->getDefinedTable(Administration\AppSettingTable::class)->getSettings();
+            $configuredName = trim((string) ($settings['app_name'] ?? ''));
+            if ($configuredName !== '') {
+                $appName = $configuredName;
+            }
+        } catch (\Exception $e) {
+            // Fallback to default app name when settings are unavailable.
+        }
+
+        return $appName;
+    }
     public function indexAction()
     {   
         $auth = new AuthenticationService();
 		if($auth->hasIdentity()):
 			return $this->redirect()->toRoute('home');
 		else:
-			return $this->redirect()->toRoute('auth', array('action' =>'login'));
+            return $this->redirect()->toRoute('auth', array('action' =>'login'));
 		endif;
 		
         return new ViewModel([
@@ -45,7 +100,7 @@ class AuthController extends AbstractActionController
         ]);
     }
     /** 
-     * Authentication - Login 
+     * Login 
      */
     public function loginAction()
     {
@@ -54,34 +109,98 @@ class AuthController extends AbstractActionController
         if($auth->hasIdentity() && $this->params()->fromRoute('id') != "NoKeepAlive"):
 			 return $this->redirect()->toRoute('home');
         endif;
+        // Check if this is an SSO authorization request (OIDC parameters in URL)
+        $clientId = $this->params()->fromQuery('client_id');
+        if ($clientId) {
+            $this->ssoService->setClientId((string) $clientId);
+            // If SSO parameters are present in the query string, redirect to SSO login
+            $sso_login_url = $this->ssoService->getSSOLoginURL();
+            if (!empty($sso_login_url)) {
+                return $this->redirect()->toUrl($sso_login_url);
+            }
+        } else {
+            $this->ssoService->setClientId(null);
+        }
         if ($this->getRequest()->isPost()) 
 		{
-			$data = $this->getRequest()->getPost();
+			$postData = $this->getRequest()->getPost();
             $staticSalt = $this->password()->getStaticSalt();// Get Static Salt using Password Plugin
-            if(filter_var($data['username'], FILTER_VALIDATE_EMAIL)):
+            $legacyStaticSalt = trim((string) ($this->config['legacy_static_salt'] ?? ''));
+            $initialDefaultPassword = trim((string) ($this->config['initial_default_password'] ?? ''));
+            if ($initialDefaultPassword === '') {
+                throw new \RuntimeException('INITIAL_DEFAULT_PASSWORD must be configured in environment.');
+            }
+            if(filter_var($postData['username'], FILTER_VALIDATE_EMAIL)):
                 $identitycolumn = "email";
             else:
                 $identitycolumn = "mobile";
             endif;
-        
+
+            // If logins is manually reset to 0, force account password back to default.
+            $usersTable = $this->getDefinedTable(Administration\UsersTable::class);
+            $userRows = $usersTable->get([$identitycolumn => $postData['username']]);
+            foreach ($userRows as $candidateUser) {
+                $candidateLogins = isset($candidateUser['logins']) ? (int) $candidateUser['logins'] : 0;
+                $candidateSalt = (string) ($candidateUser['salt'] ?? '');
+                if ($candidateLogins !== 0 || $candidateSalt === '') {
+                    continue;
+                }
+
+                $defaultHash = $this->password()->encryptPassword($staticSalt, $initialDefaultPassword, $candidateSalt);
+                if (!hash_equals((string) ($candidateUser['password'] ?? ''), $defaultHash)) {
+                    $usersTable->save([
+                        'id' => (int) $candidateUser['id'],
+                        'password' => $defaultHash,
+                    ]);
+                }
+            }
+
             $authAdapter = new AuthAdapter($this->dbAdapter,
-                                           'sys_users', // there is a method setTableName to do the same
-                                           $identitycolumn, // there is a method setIdentityColumn to do the same
-                                           'password', // there is a method setCredentialColumn to do the same
-                                           "SHA1(CONCAT('$staticSalt', ?, salt))" // setCredentialTreatment(parametrized string) 'MD5(?)'
-                                          );            
+                                           'sys_users',
+                                           $identitycolumn,
+                                           'password',
+                                           "SHA1(CONCAT('$staticSalt', ?, salt))"
+                                          );
             $authAdapter
-                    ->setIdentity($data['username'])
-                    ->setCredential($data['password'])
+                    ->setIdentity($postData['username'])
+                    ->setCredential($postData['password'])
                 ;
             $authService = new AuthenticationService();
             $result = $authService->authenticate($authAdapter);
+            $usedLegacySalt = false;
+
+            if (
+                $result->getCode() === Result::FAILURE_CREDENTIAL_INVALID
+                && $legacyStaticSalt !== ''
+                && $legacyStaticSalt !== $staticSalt
+            ) {
+                $legacyAuthAdapter = new AuthAdapter($this->dbAdapter,
+                                                    'sys_users',
+                                                    $identitycolumn,
+                                                    'password',
+                                                    "SHA1(CONCAT('$legacyStaticSalt', ?, salt))"
+                                                   );
+                $legacyAuthAdapter
+                    ->setIdentity($postData['username'])
+                    ->setCredential($postData['password']);
+
+                $legacyResult = $authService->authenticate($legacyAuthAdapter);
+                if ($legacyResult->getCode() === Result::SUCCESS) {
+                    $result = $legacyResult;
+                    $authAdapter = $legacyAuthAdapter;
+                    $usedLegacySalt = true;
+                }
+            }
             //echo"<pre>"; print_r($result); exit;
             switch ($result->getCode()) 
 			{
                 case Result::FAILURE_IDENTITY_NOT_FOUND:
                     // nonexistent identity
-                    $this->flashMessenger()->addMessage("error^ A record with the supplied identity (username) could not be found.");
+                    if ($identitycolumn === 'email') {
+                        $this->flashMessenger()->addMessage("error^ This email is not registered in the system.");
+                    } else {
+                        $this->flashMessenger()->addMessage("error^ This mobile number is not registered in the system.");
+                    }
                     break;
 
                 case Result::FAILURE_CREDENTIAL_INVALID:
@@ -93,14 +212,31 @@ class AuthController extends AbstractActionController
                 case Result::SUCCESS:
                     $storage = $authService->getStorage();
                     $storage->write($authAdapter->getResultRowObject());
+
+                    if ($usedLegacySalt) {
+                        $userId = $this->identity()->id;
+                        $userSalt = (string) $this->getDefinedTable(Administration\UsersTable::class)->getColumn($userId, 'salt');
+                        if ($userSalt !== '') {
+                            $migratedHash = $this->password()->encryptPassword($staticSalt, (string) $postData['password'], $userSalt);
+                            $this->getDefinedTable(Administration\UsersTable::class)->save([
+                                'id' => $userId,
+                                'password' => $migratedHash,
+                            ]);
+                        }
+                    }
+
                     $role = $this->identity()->role;
                     $time = 1209600; // 14 days 1209600/3600 = 336 hours => 336/24 = 14 days
-                    if ($data['rememberme']) {
+                    if ($postData['rememberme']) {
                         $sessionManager = new \Laminas\Session\SessionManager();
                         $sessionManager->rememberMe($time);
                     }
                     $id = $this->identity()->id; 
-                    $login = $this->getDefinedTable(Administration\UsersTable::class)->getColumn($id, $column='logins');
+                        $login = (int) $this->getDefinedTable(Administration\UsersTable::class)->getColumn($id, $column='logins');
+                        $isFirstLogin = ($login === 0);
+                        $authMeta = new Container('auth_meta');
+                        $authMeta->is_first_login = $isFirstLogin;
+                        $authMeta->first_login_user_id = $id;
                     
                     $data = array(
                             'id'         => $id,
@@ -109,15 +245,17 @@ class AuthController extends AbstractActionController
                             'logins' => $login + 1
                     ); 
                     $this->getDefinedTable(Administration\UsersTable::class)->save($data);
-					//check whether user is block
 					$status = $this->getDefinedTable(Administration\UsersTable::class)->getColumn($id, $column='status');
-					if($status == "0"){
-					   return $this->redirect()->toRoute('auth', array('action' => 'logout','id'=>'blocked'));	
+					if($status == "9"){
+					   return $this->redirect()->toRoute('auth', array('action' => 'logout', 'id'=>'1'));	
 					}
+                    if ($isFirstLogin) {
+                        $this->flashMessenger()->addMessage("warning^ This is your first login. Please change your password now.");
+                        return $this->redirect()->toRoute('user', array('action' => 'changepwd'), array('query' => array('first_login' => '1')));
+                    }
                     $this->flashMessenger()->addMessage("info^ Welcome,</br>You have successfully logged in!");
                     return $this->redirect()->toRoute('home');
                 break;
-
                 default:
                     //other failure--- currently silent
                 break;  
@@ -132,54 +270,887 @@ class AuthController extends AbstractActionController
 				$this->flashMessenger()->addMessage('warning^Your session has expired, please login again.');
 			endif;
         }
+        $sso_login_url = $this->ssoService->getSSOLoginURL();
         $ViewModel = new ViewModel(array(
 			'title' => 'Log into System',
+            'sso_login_url' => $sso_login_url
 		));
 		$ViewModel->setTerminal(false);
 		return $ViewModel;
     }
     /**
+     * registration Action with RMA Payment Verification
+     * 
+     * Flow:
+     * 1. Display registration form with bank account fields
+     * 2. User submits form with account details
+     * 3. Authorize transaction with RMA
+     * 4. User enters OTP
+     * 5. Verify OTP and debit
+     * 6. On success: Create user account and redirect to login
+     * 7. On failure: Show error and return to form
+     */
+    public function registrationAction()
+    {
+        $request = $this->getRequest();
+        $session = new Container('registration');
+        // Persist newsId in session so it survives redirects between steps
+        $newsId = $this->params()->fromQuery('id', $session->newsId ?? null);
+        if ($newsId === null) {
+            $newsId = $this->params()->fromRoute('id');
+        }
+        if ($newsId !== null) {
+            $session->newsId = $newsId;
+        }
+        // Get step from POST if available, otherwise from query string
+        if ($request->isPost()) {
+            $data = $request->getPost();
+            $step = $data['step'] ?? $this->params()->fromQuery('step', '1');
+        } else {
+            $step = $this->params()->fromQuery('step', '1');
+        }
+        if ($request->isPost()) {
+            // Debug logging
+            // STEP 1: Initial Registration Form Submission
+            if ($step == '1' || empty($session->bfsTxnId)) {
+            return $this->handlePaymentAuthorization($data, $newsId, $session);
+            }
+            
+            // STEP 2: OTP Verification and Debit
+            if ($step == '2' && !empty($session->bfsTxnId)) {
+            return $this->handlePaymentDebit($data, $session);
+            }
+        }
+        
+        $viewModel = new ViewModel([
+            'title'         => 'Register New Account',
+            'newsId'        => $session->newsId ?? $newsId,
+            'step'          => $step,
+            'districts'     => $this->getDefinedTable(Administration\DistrictTable::class)->getAll(),
+            'session'       => $session,
+            'banks'         => $this->getDefinedTable(Administration\BankTable::class)->getAll(),
+        ]);
+        return $viewModel;
+    }
+
+    /**
+     * Handle Step 1: Payment Authorization
+     * Validates user input and initiates RMA payment authorization
+     */
+    private function handlePaymentAuthorization($data, $newsId, Container $session)
+    {
+        try {
+            if (! $this->hasPaymentDependencies()) {
+                $this->flashMessenger()->addMessage('error^Payment service is temporarily unavailable. Please contact administrator.');
+                return $this->redirect()->toRoute('auth', ['action' => 'registration']);
+            }
+
+            // Validate registration data
+            $validationError = $this->validateRegistrationData($data);
+            if ($validationError) {
+                $this->flashMessenger()->addMessage($validationError);
+                return $this->redirect()->toRoute('auth', ['action' => 'registration', 'id' => $newsId]);
+            }
+
+            // Check if user already exists
+            $existingUser = $this->getDefinedTable(Administration\UsersTable::class)
+                             ->get(['cid' => $data['cid']]);
+            if ($existingUser) {
+                $this->flashMessenger()->addMessage("warning^You are already Registered. Please login.");
+                return $this->redirect()->toRoute('auth', ['action' => 'login']);
+            }
+
+            // Authorize transaction with RMA
+            $config = $this->container->get('config');
+            $merchantId = trim((string)($config['rma_api']['merchant_id'] ?? ''));
+            
+            // Log payment request details
+            
+            $paymentDesc = "Registration Payment - {$data['name']} ({$data['cid']})";
+            $authResponse = $this->rmaPaymentService->authorizeTransaction(
+                $merchantId,
+                $paymentDesc,
+                '1.00'  // Registration fee amount
+            );
+
+            // Log full response for debugging
+            $authStatus = strtoupper((string)($authResponse['status'] ?? $authResponse['authorisation_status'] ?? ''));
+            $authCode = $authResponse['bfs_responseCode']
+                ?? $authResponse['bfs_response_code']
+                ?? null;
+            $authStatusOk = ($authStatus !== '' && strpos($authStatus, 'SUCCESS') !== false);
+            $authStatusFailed = ($authStatus !== '' && (strpos($authStatus, 'FAIL') !== false || strpos($authStatus, 'INVALID') !== false));
+
+            if (
+                !$authResponse
+                || $authStatusFailed
+                || ($authCode !== null && $authCode !== '00')
+                || ($authCode === null && !$authStatusOk)
+                || empty($authResponse['bfs_bfsTxnId'])
+            ) {
+                $errorMsg = $authResponse['bfs_responseMessage']
+                    ?? $authResponse['bfs_response_message']
+                    ?? $authResponse['message']
+                    ?? 'Payment authorization failed';
+                $errorDetails = $authCode ? " (Code: {$authCode})" : "";
+                
+                $this->flashMessenger()->addMessage("error^Payment authorization failed: {$errorMsg}{$errorDetails}");
+                return $this->redirect()->toRoute('auth', ['action' => 'registration']);
+            }
+
+            // Store transaction info in session
+            $session->bfsTxnId = $authResponse['bfs_bfsTxnId'];
+            $session->paymentDesc = $paymentDesc;
+            $session->regData = [
+                'name'       => $data['name'],
+                'cid'        => $data['cid'],
+                'email'      => $data['email'],
+                'phone'      => $data['phone'],
+                'dzongkhag'  => $data['Dzongkhag'] ?? '',
+                'accountNo'  => $data['account_number'],
+                'bankId'     => $data['bank_id'],
+                'newsId'     => $session->newsId ?? $newsId,
+            ];
+
+            // Save payment transaction to database
+            $transaction = new \DomesticPayment\Model\PaymentTransaction();
+                        $transaction->setMerchantId($merchantId)
+                            ->setPaymentDesc($paymentDesc)
+                            ->setTxnAmount('1.00')
+                            ->setBfsTxnId($authResponse['bfs_bfsTxnId'])
+                            ->setStatus('authorized')
+                            ->setResponseCode($authResponse['bfs_responseCode'] ?? '')
+                            ->setResponseMessage($authResponse['message'] ?? '')
+                            ->setRemitterAccNo('')
+                            ->setRemitterBankId('')
+                            ->setRemitterOtp('')
+                            ->setRemitterCid($data['cid']) // Store user CID as identifier
+                            ->setCreatedAt(new DateTime())
+                            ->setUpdatedAt(new DateTime());
+
+            $txnId = $this->paymentTransactionTable->savePaymentTransaction($transaction);
+            $session->txnId = $txnId; // Store transaction ID in session
+            
+            // Proceed to account inquiry (only show user-facing messages after inquiry)
+            return $this->handleAccountInquiry($data, $session);
+
+        } catch (\Exception $e) {
+            $this->flashMessenger()->addMessage("error^Payment error: " . $e->getMessage());
+            return $this->redirect()->toRoute('auth', ['action' => 'registration']);
+        }
+    }
+
+    /**
+     * Handle Account Inquiry (Step 2)
+     */
+    private function handleAccountInquiry($data, Container $session)
+    {
+        try {
+            // Verify account with RMA
+            $inquiryResponse = $this->rmaPaymentService->accountInquiry(
+                $data['account_number'],
+                $data['bank_id'],
+                $session->bfsTxnId
+            );
+
+            // Map API fields (supports snake_case and camelCase)
+            $respCode = $inquiryResponse['bfs_responseCode']
+                ?? $inquiryResponse['bfs_response_code']
+                ?? $inquiryResponse['response_code']
+                ?? null;
+            $respDesc = $inquiryResponse['bfs_responseDesc']
+                ?? $inquiryResponse['bfs_response_message']
+                ?? $inquiryResponse['message']
+                ?? null;
+            $enquiryStatus = $inquiryResponse['account_enquiry_status']
+                ?? $inquiryResponse['account_inquiry_status']
+                ?? null;
+
+            $codeOk = ($respCode === '00');
+            $statusOk = ($enquiryStatus && stripos($enquiryStatus, 'SUCCESS') !== false);
+
+            if (!$inquiryResponse || (!($codeOk || $statusOk))) {
+                $displayMsg = $respDesc ?: ($inquiryResponse['message'] ?? 'Account verification failed');
+                if ($respCode) {
+                    $displayMsg .= " (Code: {$respCode})";
+                }
+                $this->flashMessenger()->addMessage("error^Account verification failed: {$displayMsg}. Please verify your bank account details.");
+                return $this->redirect()->toRoute('auth', ['action' => 'registration']);
+            }
+
+            // Update payment transaction with account details
+            if (!empty($session->txnId)) {
+                $transaction = $this->paymentTransactionTable->getPaymentTransaction($session->txnId);
+                if ($transaction) {
+                    $transaction->setRemitterAccNo($data['account_number'])
+                        ->setRemitterBankId($data['bank_id'])
+                        ->setStatus('inquired')
+                        ->setResponseCode($respCode ?? '')
+                        ->setResponseMessage(($respDesc ?: $enquiryStatus) ?? '')
+                        ->setUpdatedAt(new DateTime());
+                    
+                    $this->paymentTransactionTable->savePaymentTransaction($transaction);
+                }
+            }
+            $this->flashMessenger()->addMessage("success^Account verified! Please check your phone for OTP.");
+            // Redirect to OTP verification step
+            return $this->redirect()->toRoute('auth', [
+                'action' => 'registration',
+                'id' => $session->regData['newsId']
+            ], ['query' => ['step' => '2']]);
+
+        } catch (\Exception $e) {
+            $this->flashMessenger()->addMessage("error^Account inquiry error: " . $e->getMessage());
+            return $this->redirect()->toRoute('auth', ['action' => 'registration']);
+        }
+    }
+
+    /**
+     * Handle Step 3: Payment Debit with OTP
+     * Completes payment and creates user account if successful
+     */
+    private function handlePaymentDebit($data, Container $session)
+    {
+        try {
+            if (empty($session->bfsTxnId)) {
+                $this->flashMessenger()->addMessage("error^Session expired. Please start registration again.");
+                return $this->redirect()->toRoute('auth', ['action' => 'registration']);
+            }
+
+            if (empty($data['otp'])) {
+                $this->flashMessenger()->addMessage("error^OTP is required.");
+                return $this->redirect()->toRoute('auth', [
+                    'action' => 'registration',
+                    'id' => $session->newsId ?? ($session->regData['newsId'] ?? null)
+                ], ['query' => ['step' => '2']]);
+            }
+
+            // Process debit with OTP
+            $debitResponse = $this->rmaPaymentService->debitTransaction(
+                $data['otp'],
+                $session->bfsTxnId
+            );
+
+            // Map fields (snake_case vs camelCase) and determine success
+            $debitRespCode = $debitResponse['debit_response_code']
+                ?? $debitResponse['bfs_responseCode']
+                ?? $debitResponse['bfs_response_code']
+                ?? null;
+            $debitRespMsg = $debitResponse['bfs_responseMessage']
+                ?? $debitResponse['bfs_response_message']
+                ?? $debitResponse['bfs_responseDesc']
+                ?? $debitResponse['message']
+                ?? null;
+            $accountDebitStatus = $debitResponse['account_debit_status'] ?? null;
+            $debitStatus = isset($debitResponse['status']) ? strtoupper((string)$debitResponse['status']) : null;
+            $debitOk = ($debitRespCode === '00')
+                || ($debitStatus === 'SUCCESS')
+                || ($accountDebitStatus && stripos($accountDebitStatus, 'success') !== false);
+
+            if (!$debitResponse || !$debitOk) {
+                $errorMsg = $debitRespMsg ?? $accountDebitStatus ?? ($debitResponse['message'] ?? 'Payment failed');
+                $errorCode = $debitRespCode ?? '';
+                
+                $displayMsg = $errorMsg;
+                if ($errorCode) {
+                    $displayMsg .= " (Error Code: {$errorCode})";
+                }
+                
+                $this->flashMessenger()->addMessage("error^Payment failed: {$displayMsg}");
+                return $this->redirect()->toRoute('auth', [
+                    'action' => 'registration',
+                    'id' => $session->newsId ?? ($session->regData['newsId'] ?? null)
+                ], ['query' => ['step' => '2']]);
+            }
+            
+            // Update payment transaction with final status
+            if (!empty($session->txnId)) {
+                $transaction = $this->paymentTransactionTable->getPaymentTransaction($session->txnId);
+                if ($transaction) {
+                    $transaction->setRemitterOtp($data['otp'])
+                        ->setStatus('completed')
+                        ->setResponseCode($debitRespCode ?? '')
+                        ->setResponseMessage(($debitRespMsg ?? $accountDebitStatus ?? 'Success'))
+                        ->setUpdatedAt(new DateTime());
+                    
+                    $this->paymentTransactionTable->savePaymentTransaction($transaction);
+                }
+            }
+
+            // Payment successful! Now create user account
+            return $this->completeRegistration($session);
+
+        } catch (\Exception $e) {
+            $this->flashMessenger()->addMessage("error^Payment debit error: " . $e->getMessage());
+            return $this->redirect()->toRoute('auth', ['action' => 'registration']);
+        }
+    }
+
+    /**
+     * Complete Registration: Create user account after successful payment
+     */
+    private function completeRegistration(Container $session)
+    {
+        try {
+            $regData = $session->regData;
+            if (empty($regData['newsId']) && isset($session->newsId)) {
+                $regData['newsId'] = $session->newsId;
+                $session->regData = $regData; // keep session in sync
+            }
+            
+
+            // Use configured initial default password for first-time login.
+            $staticSalt = $this->password()->getStaticSalt();
+            $randomPassword = trim((string) ($this->config['initial_default_password'] ?? ''));
+            if ($randomPassword === '') {
+                throw new \RuntimeException('INITIAL_DEFAULT_PASSWORD must be configured in environment.');
+            }
+            
+            $dynamicSalt = bin2hex(random_bytes(4));
+            $hashedPassword = sha1($staticSalt . $randomPassword . $dynamicSalt);
+
+            $userTable = $this->getDefinedTable(Administration\UsersTable::class);
+            $regEmail = trim((string) ($regData['email'] ?? ''));
+            $regMobile = trim((string) ($regData['phone'] ?? ''));
+            if ($regEmail !== '' && count($userTable->get(['email' => $regEmail])) > 0) {
+                $this->flashMessenger()->addMessage('error^Registration failed: this email is already registered. Please login or use forgot password.');
+                return $this->redirect()->toRoute('auth', ['action' => 'login']);
+            }
+            if ($regMobile !== '' && count($userTable->get(['mobile' => $regMobile])) > 0) {
+                $this->flashMessenger()->addMessage('error^Registration failed: this mobile number is already registered. Please login or use forgot password.');
+                return $this->redirect()->toRoute('auth', ['action' => 'login']);
+            }
+            
+            // Create user account
+            $userData = [
+                'name'         => $regData['name'],
+                'cid'          => $regData['cid'],
+                'email'        => $regData['email'],
+                'mobile'       => $regData['phone'],
+                'role'         => 2,
+                'region'       => 1,
+                'location'     => $regData['dzongkhag'],
+                'password'     => $hashedPassword,
+                'salt'         => $dynamicSalt,
+                'status'       => 1,
+                'created'      => date('Y-m-d H:i:s'),
+                'modified'     => date('Y-m-d H:i:s')
+            ];
+
+            $userId = $this->getDefinedTable(Administration\UsersTable::class)->save($userData);
+            if ($userId > 0) {
+                // Create subscription if newsId is provided
+                if (!empty($regData['newsId'])) {
+                    $start = date('Y-m-d H:i:s');
+                    $end   = date('Y-m-d H:i:s', strtotime('+1 year', strtotime($start)));
+                    
+                    $subscribeData = [
+                        'user'            => $userId,
+                        'news_type'       => $regData['newsId'],
+                        'sub_start_date'  => $start,
+                        'sub_end_date'    => $end,
+                        'status'          => 1,
+                        'author'          => 1,
+                        'created'         => date('Y-m-d H:i:s'),
+                        'modified'        => date('Y-m-d H:i:s')
+                    ];
+                    $this->getDefinedTable(News\SubcribeTable::class)->save($subscribeData);
+                }
+                // Send credentials email
+                $message = "
+                    <div style='font-family: Arial, sans-serif; line-height: 1.6; color: #333;'>
+                        <h2 style='color: #0f766e;'>Welcome to MyThimphu!</h2>
+                        <p>Dear {$regData['name']},</p>
+                        <p>Your registration has been completed successfully. Below are your login credentials:</p>
+                        <div style='background-color: #f3f4f6; padding: 15px; border-left: 4px solid #0f766e; margin: 20px 0;'>
+                            <p style='margin: 5px 0;'><strong>Username:</strong> {$regData['email']}</p>
+                            <p style='margin: 5px 0;'><strong>Password:</strong> {$randomPassword}</p>
+                        </div>
+                        <p>Please keep these credentials safe.</p>
+                        <br>
+                        <p>Best regards,<br>MyThimphu Team</p>
+                    </div>
+                ";
+                $mail = array(
+                    'email'    => $regData['email'],
+                    'name'     => $regData['name'],
+                    'subject'  => $this->getApplicationNameForSubject() . ': Registration Successful',
+                    'message'  => $message,
+                    'cc_array' => [],
+                );
+                try {
+                    $this->EmailPlugin()->sendmail($mail);
+                } catch (\Exception $e) {
+                }
+                // Clear session
+                $this->clearRegistrationSession($session);
+                $this->flashMessenger()->addMessage("success^Registration and payment successful! Your login credentials have been sent to your email.");
+                return $this->redirect()->toRoute('auth', ['action' => 'login']);
+
+            } else {
+                $this->flashMessenger()->addMessage("error^Failed to create user account.");
+                return $this->redirect()->toRoute('auth', ['action' => 'registration']);
+            }
+
+        } catch (\Exception $e) {
+            $this->flashMessenger()->addMessage("error^Registration error: " . $e->getMessage());
+            return $this->redirect()->toRoute('auth', ['action' => 'registration']);
+        }
+    }
+    /**
+     * Validate registration form data
+     */
+    private function validateRegistrationData($data)
+    {
+        if (empty($data['name'])) return "error^Name is required.";
+        if (empty($data['cid'])) return "error^Citizenship ID is required.";
+        if (empty($data['email'])) return "error^Email is required.";
+        if (!filter_var($data['email'], FILTER_VALIDATE_EMAIL)) return "error^Invalid email format.";
+        if (empty($data['phone'])) return "error^Phone number is required.";
+        if (empty($data['account_number'])) return "error^Bank account number is required.";
+        if (empty($data['bank_id'])) return "error^Bank ID is required.";
+        
+        return null;
+    }
+    /**
+     * Clear registration session
+     */
+    private function clearRegistrationSession(Container $session)
+    {
+        unset($session->bfsTxnId);
+        unset($session->paymentDesc);
+        unset($session->regData);
+    }
+    /**
+     * Verify the code sent for 2FA
+     * duration: 5 minutes
+     * redirect to home on success
+     * redirect to login on failure
+     */
+    public function verify2faAction()
+    {
+        $session = new Container('2fa');
+        $auth = new AuthenticationService();
+
+        // Session expired or no code
+        if (empty($session->userId)) {
+            $this->flashMessenger()->addMessage("error^Session expired, please login again.");
+            return $this->redirect()->toRoute('auth', ['action' => 'login']);
+        }
+
+        if ($this->getRequest()->isPost()) {
+            $data = $this->getRequest()->getPost();
+            if (time() > $session->expires) {
+                $this->flashMessenger()->addMessage("error^2FA code expired, please login again.");
+                $this->clear2faSession();
+                return $this->redirect()->toRoute('auth', ['action' => 'login']);
+            }
+            if ($data['twofa_code'] == $session->code) {
+                // Read userId BEFORE clearing session
+                $userId = $session->userId;
+                // Load user from DB (your table returns array)
+                $user = $this->getDefinedTable(Administration\UsersTable::class)->get($userId);
+                $userData = $user[0];
+                // Convert array to object for proper authentication
+                $userObject = (object) $userData;
+                // Write user object to auth storage
+                $auth->getStorage()->write($userObject);
+                // Update login info
+                $existingLogins = is_numeric($userData['logins']) ? (int) $userData['logins'] : 0;
+                $isFirstLogin = ($existingLogins === 0);
+                $authMeta = new Container('auth_meta');
+                $authMeta->is_first_login = $isFirstLogin;
+                $authMeta->first_login_user_id = (int) $userData['id'];
+
+                $updateData = [
+                    'id' => $userData['id'],
+                    'last_login' => date('Y-m-d H:i:s'),
+                    'last_accessed_ip' => $_SERVER['REMOTE_ADDR'],
+                    'logins' => $existingLogins + 1,
+                    'modified' => date('Y-m-d H:i:s')
+                ];
+                // echo"<pre>"; print_r($updateData); exit;
+                $this->getDefinedTable(Administration\UsersTable::class)->save($updateData);
+                
+                // Clear only the 2fa session, not the entire session
+                $this->clear2faSession();
+
+                if ($isFirstLogin) {
+                    $this->flashMessenger()->addMessage("warning^ This is your first login. Please change your password now.");
+                    return $this->redirect()->toRoute('user', ['action' => 'changepwd'], ['query' => ['first_login' => '1']]);
+                }
+                
+                $this->flashMessenger()->addMessage("info^Login successful!");
+                return $this->redirect()->toRoute('home');
+
+            } else {
+                $this->flashMessenger()->addMessage("error^Invalid 2FA code, try again.");
+                return $this->redirect()->toRoute('auth', ['action' => 'verify-2fa']);
+            }
+        }
+        return new ViewModel(['title' => 'Enter 2FA Code']);
+    }
+    /**
+     * Clear 2FA session container safely
+     */
+    private function clear2faSession()
+    {
+        $session = new Container('2fa');
+        unset($session->userId);
+        unset($session->user);
+        unset($session->code);
+        unset($session->expires);
+    }
+    /**
      * Logout
      */
     public function logoutAction()
-	{
-        if(!$this->identity()){
-	    	  $this->flashMessenger()->addMessage("warning^ Your session has already expired. Login in to proceed.");
-	    	  return $this->redirect()->toRoute('auth', array('action' => 'login'));
-	    }
-		$auth = new AuthenticationService();
-		//$msg = $this->params()->fromRoute('id');
-		$id = $this->identity()->id;   
-		$data = array(
-		    'id'          => $id,
-			'last_logout' => date('Y-m-d H:i:s')	    
-		); 
-		
-		$this->getDefinedTable(Administration\UsersTable::class)->save($data);
+    {
+        if (!$this->identity()) {
+            $this->flashMessenger()->addMessage("warning^Your session has already expired. Login to proceed.");
+            return $this->redirect()->toRoute('auth', ['action' => 'login']);
+        }
 
-		if ($auth->hasIdentity()) {
-			$identity = $auth->getIdentity();
-		}			
-		
-		$auth->clearIdentity();
-		$sessionManager = new \Laminas\Session\SessionManager();
-		$sessionManager->forgetMe();
-		
-		if ( $this->params()->fromRoute('id') == "blocked" ):
-		    $this->flashMessenger()->addMessage('warning^You cannot use the system as you are blocked. Contact the administrator.');
-		else:
-			$this->flashMessenger()->addMessage('info^You have successfully logged out!');
-		endif;
-		
-		return $this->redirect()->toRoute('auth', array('action'=>'login'));
-	}
+        $auth = new AuthenticationService();
+        $msg = $this->params()->fromRoute('id');
+        $id = $this->identity()->id;
+
+        // Log last_logout timestamp
+        $this->getDefinedTable(Administration\UsersTable::class)->save([
+            'id' => $id,
+            'last_logout' => date('Y-m-d H:i:s')
+        ]);
+
+        // Optional: store identity for audit or logs
+        if ($auth->hasIdentity()) {
+            $identity = $auth->getIdentity();
+        }
+
+        // Clear identity and session
+        $auth->clearIdentity();
+        $sessionManager = new \Laminas\Session\SessionManager();
+        $sessionManager->forgetMe();
+        $this->session->getManager()->getStorage()->clear();
+
+        // Trigger IdP logout only when explicitly requested.
+        $forceSsoLogout = (string) $this->params()->fromQuery('sso_logout', '0') === '1';
+        if ($forceSsoLogout && isset($identity) && $identity->is_sso_user) {
+
+            try {
+                // Optional: get post-logout callback
+                $postLogoutRedirectUri = $this->url()->fromRoute('logout-callback', [], ['force_canonical' => true]);
+
+                // Get SSO logout URL
+                $logoutUrl = $this->ssoService->getLogoutUrl($postLogoutRedirectUri);
+
+                // Destroy session entirely
+                $this->session->getManager()->destroy();
+
+                return $this->redirect()->toUrl($logoutUrl);
+            } catch (\Exception $e) {
+                // Fallback if SSO logout fails
+                $this->flashMessenger()->addMessage("danger^SSO logout failed: " . $e->getMessage());
+            }
+        }
+        // Default behavior: local app logout without IdP redirect.
+        if ($msg == "1") {
+            $this->flashMessenger()->addMessage('warning^You cannot use the system as you are blocked. Contact the administrator.');
+        } else {
+            $this->flashMessenger()->addMessage('info^You have successfully logged out!');
+        }
+
+        return $this->redirect()->toRoute('auth', ['action' => 'login']);
+    }
+    /**
+     * state send back from SSO provider needed to be same as state in the session
+     * SSO Callback Action
+	 */
+    public function callbackAction()
+    {
+        $code  = $this->params()->fromQuery('code');
+        $state = $this->params()->fromQuery('state');
+        $error = $this->params()->fromQuery('error');
+
+        if ($error) {
+            $this->flashMessenger()->addMessage('error^SSO authentication failed: ' . $error);
+            return $this->redirect()->toRoute('auth', ['action' => 'login']);
+        }
+        // Debug: dump all session variables
+        if (!$state || $state !== $this->session->state) {
+            $this->flashMessenger()->addMessage('error^Invalid state parameter. Please try signing in again.');
+            return $this->redirect()->toRoute('auth', ['action' => 'login']);
+        }
+
+        $codeVerifier = $this->session->code_verifier ?? null;
+        if (!$codeVerifier) {
+            $this->flashMessenger()->addMessage('error^SSO session expired. Please sign in again.');
+            return $this->redirect()->toRoute('auth', ['action' => 'login']);
+        }
+        try {
+            $tokens = $this->ssoService->exchangeCodeForToken($code, $codeVerifier);
+            if (!isset($tokens['access_token'])) {
+                throw new \Exception('Access token not found in response');
+            }
+
+            if (!isset($tokens['id_token'])) {
+                throw new \Exception('ID token not found in response');
+            }
+
+            $this->ssoService->storeTokens($tokens);
+            $jwkSet = $this->ssoService->getJwkEndpointContent($this->config['openid_config']['jwks_uri']);
+            $jwt = $this->session->offsetGet($this->config['session_keys']['id_token']);
+            $jwk = $jwkSet['keys'][0];
+            $pem = $this->ssoService->jwkToPem($jwk);
+
+            if (!$this->ssoService->verifyJwtSignature($jwt, $pem)) {
+                throw new \Exception('JWT signature verification failed.');
+            }
+
+            $jwtPayload = $this->ssoService->decodeJwtPayload($jwt);
+            $tokenIssuer = trim((string) ($jwtPayload['iss'] ?? ''));
+            $validIssuers = array_map('trim', explode(',', (string) ($this->config['sso']['validIssuers'] ?? '')));
+            $validIssuers = array_filter($validIssuers, fn ($issuer) => $issuer !== '');
+
+            if ($tokenIssuer === '' || !in_array($tokenIssuer, $validIssuers, true)) {
+                throw new \Exception('Invalid token issuer.');
+            }
+
+            // Fetch user info using the access token  
+            $userData = $this->ssoService->getUserInfo($tokens['access_token']);
+            $userData = $this->completeUserData($userData);
+            if (!is_array($userData) || empty($userData)) {
+                throw new \Exception('Unable to resolve local user details from SSO identity.');
+            }
+        
+
+            //  Save user in session
+            $this->session->user = $userData;
+            $this->session->authenticated = true;
+            $this->session->access_token = $tokens['access_token'];
+            $this->session->is_sso_user = true;
+
+            // The line unset($this->session->state); removes the state property from the session object associated with the current user. I
+            unset($this->session->state);
+            
+            // AuthenticationService login logic
+            $authService = new \Laminas\Authentication\AuthenticationService();
+            $authStorage = $authService->getStorage();
+            $authStorage->write((object) $userData); // Convert array to object
+
+            $userId = $userData['id'] ?? ($userData['uuid'] ?? ($userData['sub'] ?? null));
+            if ($userId) {
+                $isFirstLogin = false;
+            
+                // Log login time and IP
+                $ipAddress = $_SERVER['HTTP_CLIENT_IP']
+                            ?? $_SERVER['HTTP_X_FORWARDED_FOR']
+                            ?? $_SERVER['REMOTE_ADDR'];
+
+                $usersTable = $this->getDefinedTable(UsersTable::class);
+                $loginCount = $usersTable->getColumn($userId, 'logins');
+                $loginCount = is_numeric($loginCount) ? (int) $loginCount : 0;
+                $isFirstLogin = ($loginCount === 0);
+                $usersTable->save([
+                    'id' => $userId,
+                    'last_login' => date('Y-m-d H:i:s'),
+                    'last_accessed_ip' => $ipAddress,
+                    'logins' => $loginCount + 1,
+                ]);
+                $status = $usersTable->getColumn($userId, 'status');
+                if ($status == "9") {
+                    return $this->redirect()->toRoute('auth', ['action' => 'logout', 'id' => '1']);
+                }
+
+                if ($isFirstLogin) {
+                    $this->flashMessenger()->addMessage("warning^ This is your first login. Please change your password now.");
+                    return $this->redirect()->toRoute('user', ['action' => 'changepwd'], ['query' => ['first_login' => '1']]);
+                }
+            }
+
+            $this->flashMessenger()->addMessage("info^ Welcome,</br>You have successfully logged in!");
+
+            return $this->redirect()->toRoute('application', ['action' => 'panel1']);
+
+        } catch (\Exception $e) {
+            $errorMessage = $e->getMessage();
+            if (strpos($errorMessage, 'SSO user UUID is not linked') !== false) {
+                $errorMessage = 'Your SSO account is not linked to your Application Account. Please contact administrator.';
+            } elseif (strpos($errorMessage, 'SSO subject (sub) is missing') !== false) {
+                $errorMessage = 'Your SSO account is missing a required identifier. Please contact administrator.';
+            }
+            $this->flashMessenger()->addMessage('error^Authentication failed: ' . $errorMessage);
+            return $this->redirect()->toRoute('auth', ['action' => 'login']);
+        }
+    }
+     // logout methods:
+    public function SSOlogoutAction()
+    {
+        try {
+            // Redirect URI that the SSO provider should call after logout
+            $postLogoutRedirectUri = $this->url()->fromRoute('logout-callback', [], ['force_canonical' => true]);
+    
+            // Get the end_session_endpoint from OpenID config
+            $logoutUrl = $this->ssoService->getLogoutUrl($postLogoutRedirectUri);
+    
+            return $this->redirect()->toUrl($logoutUrl);
+    
+        } catch (\Exception $e) {
+            return new ViewModel([
+                'error' => 'Failed to initiate SSO logout: ' . $e->getMessage(),
+            ]);
+        }
+    }
+
+    public function logoutCallbackAction()
+    {
+        // Redundant safety clear for app session
+        $this->session->getManager()->getStorage()->clear();
+        $this->session->getManager()->destroy();
+
+        // Flash message or redirect
+        $this->flashMessenger()->addSuccessMessage('You have been logged out successfully.');
+
+        return $this->redirect()->toRoute('home', [], ['query' => ['logout' => 'success']]);
+    }
+    public function statusAction()
+    {
+        return new ViewModel([
+            'authenticated' => $this->session->authenticated ?? false,
+            'user'          => $this->session->user ?? null,
+        ]);
+    }
+
+    public function completeUserData($userData)
+    {
+        $rawSubject = trim((string) ($userData['sub'] ?? ''));
+
+        $userData = [
+            'id'                 => $rawSubject,
+            'sub'                => $rawSubject,
+            'name'               => $userData['name'] ?? '',
+            'preferred_username' => $userData['preferred_username'] ?? '',
+            'email'              => $userData['email'] ?? '',
+        ];
+
+        try {
+            if ($rawSubject === '') {
+                throw new \Exception('SSO subject (sub) is missing.');
+            }
+
+            $usersTable = $this->getDefinedTable(UsersTable::class);
+
+            // NOTE: resolve local user row to fetch role/metadata when SSO claims are partial.
+            $localUser = null;
+
+            if ($this->isUuidValue($rawSubject)) {
+                $rows = $usersTable->get(['uuid' => strtolower($rawSubject)]);
+                if (!empty($rows)) {
+                    $localUser = $rows[0];
+                }
+
+                if ($localUser === null) {
+                    throw new \Exception('SSO user UUID is not linked to any local account.');
+                }
+            } elseif (!empty($userData['id'])) {
+                $rows = $usersTable->get($userData['id']);
+                if (!empty($rows)) {
+                    $localUser = $rows[0];
+                }
+            }
+
+            if ($localUser === null && !empty($userData['email'])) {
+                $rows = $usersTable->get(['email' => $userData['email']]);
+                if (!empty($rows)) {
+                    $localUser = $rows[0];
+                }
+            }
+
+            if ($localUser === null && !empty($userData['preferred_username'])) {
+                $username = trim((string) $userData['preferred_username']);
+                $where = filter_var($username, FILTER_VALIDATE_EMAIL)
+                    ? ['email' => $username]
+                    : ['mobile' => $username];
+                $rows = $usersTable->get($where);
+                if (!empty($rows)) {
+                    $localUser = $rows[0];
+                }
+            }
+
+            if ($localUser !== null) {
+                $userData['id'] = $localUser['id'] ?? $userData['id'];
+                $userData['uuid'] = strtolower((string) ($localUser['uuid'] ?? $rawSubject));
+                $userData['name'] = (string) ($localUser['name'] ?? $userData['name']);
+                $userData['role'] = (string) ($localUser['role'] ?? '');
+                $userData['location'] = $localUser['location'] ?? null;
+                $userData['location_type'] = $localUser['location_type'] ?? null;
+                $userData['admin_location'] = (string) ($localUser['admin_location'] ?? '0');
+                $userData['admin_activity'] = (string) ($localUser['admin_activity'] ?? '0');
+                $userData['mobile'] = $localUser['mobile'] ?? null;
+                $userData['photo'] = $localUser['photo'] ?? '0';
+            } else {
+                if ($rawSubject !== '' && $this->isUuidValue($rawSubject)) {
+                    $userData['uuid'] = strtolower($rawSubject);
+                }
+                $userData['role'] = '';
+                $userData['admin_location'] = '0';
+                $userData['admin_activity'] = '0';
+                $userData['photo'] = '0';
+            }
+
+            if (empty($userData['role'])) {
+                $userData['role'] = '1';
+            }
+            $userData['login_method'] = 'sso';
+            $userData['is_sso_user'] = true;
+            return $userData;
+        } catch (\Exception $e) {
+            $this->auditSsoValidationFailure($e->getMessage(), [
+                'sub' => $rawSubject,
+                'email' => (string) ($userData['email'] ?? ''),
+                'preferred_username' => (string) ($userData['preferred_username'] ?? ''),
+            ]);
+            throw $e;
+        }
+    }
+
+    private function auditSsoValidationFailure($reason, array $context = [])
+    {
+        $ipAddress = $_SERVER['HTTP_CLIENT_IP']
+            ?? $_SERVER['HTTP_X_FORWARDED_FOR']
+            ?? $_SERVER['REMOTE_ADDR']
+            ?? 'unknown';
+
+        $remarks = 'SSO UUID validation failed: ' . trim((string) $reason)
+            . ' | sub=' . trim((string) ($context['sub'] ?? ''))
+            . ' | email=' . trim((string) ($context['email'] ?? ''))
+            . ' | preferred_username=' . trim((string) ($context['preferred_username'] ?? ''))
+            . ' | ip=' . $ipAddress;
+
+        if (strlen($remarks) > 1024) {
+            $remarks = substr($remarks, 0, 1021) . '...';
+        }
+
+        try {
+            $this->getDefinedTable(Acl\ActivityLogTable::class)->save([
+                'process' => 0,
+                'process_id' => 0,
+                'status' => 9,
+                'remarks' => $remarks,
+                'role' => 0,
+                'author' => 0,
+                'created' => date('Y-m-d H:i:s'),
+                'modified' => date('Y-m-d H:i:s'),
+            ]);
+        } catch (\Exception $auditException) {
+            error_log('SSO UUID validation audit failure: ' . $auditException->getMessage());
+        }
+    }
     /**
 	 * forgotpwd
 	 */
     public function forgotpwdAction()
     {
         $captcha = new AuthForm();
-
         if ($this->getRequest()->isPost()) {
             $form = $this->getRequest()->getPost();
             $captcha->setData($form);
@@ -191,7 +1162,6 @@ class AuthController extends AbstractActionController
                 }else{
                     foreach ($userDtls as $row);
 					$email = $row['email']; $name = $row['name'];
-                    
 					$expiry_time = date("Y-m-d H:i:s", strtotime('+12 hours'));
 					$recovery_stamp = rtrim(strtr(base64_encode($row['email']."***".$expiry_time), '+/', '-_'), '=');
 					
@@ -204,14 +1174,13 @@ class AuthController extends AbstractActionController
                     $mail = array(
                         'email'    => $row['email'],
                         'name'     => $row['name'],
-                        'subject'  => 'BhutanPost-ERP: Password Recovery', 
+                        'subject'  => $this->getApplicationNameForSubject() . ': Password Recovery', 
                         'message'  => $notify_msg,
                         'cc_array' => [],
                     );
                     $this->EmailPlugin()->sendmail($mail);
 					$this->flashMessenger()->addMessage("success^ Your password reset link will be sent to your registered email, i.e. ".$row['email'].". Please check in the spam folder if you can't find in the inbox. Thank You.");
 					return $this->redirect()->toRoute('auth', array('action' => 'forgotpwd'));
-                    
                 }
             }else{
                 $this->flashMessenger()->addMessage("warning^ Captcha is invalid. Try again.");
@@ -244,14 +1213,14 @@ class AuthController extends AbstractActionController
 					if($form['new_password'] == $form['confirm_password']):
 						$dynamicSalt = $this->password()->generateDynamicSalt();
 						$password = $this->password()->encryptPassword(
-								$staticSalt,
-								$form['new_password'],
-								$dynamicSalt
+                            $staticSalt,
+                            $form['new_password'],
+                            $dynamicSalt
 						);
 						$data = array(
-								'id'		=> $user_dtl['id'],
-								'password'	=> $password,
-								'salt'		=> $dynamicSalt,
+                            'id'		=> $user_dtl['id'],
+                            'password'	=> $password,
+                            'salt'		=> $dynamicSalt,
 						);
 						$result = $this->getDefinedTable(Administration\UsersTable::class)->save($data);
 						if($result > 0):	
@@ -286,5 +1255,10 @@ class AuthController extends AbstractActionController
 			}
 		}
 		return $this->redirect()->toRoute('auth', array('action' => 'login'));
+    }
+
+    private function isUuidValue($value)
+    {
+        return (bool) preg_match('/^[a-f0-9]{8}-[a-f0-9]{4}-[1-5][a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/i', (string) $value);
     }
 }

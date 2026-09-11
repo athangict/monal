@@ -28,6 +28,8 @@ class PurchaseController extends AbstractActionController
     protected $_id; 		// route parameter id, usally used by crude
     protected $_auth; 		// checking authentication
     protected $_safedataObj; //safedata controller plugin
+	protected $_connection; // DB transaction connection
+	protected $_userloc; // logged-in user's location
     
 	public function __construct(ContainerInterface $container)
     {
@@ -81,6 +83,54 @@ class PurchaseController extends AbstractActionController
 		$this->_safedataObj = $this->safedata();
 		$this->_connection = $this->_container->get('Laminas\Db\Adapter\Adapter')->getDriver()->getConnection();
 	
+	}
+
+	private function getCurrentRoleIds()
+	{
+		$roles = array();
+		foreach (explode(',', (string) $this->_login_role) as $role) {
+			$role = trim($role);
+			if ($role !== '' && ctype_digit($role)) {
+				$roles[] = (int) $role;
+			}
+		}
+		return $roles;
+	}
+
+	private function isPrivilegedUser()
+	{
+		$roles = $this->getCurrentRoleIds();
+		return in_array(99, $roles, true) || in_array(100, $roles, true);
+	}
+
+	private function getPurchaseOrderRow($purchaseOrderId)
+	{
+		$rows = $this->getDefinedTable(Purchase\PurchaseOrderTable::class)->get($purchaseOrderId);
+		foreach ($rows as $row) {
+			return $row;
+		}
+		return null;
+	}
+
+	private function canAccessPurchaseOrder($purchaseOrderId)
+	{
+		$purchaseOrder = $this->getPurchaseOrderRow($purchaseOrderId);
+		if ($purchaseOrder === null) {
+			return false;
+		}
+		if ($this->isPrivilegedUser()) {
+			return true;
+		}
+		return isset($purchaseOrder['author']) && (int) $purchaseOrder['author'] === (int) $this->_login_id;
+	}
+
+	private function getPODetailRow($detailId)
+	{
+		$rows = $this->getDefinedTable(Purchase\PODetailsTable::class)->get($detailId);
+		foreach ($rows as $row) {
+			return $row;
+		}
+		return null;
 	}
 	
 	public function indexAction()
@@ -225,6 +275,10 @@ class PurchaseController extends AbstractActionController
 	public function editporderAction()
 	{
 		$this->init();
+		if (!$this->canAccessPurchaseOrder((int) $this->_id)) {
+			$this->flashMessenger()->addMessage("error^ You are not allowed to edit this purchase order");
+			return $this->redirect()->toRoute('purorder');
+		}
 		
 		if($this->getRequest()->isPost()){
 			$form = $this->getRequest()->getpost();
@@ -242,7 +296,13 @@ class PurchaseController extends AbstractActionController
 			);
 			$data   = $this->_safedataObj->rteSafe($data);
 			$result = $this->getDefinedTable(Purchase\PurchaseOrderTable::class)->save($data);
-				$id			  =	$form['id'];
+				$id			  =	(isset($form['id']) && is_array($form['id'])) ? $form['id'] : array();
+				$allowedDetailIds = array();
+				foreach ($this->getDefinedTable(Purchase\PODetailsTable::class)->get(array('purchase_order' => $this->_id)) as $detailRow) {
+					if (isset($detailRow['id']) && ctype_digit((string) $detailRow['id'])) {
+						$allowedDetailIds[(int) $detailRow['id']] = true;
+					}
+				}
 				$item         = $form['item'];
 				$item_class   = $form['item_class'];
 				$item_name   = $form['item_name'];
@@ -253,9 +313,14 @@ class PurchaseController extends AbstractActionController
 				$remarks      = $form['remarks'];
 				if(!empty($id)){
 					for($i=0; $i < sizeof($id); $i++):
+						$detailId = (int) $id[$i];
+						if($detailId > 0 && !isset($allowedDetailIds[$detailId])){
+							$this->flashMessenger()->addMessage("error^ Invalid purchase order detail selection");
+							return $this->redirect()->toRoute('purorder', array('action' =>'editporder', 'id' => $this->_id));
+						}
 						
 							$po_details = array(
-									'id'			=> $id[$i],
+									'id'			=> $detailId,
 									'purchase_order' => $result,
 									'item'           => $item[$i],
 									'item_class'     => $item_class[$i],
@@ -379,7 +444,11 @@ class PurchaseController extends AbstractActionController
 	public function deleteAction()
 	{
 		$this->init(); 
-		foreach($this->getDefinedTable(Purchase\PODetailsTable::Class)->get($this->_id) as $podetails);
+		$podetails = $this->getPODetailRow((int) $this->_id);
+		if (empty($podetails) || !$this->canAccessPurchaseOrder((int) $podetails['purchase_order'])) {
+			$this->flashMessenger()->addMessage("error^ Invalid purchase order detail selection");
+			return $this->redirect()->toRoute('purorder');
+		}
 		//foreach($this->getDefinedTable(Sales\SalesTable::Class)->get($salesd['sales']) as $sales);
 		$result = $this->getDefinedTable(Purchase\PODetailsTable::Class)->remove($this->_id);
 		if($result > 0):
@@ -480,7 +549,7 @@ class PurchaseController extends AbstractActionController
 		$form = $this->getRequest()->getPost();
 		$itemclass_id =$form['itemclassId'];
 		if($itemclass_id==33){
-			$sub_head = $this->getDefinedTable(Accounts\SubheadTable::class)->get(array('sh.head'=>1));
+			$sub_head = $this->getDefinedTable(Accounts\SubheadTable::class)->get(array('sh.head'=>[1,3])); 
 		}
 		else{
 			$sub_head = $this->getDefinedTable(Accounts\SubheadTable::class)->get(array('sh.head'=>9));

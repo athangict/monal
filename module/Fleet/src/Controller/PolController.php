@@ -16,6 +16,7 @@ use Hr\Model As Hr;
 use Fleet\Model As Fleet;
 class PolController extends AbstractActionController
 {   
+	protected $_userloc;
 	private $_container;
 	protected $_table; 		// database table 
     protected $_user; 		// user detail
@@ -748,7 +749,7 @@ class PolController extends AbstractActionController
 	public function viewpolAction()
 	{
 		$this->init();	
-		$params = explode("-", $this->_id);
+		$params = explode("-", (string) $this->_id);
 		if (isset($params['1']) && $params['1'] == '1' && isset($params['2']) && $params['2'] > 0) {
 			$flag = $this->getDefinedTable(Acl\NotifyTable::class)->getColumn($params['2'], 'flag'); 
 				if($flag == "0") {

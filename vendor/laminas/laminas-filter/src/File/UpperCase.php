@@ -12,8 +12,10 @@ use function file_get_contents;
 use function file_put_contents;
 use function is_array;
 use function is_scalar;
+use function is_string;
 use function is_writable;
 
+/** @final */
 class UpperCase extends StringToUpper
 {
     /**
@@ -21,8 +23,8 @@ class UpperCase extends StringToUpper
      *
      * Does a lowercase on the content of the given file
      *
-     * @param  string|array $value Full path of file to change or $_FILES data array
-     * @return string|array The given $value
+     * @param  mixed $value Full path of file to change or $_FILES data array
+     * @return mixed|string|array The given $value
      * @throws Exception\RuntimeException
      * @throws Exception\InvalidArgumentException
      */
@@ -44,7 +46,7 @@ class UpperCase extends StringToUpper
             $value        = $value['tmp_name'];
         }
 
-        if (! file_exists($value)) {
+        if (! is_string($value) || ! file_exists($value)) {
             throw new Exception\InvalidArgumentException("File '$value' not found");
         }
 
@@ -53,14 +55,14 @@ class UpperCase extends StringToUpper
         }
 
         $content = file_get_contents($value);
-        if (! $content) {
+        if ($content === false) {
             throw new Exception\RuntimeException("Problem while reading file '$value'");
         }
 
         $content = parent::filter($content);
         $result  = file_put_contents($value, $content);
 
-        if (! $result) {
+        if ($result === false) {
             throw new Exception\RuntimeException("Problem while writing file '$value'");
         }
 

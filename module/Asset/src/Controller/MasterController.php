@@ -17,6 +17,9 @@ use Accounts\Model As Accounts;
 
 class MasterController extends AbstractActionController
 {   
+	protected $_connection;
+	protected $_highest_role;
+	protected $_lowest_role;
 	private $_container;
 	protected $_table; 		// database table 
     protected $_user; 		// user detail
@@ -192,7 +195,7 @@ class MasterController extends AbstractActionController
      public function editassettypeAction()
     {
         $this->init();
-		$params = explode("_", $this->_id);
+		$params = explode("_", (string) $this->_id);
 		$assettype_id =  $params['0'];
 		//echo '<pre>';print_r($params);exit;
 		//$test = $this->getDefinedTable(Asset\AssettypeTable::class)->get($assettype_id);

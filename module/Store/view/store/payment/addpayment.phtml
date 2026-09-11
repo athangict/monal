@@ -11,16 +11,32 @@ $this->headTitle($this->title);
 		foreach($pur_receipt as $pur_receipt):
 			extract($pur_receipt);
 			$pr_id = $id;
-			$pr_location = $location_id;
-			$pr_activity = $activity_id;
+			$pr_location = isset($location_id) ? $location_id : (isset($location) ? $location : '');
+			$pr_activity = isset($activity_id) ? $activity_id : (isset($cost_center_id) ? $cost_center_id : '');
+			$payment_amt = isset($payment_amt) ? $payment_amt : (isset($total) ? $total : '');
+			$invoice_no = isset($invoice_no) ? $invoice_no : (isset($prn_no) ? $prn_no : '');
+			$challan_no = isset($challan_no) ? $challan_no : '';
 		endforeach;
 		foreach($pur_order as $pur_order):
 			extract($pur_order);
 			$po_id = $id;
-			$po_location = $location_id;
-			$po_activity = $activity_id;
+			$po_location = isset($location_id) ? $location_id : (isset($location) ? $location : '');
+			$po_activity = isset($activity_id) ? $activity_id : (isset($cost_center_id) ? $cost_center_id : '');
+			$item_group_id = isset($item_group_id) ? $item_group_id : (isset($item_group) ? $item_group : '');
 		endforeach;
 	endif;
+	$pr_id = isset($pr_id) ? $pr_id : '';
+	$pr_location = isset($pr_location) ? $pr_location : '';
+	$pr_activity = isset($pr_activity) ? $pr_activity : '';
+	$po_id = isset($po_id) ? $po_id : '';
+	$po_location = isset($po_location) ? $po_location : '';
+	$po_activity = isset($po_activity) ? $po_activity : '';
+	$supplier = isset($supplier) ? $supplier : '';
+	$item_group_id = isset($item_group_id) ? $item_group_id : '';
+	$invoice_no = isset($invoice_no) ? $invoice_no : '';
+	$challan_no = isset($challan_no) ? $challan_no : '';
+	$payment_amt = isset($payment_amt) ? $payment_amt : '';
+	$bank_charge = isset($bank_charge) ? $bank_charge : '';
 ?>
 <div class="row">
 	<div class="col-lg-12">
@@ -77,7 +93,7 @@ $this->headTitle($this->title);
 										<optgroup label="<?php echo $region['region'];?>">
 											<?php  
 												 // retrive locations under the above region ID
-												$locations = $locationObj->get(array('l.region'=>$region['id']));
+												$locations = $locationObj->get(array('region'=>$region['id']));
 												 foreach ($locations as $location):
 												 $selected = ($location['id']==$pr_location)?"selected":"";
 											?>
@@ -130,7 +146,7 @@ $this->headTitle($this->title);
 									<select class="form-control" name="purchase_order_no" id="purchase_order_no" data-placeholder="Select" readonly >
 										<option value=""></option>
 										<option value="<?php echo $po_id;?>" selected="selected">
-											<?php if($po_id != ""){echo $this->pur_ordertObj->getColumn($po_id,'purchase_order_no');}?>
+											<?php if($po_id != ""){echo $this->pur_ordertObj->getColumn($po_id,'po_no');}?>
 										</option>	
 									</select> 
 								</div>
@@ -141,7 +157,7 @@ $this->headTitle($this->title);
 									<select class="form-control" name="purchase_receipt_no" id="purchase_receipt_no" data-placeholder="Select" readonly >
 										<option value=""></option>
 										<option value="<?php echo $pr_id;?>" selected="selected">
-											<?php if($pr_id != ""){echo $this->pur_receiptObj->getColumn($pr_id,'purchase_receipt_no');}?>
+											<?php if($pr_id != ""){echo $this->pur_receiptObj->getColumn($pr_id,'prn_no');}?>
 										</option>	
 									</select> 
 								</div>
@@ -185,8 +201,8 @@ $this->headTitle($this->title);
 									<input class = "form-control" type ="text" id ="cheque_no" name ="cheque_no" />
 								</div>
 							</div>	
-						    <div class="form-group col-lg-3">
-								<label for="bank_charge" class="control-label">Bank Charge(<?php echo $this->currency_code();?>)</label>							
+							<div class="form-group col-lg-3">
+								<label for="bank_charge" class="control-label">Bank Charge(<?php echo 'Nu.';?>)</label>							
 							    <input type="text" class="form-control" name="bank_charge" id="bank_charge" value="" placeholder="Bank Charge"/>
 							</div>
 							<div class="form-group col-lg-3">
@@ -206,7 +222,7 @@ $this->headTitle($this->title);
 										<thead>
 											<tr>
 												<th>Invoice No.</th>
-												<th>Payable Amount(<?php echo $this->currency_code();?>)</th>
+												<th>Payable Amount(<?php echo 'Nu.';?>)</th>
 											</tr>
 										</thead>
 										<tbody>
@@ -230,7 +246,7 @@ $this->headTitle($this->title);
 						<div class="row">
 							<div class="col-lg-9"></div>
 							<div class="form-group col-lg-3">
-								<label for="payment_amount" class="control-label">Net Payable Amount(<?php echo $this->currency_code();?>)</label> 
+								<label for="payment_amount" class="control-label">Net Payable Amount(<?php echo 'Nu.';?>)</label> 
 								<input type="text" class="form-control" name="payment_amount" id="payment_amount" value="<?php echo $payment_amt;?>" placeholder="Payment Amount" readonly />
 							</div>
 						</div>

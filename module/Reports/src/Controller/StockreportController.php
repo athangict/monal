@@ -15,6 +15,8 @@ use Purchase\Model as Purchase;
 use Sales\Model as Sales;
 class StockreportController extends AbstractActionController
 {   
+	protected $_connection;
+	protected $_user_loc;
 	private $_container;
 	protected $_table; 		// database table 
     protected $_user; 		// user detail
@@ -171,7 +173,7 @@ class StockreportController extends AbstractActionController
 			endif;
 			//echo "<pre>";print_r($postTable);exit;
 		else:
-			$param = explode("_",$this->_id);
+			$param = explode("_", (string) $this->_id);
 			$location = $param['0'];
 			$activity = $param['1'];
 			$start_date = $param['2'];

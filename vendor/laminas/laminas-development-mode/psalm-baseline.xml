@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<files psalm-version="5.26.1@d747f6500b38ac4f7dfc5edbcae6e4b637d7add0">
+  <file src="src/Command.php">
+    <MixedAssignment>
+      <code><![CDATA[$argument]]></code>
+    </MixedAssignment>
+  </file>
+  <file src="src/ConfigDiscoveryTrait.php">
+    <DocblockTypeContradiction>
+      <code><![CDATA[$this->applicationConfigPath]]></code>
+    </DocblockTypeContradiction>
+    <MixedAssignment>
+      <code><![CDATA[$this->applicationConfig]]></code>
+    </MixedAssignment>
+    <RedundantConditionGivenDocblockType>
+      <code><![CDATA[isset($this->projectDir)]]></code>
+    </RedundantConditionGivenDocblockType>
+  </file>
+  <file src="test/AutoComposerTest.php">
+    <InvalidPropertyAssignmentValue>
+      <code><![CDATA[$this->errorStream]]></code>
+    </InvalidPropertyAssignmentValue>
+  </file>
+  <file src="test/DisableTest.php">
+    <InvalidPropertyAssignmentValue>
+      <code><![CDATA[$this->errorStream]]></code>
+    </InvalidPropertyAssignmentValue>
+  </file>
+  <file src="test/EnableTest.php">
+    <InvalidPropertyAssignmentValue>
+      <code><![CDATA[$this->errorStream]]></code>
+    </InvalidPropertyAssignmentValue>
+  </file>
+</files>

@@ -1,0 +1,107 @@
+<?php
+
+declare(strict_types=1);
+
+namespace LaminasTest\Session;
+
+use Laminas\Session\Storage\ArrayStorage;
+use Laminas\Session\Storage\SessionStorage;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\TestCase;
+
+use function var_export;
+
+#[CoversClass(SessionStorage::class)]
+final class SessionStorageTest extends TestCase
+{
+    /** @var SessionStorage<string, mixed> */
+    private SessionStorage $storage;
+
+    protected function setUp(): void
+    {
+        $_SESSION = [];
+        /** @var SessionStorage<string, mixed> $sessionStorage */
+        $sessionStorage = new SessionStorage();
+        $this->storage  = $sessionStorage;
+    }
+
+    protected function tearDown(): void
+    {
+        $_SESSION = [];
+    }
+
+    public function testSessionStorageInheritsFromArrayStorage(): void
+    {
+        self::assertInstanceOf(SessionStorage::class, $this->storage);
+        self::assertInstanceOf(ArrayStorage::class, $this->storage);
+    }
+
+    public function testStorageWritesToSessionSuperglobal(): void
+    {
+        $this->storage['foo'] = 'bar';
+        self::assertSame($_SESSION, $this->storage);
+        unset($this->storage['foo']);
+        self::assertArrayNotHasKey('foo', $_SESSION);
+    }
+
+    public function testPassingArrayToConstructorOverwritesSessionSuperglobal(): void
+    {
+        $_SESSION['foo'] = 'bar';
+        $array           = ['foo' => 'FOO'];
+        $storage         = new SessionStorage($array);
+        $expected        = [
+            'foo'       => 'FOO',
+            '__Laminas' => [
+                '_REQUEST_ACCESS_TIME' => $storage->getRequestAccessTime(),
+            ],
+        ];
+        self::assertSame($expected, $_SESSION->getArrayCopy());
+    }
+
+    public function testModifyingSessionSuperglobalDirectlyUpdatesStorage(): void
+    {
+        $_SESSION['foo'] = 'bar';
+        self::assertTrue(isset($this->storage['foo']));
+    }
+
+    public function testDestructorSetsSessionToArray(): void
+    {
+        $this->storage->foo = 'bar';
+        $expected           = [
+            '__Laminas' => [
+                '_REQUEST_ACCESS_TIME' => $this->storage->getRequestAccessTime(),
+            ],
+            'foo'       => 'bar',
+        ];
+        $this->storage->__destruct();
+        self::assertSame($expected, $_SESSION);
+    }
+
+    public function testModifyingOneSessionObjectModifiesTheOther(): void
+    {
+        $this->storage->foo = 'bar';
+        $storage            = new SessionStorage();
+        $storage->bar       = 'foo';
+        self::assertEquals('foo', $this->storage->bar);
+    }
+
+    public function testMarkingOneSessionObjectImmutableShouldMarkOtherInstancesImmutable(): void
+    {
+        $this->storage->foo = 'bar';
+        $storage            = new SessionStorage();
+        self::assertEquals('bar', $storage['foo']);
+        $this->storage->markImmutable();
+        self::assertTrue($storage->isImmutable(), var_export($_SESSION, true));
+    }
+
+    public function testMultiDimensionalUnset(): void
+    {
+        $this->storage['foo'] = ['bar' => ['baz' => 'boo']];
+        self::assertIsArray($this->storage['foo']);
+        self::assertIsArray($this->storage['foo']['bar']);
+        unset($this->storage['foo']['bar']['baz']);
+        self::assertFalse(isset($this->storage['foo']['bar']['baz']));
+        unset($this->storage['foo']['bar']);
+        self::assertFalse(isset($this->storage['foo']['bar']));
+    }
+}

@@ -35,11 +35,20 @@ class SessionManagerFactory implements FactoryInterface
             Container::setDefaultManager($sessionManager);
             return $sessionManager;
         }
+        
         // create session config if exists in global configuration
         $sessionConfig = null;
         if (isset($config['session_config'])) {
             $sessionConfig = new SessionConfig();
             $sessionConfig->setOptions($config['session_config']);
+            
+            // Explicitly set cookie lifetime and gc_maxlifetime using setter methods
+            if (isset($config['session_config']['cookie_lifetime'])) {
+                $sessionConfig->setCookieLifetime($config['session_config']['cookie_lifetime']);
+            }
+            if (isset($config['session_config']['gc_maxlifetime'])) {
+                $sessionConfig->setGcMaxlifetime($config['session_config']['gc_maxlifetime']);
+            }
         }
         // create session storage if exists in global configuration
         $sessionStorage = null;

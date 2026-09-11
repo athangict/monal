@@ -14,6 +14,7 @@ interface SharedEventManagerInterface
      * @param  string $eventName
      * @param  callable $listener Listener that will handle the event.
      * @param  int $priority Priority at which listener should execute
+     * @return void
      */
     public function attach($identifier, $eventName, callable $listener, $priority = 1);
 
@@ -28,6 +29,7 @@ interface SharedEventManagerInterface
      *      all registered identifiers.
      * @param  null|string $eventName Event from which to detach; null indicates
      *      all registered events.
+     * @return void
      * @throws Exception\InvalidArgumentException For invalid identifier arguments.
      * @throws Exception\InvalidArgumentException For invalid event arguments.
      */
@@ -36,7 +38,6 @@ interface SharedEventManagerInterface
     /**
      * Retrieve all listeners for given identifiers
      *
-     * @param  array $identifiers
      * @param  string $eventName
      * @return array
      */
@@ -47,6 +48,7 @@ interface SharedEventManagerInterface
      *
      * @param  string $identifier
      * @param  null|string $eventName
+     * @return void|false
      */
     public function clearListeners($identifier, $eventName = null);
 }

@@ -1,12 +1,16 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Laminas\Form;
 
 use Countable;
 use IteratorAggregate;
+use Laminas\Form\Exception\ExceptionInterface;
 use Laminas\Hydrator\HydratorInterface;
 use Traversable;
 
+/** @extends IteratorAggregate<string, ElementInterface> */
 interface FieldsetInterface extends
     Countable,
     IteratorAggregate,
@@ -24,75 +28,63 @@ interface FieldsetInterface extends
      *                                                               ElementInterface; however, keeping it flexible
      *                                                               to allow a factory-based form
      *                                                               implementation as well
-     * @param  array $flags
-     * @return $this
+     * @return self
+     * @throws ExceptionInterface
      */
     public function add($elementOrFieldset, array $flags = []);
 
     /**
      * Does the fieldset have an element/fieldset by the given name?
-     *
-     * @param  string $elementOrFieldset
-     * @return bool
      */
-    public function has($elementOrFieldset);
+    public function has(string $elementOrFieldset): bool;
 
     /**
      * Retrieve a named element or fieldset
-     *
-     * @param  string $elementOrFieldset
-     * @return ElementInterface
      */
-    public function get($elementOrFieldset);
+    public function get(string $elementOrFieldset): ElementInterface;
 
     /**
      * Remove a named element or fieldset
      *
-     * @param  string $elementOrFieldset
-     * @return $this
+     * @return self
      */
-    public function remove($elementOrFieldset);
+    public function remove(string $elementOrFieldset);
 
     /**
      * Set/change the priority of an element or fieldset
      *
-     * @param  string $elementOrFieldset
-     * @param  int    $priority
-     * @return $this
+     * @return self
      */
-    public function setPriority($elementOrFieldset, $priority);
+    public function setPriority(string $elementOrFieldset, int $priority);
 
     /**
      * Retrieve all attached elements
      *
      * Storage is an implementation detail of the concrete class.
      *
-     * @return array|Traversable
+     * @return ElementInterface[]
      */
-    public function getElements();
+    public function getElements(): array;
 
     /**
      * Retrieve all attached fieldsets
      *
      * Storage is an implementation detail of the concrete class.
      *
-     * @return array|Traversable
+     * @return FieldsetInterface[]
      */
-    public function getFieldsets();
+    public function getFieldsets(): array;
 
     /**
      * Recursively populate value attributes of elements
-     *
-     * @param  array|Traversable $data
-     * @return void
      */
-    public function populateValues($data);
+    public function populateValues(iterable $data): void;
 
     /**
      * Set the object used by the hydrator
      *
-     * @param  $object
-     * @return $this
+     * @param  mixed $object
+     * @return self
      */
     public function setObject($object);
 
@@ -105,39 +97,30 @@ interface FieldsetInterface extends
 
     /**
      * Checks if the object can be set in this fieldset
-     *
-     * @param $object
-     * @return bool
      */
-    public function allowObjectBinding($object);
+    public function allowObjectBinding(object $object): bool;
 
     /**
      * Set the hydrator to use when binding an object to the element
      *
-     * @param  HydratorInterface $hydrator
-     * @return $this
+     * @return self
      */
     public function setHydrator(HydratorInterface $hydrator);
 
     /**
      * Get the hydrator used when binding an object to the element
-     *
-     * @return null|HydratorInterface
      */
-    public function getHydrator();
+    public function getHydrator(): ?HydratorInterface;
 
     /**
      * Bind values to the bound object
      *
-     * @param  array $values
      * @return mixed
      */
     public function bindValues(array $values = []);
 
     /**
      * Checks if this fieldset can bind data
-     *
-     * @return bool
      */
-    public function allowValueBinding();
+    public function allowValueBinding(): bool;
 }

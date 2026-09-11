@@ -1,0 +1,70 @@
+<?php
+
+declare(strict_types=1);
+
+namespace LaminasTest\ComponentInstaller\ConfigDiscovery;
+
+use Laminas\ComponentInstaller\ConfigDiscovery\MezzioConfig;
+use org\bovigo\vfs\vfsStream;
+use org\bovigo\vfs\vfsStreamDirectory;
+use Override;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\TestCase;
+
+final class MezzioConfigTest extends TestCase
+{
+    /** @var vfsStreamDirectory */
+    private $configDir;
+
+    /** @var MezzioConfig */
+    private $locator;
+
+    #[Override]
+    protected function setUp(): void
+    {
+        $this->configDir = vfsStream::setup('project');
+        $this->locator   = new MezzioConfig(
+            vfsStream::url('project')
+        );
+    }
+
+    public function testAbsenceOfFileReturnsFalseOnLocate(): void
+    {
+        $this->assertFalse($this->locator->locate());
+    }
+
+    public function testLocateReturnsFalseWhenFileDoesNotHaveExpectedContents(): void
+    {
+        vfsStream::newFile('config/config.php')
+            ->at($this->configDir)
+            ->setContent('<' . "?php\nreturn [];");
+        $this->assertFalse($this->locator->locate());
+    }
+
+    /**
+     * @psalm-return array<string, array{0: string}>
+     */
+    public static function validMezzioConfigContents(): array
+    {
+        // @codingStandardsIgnoreStart
+        return [
+            'fqcn-short-array'               => ['<' . "?php\n\$configManager = new Mezzio\ConfigManager\ConfigManager([\n]);"],
+            'globally-qualified-short-array' => ['<' . "?php\n\$configManager = new \Mezzio\ConfigManager\ConfigManager([\n]);"],
+            'imported-short-array'           => ['<' . "?php\n\$configManager = new ConfigManager([\n]);"],
+            'fqcn-long-array'                => ['<' . "?php\n\$configManager = new Mezzio\ConfigManager\ConfigManager(array(\n));"],
+            'globally-qualified-long-array'  => ['<' . "?php\n\$configManager = new \Mezzio\ConfigManager\ConfigManager(array(\n));"],
+            'imported-long-array'            => ['<' . "?php\n\$configManager = new ConfigManager(array(\n));"],
+        ];
+        // @codingStandardsIgnoreEnd
+    }
+
+    #[DataProvider('validMezzioConfigContents')]
+    public function testLocateReturnsTrueWhenFileExistsAndHasExpectedContent(string $contents): void
+    {
+        vfsStream::newFile('config/config.php')
+            ->at($this->configDir)
+            ->setContent($contents);
+
+        $this->assertTrue($this->locator->locate());
+    }
+}

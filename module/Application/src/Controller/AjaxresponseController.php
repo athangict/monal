@@ -1,10 +1,6 @@
 <?php
 /**
- * Zend Framework (http://framework.zend.com/)
- *
- * @link      http://github.com/zendframework/ZendSkeletonApplication for the canonical source repository
- * @copyright Copyright (c) 2005-2013 Zend Technologies USA Inc. (http://www.zend.com)
- * @license   http://framework.zend.com/license/new-bsd New BSD License
+ * Laminas MVC Application Controller
  */
 
 namespace Application\Controller;
@@ -189,43 +185,52 @@ class AjaxresponseController extends AbstractActionController
 	public function gettransactionsAction()
 	{	//echo 'Hi';exit;
 		$this->init();
+		$subHead = $this->params()->fromPost('sub_head', $this->_id);
+		$where = new \Laminas\Db\Sql\Where();
+		$where->equalTo('sub_head', $subHead)
+			->equalTo('against', 0)
+			->isNotNull('ref_no')
+			->notEqualTo('ref_no', '')
+			->expression('TRIM(ref_no) <> ?', array(''));
+
 		$viewModel = new ViewModel(array(
-			'transactiondtls' => $this->getDefaultTable("fa_transaction_details")->select(array('sub_head'=>$this->_id,'against'=>0)),
+			'transactiondtls' => $this->getDefaultTable("fa_transaction_details")->select(function($select) use ($where) {
+				$select->where($where);
+			}),
 		));
 		$viewModel->setTerminal(true);
 		return  $viewModel;
 	}
 	/*GET CREDIT/DEBIT AMOUNT BASED ON THE REF-NO*/
-	public function getcreditamountAction()
+	public function getamountAction()
     {
-        // Assuming $referenceValue is the value received from the AJAX request
-        $referenceValue =$this->params()->fromRoute('id');
-		//error_log("Received reference value: $referenceValue");
-        //echo  $referenceValue;
-        // Assuming $yourModel is an instance of your model class
-        $debitAmount = $this->getDefinedTable(Accounts\TransactiondetailTable::class)->getColumn($referenceValue,'debit');
+		$referenceValue = $this->params()->fromRoute(
+			'id',
+			$this->params()->fromPost('id', $this->params()->fromPost('reference', ''))
+		);
+		$transactiondetailTable = $this->getDefinedTable(Accounts\TransactiondetailTable::class);
 
-		//echo  $debitAmount;exit;
-        // Return the debit amount as JSON
-        return new JsonModel(['debit' => $debitAmount]);
-		//error_log("Received reference value: $referenceValue");
-		// Code to generate JSON response
-		error_log("JSON Response: " . json_encode($debitAmount));
+		$debitAmount = '0.000';
+		$creditAmount = '0.000';
 
-    }
-	/*GET DEBIT AMOUNT BASED ON THE REF-NO*/
-	public function getdebitamountAction()
-    {
-        // Assuming $referenceValue is the value received from the AJAX request
-        $referenceValue =$this->params()->fromRoute('id');
-		//error_log("Received reference value: $referenceValue");
-        //echo  $referenceValue;
-        // Assuming $yourModel is an instance of your model class
-        $creditAmount = $this->getDefinedTable(Accounts\TransactiondetailTable::class)->getColumn($referenceValue,'credit');
+		if ($referenceValue !== '' && $referenceValue !== null) {
+			if (is_numeric($referenceValue)) {
+				$debitAmount = $transactiondetailTable->getColumn($referenceValue, 'debit');
+				$creditAmount = $transactiondetailTable->getColumn($referenceValue, 'credit');
+			} else {
+				$rows = $this->getDefaultTable('fa_transaction_details')->select(array('ref_no' => $referenceValue));
+				foreach ($rows as $row) {
+					$debitAmount = $row['debit'];
+					$creditAmount = $row['credit'];
+					break;
+				}
+			}
+		}
 
-		//echo  $debitAmount;exit;
-        // Return the debit amount as JSON
-        return new JsonModel(['credit' => $creditAmount]);
+		return new JsonModel([
+			'debit' => $debitAmount,
+			'credit' => $creditAmount,
+		]);
 
     }
 }

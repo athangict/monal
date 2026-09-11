@@ -15850,7 +15850,9 @@ div.ColVis_collectionBackground{
 }
 
 .chosen-container,[class*=chosen-container]{
-	vertical-align:middle
+	vertical-align:middle;
+	position:relative;
+	display:block
 }
 
 .chosen-container>.chosen-single,[class*=chosen-container]>.chosen-single{
@@ -16005,12 +16007,16 @@ div.ColVis_collectionBackground{
 }
 
 .chosen-container .chosen-drop{
-	display:none
+	display:none;
+	position:absolute;
+	top:100%;
+	left:-9999px;
+	z-index:1060
 }
 
 .chosen-container.chosen-with-drop .chosen-drop{
-	left:auto;
-	right:auto;
+	left:0;
+	right:0;
 	display:block;
 	width:100%;
 }

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Brick\VarExporter\Internal\ObjectExporter;
 
 use Brick\VarExporter\Internal\ObjectExporter;
+use Override;
 
 /**
  * Handles any class through direct property access and bound closures.
@@ -14,21 +15,18 @@ use Brick\VarExporter\Internal\ObjectExporter;
  *
  * @internal This class is for internal use, and not part of the public API. It may change at any time without warning.
  */
-class AnyObjectExporter extends ObjectExporter
+final class AnyObjectExporter extends ObjectExporter
 {
-    /**
-     * {@inheritDoc}
-     */
+    #[Override]
     public function supports(\ReflectionObject $reflectionObject) : bool
     {
         return true;
     }
 
     /**
-     * {@inheritDoc}
-     *
      * @psalm-suppress MixedAssignment
      */
+    #[Override]
     public function export(object $object, \ReflectionObject $reflectionObject, array $path, array $parentIds) : array
     {
         $lines = $this->getCreateObjectCode($reflectionObject);
@@ -44,10 +42,10 @@ class AnyObjectExporter extends ObjectExporter
         $returnNewObject = ($reflectionObject->getConstructor() === null);
 
         while ($current) {
-            $publicProperties = [];
-            $nonPublicProperties = [];
-            $unsetPublicProperties = [];
-            $unsetNonPublicProperties = [];
+            $publicNonReadonlyProperties = [];
+            $nonPublicOrPublicReadonlyProperties = [];
+            $unsetPublicNonReadonlyProperties = [];
+            $unsetNonPublicOrPublicReadonlyProperties = [];
 
             foreach ($current->getProperties() as $property) {
                 if ($property->isStatic()) {
@@ -70,26 +68,26 @@ class AnyObjectExporter extends ObjectExporter
                 if (array_key_exists($key, $objectAsArray)) {
                     $value = $objectAsArray[$key];
 
-                    if ($property->isPublic()) {
-                        $publicProperties[$name] = $value;
+                    if ($property->isPublic() && !(method_exists($property, 'isReadOnly') && $property->isReadOnly())) {
+                        $publicNonReadonlyProperties[$name] = $value;
                     } else {
-                        $nonPublicProperties[$name] = $value;
+                        $nonPublicOrPublicReadonlyProperties[$name] = $value;
                     }
                 } else {
-                    if ($property->isPublic()) {
-                        $unsetPublicProperties[] = $name;
+                    if ($property->isPublic() && !(method_exists($property, 'isReadOnly') && $property->isReadOnly())) {
+                        $unsetPublicNonReadonlyProperties[] = $name;
                     } else {
-                        $unsetNonPublicProperties[] = $name;
+                        $unsetNonPublicOrPublicReadonlyProperties[] = $name;
                     }
                 }
 
                 $returnNewObject = false;
             }
 
-            if ($publicProperties || $unsetPublicProperties) {
+            if ($publicNonReadonlyProperties || $unsetPublicNonReadonlyProperties) {
                 $lines[] = '';
 
-                foreach ($publicProperties as $name => $value) {
+                foreach ($publicNonReadonlyProperties as $name => $value) {
                     /** @psalm-suppress RedundantCast See: https://github.com/vimeo/psalm/issues/4891 */
                     $name = (string) $name;
 
@@ -104,19 +102,19 @@ class AnyObjectExporter extends ObjectExporter
                     $lines = array_merge($lines, $exportedValue);
                 }
 
-                foreach ($unsetPublicProperties as $name) {
+                foreach ($unsetPublicNonReadonlyProperties as $name) {
                     $lines[] = 'unset($object->' . $this->escapePropName($name) . ');';
                 }
             }
 
-            if ($nonPublicProperties || $unsetNonPublicProperties) {
+            if ($nonPublicOrPublicReadonlyProperties || $unsetNonPublicOrPublicReadonlyProperties) {
                 $closureLines = [];
 
                 if ($this->exporter->addTypeHints) {
                     $closureLines[] = '/** @var \\' . $current->getName() . ' $this */';
                 }
 
-                foreach ($nonPublicProperties as $name => $value) {
+                foreach ($nonPublicOrPublicReadonlyProperties as $name => $value) {
                     $newPath = $path;
                     $newPath[] = $name;
 
@@ -128,7 +126,7 @@ class AnyObjectExporter extends ObjectExporter
                     $closureLines = array_merge($closureLines, $exportedValue);
                 }
 
-                foreach ($unsetNonPublicProperties as $name) {
+                foreach ($unsetNonPublicOrPublicReadonlyProperties as $name) {
                     $closureLines[] = 'unset($this->' . $this->escapePropName($name) . ');';
                 }
 
@@ -156,9 +154,6 @@ class AnyObjectExporter extends ObjectExporter
     /**
      * Returns the key of the given property in the object-to-array cast.
      *
-     * @param \ReflectionProperty $property
-     *
-     * @return string
      */
     private function getPropertyKey(\ReflectionProperty $property) : string
     {
@@ -175,11 +170,6 @@ class AnyObjectExporter extends ObjectExporter
         return $name;
     }
 
-    /**
-     * @param string $var
-     *
-     * @return string
-     */
     private function escapePropName(string $var) : string
     {
         if (preg_match('/^[a-zA-Z_][a-zA-Z0-9_]*$/', $var) === 1) {

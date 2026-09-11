@@ -7,24 +7,23 @@ namespace Laminas\Test\PHPUnit\Constraint;
 use Laminas\Http\Header\Location;
 use Laminas\Http\PhpEnvironment\Response;
 use Laminas\Test\PHPUnit\Controller\AbstractHttpControllerTestCase;
+use Override;
 use PHPUnit\Framework\Constraint\Constraint;
 
 final class HasRedirectConstraint extends Constraint
 {
-    /** @var AbstractHttpControllerTestCase */
-    private $activeTestCase;
-
-    public function __construct(AbstractHttpControllerTestCase $activeTestCase)
+    public function __construct(private readonly AbstractHttpControllerTestCase $activeTestCase)
     {
-        $this->activeTestCase = $activeTestCase;
     }
 
+    #[Override]
     public function toString(): string
     {
         return 'has a redirect';
     }
 
     /** @param mixed $other */
+    #[Override]
     public function matches($other): bool
     {
         $response = $this->activeTestCase->getResponse();

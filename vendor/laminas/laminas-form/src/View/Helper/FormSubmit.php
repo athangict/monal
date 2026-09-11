@@ -1,10 +1,13 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Laminas\Form\View\Helper;
 
 use Laminas\Form\ElementInterface;
 use Laminas\Form\Exception;
 
+/** @final */
 class FormSubmit extends FormInput
 {
     /**
@@ -29,7 +32,7 @@ class FormSubmit extends FormInput
     /**
      * Translatable attributes
      *
-     * @var array
+     * @var array<string, bool>
      */
     protected $translatableAttributes = [
         'value' => true,
@@ -38,11 +41,9 @@ class FormSubmit extends FormInput
     /**
      * Determine input type to use
      *
-     * @param  ElementInterface $element
      * @throws Exception\DomainException
-     * @return string
      */
-    protected function getType(ElementInterface $element)
+    protected function getType(ElementInterface $element): string
     {
         return 'submit';
     }

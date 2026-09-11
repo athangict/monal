@@ -13,6 +13,7 @@ use Stock\Model As Stock;
 use Sales\Model As Sales;
 class MasterposController extends AbstractActionController
 {   
+	protected $_connection;
 	private $_container;
 	protected $_table; 		// database table 
     protected $_user; 		// user detail
@@ -339,7 +340,7 @@ class MasterposController extends AbstractActionController
 	{
 		{
 			$this->init();
-			$array_id = explode("_", $this->_id);
+			$array_id = explode("_", (string) $this->_id);
 			$scope = (sizeof($array_id)>1)?$array_id[0]:'-1';
 			$service = (sizeof($array_id)>1)?$array_id[1]:'-1';
 		
@@ -459,7 +460,7 @@ class MasterposController extends AbstractActionController
 {
 	{
 		$this->init();
-		$array_id = explode("_", $this->_id);
+		$array_id = explode("_", (string) $this->_id);
 		$scope = (sizeof($array_id)>1)?$array_id[0]:'-1';
 		$service = (sizeof($array_id)>1)?$array_id[1]:'-1';
 		if($this->getRequest()->isPost())
@@ -582,7 +583,7 @@ class MasterposController extends AbstractActionController
 	{
 		{	
 			$this->init();
-			$array_id = explode("_", $this->_id);
+			$array_id = explode("_", (string) $this->_id);
 			$scope = (sizeof($array_id)>1)?$array_id[0]:'-1';
 			$service = (sizeof($array_id)>1)?$array_id[1]:'-1';
 			if($this->getRequest()->isPost())

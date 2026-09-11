@@ -294,7 +294,7 @@ class TAClaimTable extends AbstractTableGateway
 	 * @param String $column
 	 * @return Array | Int
 	 */
-	public function getPendingTC($column, $where = NULL,$user){
+	public function getPendingTC($column, $where = NULL,$user = NULL){
 	 $adapter = $this->adapter;
     $sql = new Sql($adapter);
 
@@ -330,7 +330,7 @@ class TAClaimTable extends AbstractTableGateway
 	 * @param String $column
 	 * @return Array | Int
 	 */
-	public function getActionByMe($where = NULL,$user)
+	public function getActionByMe($where = NULL,$user = NULL)
 	{
 		$adapter = $this->adapter;
 		$sql = new Sql($adapter);

@@ -1,0 +1,18 @@
+<?php
+
+declare(strict_types=1);
+
+namespace LaminasTest\Form\TestAsset\Annotation;
+
+use Laminas\Form\Annotation;
+use LaminasTest\Form\TestAsset\Annotation\InputFilterInput;
+
+final class EntityWithInputFilterInput
+{
+    /**
+     * @var null|string
+     * @Annotation\Input("LaminasTest\Form\TestAsset\Annotation\InputFilterInput")
+     */
+    #[Annotation\Input(InputFilterInput::class)]
+    public $input;
+}

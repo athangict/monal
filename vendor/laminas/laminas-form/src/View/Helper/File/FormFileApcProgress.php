@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Laminas\Form\View\Helper\File;
 
 use function ini_get;
@@ -7,13 +9,12 @@ use function ini_get;
 /**
  * A view helper to render the hidden input with a Session progress id
  * for file uploads progress tracking.
+ *
+ * @final
  */
 class FormFileApcProgress extends FormFileUploadProgress
 {
-    /**
-     * @return string
-     */
-    protected function getName()
+    protected function getName(): string
     {
         return ini_get('apc.rfc1867_name');
     }

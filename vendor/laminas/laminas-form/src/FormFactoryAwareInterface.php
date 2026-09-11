@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Laminas\Form;
 
 interface FormFactoryAwareInterface
@@ -7,7 +9,7 @@ interface FormFactoryAwareInterface
     /**
      * Compose a form factory into the object
      *
-     * @param Factory $factory
+     * @return self
      */
-    public function setFormFactory(Factory $factory);
+    public function setFormFactory(Factory $formFactory);
 }

@@ -17,6 +17,7 @@ use Pswf\Model As Pswf;
 use Laminas\EventManager\EventManagerInterface;
 class TransactionController extends AbstractActionController
 {   
+	protected $_login_location_type;
 	private $_container;    // database table 
 	protected $_table; 		// database table 
     protected $_user; 		// user detail
@@ -108,6 +109,45 @@ class TransactionController extends AbstractActionController
 		$this->_safedataObj = $this->safedata();
 		$this->_connection = $this->_container->get('Laminas\Db\Adapter\Adapter')->getDriver()->getConnection();
 
+	}
+
+	private function getCurrentRoleIds()
+	{
+		$roles = array();
+		foreach (explode(',', (string) $this->_login_role) as $role) {
+			$role = trim($role);
+			if ($role !== '' && ctype_digit($role)) {
+				$roles[] = (int) $role;
+			}
+		}
+		return $roles;
+	}
+
+	private function isPrivilegedUser()
+	{
+		$roles = $this->getCurrentRoleIds();
+		return in_array(99, $roles, true) || in_array(100, $roles, true);
+	}
+
+	private function getTransactionRow($transactionId)
+	{
+		$rows = $this->getDefinedTable(Pswf\TransactionTable::class)->get($transactionId);
+		foreach ($rows as $row) {
+			return $row;
+		}
+		return null;
+	}
+
+	private function canAccessTransaction($transactionId)
+	{
+		$transaction = $this->getTransactionRow($transactionId);
+		if ($transaction === null) {
+			return false;
+		}
+		if ($this->isPrivilegedUser()) {
+			return true;
+		}
+		return isset($transaction['author']) && (int) $transaction['author'] === (int) $this->_login_id;
 	}
 	
 	/**
@@ -327,7 +367,7 @@ class TransactionController extends AbstractActionController
 			}
 		}
 		$user_region= $this->getDefinedTable(Administration\UsersTable::class)->getColumn($this->_login_id,'region');
-		$role=explode(",",$this->_login_role);//Multiple Role
+		$role=explode(",", (string) ($this->_login_role ?? ''));//Multiple Role
 		$user_region= $this->getDefinedTable(Administration\UsersTable::class)->getColumn($this->_login_id,'region');
 		if($this->_login_role ==100|| $this->_login_role==99 || $this->_login_role==8|| $this->_login_role==6|| $role==array(2,17)|| $role==array(5,6)):
 		   $regions=$this->getDefinedTable(Administration\RegionTable::class)->getAll();
@@ -355,10 +395,16 @@ class TransactionController extends AbstractActionController
 	public function deletejournalAction()
 	{
 		$this->init();
+		if (!$this->canAccessTransaction((int) $this->_id)) {
+			$this->flashMessenger()->addMessage("error^ You are not allowed to delete this transaction");
+			return $this->redirect()->toRoute('transaction', array('action' => 'index'));
+		}
 		if($this->getRequest()->isPost()){
 			$form = $this->getRequest()->getPost();
 			$voucher = $this->getDefinedTable(Pswf\TransactionTable::class)->getColumn($this->_id,'voucher_type');
 			$transactiondetails_id = $this->getDefinedTable(Pswf\TransactiondetailTable::class)->get(array('td.transaction'=>$this->_id));
+			$result = false;
+			$result2 = 0;
 			foreach($transactiondetails_id as $transactiondetails_ids):
 				$result = $this->getDefinedTable(Pswf\TransactiondetailTable::class)->remove($transactiondetails_ids['id']);
 			endforeach;
@@ -390,6 +436,15 @@ class TransactionController extends AbstractActionController
 	public function edittransactionAction()
 	{
 		$this->init();
+		if (!$this->canAccessTransaction((int) $this->_id)) {
+			$this->flashMessenger()->addMessage("error^ You are not allowed to edit this transaction");
+			return $this->redirect()->toRoute('transaction', array('action' => 'index'));
+		}
+		$transaction = $this->getTransactionRow((int) $this->_id);
+		if ($transaction === null) {
+			$this->flashMessenger()->addMessage("error^ Transaction not found");
+			return $this->redirect()->toRoute('transaction', array('action' => 'index'));
+		}
 		if($this->getRequest()->isPost()){
 			$form = $this->getRequest()->getpost();
 			$loc = $this->getDefinedTable(Administration\LocationTable::class)->getColumn($this->_user->location, 'location_code');
@@ -399,7 +454,14 @@ class TransactionController extends AbstractActionController
 			preg_match('/([\d]+)/', $serial, $match );
 			$serial = substr($match[0],4);
 			$voucher_no = $loc.$prefix.$date.$serial;
-			$created_author=$form['created_author'];
+			$created_author = isset($transaction['author']) ? $transaction['author'] : $this->_author;
+			$allowedDetailIds = array();
+			$currentDetails = $this->getDefinedTable(Pswf\TransactiondetailTable::class)->get(array('td.transaction' => $this->_id));
+			foreach ($currentDetails as $currentDetail) {
+				if (isset($currentDetail['id']) && ctype_digit((string) $currentDetail['id'])) {
+					$allowedDetailIds[(int) $currentDetail['id']] = true;
+				}
+			}
 			$data1 = array(
 				'id' => $this->_id,
 				'voucher_date' => $form['voucher_date'],
@@ -417,7 +479,14 @@ class TransactionController extends AbstractActionController
 			$this->_connection->beginTransaction();
 			$result = $this->getDefinedTable(Pswf\TransactionTable::class)->save($data1);
 			if($result > 0){
-				$tdetails_id = $form['id'];
+				$tdetails_id = isset($form['id']) ? (array) $form['id'] : array();
+				$validDetailIds = array();
+				foreach ($tdetails_id as $postedDetailId) {
+					$postedDetailId = (int) $postedDetailId;
+					if ($postedDetailId > 0 && isset($allowedDetailIds[$postedDetailId])) {
+						$validDetailIds[] = $postedDetailId;
+					}
+				}
 				$location= $form['location'];
 				$head= $form['head'];
 				$sub_head= $form['sub_head'];
@@ -426,12 +495,18 @@ class TransactionController extends AbstractActionController
 				$credit= $form['credit'];
 				$reference= $form['reference'];
 				$bank_ref_type='DFT2024';
-				$delete_rows = $this->getDefinedTable(Pswf\TransactiondetailTable::class)->getNotInDtl($tdetails_id, array('transaction' => $result));
+				$delete_rows = $this->getDefinedTable(Pswf\TransactiondetailTable::class)->getNotInDtl($validDetailIds, array('transaction' => $result));
 				for($i=0; $i < sizeof($location); $i++):
 					if(isset($location[$i]) && is_numeric($location[$i])):
-						if($tdetails_id[$i]>0):
+						$detailId = isset($tdetails_id[$i]) ? (int) $tdetails_id[$i] : 0;
+						if($detailId>0):
+							if (!isset($allowedDetailIds[$detailId])) {
+								$this->_connection->rollback();
+								$this->flashMessenger()->addMessage("error^ Invalid detail row in request");
+								return $this->redirect()->toRoute('transaction', array('action' =>'edittransaction', 'id' => $this->_id));
+							}
 							$tdetailsdata = array(
-								'id' => $tdetails_id[$i],
+								'id' => $detailId,
 								'transaction' => $result,
 								'location' => $location[$i],
 								'activity' => $location[$i],
@@ -485,7 +560,7 @@ class TransactionController extends AbstractActionController
 				return $this->redirect()->toRoute('transaction', array('action' =>'viewtransaction', 'id' => $this->_id));
 			}
 		}
-		$role=explode(",",$this->_login_role);//Multiple Role
+		$role=explode(",", (string) ($this->_login_role ?? ''));//Multiple Role
 		$user_region= $this->getDefinedTable(Administration\UsersTable::class)->getColumn($this->_login_id,'region');
 		if($this->_login_role ==100|| $this->_login_role==99 || $role==array(2,17)|| $role==8):
 		   $regions=$this->getDefinedTable(Administration\RegionTable::class)->getAll();
@@ -827,7 +902,7 @@ class TransactionController extends AbstractActionController
 				return $this->redirect()->toRoute('transaction');
 			}
 		}
-		$role=explode(",",$this->_login_role);//Multiple Role
+		$role=explode(",", (string) ($this->_login_role ?? ''));//Multiple Role
 		$user_region= $this->getDefinedTable(Administration\UsersTable::class)->getColumn($this->_login_id,'region');
 		if($this->_login_role ==100|| $this->_login_role==99 || $role==array(2,17)):
 		   $regions=$this->getDefinedTable(Administration\RegionTable::class)->getAll();
@@ -987,7 +1062,7 @@ class TransactionController extends AbstractActionController
 		$this->init();
 		$application_id = $this->_id;
 		/**--Disapearing the notification--*/
-		$params = explode("-", $this->_id);
+		$params = explode("-", (string) $this->_id);
 		if (isset($params['1']) && $params['1'] == '1' && isset($params['2']) && $params['2'] > 0) {
 			$flag = $this->getDefinedTable(Acl\NotifyTable::class)->getColumn($params['2'], 'flag'); 
 				if($flag == "0") {
@@ -1431,7 +1506,7 @@ class TransactionController extends AbstractActionController
 						);
 						$flow_result = $this->getDefinedTable(Administration\FlowTransactionTable::class)->save($flow_data);
 						if($flow_result):
-							$this->notify($application_id,$privilege['id'],$remark,$flow_result);
+							$this->notify($application_id,$privilege['id'],$flow_result,$remark);
 							$this->getDefinedTable(Administration\FlowTransactionTable::class)->performed($flow_id);
 							$this->_connection->commit();
 							$this->flashMessenger()->addMessage("success^ Successfully applied <strong>".$action_performed."</strong>!");
@@ -1639,7 +1714,7 @@ class TransactionController extends AbstractActionController
 						//echo '<>pre';print_r($flow_data);exit;
 						$flow_result = $this->getDefinedTable(Administration\FlowTransactionTable::class)->save($flow_data);
 						if($flow_result):
-							$this->notify($application_id,$privilege['id'],$remark,$flow_data['role_id']);
+							$this->notify($application_id,$privilege['id'],$flow_data['role_id'],$remark);
 							$this->getDefinedTable(Administration\FlowTransactionTable::class)->performed($flow_id);
 							$this->_connection->commit();
 							$this->flashMessenger()->addMessage("success^ Successfully applied <strong>".$action_performed."</strong>!");
@@ -1687,7 +1762,7 @@ class TransactionController extends AbstractActionController
 	/**
 	 * Notification Action
 	 */
-	public function notify($application_id,$privilege_id,$remarks = NULL,$role_id)
+	public function notify($application_id,$privilege_id,$role_id,$remarks = NULL)
 	{
 		$userlists='';
 		$applications = $this->getDefinedTable(Pswf\TransactionTable::class)->get($application_id);
@@ -1707,7 +1782,7 @@ class TransactionController extends AbstractActionController
 			//echo '<>pre';print_r($privileges);exit;
 			$notificationResult = $this->getDefinedTable(Acl\NotificationTable::class)->save($notification_data);
 			if($notificationResult > 0 ){
-				$notification_array = explode("|", $flow['route_notification_to']);
+				$notification_array = explode("|", (string) $flow['route_notification_to']);
 				//echo '<pre>';print_r($notification_array);
 				if(sizeof($notification_array)>0){
 					for($k=0;$k<sizeof($notification_array);$k++){
@@ -1944,7 +2019,7 @@ class TransactionController extends AbstractActionController
 			}
 		}
 		$user_region= $this->getDefinedTable(Administration\UsersTable::class)->getColumn($this->_login_id,'region');
-		$role=explode(",",$this->_login_role);//Multiple Role
+		$role=explode(",", (string) ($this->_login_role ?? ''));//Multiple Role
 		$user_region= $this->getDefinedTable(Administration\UsersTable::class)->getColumn($this->_login_id,'region');
 		if($this->_login_role ==100|| $this->_login_role==99 || $this->_login_role==8|| $this->_login_role==6|| $role==array(2,17)|| $role==array(5,6)):
 		   $regions=$this->getDefinedTable(Administration\RegionTable::class)->getAll();
@@ -2228,10 +2303,16 @@ class TransactionController extends AbstractActionController
 	public function deletecontraAction()
 	{
 		$this->init();
+		if (!$this->canAccessTransaction((int) $this->_id)) {
+			$this->flashMessenger()->addMessage("error^ You are not allowed to delete this transaction");
+			return $this->redirect()->toRoute('transaction', array('action' => 'contra'));
+		}
 		if($this->getRequest()->isPost()){
 			$form = $this->getRequest()->getPost();
 			$voucher = $this->getDefinedTable(Pswf\TransactionTable::class)->getColumn($this->_id,'voucher_type');
 			$transactiondetails_id = $this->getDefinedTable(Pswf\TransactiondetailTable::class)->get(array('td.transaction'=>$this->_id));
+			$result = false;
+			$result2 = 0;
 			foreach($transactiondetails_id as $transactiondetails_ids):
 				$result = $this->getDefinedTable(Pswf\TransactiondetailTable::class)->remove($transactiondetails_ids['id']);
 			endforeach;
@@ -2385,7 +2466,7 @@ class TransactionController extends AbstractActionController
 			}
 		}
 		$user_region= $this->getDefinedTable(Administration\UsersTable::class)->getColumn($this->_login_id,'region');
-		$role=explode(",",$this->_login_role);//Multiple Role
+		$role=explode(",", (string) ($this->_login_role ?? ''));//Multiple Role
 		if($this->_login_role ==100|| $this->_login_role==99 ||$this->_login_role==6 ||$this->_login_role==8||$role==array(5,6)):
 		   $regions=$this->getDefinedTable(Administration\RegionTable::class)->getAll();
 		else:
@@ -2868,7 +2949,7 @@ class TransactionController extends AbstractActionController
 	    /* role=8-Western Union User
            role=6-casher*/	
 		   
-		$role=explode(",",$this->_login_role);//Multiple Role
+		$role=explode(",", (string) ($this->_login_role ?? ''));//Multiple Role
 		if($this->_login_role ==100|| $this->_login_role==99 || $this->_login_role==5|| $this->_login_role==8 || $this->_login_role==6 || $role==array(2,17)):
 		   $regions=$this->getDefinedTable(Administration\RegionTable::class)->getAll();
 		else:

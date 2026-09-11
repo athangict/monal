@@ -26,11 +26,11 @@ use const UPLOAD_ERR_NO_FILE;
  *
  * 3. Instead of adding a NotEmpty validator, it will (by default) automatically add
  *    a Laminas\Validator\File\Upload validator.
+ *
+ * @final
  */
 class HttpServerFileInputDecorator extends FileInput implements FileInputDecoratorInterface
 {
-    private FileInput $subject;
-
     /**
      * Checks if the raw input value is an empty file input eg: no file was uploaded
      *
@@ -54,9 +54,8 @@ class HttpServerFileInputDecorator extends FileInput implements FileInputDecorat
         return false;
     }
 
-    public function __construct(FileInput $subject)
+    public function __construct(private readonly FileInput $subject)
     {
-        $this->subject = $subject;
     }
 
     /**

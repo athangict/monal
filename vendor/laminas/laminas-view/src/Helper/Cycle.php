@@ -11,13 +11,15 @@ use function count;
 
 /**
  * Helper for alternating between set of values
+ *
+ * @final
  */
 class Cycle extends AbstractHelper implements Iterator
 {
     /**
      * Default name
      *
-     * @var string
+     * @internal This constant will become private in 3.0
      */
     public const DEFAULT_NAME = 'default';
 
@@ -45,7 +47,6 @@ class Cycle extends AbstractHelper implements Iterator
     /**
      * Add elements to alternate
      *
-     * @param  array $data
      * @param  string $name
      * @return Cycle
      */
@@ -82,7 +83,6 @@ class Cycle extends AbstractHelper implements Iterator
     /**
      * Add elements to alternate
      *
-     * @param  array $data
      * @param  string $name
      * @return Cycle
      */
@@ -117,6 +117,8 @@ class Cycle extends AbstractHelper implements Iterator
 
     /**
      * Gets actual name of cycle
+     *
+     * @deprecated Since 2.40.0. This method will be removed in 3.0 without replacement
      *
      * @return string
      */
@@ -201,6 +203,8 @@ class Cycle extends AbstractHelper implements Iterator
 
     /**
      * Check if element is valid
+     *
+     * @deprecated Since 2.40.0. This method will be removed in 3.0 without replacement
      *
      * @return bool
      */

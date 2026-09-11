@@ -5,15 +5,21 @@
  */
 	$this->headTitle($title);
 ?> 
+<?php
+$appSettings = $this->appsetting();
+$appName = !empty($appSettings['app_name']) ? $appSettings['app_name'] : 'Monal-ERP';
+$appLogo = !empty($appSettings['app_logo']) ? $appSettings['app_logo'] : 'images/logo.png';
+$appLogoSrc = $this->basePath('/' . ltrim((string) $appLogo, '/'));
+?>
 <div class="row">
 	<div class="col-sm-10 col-sm-offset-1">
 		<div class="login-container">
 			<div class="center">
 				<h1>
-					<img style="height:100px"src="<?php echo $this->basePath() . '/images/logo.png' ?> "/>
+					<img style="height:100px" src="<?php echo $appLogoSrc; ?>" alt="<?php echo $this->escapeHtmlAttr($appName); ?>"/>
 				</h1>
 				<h3 class="blue" id="id-company-text">
-					&copy;<span class="red"> Bhutan Post</span><span id="id-text2"> ERP-System</span>
+					&copy;<span class="red"> <?php echo $this->escapeHtml($appName); ?></span>
 				</h3>
 			</div>
 			<div class="space-6"></div>

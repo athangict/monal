@@ -17,11 +17,15 @@ final class FilterComposite implements FilterInterface
 {
     /**
      * Constant to add with "or" condition
+     *
+     * @deprecated This constant will be replaced with FilterCondition::class in the v5
      */
     public const CONDITION_OR = 1;
 
     /**
      * Constant to add with "and" condition
+     *
+     * @deprecated This constant will be replaced with FilterCondition::class in the v5
      */
     public const CONDITION_AND = 2;
 
@@ -166,7 +170,7 @@ final class FilterComposite implements FilterInterface
      * @throws InvalidArgumentException If $filter is neither a
      *     callable nor FilterInterface.
      */
-    private function validateFilter($filter, string $name): void
+    private function validateFilter(mixed $filter, string $name): void
     {
         if (! is_callable($filter) && ! $filter instanceof FilterInterface) {
             throw new InvalidArgumentException(sprintf(

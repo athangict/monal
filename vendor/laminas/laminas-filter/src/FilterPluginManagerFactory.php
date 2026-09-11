@@ -7,10 +7,14 @@ namespace Laminas\Filter;
 use Laminas\ServiceManager\Config;
 use Laminas\ServiceManager\FactoryInterface;
 use Laminas\ServiceManager\ServiceLocatorInterface;
+use Laminas\ServiceManager\ServiceManager;
 use Psr\Container\ContainerInterface;
 
 use function is_array;
 
+/**
+ * @psalm-import-type ServiceManagerConfiguration from ServiceManager
+ */
 class FilterPluginManagerFactory implements FactoryInterface
 {
     /**
@@ -23,11 +27,12 @@ class FilterPluginManagerFactory implements FactoryInterface
     /**
      * {@inheritDoc}
      *
+     * @param ServiceManagerConfiguration|null $options
      * @return FilterPluginManager
      */
     public function __invoke(ContainerInterface $container, $name, ?array $options = null)
     {
-        $pluginManager = new FilterPluginManager($container, $options ?: []);
+        $pluginManager = new FilterPluginManager($container, $options ?? []);
 
         // If this is in a laminas-mvc application, the ServiceListener will inject
         // merged configuration during bootstrap.
@@ -66,7 +71,6 @@ class FilterPluginManagerFactory implements FactoryInterface
     /**
      * laminas-servicemanager v2 support for invocation options.
      *
-     * @param array $options
      * @return void
      */
     public function setCreationOptions(array $options)

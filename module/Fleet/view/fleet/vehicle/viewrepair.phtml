@@ -12,7 +12,7 @@
                 $rm_status = $row['status'];
 				//print_r($row);
 //endforeach;exit;
-	$roles=explode(',',$role);
+	$roles=explode(',', (string) $role);
 	$count=0;
 	for($i=0;$i<sizeof($roles);$i++){
 		if($roles[$i]==2 ||$roles[$i]==3){

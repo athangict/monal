@@ -16,6 +16,7 @@ use Accounts\Model As Accounts;
 
 class PostController extends AbstractActionController
 {   
+	protected $_userloc;
 	private $_container;
 	protected $_table; 		// database table 
     protected $_user; 		// user detail
@@ -1001,7 +1002,7 @@ class PostController extends AbstractActionController
 	public function viewrenewAction()
 	{
 		$this->init();
-			$array_id = explode("_", $this->_id);
+			$array_id = explode("_", (string) $this->_id);
 			$location = (sizeof($array_id)>1)?$array_id[0]:'-1';
 			$postbox = (sizeof($array_id)>1)?$array_id[1]:'-1';
 			if($this->getRequest()->isPost())
@@ -1066,7 +1067,7 @@ class PostController extends AbstractActionController
 	{
 		{	
 			$this->init();
-			$array_id = explode("_", $this->_id);
+			$array_id = explode("_", (string) $this->_id);
 			$location = (sizeof($array_id)>1)?$array_id[0]:'-1';
 			$postbox = (sizeof($array_id)>1)?$array_id[1]:'-1';
 			if($this->getRequest()->isPost())

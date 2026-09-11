@@ -6,7 +6,8 @@ namespace Laminas\Router\Http;
 
 use Laminas\Router\Exception;
 use Laminas\Stdlib\ArrayUtils;
-use Laminas\Stdlib\RequestInterface as Request;
+use Laminas\Stdlib\RequestInterface;
+use Override;
 use Traversable;
 
 use function array_map;
@@ -19,16 +20,11 @@ use function strtoupper;
 
 /**
  * Method route.
+ *
+ * @final
  */
-class Method implements RouteInterface
+class Method implements HttpRouteInterface
 {
-    /**
-     * Verb to match.
-     *
-     * @var string
-     */
-    protected $verb;
-
     /**
      * Default values.
      *
@@ -37,26 +33,33 @@ class Method implements RouteInterface
     protected $defaults;
 
     /**
+     * @internal
+     * @deprecated Since 3.9.0 This property will be removed or made private in version 4.0
+     *
+     * @var int|null
+     */
+    public $priority;
+
+    /**
      * Create a new method route.
      *
      * @param  string $verb
-     * @param  array  $defaults
      */
-    public function __construct($verb, array $defaults = [])
-    {
-        $this->verb     = $verb;
+    public function __construct(
+        /**
+         * Verb to match.
+         */
+        protected $verb,
+        array $defaults = []
+    ) {
         $this->defaults = $defaults;
     }
 
     /**
-     * factory(): defined by RouteInterface interface.
-     *
-     * @see    \Laminas\Router\RouteInterface::factory()
-     *
-     * @param  array|Traversable $options
-     * @return Method
+     * @inheritDoc
      * @throws Exception\InvalidArgumentException
      */
+    #[Override]
     public static function factory($options = [])
     {
         if ($options instanceof Traversable) {
@@ -80,13 +83,10 @@ class Method implements RouteInterface
     }
 
     /**
-     * match(): defined by RouteInterface interface.
-     *
-     * @see    \Laminas\Router\RouteInterface::match()
-     *
-     * @return RouteMatch|null
+     * @inheritDoc
      */
-    public function match(Request $request)
+    #[Override]
+    public function match(RequestInterface $request)
     {
         if (! method_exists($request, 'getMethod')) {
             return null;
@@ -97,21 +97,16 @@ class Method implements RouteInterface
         $matchVerbs  = array_map('trim', $matchVerbs);
 
         if (in_array($requestVerb, $matchVerbs)) {
-            return new RouteMatch($this->defaults);
+            return new HttpRouteMatch($this->defaults);
         }
 
         return null;
     }
 
     /**
-     * assemble(): Defined by RouteInterface interface.
-     *
-     * @see    \Laminas\Router\RouteInterface::assemble()
-     *
-     * @param  array $params
-     * @param  array $options
-     * @return mixed
+     * @inheritDoc
      */
+    #[Override]
     public function assemble(array $params = [], array $options = [])
     {
         // The request method does not contribute to the path, thus nothing is returned.
@@ -119,12 +114,13 @@ class Method implements RouteInterface
     }
 
     /**
-     * getAssembledParams(): defined by RouteInterface interface.
+     * @deprecated Since 3.19.0. This method will be removed in 4.0 and assembled parameters
+     * will be available on the value object that will be returned from assemble().
+     * There is not a forward compatible way to replace usage of this method.
      *
-     * @see    RouteInterface::getAssembledParams
-     *
-     * @return array
+     * @inheritDoc
      */
+    #[Override]
     public function getAssembledParams()
     {
         return [];

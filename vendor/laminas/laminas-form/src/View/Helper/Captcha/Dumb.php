@@ -1,25 +1,29 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Laminas\Form\View\Helper\Captcha;
 
 use Laminas\Captcha\Dumb as CaptchaAdapter;
+use Laminas\Form\Element\Captcha;
 use Laminas\Form\ElementInterface;
 use Laminas\Form\Exception;
 
+use function assert;
 use function sprintf;
 use function strrev;
 
+/** @final */
 class Dumb extends AbstractWord
 {
     /**
      * Render the captcha
      *
-     * @param  ElementInterface $element
      * @throws Exception\DomainException
-     * @return string
      */
-    public function render(ElementInterface $element)
+    public function render(ElementInterface $element): string
     {
+        assert($element instanceof Captcha);
         $captcha = $element->getCaptcha();
 
         if ($captcha === null || ! $captcha instanceof CaptchaAdapter) {

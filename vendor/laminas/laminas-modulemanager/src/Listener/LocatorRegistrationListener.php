@@ -13,10 +13,10 @@ use Laminas\ModuleManager\ModuleManager;
 use Laminas\Mvc\Application;
 use Laminas\Mvc\MvcEvent;
 use Laminas\ServiceManager\ServiceManager;
+use Override;
 
 use function end;
 use function explode;
-use function get_class;
 
 class LocatorRegistrationListener extends AbstractListener implements
     ListenerAggregateInterface
@@ -58,8 +58,8 @@ class LocatorRegistrationListener extends AbstractListener implements
         $events->attach(
             Application::class,
             ModuleManager::EVENT_BOOTSTRAP,
-            function (MvcEvent $e) use ($moduleManager) {
-                $moduleClassName      = get_class($moduleManager);
+            static function (MvcEvent $e) use ($moduleManager): void {
+                $moduleClassName      = $moduleManager::class;
                 $moduleClassNameArray = explode('\\', $moduleClassName);
                 $moduleClassNameAlias = end($moduleClassNameArray);
                 $application          = $e->getApplication();
@@ -95,7 +95,7 @@ class LocatorRegistrationListener extends AbstractListener implements
         $services = $application->getServiceManager();
 
         foreach ($this->modules as $module) {
-            $moduleClassName = get_class($module);
+            $moduleClassName = $module::class;
             if (! $services->has($moduleClassName)) {
                 $services->setService($moduleClassName, $module);
             }
@@ -103,6 +103,7 @@ class LocatorRegistrationListener extends AbstractListener implements
     }
 
     /** {@inheritDoc} */
+    #[Override]
     public function attach(EventManagerInterface $events, $priority = 1)
     {
         $this->listeners[] = $events->attach(ModuleEvent::EVENT_LOAD_MODULE, [$this, 'onLoadModule']);

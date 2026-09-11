@@ -12,6 +12,8 @@ use Sales\Model As Sales;
 
 class BudgetManagementController extends AbstractActionController
 {   
+	protected $_login_location_type;
+	protected $_userloc;
 	private $_container;
 	protected $_table; 		// database table 
     protected $_user; 		// user detail
@@ -213,7 +215,7 @@ class BudgetManagementController extends AbstractActionController
 	public function sheadlistAction()
 	{
 		$this->init();		
-		$param = explode('-',$this->_id);
+		$param = explode('-', (string) $this->_id);
 		$month = $param['2'];
 		$head = $param['1'];
 		$year = $param['0']; 

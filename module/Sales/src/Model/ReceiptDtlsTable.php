@@ -165,7 +165,7 @@ class ReceiptDtlsTable extends AbstractTableGateway
 	 * @param String $column
 	 * @return String | Int
 	 */
-	public function getMax($where=NULL, $column)
+	public function getMax($where=NULL, $column = NULL)
 	{
 		$adapter = $this->adapter;
 		$sql = new Sql($adapter);
@@ -246,7 +246,7 @@ class ReceiptDtlsTable extends AbstractTableGateway
 	 * @param String $column
 	 * @return String | Int
 	 */
-	public function getReceiptMin($where=NULL, $column)
+	public function getReceiptMin($where=NULL, $column = NULL)
 	{
 		$adapter = $this->adapter;
 		$sql = new Sql($adapter);

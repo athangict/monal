@@ -10,11 +10,15 @@ use ReturnTypeWillChange;
  * Cache session save handler
  *
  * @see ReturnTypeWillChange
+ *
+ * @final
  */
 class Cache implements SaveHandlerInterface
 {
     /**
      * Session Save Path
+     *
+     * @deprecated This property will no longer be needed in the future and will therefore be removed in version 3.0.
      *
      * @var string
      */
@@ -22,6 +26,8 @@ class Cache implements SaveHandlerInterface
 
     /**
      * Session Name
+     *
+     * @deprecated This property will no longer be needed in the future and will therefore be removed in version 3.0.
      *
      * @var string
      */
@@ -45,15 +51,14 @@ class Cache implements SaveHandlerInterface
     /**
      * Open Session
      *
-     * @param string $savePath
+     * @param string $path
      * @param string $name
      * @return bool
      */
     #[ReturnTypeWillChange]
-    public function open($savePath, $name)
+    public function open($path, $name)
     {
-        // @todo figure out if we want to use these
-        $this->sessionSavePath = $savePath;
+        $this->sessionSavePath = $path;
         $this->sessionName     = $name;
 
         return true;
@@ -131,6 +136,8 @@ class Cache implements SaveHandlerInterface
     /**
      * Set cache storage
      *
+     * @deprecated This method will no longer be needed in the future and will therefore be removed in version 3.0.
+     *
      * @return Cache
      */
     public function setCacheStorage(CacheStorage $cacheStorage)
@@ -142,6 +149,8 @@ class Cache implements SaveHandlerInterface
     /**
      * Get cache storage
      *
+     * @deprecated This method will no longer be needed in the future and will therefore be removed in version 3.0.
+     *
      * @return CacheStorage
      */
     public function getCacheStorage()
@@ -150,7 +159,7 @@ class Cache implements SaveHandlerInterface
     }
 
     /**
-     * @deprecated Misspelled method - use getCacheStorage() instead
+     * @deprecated Misspelled method - use getCacheStorage() instead. Will be removed in version 3.0
      *
      * @return CacheStorage
      */

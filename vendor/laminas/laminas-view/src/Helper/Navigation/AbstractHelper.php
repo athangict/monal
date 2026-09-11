@@ -9,6 +9,7 @@ use Laminas\EventManager\EventManager;
 use Laminas\EventManager\EventManagerAwareInterface;
 use Laminas\EventManager\EventManagerInterface;
 use Laminas\EventManager\SharedEventManager;
+use Laminas\I18n\Translator\TranslatorInterface;
 use Laminas\Navigation;
 use Laminas\Navigation\AbstractContainer;
 use Laminas\Navigation\Page\AbstractPage;
@@ -21,8 +22,8 @@ use Laminas\View\Helper\TranslatorAwareTrait;
 use RecursiveIteratorIterator;
 use ReflectionClass;
 
+use function assert;
 use function call_user_func_array;
-use function get_class;
 use function gettype;
 use function in_array;
 use function is_int;
@@ -43,6 +44,8 @@ use const E_USER_ERROR;
  * Base class for navigational helpers.
  *
  * Duck-types against Laminas\I18n\Translator\TranslatorAwareInterface.
+ *
+ * @deprecated This class has been moved to the `Laminas\Navigation` component and will be removed in 3.0
  */
 abstract class AbstractHelper extends View\Helper\AbstractHtmlElement implements
     EventManagerAwareInterface,
@@ -159,7 +162,7 @@ abstract class AbstractHelper extends View\Helper\AbstractHtmlElement implements
         try {
             return $this->render();
         } catch (\Exception $e) {
-            $msg = get_class($e) . ': ' . $e->getMessage();
+            $msg = $e::class . ': ' . $e->getMessage();
             trigger_error($msg, E_USER_ERROR);
             return '';
         }
@@ -245,6 +248,7 @@ abstract class AbstractHelper extends View\Helper\AbstractHtmlElement implements
      *
      * @param AbstractContainer|string|null $container
      * @return void
+     * @param-out AbstractContainer $container
      * @throws Exception\InvalidArgumentException
      */
     protected function parseContainer(&$container = null)
@@ -411,6 +415,10 @@ abstract class AbstractHelper extends View\Helper\AbstractHtmlElement implements
             'target' => $page->getTarget(),
         ];
 
+        if ($page->isActive()) {
+            $attribs['aria-current'] = 'page';
+        }
+
         /** @var View\Helper\EscapeHtml $escaper */
         $escaper = $this->view->plugin('escapeHtml');
         $label   = $escaper($label);
@@ -436,6 +444,7 @@ abstract class AbstractHelper extends View\Helper\AbstractHtmlElement implements
         }
 
         $translator = $this->getTranslator();
+        assert($translator instanceof TranslatorInterface);
         $textDomain = $textDomain ?: $this->getTranslatorTextDomain();
 
         return $translator->translate($message, $textDomain);
@@ -611,7 +620,7 @@ abstract class AbstractHelper extends View\Helper\AbstractHtmlElement implements
     /**
      * Sets the maximum depth a page can have to be included when rendering
      *
-     * @param  int $maxDepth Default is null, which sets no maximum depth.
+     * @param  int|null|numeric-string $maxDepth Default is null, which sets no maximum depth.
      * @return AbstractHelper
      */
     public function setMaxDepth($maxDepth = null)
@@ -638,7 +647,7 @@ abstract class AbstractHelper extends View\Helper\AbstractHtmlElement implements
     /**
      * Sets the minimum depth a page must have to be included when rendering
      *
-     * @param  int $minDepth Default is null, which sets no minimum depth.
+     * @param  int|null|numeric-string $minDepth Default is null, which sets no minimum depth.
      * @return AbstractHelper
      */
     public function setMinDepth($minDepth = null)
@@ -710,7 +719,7 @@ abstract class AbstractHelper extends View\Helper\AbstractHtmlElement implements
             throw new Exception\InvalidArgumentException(sprintf(
                 '$role must be a string, null, or an instance of '
                 . 'Laminas\Permissions\Role\RoleInterface; %s given',
-                is_object($role) ? get_class($role) : gettype($role)
+                is_object($role) ? $role::class : gettype($role)
             ));
         }
 
@@ -841,7 +850,7 @@ abstract class AbstractHelper extends View\Helper\AbstractHtmlElement implements
         } else {
             throw new Exception\InvalidArgumentException(sprintf(
                 '$role must be null|string|Laminas\Permissions\Role\RoleInterface; received "%s"',
-                is_object($role) ? get_class($role) : gettype($role)
+                is_object($role) ? $role::class : gettype($role)
             ));
         }
     }

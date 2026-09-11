@@ -1,0 +1,19 @@
+<?php
+
+declare(strict_types=1);
+
+namespace LaminasTest\Form\TestAsset\Annotation;
+
+use Laminas\Form\Annotation;
+
+final class LegacyValidatorAnnotation
+{
+    /**
+     * @var null|string
+     * @Annotation\Required(true)
+     * @Annotation\Validator({"name": "StringLength", "options":{"min":3,"max":25}})
+     */
+    #[Annotation\Required(true)]
+    #[Annotation\Validator(["name" => "StringLength", "options" => ["min" => 3, "max" => 25]])]
+    public $username;
+}

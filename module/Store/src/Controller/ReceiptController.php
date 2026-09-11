@@ -151,7 +151,7 @@ class ReceiptController extends AbstractActionController
 				endforeach;
 				$next_serial = max($prn_no_list) + 1;
 
-				switch(strlen($next_serial)){
+				switch(strlen((string)($next_serial))){
 					case 1: $next_prn_serial = "000".$next_serial; break;
 					case 2: $next_prn_serial = "00".$next_serial;  break;
 					case 3: $next_prn_serial = "0".$next_serial;   break;
@@ -445,7 +445,7 @@ class ReceiptController extends AbstractActionController
 					}else{
 						$next_serial = 1;
 					}			   	  
-					switch(strlen($next_serial)){
+					switch(strlen((string)($next_serial))){
 						case 1: $next_sc_serial  = "000".$next_serial;  break;
 						case 2: $next_sc_serial  = "00".$next_serial;   break;
 						case 3: $next_sc_serial  = "0".$next_serial;   break;
@@ -613,7 +613,7 @@ class ReceiptController extends AbstractActionController
 					}else{
 						$next_serial = 1;
 					}			   	  
-					switch(strlen($next_serial)){
+					switch(strlen((string)($next_serial))){
 						case 1: $next_sc_serial  = "000".$next_serial;  break;
 						case 2: $next_sc_serial  = "00".$next_serial;   break;
 						case 3: $next_sc_serial  = "0".$next_serial;   break;
@@ -726,7 +726,7 @@ class ReceiptController extends AbstractActionController
 		endforeach;
 		$next_serial = max($pltp_no_list) + 1;
 			
-		switch(strlen($next_serial)){
+		switch(strlen((string)($next_serial))){
 		case 1: $next_vc_serial = "000".$next_serial; break;
 		case 2: $next_vc_serial = "00".$next_serial;  break;
 		case 3: $next_vc_serial = "0".$next_serial;   break;

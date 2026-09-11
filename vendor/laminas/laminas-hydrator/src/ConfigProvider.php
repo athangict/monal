@@ -8,6 +8,9 @@ use Laminas\ServiceManager\ServiceManager;
 
 use function class_exists;
 
+/**
+ * @final
+ */
 class ConfigProvider
 {
     /**

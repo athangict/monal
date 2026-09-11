@@ -15,9 +15,8 @@ class Json extends AbstractWriter
     /**
      * processConfig(): defined by AbstractWriter.
      *
-     * @param  array $config
      * @return string
-     * @throws Exception\RuntimeException if encoding errors occur.
+     * @throws Exception\RuntimeException If encoding errors occur.
      */
     public function processConfig(array $config)
     {

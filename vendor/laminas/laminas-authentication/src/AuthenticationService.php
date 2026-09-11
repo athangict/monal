@@ -4,19 +4,23 @@ declare(strict_types=1);
 
 namespace Laminas\Authentication;
 
+use Override;
+
+use function assert;
+
 class AuthenticationService implements AuthenticationServiceInterface
 {
     /**
      * Persistent storage handler
      *
-     * @var Storage\StorageInterface
+     * @var Storage\StorageInterface|null
      */
     protected $storage;
 
     /**
      * Authentication adapter
      *
-     * @var Adapter\AdapterInterface
+     * @var Adapter\AdapterInterface|null
      */
     protected $adapter;
 
@@ -69,6 +73,8 @@ class AuthenticationService implements AuthenticationServiceInterface
             $this->setStorage(new Storage\Session());
         }
 
+        assert($this->storage !== null);
+
         return $this->storage;
     }
 
@@ -89,6 +95,7 @@ class AuthenticationService implements AuthenticationServiceInterface
      * @return Result
      * @throws Exception\RuntimeException
      */
+    #[Override]
     public function authenticate(?Adapter\AdapterInterface $adapter = null)
     {
         if (! $adapter) {
@@ -120,6 +127,7 @@ class AuthenticationService implements AuthenticationServiceInterface
      *
      * @return bool
      */
+    #[Override]
     public function hasIdentity()
     {
         return ! $this->getStorage()->isEmpty();
@@ -128,14 +136,15 @@ class AuthenticationService implements AuthenticationServiceInterface
     /**
      * Returns the identity from storage or null if no identity is available
      *
-     * @return mixed|null
+     * @return mixed
      */
+    #[Override]
     public function getIdentity()
     {
         $storage = $this->getStorage();
 
         if ($storage->isEmpty()) {
-            return;
+            return null;
         }
 
         return $storage->read();
@@ -146,6 +155,7 @@ class AuthenticationService implements AuthenticationServiceInterface
      *
      * @return void
      */
+    #[Override]
     public function clearIdentity()
     {
         $this->getStorage()->clear();

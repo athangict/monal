@@ -1,13 +1,13 @@
 <?php
 namespace Administration\Model;
 
-use Zend\Db\Adapter\Adapter;
-use Zend\Db\TableGateway\AbstractTableGateway;
-use Zend\Db\ResultSet\HydratingResultSet;
-use Zend\Db\Adapter\AdapterAwareInterface;
-use Zend\Db\Sql\Select;
-use Zend\Db\Sql\Sql;
-use Zend\Db\Sql\Expression;
+use Laminas\Db\Adapter\Adapter;
+use Laminas\Db\TableGateway\AbstractTableGateway;
+use Laminas\Db\ResultSet\HydratingResultSet;
+use Laminas\Db\Adapter\AdapterAwareInterface;
+use Laminas\Db\Sql\Select;
+use Laminas\Db\Sql\Sql;
+use Laminas\Db\Sql\Expression;
 
 class DepartmentTable extends AbstractTableGateway 
 {
@@ -132,7 +132,7 @@ class DepartmentTable extends AbstractTableGateway
 	 * @param String $column
 	 * @return String | Int
 	 */
-	public function getMin($where = NULL, $column)
+	public function getMin($where = NULL, $column = NULL)
 	{
 		$adapter = $this->adapter;
 		$sql = new Sql($adapter);
@@ -160,7 +160,7 @@ class DepartmentTable extends AbstractTableGateway
 	 * @param String $column
 	 * @return String | Int
 	 */
-	public function getMax($where=NULL, $column)
+	public function getMax($where=NULL, $column = NULL)
 	{
 		$adapter = $this->adapter;
 		$sql = new Sql($adapter);

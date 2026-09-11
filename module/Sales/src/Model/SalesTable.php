@@ -181,7 +181,7 @@ class SalesTable extends AbstractTableGateway
 	 * @param String $column
 	 * @return String | Int
 	 */
-	public function getMax($where=NULL, $column)
+	public function getMax($where=NULL, $column = NULL)
 	{
 		$adapter = $this->adapter;
 		$sql = new Sql($adapter);
@@ -203,7 +203,7 @@ class SalesTable extends AbstractTableGateway
 		return $column;
 	}
         //returns max sales date 
-	public function getMaxTranDate($where=NULL, $column)
+	public function getMaxTranDate($where=NULL, $column = NULL)
 	{
 		$adapter = $this->adapter;
 		$sql = new Sql($adapter);

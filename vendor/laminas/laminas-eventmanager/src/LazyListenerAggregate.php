@@ -4,10 +4,8 @@ namespace Laminas\EventManager;
 
 use Psr\Container\ContainerInterface;
 
-use function get_class;
-use function gettype;
+use function get_debug_type;
 use function is_array;
-use function is_object;
 use function sprintf;
 
 /**
@@ -26,20 +24,12 @@ use function sprintf;
  * );
  * $aggregate->attach($events);
  * </code>
+ *
+ * @final This class should not be extended
  */
 class LazyListenerAggregate implements ListenerAggregateInterface
 {
     use ListenerAggregateTrait;
-
-    // phpcs:disable SlevomatCodingStandard.Classes.UnusedPrivateElements.WriteOnlyProperty
-
-    /** @var ContainerInterface Container from which to pull lazy listeners. */
-    private $container;
-
-    /** @var array Additional environment/option variables to use when creating listener. */
-    private $env;
-
-    // phpcs:enable
 
     /**
      * Generated LazyEventListener instances.
@@ -62,14 +52,19 @@ class LazyListenerAggregate implements ListenerAggregateInterface
      *
      * @param array $listeners LazyEventListener instances or array definitions
      *     to pass to the LazyEventListener constructor.
-     * @param array $env
      * @throws Exception\InvalidArgumentException For invalid listener items.
      */
-    public function __construct(array $listeners, ContainerInterface $container, array $env = [])
-    {
-        $this->container = $container;
-        $this->env       = $env;
-
+    public function __construct(
+        array $listeners,
+        /**
+         * @var ContainerInterface Container from which to pull lazy listeners
+         */
+        private ContainerInterface $container,
+        /**
+         * @var array Additional environment/option variables to use when creating listener
+         */
+        private array $env = []
+    ) {
         // This would raise an exception for invalid structs
         foreach ($listeners as $listener) {
             if (is_array($listener)) {
@@ -79,7 +74,7 @@ class LazyListenerAggregate implements ListenerAggregateInterface
             if (! $listener instanceof LazyEventListener) {
                 throw new Exception\InvalidArgumentException(sprintf(
                     'All listeners must be LazyEventListener instances or definitions; received %s',
-                    is_object($listener) ? get_class($listener) : gettype($listener)
+                    get_debug_type($listener),
                 ));
             }
 

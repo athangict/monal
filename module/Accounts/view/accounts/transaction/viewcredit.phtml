@@ -18,7 +18,7 @@ $current_flow = $this->flowtransactionObj->get(array('application'=>$row['id'], 
 $edit_option = 0;
 if(!empty($current_flow)) {
 	foreach($current_flow as $current);
-	$userRolesArray = explode(",", $login_role);
+	$userRolesArray = explode(",", (string) $login_role);
 	$edit_option = (in_array($current['actor'],$userRolesArray))?1:0;
 	//echo '<pre>';print_r($current_flow);
 }//exit;
@@ -276,7 +276,7 @@ if(!empty($current_flow)) {
 								<?php 
 								if(sizeof($current_flow) > 0 && $edit_option==1):
 									foreach($current_flow as $flow);
-									$actions = explode('|', $flow['action']);
+									$actions = explode('|', (string) $flow['action']);
 									for($i=0; $i < sizeof($actions); $i++):
 										$buttons = $this->flowactionObj->get($actions[$i]);
 										foreach($buttons as $button):?>

@@ -19,11 +19,32 @@ return [
                     'route'    => '/auth[/:action[/:id]]',
                     'constraints' => [
                         'action' => '[a-zA-Z][a-zA-Z0-9_-]*',
-                        'id'     => '[a-zA-Z][a-zA-Z0-9_-]*',
+                        // Allow numeric news IDs passed via route segment
+                        'id'     => '[a-zA-Z0-9_-]+',
                     ],
                     'defaults' => [
                         'controller' => Controller\AuthController::class,
                         'action'     => 'index',
+                    ],
+                ],
+            ],
+            'logout-callback' => [
+                'type' => 'Literal',
+                'options' => [
+                    'route' => '/logout-callback',
+                    'defaults' => [
+                        'controller' => Controller\AuthController::class,
+                        'action' => 'logoutCallback',
+                    ],
+                ],
+            ],
+            'verify-2fa' => [
+                'type' => Literal::class,
+                'options' => [
+                    'route' => '/verify-2fa',
+                    'defaults' => [
+                        'controller' => Controller\AuthController::class,
+                        'action' => 'verify-2fa',
                     ],
                 ],
             ],
@@ -34,10 +55,29 @@ return [
             __DIR__ . '/../view',
         ],
     ],
+    'controllers'     => [
+        'factories' => [
+            Controller\AuthController::class  => function ($container) {
+                return new Controller\AuthController(
+                    $container,
+                    $container->has(\DomesticPayment\Service\RmaPaymentService::class)
+                        ? $container->get(\DomesticPayment\Service\RmaPaymentService::class)
+                        : null,
+                    $container->has(\DomesticPayment\Model\PaymentTransactionTable::class)
+                        ? $container->get(\DomesticPayment\Model\PaymentTransactionTable::class)
+                        : null
+                );
+            },
+        ],
+    ],
     'service_manager' => [
         'factories' => [
             AuthStorage::class => InvokableFactory::class,
             SessionManager::class => SessionManagerFactory::class,
+            \Auth\Service\SSOService::class => function ($container) {
+                $config = $container->get('config') ?? [];
+                return new \Auth\Service\SSOService($config);
+            },
         ],
     ],
 ];

@@ -6,6 +6,12 @@ namespace Laminas\View\Helper;
 
 use function array_merge;
 
+/**
+ * @deprecated Since 2.40.0 - This helper is deprecated for removal in 3.0 - It's main purpose as a helper to avoid
+ *             remembering the correct `classid` attribute value is long obsolete. IE is dead.
+ *
+ * @final
+ */
 class HtmlPage extends AbstractHtmlElement
 {
     /**

@@ -16,6 +16,7 @@ use function is_scalar;
 use function is_string;
 use function preg_match;
 use function preg_match_all;
+use function str_contains;
 use function str_replace;
 use function strlen;
 use function strpos;
@@ -23,10 +24,21 @@ use function strtolower;
 use function substr;
 use function trim;
 
+/**
+ * @psalm-type Options = array{
+ *     tags_allowed?: array<string>|string,
+ *     attributes_allowed?: array<string>|string,
+ *     ...
+ * }
+ * @extends AbstractFilter<Options>
+ * @final
+ */
 class StripTags extends AbstractFilter
 {
     /**
      * Unique ID prefix used for allowing comments
+     *
+     * @deprecated This unused constant will be removed in 3.0
      */
     public const UNIQUE_ID_PREFIX = '__Laminas_Filter_StripTags__';
 
@@ -36,7 +48,7 @@ class StripTags extends AbstractFilter
      * Tags are stored in the array keys, and the array values are themselves
      * arrays of the attributes allowed for the corresponding tag.
      *
-     * @var array
+     * @var array<string, array<string, null>>
      */
     protected $tagsAllowed = [];
 
@@ -45,7 +57,7 @@ class StripTags extends AbstractFilter
      *
      * Attributes stored here are allowed for all of the allowed tags.
      *
-     * @var array
+     * @var array<string, null>
      */
     protected $attributesAllowed = [];
 
@@ -92,7 +104,9 @@ class StripTags extends AbstractFilter
     /**
      * Returns the tagsAllowed option
      *
-     * @return array
+     * @deprecated This method will be removed in 3.0
+     *
+     * @return array<string, array<string, null>>
      */
     public function getTagsAllowed()
     {
@@ -102,7 +116,9 @@ class StripTags extends AbstractFilter
     /**
      * Sets the tagsAllowed option
      *
-     * @param  array|string $tagsAllowed
+     * @deprecated This method will be removed in 3.0. Only the constructor can be used to set options.
+     *
+     * @param array|string $tagsAllowed
      * @return self Provides a fluent interface
      */
     public function setTagsAllowed($tagsAllowed)
@@ -144,7 +160,9 @@ class StripTags extends AbstractFilter
     /**
      * Returns the attributesAllowed option
      *
-     * @return array
+     * @deprecated This method will be removed in 3.0
+     *
+     * @return array<string, null>
      */
     public function getAttributesAllowed()
     {
@@ -154,7 +172,9 @@ class StripTags extends AbstractFilter
     /**
      * Sets the attributesAllowed option
      *
-     * @param  array|string $attributesAllowed
+     * @deprecated This method will be removed in 3.0. Only the constructor can be used to set options.
+     *
+     * @param  list<string>|string $attributesAllowed
      * @return self Provides a fluent interface
      */
     public function setAttributesAllowed($attributesAllowed)
@@ -180,8 +200,7 @@ class StripTags extends AbstractFilter
      *
      * If the value provided is non-scalar, the value will remain unfiltered
      *
-     * @todo   improve docblock descriptions
-     * @param  string $value
+     * @param mixed $value
      * @return string|mixed
      */
     public function filter($value)
@@ -210,7 +229,7 @@ class StripTags extends AbstractFilter
         $dataFiltered = '';
         // Parse the input data iteratively as regular pre-tag text followed by a
         // tag; either may be empty strings
-        preg_match_all('/([^<]*)(<?[^>]*>?)/', (string) $value, $matches);
+        preg_match_all('/([^<]*)(<?[^>]*>?)/', $value, $matches);
 
         // Iterate over each set of matches
         foreach ($matches[1] as $index => $preTag) {
@@ -236,11 +255,12 @@ class StripTags extends AbstractFilter
     /**
      * Filters a single tag against the current option settings
      *
-     * @param  string $tag
+     * @deprecated This method will be inaccessible in 3.0 once this class is marked final
+     *
+     * @param string $tag
      * @return string
      */
-    // @codingStandardsIgnoreStart
-    protected function _filterTag($tag)
+    protected function _filterTag($tag) // phpcs:ignore
     {
         // @codingStandardsIgnoreEnd
         // Parse the tag into:
@@ -280,7 +300,7 @@ class StripTags extends AbstractFilter
             // Iterate over each matched attribute
             foreach ($matches[1] as $index => $attributeName) {
                 $attributeName      = strtolower($attributeName);
-                $attributeDelimiter = empty($matches[2][$index]) ? $matches[4][$index] : $matches[2][$index];
+                $attributeDelimiter = $matches[2][$index] === '' ? $matches[4][$index] : $matches[2][$index];
                 $attributeValue     = $matches[3][$index] === '' ? $matches[5][$index] : $matches[3][$index];
 
                 // If the attribute is not allowed, then remove it entirely
@@ -297,7 +317,7 @@ class StripTags extends AbstractFilter
         }
 
         // Reconstruct tags ending with "/>" as backwards-compatible XHTML tag
-        if (strpos($tagEnd, '/') !== false) {
+        if (str_contains($tagEnd, '/')) {
             $tagEnd = " $tagEnd";
         }
 

@@ -381,7 +381,7 @@ class MovingItemSpTable extends AbstractTableGateway
 	 * @param String $column
 	 * @return String | Int
 	 */
-	public function getSUM($where=NULL, $column)
+	public function getSUM($where=NULL, $column = NULL)
 	{
 		$adapter = $this->adapter;
 		$sql = new Sql($adapter);
@@ -586,7 +586,7 @@ class MovingItemSpTable extends AbstractTableGateway
 	 * @param String $column
 	 * @return String | Int
 	 */
-	public function getMaxBatchdate($column,$where=NULL,$start_date,$end_date)
+	public function getMaxBatchdate($column,$where=NULL,$start_date = NULL,$end_date = NULL)
 	{
 		$adapter = $this->adapter;
 		$sql = new Sql($adapter);
@@ -616,7 +616,7 @@ class MovingItemSpTable extends AbstractTableGateway
 	 * @param String $column
 	 * @return String | Int
 	 */
-	public function getMaxBatchID($batc_id,$where=NULL,$item)
+	public function getMaxBatchID($batc_id,$where=NULL,$item = NULL)
 	{
 		$adapter = $this->adapter;
 		$sql = new Sql($adapter);
@@ -672,7 +672,7 @@ class MovingItemSpTable extends AbstractTableGateway
 	 * @param String $column
 	 * @return String | Int
 	 */
-	public function getMaxBatchdateforAllLocs($column,$where=NULL,$end_date)
+	public function getMaxBatchdateforAllLocs($column,$where=NULL,$end_date = NULL)
 	{
 		$adapter = $this->adapter;
 		$sql = new Sql($adapter);
@@ -758,7 +758,7 @@ class MovingItemSpTable extends AbstractTableGateway
 	 * @param String $column
 	 * @return String | Int
 	 */
-	public function getMaxBatchdateByLocation($column,$where=NULL,$end_date,$location)
+	public function getMaxBatchdateByLocation($column,$where=NULL,$end_date = NULL,$location = NULL)
 	{
 		$adapter = $this->adapter;
 		$sql = new Sql($adapter);
@@ -789,7 +789,7 @@ class MovingItemSpTable extends AbstractTableGateway
 	 * @param String $column
 	 * @return String | Int
 	 */
-	public function getMaxBatchIdByLocation($column,$where=NULL,$max_spe_date,$location)
+	public function getMaxBatchIdByLocation($column,$where=NULL,$max_spe_date = NULL,$location = NULL)
 	{
 		$adapter = $this->adapter;
 		$sql = new Sql($adapter);

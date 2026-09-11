@@ -294,7 +294,7 @@ class NotesheetTable extends AbstractTableGateway
 	 * @param String $column
 	 * @return Array | Int
 	 */
-	public function getPendingSheet($column, $where = NULL,$user){
+	public function getPendingSheet($column, $where = NULL,$user = NULL){
 	 $adapter = $this->adapter;
     $sql = new Sql($adapter);
 
@@ -330,7 +330,7 @@ class NotesheetTable extends AbstractTableGateway
 	 * @param String $column
 	 * @return Array | Int
 	 */
-	public function getActionByMe($where = NULL,$user)
+	public function getActionByMe($where = NULL,$user = NULL)
 	{
 		$adapter = $this->adapter;
 		$sql = new Sql($adapter);

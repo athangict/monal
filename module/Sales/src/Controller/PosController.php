@@ -28,6 +28,7 @@ class PosController extends AbstractActionController
     protected $_auth; 		// checking authentication
     protected $_safedataObj; // safedata controller plugin
 	protected $_userloc; //location of the current user
+	protected $_connection; // DB transaction connection
 	
 
 	public function __construct(ContainerInterface $container)
@@ -96,6 +97,54 @@ class PosController extends AbstractActionController
 		$this->_safedataObj = $this->safedata();
 		$this->_connection = $this->_container->get('Laminas\Db\Adapter\Adapter')->getDriver()->getConnection();
 
+	}
+
+	private function getCurrentRoleIds()
+	{
+		$roles = array();
+		foreach (explode(',', (string) $this->_login_role) as $role) {
+			$role = trim($role);
+			if ($role !== '' && ctype_digit($role)) {
+				$roles[] = (int) $role;
+			}
+		}
+		return $roles;
+	}
+
+	private function isPrivilegedUser()
+	{
+		$roles = $this->getCurrentRoleIds();
+		return in_array(99, $roles, true) || in_array(100, $roles, true);
+	}
+
+	private function getSaleRow($saleId)
+	{
+		$rows = $this->getDefinedTable(Sales\SalesTable::class)->get($saleId);
+		foreach ($rows as $row) {
+			return $row;
+		}
+		return null;
+	}
+
+	private function canAccessSale($saleId)
+	{
+		$sale = $this->getSaleRow($saleId);
+		if ($sale === null) {
+			return false;
+		}
+		if ($this->isPrivilegedUser()) {
+			return true;
+		}
+		return isset($sale['author']) && (int) $sale['author'] === (int) $this->_login_id;
+	}
+
+	private function getSalesDetailRow($detailId)
+	{
+		$rows = $this->getDefinedTable(Sales\SalesDetailsTable::class)->get($detailId);
+		foreach ($rows as $row) {
+			return $row;
+		}
+		return null;
 	}
 	
         //check if eos or not
@@ -196,6 +245,9 @@ class PosController extends AbstractActionController
 	/**
 	 * Add Sale action of Sales
 	 */
+	/**
+	 * Add Sale action of Sales
+	 */
 	public function addsalesAction()
 	{
 		$this->init();
@@ -267,6 +319,9 @@ class PosController extends AbstractActionController
 				'jrnl_no'=>$form['jrnl_no'],
 				'phone'=>$form['phone'],
 				'salesperson'=>$form['sales_person'],
+				'gst_rate'=>$form['gst_rate'],
+				'gst_amount'=>$form['gst_amt'],
+				'grand_total'=>$form['grand_total'],
 				'ref_no'=>$form['ref_no'],
 				'status'=>2,
 				'author' =>$this->_author,
@@ -322,6 +377,7 @@ class PosController extends AbstractActionController
 				'source_locs'=>$source_locs,
 				'group'			=> $this->getDefinedTable(Stock\OpeningStockTable::class),
 				'itemgroups' => $this->getDefinedTable(Stock\ItemGroupTable::class)-> getAll(),
+				'gst' => $this->getDefinedTable(Stock\GstRateTable::class)-> getAll(),
 				'uomObj'	  => $this->getDefinedTable(Stock\UomTable::class),
 				'accountObj' => $this->getDefinedTable(Accounts\BankaccountTable::class),
 				'cashObj' => $this->getDefinedTable(Accounts\CashaccountTable::class),
@@ -333,6 +389,10 @@ class PosController extends AbstractActionController
 	public function editsalesAction()
 	{
 		$this->init();
+		if (!$this->canAccessSale((int) $this->_id)) {
+			$this->flashMessenger()->addMessage("error^ You are not allowed to edit this sales record");
+			return $this->redirect()->toRoute('pos',array('action' => 'index'));
+		}
 		$employees='';
 		$admin_locs = $this->getDefinedTable(Administration\UsersTable::class)->getColumn($this->_author,'admin_location');
 		$admin_loc_array = explode(',',$admin_locs);
@@ -378,14 +438,21 @@ class PosController extends AbstractActionController
 				'ref_no'		=>$form['ref_no'],
 				'status'		=>2,
 				'discount'		=>$form['discount'],
-				'author' 		=>$this->_author,
-				'created' 		=>$this->_created,
+				'gst_rate'=>$form['gst_rate'],
+				'gst_amount'=>$form['gst_amt'],
+				'grand_total'=>$form['grand_total'],
 				'modified' 		=>$this->_modified,
 		);
 		$data = $this->_safedataObj->rteSafe($data);
 		$result = $this->getDefinedTable(Sales\SalesTable::class)->save($data);	
 		if($result > 0):
-			$id=$form['id'];
+			$id = (isset($form['id']) && is_array($form['id'])) ? $form['id'] : array();
+			$allowedDetailIds = array();
+			foreach ($this->getDefinedTable(Sales\SalesDetailsTable::class)->get(array('sales' => $this->_id)) as $detailRow) {
+				if (isset($detailRow['id']) && ctype_digit((string) $detailRow['id'])) {
+					$allowedDetailIds[(int) $detailRow['id']] = true;
+				}
+			}
 			$item=$form['item'];
 			$uom=$form['basic_uom'];
 			$rate=$form['rate'];
@@ -394,8 +461,13 @@ class PosController extends AbstractActionController
 			$amount=$form['amount'];
 			for($i=0; $i < sizeof($id); $i++):
 				if(isset($item[$i]) && is_numeric($item[$i])):
+					$detailId = (int) $id[$i];
+					if($detailId > 0 && !isset($allowedDetailIds[$detailId])){
+						$this->flashMessenger()->addMessage("error^ Invalid sales detail row selection");
+						return $this->redirect()->toRoute('pos',array('action' => 'editsales','id'=>$this->_id));
+					}
 					$data1 = array(
-						'id'				=> $id[$i],
+						'id'				=> $detailId,
 						'sales' 			=> $result,
 						'item' 				=> $item[$i],
 						'uom' 				=> $uom[$i],
@@ -465,6 +537,7 @@ class PosController extends AbstractActionController
 				'itemgroups' => $this->getDefinedTable(Stock\ItemGroupTable::class)-> getAll(),
 				'itemgroupsObj' => $this->getDefinedTable(Stock\ItemGroupTable::class),
 				'uomObj'	  => $this->getDefinedTable(Stock\UomTable::class),
+				'gst' => $this->getDefinedTable(Stock\GstRateTable::class)-> getAll(),
 		));
 	}
 	/**
@@ -473,7 +546,11 @@ class PosController extends AbstractActionController
 	public function deleteAction()
 	{
 		$this->init(); 
-		foreach($this->getDefinedTable(Sales\SalesDetailsTable::Class)->get($this->_id) as $salesd);
+		$salesd = $this->getSalesDetailRow((int) $this->_id);
+		if (empty($salesd) || !$this->canAccessSale((int) $salesd['sales'])) {
+			$this->flashMessenger()->addMessage("error^ Invalid sales detail selection");
+			return $this->redirect()->toRoute('pos',array('action' => 'index'));
+		}
 		foreach($this->getDefinedTable(Sales\SalesTable::Class)->get($salesd['sales']) as $sales);
 		$result = $this->getDefinedTable(Sales\SalesDetailsTable::Class)->remove($this->_id);
 		if($result > 0):
@@ -493,7 +570,11 @@ class PosController extends AbstractActionController
 	 public function deletesalesdAction()
 	{
 		$this->init(); 
-		foreach($this->getDefinedTable(Sales\SalesDetailsTable::Class)->get($this->_id) as $salesd);
+		$salesd = $this->getSalesDetailRow((int) $this->_id);
+		if (empty($salesd) || !$this->canAccessSale((int) $salesd['sales'])) {
+			$this->flashMessenger()->addMessage("error^ Invalid sales detail selection");
+			return $this->redirect()->toRoute('pos',array('action' => 'index'));
+		}
 		foreach($this->getDefinedTable(Sales\SalesTable::Class)->get($salesd['sales']) as $sales);
 		$result = $this->getDefinedTable(Sales\SalesDetailsTable::Class)->remove($this->_id);
 		if($result > 0):
@@ -540,6 +621,9 @@ class PosController extends AbstractActionController
 	/**
 	 * confirm Sale Action
 	 */
+	/**
+	 * confirm Sale Action
+	 */
 	public function confirmAction()
 	{
 		$this->init();
@@ -554,16 +638,17 @@ class PosController extends AbstractActionController
 			/**
 			 * Generating voucher no
 			 */
-			$loc = $this->getDefinedTable(Administration\LocationTable::class)->getcolumn($form['location'], 'prefix');
-			$prefix = $this->getDefinedTable(Accounts\JournalTable::class)->getcolumn(7,'prefix');
-			$date = date('ym',strtotime($row['sales_date']));
+			$loc = $this->getDefinedTable(Administration\LocationTable::class)->getColumn($form['location'], 'prefix');
+			$prefix = $this->getDefinedTable(Accounts\JournalTable::class)->getColumn(7,'prefix');
+			$date = date('ym',strtotime($form['sales_date']));
+			//print_r($date);exit;
 				$tmp_VCNo = $loc.'-'.$prefix.$date;
 				
 				$results = $this->getDefinedTable(Accounts\TransactionTable::class)->getSerial($tmp_VCNo);
 				
 				$pltp_no_list = array();
 				foreach($results as $result):
-					array_push($pltp_no_list, substr($result['voucher_no'], 13));
+					array_push($pltp_no_list, substr($result['voucher_no'], -4));
 				endforeach;
 				$next_serial = max($pltp_no_list) + 1;
 					
@@ -639,20 +724,6 @@ class PosController extends AbstractActionController
 				$result = $this->getDefinedTable(Stock\OpeningStockTable::class)->save($data);
 			endforeach;
 				foreach($this->getDefinedTable(Sales\SalesTable::class)->get(array('sales_no'=>$form['sales_no'])) as $sales);
-				$data1 = array(
-					'voucher_date' => $form['sales_date'],
-					'voucher_type' => 7,
-					'region'   =>$region,
-					'doc_id'   =>"sales",
-					'voucher_no' => $voucher_no,
-					'remark' => $form['sales_no'],
-					'voucher_amount' => str_replace( ",", "",$sales['payment_amount']),
-					'status' => 4, // status initiated 
-					'author' =>$this->_author,
-					'created' =>$this->_created,  
-					'modified' =>$this->_modified,
-				);
-				$resultt = $this->getDefinedTable(Accounts\TransactionTable::class)->save($data1);
 				foreach($this->getDefinedTable(Stock\ItemTable::class)->get(array('i.id'=>$sale['item'])) as $itemg);
 				if($itemg['item_group']==64){
 					$subheadinventory=2136;
@@ -673,6 +744,13 @@ class PosController extends AbstractActionController
 					$headpayable=140;
 					$subheadpayable=1964;
 				}
+				elseif($itemg['item_group']==66 || $itemg['item_group']==65 ){
+					$subheadinventory=2137;
+					$headincome=189;
+					$subheadincome=380;
+					$headexpense = 178;
+					$subheadexpense = 1565;
+				}
 				else{
 					$subheadinventory=2137;
 					$headincome=189;
@@ -680,152 +758,29 @@ class PosController extends AbstractActionController
 					$headexpense = 178;
 					$subheadexpense = 1565;
 				}
-				
-				/* checks if sale entry has discounts or not*/
-				if($sales['discount']==0){
-					$netamount=$sales['payment_amount'];
-					}
-					
-				else{
-						$discountam=$sales['payment_amount']*($sales['discount']/100);
-						if($itemg['item_group']==64){
-							$tdetailsdata2 = array(
-							'transaction' => $resultt,
-							'voucher_dates' => $form['sales_date'],
-							'voucher_types' => 7,
-							'location' => $form['location'],
-							'head' =>177,
-							'sub_head' =>1698,
-							'bank_ref_type' => '',
-							'debit' =>$discountam,
-							'credit' =>'0.000',
-							'ref_no'=> $ref, 
-							'activity'=>$form['location'],
-							'type' => '1',//user inputted  data
-							'status' => 4, // status initiated
-							'author' =>$this->_author,
-							'created' =>$this->_created,
-							'modified' =>$this->_modified,
-							);
-						}
-					else{
-						$tdetailsdata2 = array(
-						'transaction' => $resultt,
-						'voucher_dates' => $form['sales_date'],
-						'voucher_types' => 7,
-						'location' => $form['location'],
-						'head' =>178,
-						'sub_head' =>1535,
-						'bank_ref_type' => '',
-						'debit' =>$discountam,
-						'credit' =>'0.000',
-						'ref_no'=> $ref, 
-						'activity'=>$form['location'],
-						'type' => '1',//user inputted  data
-						'status' => 4, // status initiated
+				$voucher_amt=$sales['cost_price']+$sales['grand_total'];
+				if($sales['discount']==100){
+					$data1 = array(
+						'voucher_date' => $form['sales_date'],
+						'voucher_type' => 7,
+						'region'   =>$region,
+						'doc_id'   =>"sales",
+						'voucher_no' => $voucher_no,
+						'remark' => $form['sales_no'],
+						'voucher_amount' => str_replace( ",", "",$voucher_amt),
+						'status' => 4, // status initiated 
 						'author' =>$this->_author,
-						'created' =>$this->_created,
+						'created' =>$this->_created,  
 						'modified' =>$this->_modified,
-						);
-					}
-					
-				$tdetailsdata2 = $this->_safedataObj->rteSafe($tdetailsdata2);
-				$result2 = $this->getDefinedTable(Accounts\TransactiondetailTable::class)->save($tdetailsdata2);
-									
-					$netamount=$sales['payment_amount']-$discountam;
-				}
-				$tdetailsdata = array(
-					'transaction' => $resultt,
-					'voucher_dates' => $form['sales_date'],
-					'voucher_types' => 7,
-					'location' => $form['location'],
-					'head' =>$headincome,
-					'sub_head' =>$subheadincome,
-					'bank_ref_type' => '',
-					'debit' =>'0.000',
-					'credit' =>($itemg['item_group']==68 || $itemg['item_group']==69)?$sales['payment_amount']*0.2:$sales['payment_amount'],
-					'ref_no'=> '', 
-					'type' => '1',//user inputted  data
-					'status' => 4, // status initiated
-					'activity'=>$form['location'],
-					'author' =>$this->_author,
-					'created' =>$this->_created,
-					'modified' =>$this->_modified,
-				);
-				$tdetailsdata = $this->_safedataObj->rteSafe($tdetailsdata);
-				$result1 = $this->getDefinedTable(Accounts\TransactiondetailTable::class)->save($tdetailsdata);
-					foreach($this->getDefinedTable(Sales\SalesTable::class)->get(array('sales_no'=>$form['sales_no'])) as $sdd);
-					if($sdd['credit']=="n"){
-						$ref_no="";
-						$ref=$sdd['account_no'];
-							if($sdd['payment_type']==1){
-								$type=6;
-							}
-							else if($sdd['payment_type']==2){
-								$type=3;
-							}
-						$subhead = $this->getDefinedTable(Accounts\SubheadTable::class)->getColumn(array('ref_id'=>$ref,'type'=>$type),'id');
-						$head = $this->getDefinedTable(Accounts\SubheadTable::class)->getColumn(array('ref_id'=>$ref,'type'=>$type),'head');
-					}
-					else{
-						$ref=$sdd['customer'];
-						if($sdd['credit']=="y"){$headtype=10;}else{$headtype=19;}
-						$head = $this->getDefinedTable(Accounts\SubheadTable::class)->getSubheadfht(array('sh.ref_id'=>$ref,'h.head_type'=>$headtype),'head');
-						$subhead = $this->getDefinedTable(Accounts\SubheadTable::class)->getColumn(array('ref_id'=>$ref,'head'=>$head),'id');
-						$ref_no=$salestables['ref_no'];
-					}
-				$tdetailsdata1 = array(
-					'transaction' => $resultt,
-					'voucher_dates' => $form['sales_date'],
-					'voucher_types' => 7,
-					'location' => $form['location'],
-					'head' => $head,
-					'sub_head' => $subhead,
-					'bank_ref_type' => '',
-					'bank_trans_journal'=>$sales['jrnl_no'],
-					'debit' =>$netamount,
-					'credit' => '0.00',
-					'activity'=>$form['location'],
-					'ref_no'=> $ref_no, 
-					'against'=>0,
-					'type' => '1',//user inputted  data
-					'status' => 4, // status initiated
-					'author' =>$this->_author,
-					'created' =>$this->_created,
-					'modified' =>$this->_modified,
-				);
-				$tdetailsdata1 = $this->_safedataObj->rteSafe($tdetailsdata1);
-				$result2 = $this->getDefinedTable(Accounts\TransactiondetailTable::class)->save($tdetailsdata1);
-				if($itemg['item_group']==68 || $itemg['item_group']==69){
-					$tdetailsdata = array(
-					'transaction' => $resultt,
-					'voucher_dates' => $form['sales_date'],
-					'voucher_types' => 7,
-					'location' => $form['location'],
-					'head' =>$headpayable,
-					'sub_head' =>$subheadpayable,
-					'bank_ref_type' => '',
-					'debit' =>'0.000',
-					'credit' =>$sales['payment_amount']*0.8,
-					'ref_no'=> '', 
-					'type' => '1',//user inputted  data
-					'status' => 4, // status initiated
-					'activity'=>$form['location'],
-					'author' =>$this->_author,
-					'created' =>$this->_created,
-					'modified' =>$this->_modified,
-				);
-					$tdetailsdata = $this->_safedataObj->rteSafe($tdetailsdata);
-					$result1 = $this->getDefinedTable(Accounts\TransactiondetailTable::class)->save($tdetailsdata);
-				}
-				else{
+					);
+					$resultt = $this->getDefinedTable(Accounts\TransactionTable::class)->save($data1);
 					$tdetailsdata2 = array(
 						'transaction' => $resultt,
 						'voucher_dates' => $form['sales_date'],
 						'voucher_types' => 7,
 						'location' => $form['location'],
-						'head' =>$headexpense,
-						'sub_head' =>$subheadexpense,
+						'head' =>195,
+						'sub_head' =>1586,
 						'bank_ref_type' => '',
 						'debit' =>$sales['cost_price'],
 						'credit' =>'0.000',
@@ -859,6 +814,226 @@ class PosController extends AbstractActionController
 					);
 					$tdetailsdata2 = $this->_safedataObj->rteSafe($tdetailsdata2);
 					$result2 = $this->getDefinedTable(Accounts\TransactiondetailTable::class)->save($tdetailsdata2);
+				}
+				else{
+					$data1 = array(
+						'voucher_date' => $form['sales_date'],
+						'voucher_type' => 7,
+						'region'   =>$region,
+						'doc_id'   =>"sales",
+						'voucher_no' => $voucher_no,
+						'remark' => $form['sales_no'],
+						'voucher_amount' => str_replace( ",", "",$voucher_amt),
+						'status' => 4, // status initiated 
+						'author' =>$this->_author,
+						'created' =>$this->_created,  
+						'modified' =>$this->_modified,
+					);
+					$resultt = $this->getDefinedTable(Accounts\TransactionTable::class)->save($data1);
+					/* checks if sale entry has discounts or not*/
+					if($sales['discount']==0){
+						$netamount=$sales['payment_amount'];
+						}
+						
+					else{
+						$discountam=$sales['payment_amount']*($sales['discount']/100);
+						if($itemg['item_group']==64){
+							$tdetailsdata2 = array(
+							'transaction' => $resultt,
+							'voucher_dates' => $form['sales_date'],
+							'voucher_types' => 7,
+							'location' => $form['location'],
+							'head' =>177,
+							'sub_head' =>1698,
+							'bank_ref_type' => '',
+							'debit' =>$discountam,
+							'credit' =>'0.000',
+							'ref_no'=> $ref, 
+							'activity'=>$form['location'],
+							'type' => '1',//user inputted  data
+							'status' => 4, // status initiated
+							'author' =>$this->_author,
+							'created' =>$this->_created,
+							'modified' =>$this->_modified,
+							);
+						}
+						else{
+							$tdetailsdata2 = array(
+							'transaction' => $resultt,
+							'voucher_dates' => $form['sales_date'],
+							'voucher_types' => 7,
+							'location' => $form['location'],
+							'head' =>178,
+							'sub_head' =>1535,
+							'bank_ref_type' => '',
+							'debit' =>$discountam,
+							'credit' =>'0.000',
+							'ref_no'=> $ref, 
+							'activity'=>$form['location'],
+							'type' => '1',//user inputted  data
+							'status' => 4, // status initiated
+							'author' =>$this->_author,
+							'created' =>$this->_created,
+							'modified' =>$this->_modified,
+							);
+						}
+					
+						$tdetailsdata2 = $this->_safedataObj->rteSafe($tdetailsdata2);
+						$result2 = $this->getDefinedTable(Accounts\TransactiondetailTable::class)->save($tdetailsdata2);
+									
+						$netamount=$sales['payment_amount']-$discountam;
+					}
+					$tdetailsdata = array(
+						'transaction' => $resultt,
+						'voucher_dates' => $form['sales_date'],
+						'voucher_types' => 7,
+						'location' => $form['location'],
+						'head' =>$headincome,
+						'sub_head' =>$subheadincome,
+						'bank_ref_type' => '',
+						'debit' =>'0.000',
+						'credit' =>($itemg['item_group']==68 || $itemg['item_group']==69)?$sales['payment_amount']*0.2:$sales['payment_amount'],
+						'ref_no'=> '', 
+						'type' => '1',//user inputted  data
+						'status' => 4, // status initiated
+						'activity'=>$form['location'],
+						'author' =>$this->_author,
+						'created' =>$this->_created,
+						'modified' =>$this->_modified,
+					);
+					$tdetailsdata = $this->_safedataObj->rteSafe($tdetailsdata);
+					$result1 = $this->getDefinedTable(Accounts\TransactiondetailTable::class)->save($tdetailsdata);
+					foreach($this->getDefinedTable(Sales\SalesTable::class)->get(array('sales_no'=>$form['sales_no'])) as $sdd);
+					if($sdd['credit']=="n"){
+						$ref_no="";
+						$ref=$sdd['account_no'];
+							if($sdd['payment_type']==1){
+								$type=6;
+							}
+							else if($sdd['payment_type']==2){
+								$type=3;
+							}
+						$subhead = $this->getDefinedTable(Accounts\SubheadTable::class)->getColumn(array('ref_id'=>$ref,'type'=>$type),'id');
+						$head = $this->getDefinedTable(Accounts\SubheadTable::class)->getColumn(array('ref_id'=>$ref,'type'=>$type),'head');
+					}
+					else{
+						$ref=$sdd['customer'];
+						if($sdd['credit']=="y"){$headtype=10;}else{$headtype=19;}
+						$head = $this->getDefinedTable(Accounts\SubheadTable::class)->getSubheadfht(array('sh.ref_id'=>$ref,'h.head_type'=>$headtype),'head');
+						$subhead = $this->getDefinedTable(Accounts\SubheadTable::class)->getColumn(array('ref_id'=>$ref,'head'=>$head),'id');
+						$ref_no=$salestables['ref_no'];
+					}
+					$tdetailsdata1 = array(
+						'transaction' => $resultt,
+						'voucher_dates' => $form['sales_date'],
+						'voucher_types' => 7,
+						'location' => $form['location'],
+						'head' => $head,
+						'sub_head' => $subhead,
+						'bank_ref_type' => '',
+						'bank_trans_journal'=>$sales['jrnl_no'],
+						'debit' =>$sales['grand_total'],
+						'credit' => '0.00',
+						'activity'=>$form['location'],
+						'ref_no'=> $ref_no, 
+						'against'=>0,
+						'type' => '1',//user inputted  data
+						'status' => 4, // status initiated
+						'author' =>$this->_author,
+						'created' =>$this->_created,
+						'modified' =>$this->_modified,
+					);
+					$tdetailsdata1 = $this->_safedataObj->rteSafe($tdetailsdata1);
+					$result2 = $this->getDefinedTable(Accounts\TransactiondetailTable::class)->save($tdetailsdata1);
+					if($sales['gst_amount']>0){
+						$gsttransaction = array(
+							'transaction' => $resultt,
+							'voucher_dates' => $form['sales_date'],
+							'voucher_types' => 7,
+							'location' => $form['location'],
+							'head' => $this->getDefinedTable(Accounts\SubheadTable::class)->getColumn(array('id'=>3292),'head'),
+							'sub_head' => 3292,
+							'bank_ref_type' => '',
+							'bank_trans_journal'=>$sales['jrnl_no'],
+							'debit' =>0,
+							'credit' => $sales['gst_amount'],
+							'activity'=>$form['location'],
+							'ref_no'=> $ref_no, 
+							'against'=>0,
+							'type' => '1',//user inputted  data
+							'status' => 4, // status initiated
+							'author' =>$this->_author,
+							'created' =>$this->_created,
+							'modified' =>$this->_modified,
+						);
+						$gsttransaction = $this->_safedataObj->rteSafe($gsttransaction);
+						$gst = $this->getDefinedTable(Accounts\TransactiondetailTable::class)->save($gsttransaction);
+					}
+					if($itemg['item_group']==68 || $itemg['item_group']==69){
+						$tdetailsdata = array(
+							'transaction' => $resultt,
+							'voucher_dates' => $form['sales_date'],
+							'voucher_types' => 7,
+							'location' => $form['location'],
+							'head' =>$headpayable,
+							'sub_head' =>$subheadpayable,
+							'bank_ref_type' => '',
+							'debit' =>'0.000',
+							'credit' =>$sales['payment_amount']*0.8,
+							'ref_no'=> '', 
+							'type' => '1',//user inputted  data
+							'status' => 4, // status initiated
+							'activity'=>$form['location'],
+							'author' =>$this->_author,
+							'created' =>$this->_created,
+							'modified' =>$this->_modified,
+						);
+						$tdetailsdata = $this->_safedataObj->rteSafe($tdetailsdata);
+						$result1 = $this->getDefinedTable(Accounts\TransactiondetailTable::class)->save($tdetailsdata);
+					}
+					else{
+						$tdetailsdata2 = array(
+							'transaction' => $resultt,
+							'voucher_dates' => $form['sales_date'],
+							'voucher_types' => 7,
+							'location' => $form['location'],
+							'head' =>$headexpense,
+							'sub_head' =>$subheadexpense,
+							'bank_ref_type' => '',
+							'debit' =>$sales['cost_price'],
+							'credit' =>'0.000',
+							'ref_no'=> $ref, 
+							'activity'=>$form['location'],
+							'type' => '1',//user inputted  data
+							'status' => 4, // status initiated
+							'author' =>$this->_author,
+							'created' =>$this->_created,
+							'modified' =>$this->_modified,
+						);
+						$tdetailsdata2 = $this->_safedataObj->rteSafe($tdetailsdata2);
+						$result2 = $this->getDefinedTable(Accounts\TransactiondetailTable::class)->save($tdetailsdata2);
+						$tdetailsdata2 = array(
+							'transaction' => $resultt,
+							'voucher_dates' => $form['sales_date'],
+							'voucher_types' => 7,
+							'location' => $form['location'],
+							'head' =>9,
+							'sub_head' =>$subheadinventory,
+							'bank_ref_type' => '', 
+							'debit' =>'0.000',
+							'activity'=>$form['location'],
+							'credit' =>$sales['cost_price'],
+							'ref_no'=> $ref, 
+							'type' => '1',//user inputted  data
+							'status' => 4, // status initiated
+							'author' =>$this->_author,
+							'created' =>$this->_created,
+							'modified' =>$this->_modified,
+						);
+						$tdetailsdata2 = $this->_safedataObj->rteSafe($tdetailsdata2);
+						$result2 = $this->getDefinedTable(Accounts\TransactiondetailTable::class)->save($tdetailsdata2);
+					}
+				}
 						/**Push the transaction id from Transaction Table */
 				$data5 = array(
 					'id' 	             => $form['sales'],
@@ -867,7 +1042,7 @@ class PosController extends AbstractActionController
 				);
 				$data5 =  $this->_safedataObj->rteSafe($data5);
 				$result5 = $this->getDefinedTable(Sales\SalesTable::class)->save($data5);
-				}
+				
 			if($result2>0):
 			$this->_connection->commit();
 			$this->flashMessenger()->addMessage("success^ Confirmed sale successfully ");
@@ -1202,14 +1377,14 @@ class PosController extends AbstractActionController
 			 */
 			$loc = $this->getDefinedTable(Administration\LocationTable::class)->getcolumn($form['location'], 'prefix');
 			$prefix = $this->getDefinedTable(Accounts\JournalTable::class)->getcolumn(7,'prefix');
-			$date = date('ym',strtotime(date('Y-m-d')));
+			$date = date('ym',strtotime($row['sales_date']));
 				$tmp_VCNo = $loc.'-'.$prefix.$date;
 				
 				$results = $this->getDefinedTable(Accounts\TransactionTable::class)->getSerial($tmp_VCNo);
 				
 				$pltp_no_list = array();
 				foreach($results as $result):
-					array_push($pltp_no_list, substr($result['voucher_no'], 13));
+					array_push($pltp_no_list, substr($result['voucher_no'], -4));
 				endforeach;
 				$next_serial = max($pltp_no_list) + 1;
 					
@@ -1665,7 +1840,7 @@ class PosController extends AbstractActionController
 				
 				$pltp_no_list = array();
 				foreach($results as $result):
-					array_push($pltp_no_list, substr($result['voucher_no'], 13));
+					array_push($pltp_no_list, substr($result['voucher_no'], -3));
 				endforeach;
 				$next_serial = max($pltp_no_list) + 1;
 					
@@ -1850,6 +2025,7 @@ class PosController extends AbstractActionController
 		$this->init();
 		if($this->getRequest()->isPost())
 		{
+		$sales_id = (int)$this->_id;
 		foreach($this->getDefinedTable(Sales\SalesTable::Class)->get($this->_id) as $sales);
 		foreach($this->getDefinedTable(Sales\SalesDetailsTable::Class)->get(array('sales'=>$this->_id)) as $salesd):
 			foreach($this->getDefinedTable(Stock\OpeningStockDtlsTable::Class)->get(array('location'=>$sales['location'],'item'=>$salesd['item'])) as $opening);
@@ -1867,14 +2043,26 @@ class PosController extends AbstractActionController
 			}
 			$result1= $this->getDefinedTable(Sales\SalesDetailsTable::Class)->remove($salesd['id']);
 			endforeach;
-			
-			$transId=$this->getDefinedTable(Accounts\TransactionTable::Class)->getColumn(array('remark'=>$sales['sales_no']),'id');
-		
-		foreach($this->getDefinedTable(Accounts\TransactiondetailTable::Class)->get(array('td.transaction'=>$transId)) as $trand){
-			$result2 = $this->getDefinedTable(Accounts\TransactiondetailTable::Class)->remove($trand['id']);
-		}
-		$result3=$this->getDefinedTable(Accounts\TransactionTable::Class)->remove($transId);
-		$result4 = $this->getDefinedTable(Sales\SalesTable::Class)->remove($this->_id);
+
+			$transId = isset($sales['transaction']) ? (int)$sales['transaction'] : 0;
+
+			if($transId > 0):
+				$linkedSalesTransId = (int)$this->getDefinedTable(Accounts\TransactionTable::Class)->getColumn(
+					array('id' => $transId, 'doc_id' => 'sales', 'remark' => $sales['sales_no']),
+					'id'
+				);
+				if($linkedSalesTransId > 0):
+					foreach($this->getDefinedTable(Accounts\TransactiondetailTable::Class)->getTransaction(array('transaction' => $linkedSalesTransId)) as $trand):
+						$tranDetailId = (int)$trand['id'];
+						if($tranDetailId > 0):
+							$this->getDefinedTable(Accounts\TransactiondetailTable::Class)->remove($tranDetailId);
+						endif;
+					endforeach;
+					$this->getDefinedTable(Accounts\TransactionTable::Class)->remove($linkedSalesTransId);
+				endif;
+			endif;
+
+		$result4 = $this->getDefinedTable(Sales\SalesTable::Class)->remove($sales_id);
 		if($result4 > 0):
 				$this->flashMessenger()->addMessage("success^ sale deleted successfully");
 			else:
@@ -2103,7 +2291,7 @@ class PosController extends AbstractActionController
 	{
 		{	
 			$this->init();
-			$array_id = explode("_", $this->_id);
+			$array_id = explode("_", (string) ($this->_id ?? ''));
 			$user = (sizeof($array_id)>1)?$array_id[0]:'-1';
 			$location = (sizeof($array_id)>1)?$array_id[1]:'-1';
 			$item = (sizeof($array_id)>1)?$array_id[1]:'-1';

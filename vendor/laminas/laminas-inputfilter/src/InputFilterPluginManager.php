@@ -13,11 +13,8 @@ use Laminas\ServiceManager\ServiceManager;
 use Laminas\Stdlib\InitializableInterface;
 use Laminas\Validator\ValidatorPluginManager;
 use Psr\Container\ContainerInterface;
-use Psr\Container\ContainerInterface as PsrContainerInterface;
 
-use function get_class;
-use function gettype;
-use function is_object;
+use function get_debug_type;
 use function sprintf;
 
 /**
@@ -28,7 +25,8 @@ use function sprintf;
  * @psalm-import-type ServiceManagerConfiguration from ServiceManager
  * @template InstanceType of InputFilterInterface|InputInterface
  * @extends AbstractPluginManager<InstanceType>
- * @method InputFilterInterface|InputInterface get(string $name, ?array $options = null)
+ *
+ * @final
  */
 class InputFilterPluginManager extends AbstractPluginManager
 {
@@ -91,12 +89,12 @@ class InputFilterPluginManager extends AbstractPluginManager
     protected $shareByDefault = false;
 
     /**
-     * @param null|ConfigInterface|ContainerInterface|PsrContainerInterface $configOrContainer
+     * @param null|ConfigInterface|ContainerInterface $configOrContainer
      * @param ServiceManagerConfiguration $v3config
      */
     public function __construct($configOrContainer = null, array $v3config = [])
     {
-        $this->initializers[] = [$this, 'populateFactory'];
+        $this->initializers[] = $this->populateFactory(...);
         parent::__construct($configOrContainer, $v3config);
     }
 
@@ -143,9 +141,9 @@ class InputFilterPluginManager extends AbstractPluginManager
     }
 
     /**
-     * {@inheritDoc} (v3)
-     *
+     * @inheritDoc
      * @psalm-assert InstanceType $instance
+     * @param mixed $instance
      */
     public function validate($instance)
     {
@@ -161,7 +159,7 @@ class InputFilterPluginManager extends AbstractPluginManager
 
         throw new InvalidServiceException(sprintf(
             'Plugin of type %s is invalid; must implement %s or %s',
-            is_object($instance) ? get_class($instance) : gettype($instance),
+            get_debug_type($instance),
             InputFilterInterface::class,
             InputInterface::class
         ));
@@ -189,5 +187,19 @@ class InputFilterPluginManager extends AbstractPluginManager
         } catch (InvalidServiceException $e) {
             throw new Exception\RuntimeException($e->getMessage(), $e->getCode(), $e);
         }
+    }
+
+    /**
+     * @inheritDoc
+     * phpcs:disable Generic.Files.LineLength.TooLong
+     * // Template constraint required or we get mixed added to output. Two templates because union does not work
+     * @template T1 of InputInterface
+     * @template T2 of InputFilterInterface
+     * @param class-string<T1>|class-string<T2>|string $name
+     * @return ($name is class-string<InputInterface> ? T1 : ($name is class-string<InputFilterInterface> ? T2 : InputInterface|InputFilterInterface))
+     */
+    public function get($name, ?array $options = null)
+    {
+        return parent::get($name, $options);
     }
 }

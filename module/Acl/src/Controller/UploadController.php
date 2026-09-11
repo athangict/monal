@@ -11,6 +11,8 @@ use Acl\Model as Acl;
 
 class UploadController extends AbstractActionController
 {
+	protected $_fileExts;
+	protected $_maxSize;
 	private $_container;
 	protected $_table; 		// database table
 	protected $_user; 		// user detail
@@ -96,7 +98,7 @@ class UploadController extends AbstractActionController
 				$request->getPost()->toArray(),
 				$request->getFiles()->toArray()
 			);
-        	$params = explode("-", $data['application']);
+        	$params = explode("-", (string) $data['application']);
 			$process = $params['0'];
 			$process_id = $params['1'];
 			$applicationNO = $params['2'];

@@ -14,6 +14,9 @@ use Accounts\Model As Accounts;
 
 class NotesheetController extends AbstractActionController
 {   
+	protected $_connection;
+	protected $_safedataObj;
+	protected $_userloc;
 	private $_container;
 	protected $_table; 		// database table
 	protected $_user; 		// user detail
@@ -268,7 +271,7 @@ class NotesheetController extends AbstractActionController
 	public function viewsheetAction()
 	{
 		$this->init();
-		$params = explode("-", $this->_id);
+		$params = explode("-", (string) $this->_id);
 		if (isset($params['1']) && $params['1'] == '1' && isset($params['2']) && $params['2'] > 0) {
 			$flag = $this->getDefinedTable(Acl\NotifyTable::class)->getColumn($params['2'], 'flag'); 
 				if($flag == "0") {
@@ -428,7 +431,7 @@ class NotesheetController extends AbstractActionController
 			//echo '<pre>';print_r($notification_data);exit;
 			$notificationResult = $this->getDefinedTable(Acl\NotificationTable::class)->save($notification_data);
 			if($notificationResult > 0 ){
-				$notification_array = explode("|", $flow['route_notification_to']);
+				$notification_array = explode("|", (string) $flow['route_notification_to']);
 				if(sizeof($notification_array)>0){
 					for($k=0;$k<sizeof($notification_array);$k++){
 						$focalusers=$this->getDefinedTable(Administration\FlowTransactionTable::class)->get(array('id'=>$flow_result));
@@ -550,7 +553,7 @@ class NotesheetController extends AbstractActionController
 				$deduction      = $form['deduction'];
 				$payment_amount        = $form['payment_amount'];
 				for($i=0; $i < sizeof($applicant); $i++):
-				//$date1= explode('/', $date[$i]);
+				//$date1= explode('/', (string) $date[$i]);
 					$sitting_details = array(
 		      					'sitting_id' 		=> $result,
 								'employee'  	 	=> $applicant[$i],
@@ -719,7 +722,7 @@ class NotesheetController extends AbstractActionController
 	*/
 	public function viewsittingfeeAction(){
 		$this->init();
-		$params = explode("-", $this->_id);
+		$params = explode("-", (string) $this->_id);
 		if (isset($params['1']) && $params['1'] == '1' && isset($params['2']) && $params['2'] > 0) {
 			$flag = $this->getDefinedTable(Acl\NotifyTable::class)->getColumn($params['2'], 'flag'); 
 				if($flag == "0") {
@@ -971,7 +974,7 @@ class NotesheetController extends AbstractActionController
 			//echo '<pre>';print_r($notification_data);exit;
 			$notificationResult = $this->getDefinedTable(Acl\NotificationTable::class)->save($notification_data);
 			if($notificationResult > 0 ){
-				$notification_array = explode("|", $flow['route_notification_to']);
+				$notification_array = explode("|", (string) $flow['route_notification_to']);
 				if(sizeof($notification_array)>0){
 					for($k=0;$k<sizeof($notification_array);$k++){
 						$focalusers=$this->getDefinedTable(Administration\FlowTransactionTable::class)->get(array('id'=>$flow_result));

@@ -96,7 +96,7 @@ foreach($sittings as $sitting);?>
 				<i class="fa fa-check-square-o"></i> Edit </a>								
 			</form>	<?php
 			/*elseif($this->userID == $flow['role_id'] && $sitting['status']!=8):							      
-				$actions = explode('|', $flow['action']);
+				$actions = explode('|', (string) $flow['action']);
 				for($i=0; $i < sizeof($actions); $i++):
 					$buttons = $this->flowactionObj->get($actions[$i]);
 					foreach($buttons as $button):?>

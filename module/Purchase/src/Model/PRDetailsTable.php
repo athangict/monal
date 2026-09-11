@@ -281,7 +281,7 @@ class PRDetailsTable extends AbstractTableGateway
 		foreach ($results as $result) {
 			$column = $result['sum'];
 		}
-		
-		return number_format((float)$column, 2, '.', ',');
+		 
+		return $column;
 	}
 }

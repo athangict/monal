@@ -17,7 +17,13 @@
 					<select id="preceipt" name="preceipt" class="form-control" data-placeholder="Select" required>
 						<option value=""></option>
 						<?php foreach($this->purchasereceipts as $purchasereceipt):?>
-						<option value = "<?php echo $purchasereceipt['id'];?>"><?php echo $purchasereceipt['purchase_receipt_no']."|".$purchasereceipt['activity']."|".$purchasereceipt['item_group']."|".$purchasereceipt['purchase_receipt_date'];?></option>
+						<?php
+							$receiptNo = isset($purchasereceipt['purchase_receipt_no']) ? $purchasereceipt['purchase_receipt_no'] : (isset($purchasereceipt['prn_no']) ? $purchasereceipt['prn_no'] : '');
+							$activity = isset($purchasereceipt['activity']) ? $purchasereceipt['activity'] : '';
+							$itemGroup = isset($purchasereceipt['item_group']) ? $purchasereceipt['item_group'] : '';
+							$receiptDate = isset($purchasereceipt['purchase_receipt_date']) ? $purchasereceipt['purchase_receipt_date'] : (isset($purchasereceipt['prn_date']) ? $purchasereceipt['prn_date'] : '');
+						?>
+						<option value = "<?php echo $purchasereceipt['id'];?>"><?php echo $receiptNo."|".$activity."|".$itemGroup."|".$receiptDate;?></option>
 						<?php endforeach;?>
                     </select>
                 </div>                    

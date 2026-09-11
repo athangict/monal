@@ -11,6 +11,7 @@ use Hr\Model As Hr;
 use Administration\Model As Administration;
 class AdvancesalaryController extends AbstractActionController
 {   
+	protected $_connection;
 	private $_container;
 	protected $_table; 		// database table 
     protected $_user; 		// user detail
@@ -24,6 +25,7 @@ class AdvancesalaryController extends AbstractActionController
     protected $_id; 		// route parameter id, usally used by crude
     protected $_auth; 		// checking authentication
     protected $_safedataObj; // safedata controller plugin
+	
 	
 	public function __construct(ContainerInterface $container)
     {
@@ -39,13 +41,12 @@ class AdvancesalaryController extends AbstractActionController
 		$this->_table = new TableGateway($table, $this->_container->get('Laminas\Db\Adapter\Adapter'));
 		return $this->_table;
 	}
-
 	/**
 	 * User defined Model
 	 * Table name as the parameter
 	 * returns obj
 	 */
-	  public function getDefinedTable($table)
+	public function getDefinedTable($table)
     {
         $definedTable = $this->_container->get($table);
         return $definedTable;
@@ -78,7 +79,6 @@ class AdvancesalaryController extends AbstractActionController
 		if(!isset($this->_author)){
 			$this->_author = $this->_user->id;  
 		}
-
 		$this->_id = $this->params()->fromRoute('id');
 
 		$this->_created = date('Y-m-d H:i:s');
@@ -112,10 +112,10 @@ class AdvancesalaryController extends AbstractActionController
 		//echo $this->_id;exit;
 		$advances=0;
 		$advance_dtls=0;
-		$params = explode("-", $this->_id);
+		$params = explode("-", (string) $this->_id);
 		//echo '<pre>';print_r($params);exit;
-		$employee_id = $params['0'];
-		$payhead_id = $params['1'];
+		$employee_id = $params['0']?? '';
+		$payhead_id = $params['1']?? '';
 		if($employee_id > 0 && $payhead_id > 0):
 			$advances = $this->getDefinedTable(Accounts\AdvanceSalaryTable::class)->get(array('employee' => $employee_id, 'pay_head' => $payhead_id));
 			foreach($advances as $advance);
@@ -126,6 +126,7 @@ class AdvancesalaryController extends AbstractActionController
 			'employee_id' => $employee_id,
 			'payhead_id'  => $payhead_id,
 		);	
+		//echo "<pre>";print_r($data);exit;
 		if($this->getRequest()->isPost()):
 			$form = $this->getRequest()->getPost();
 			if($form['advance_id']):
@@ -160,7 +161,6 @@ class AdvancesalaryController extends AbstractActionController
 				$amount = $form['amount'];
 				$monthly_deduction = $form['monthly_deduction'];
 				$status = $form['status'];
-				
 				for($i=0; $i<sizeof($advance_ded_type);$i++):
 					if(isset($advance_ded_type[$i]) && $advance_ded_type[$i] > 0):
 						if(isset($adv_dtl_id[$i]) && $adv_dtl_id[$i] > 0):
@@ -229,7 +229,6 @@ class AdvancesalaryController extends AbstractActionController
 		$this->init();
 		
 		$form = $this->getRequest()->getpost();
-		
 		$employee_id = $form['employee'];
 		$employee_dtls = $this->getDefinedTable(Hr\EmployeeTable::class)->get($employee_id);
 		foreach($employee_dtls as $employee);

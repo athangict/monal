@@ -96,7 +96,7 @@
 				<tr>
 					<td class="align-middle" width="20%">
 						<strong><?php echo $processdtl['process'];?></strong><br>
-						<?php $permission_array = explode(",", $permission_level);
+						<?php $permission_array = explode(",", (string) $permission_level);
 							for($i=0;$i<sizeof($permission_array);$i++):
 								echo ($permission_array[$i]>0)?$this->status($permission_array[$i]):'';
 							endfor;
@@ -165,7 +165,7 @@
 				<tr>
 					<td class="align-middle" width="20%">
 						<strong><?php echo $aclprocessdtl['process'];?></strong><br>
-						<?php $aclpermission_array = explode(",", $aclpermission_level);
+						<?php $aclpermission_array = explode(",", (string) $aclpermission_level);
 						for($i=0;$i<sizeof($aclpermission_array);$i++):
 							echo ($aclpermission_array[$i]>0)?$this->status($aclpermission_array[$i]):'';
 						endfor;

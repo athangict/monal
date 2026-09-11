@@ -12,6 +12,8 @@ use Pswf\Model As Pswf;
 
 class ReportController extends AbstractActionController
 {   
+	protected $_connection;
+	protected $_safedataObj;
 	private $_container;
 	protected $_table; 		// database table 
     protected $_user; 		// user detail
@@ -565,7 +567,7 @@ class ReportController extends AbstractActionController
 	public function transactionlistAction()
 	{
 		$this->init();		
-		$param = explode('-',$this->_id);
+		$param = explode('-', (string) $this->_id);
 		$head = $param['0'];
 		$login_id=$this->_login_id;
 		$user_location = $this->getDefinedTable(Administration\UsersTable::class)->getColumn($login_id,'admin_location');

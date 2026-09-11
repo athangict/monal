@@ -20,6 +20,8 @@ use function substr;
  *
  * This allows for usage of partial template paths such as `some/partial`, resolving to
  * `my/module/script/path/some/partial.phtml`, while rendering template `my/module/script/path/my-view`
+ *
+ * @final
  */
 class RelativeFallbackResolver implements ResolverInterface
 {
@@ -58,7 +60,7 @@ class RelativeFallbackResolver implements ResolverInterface
         $currentTemplate = $currentModel->getTemplate();
         $position        = strrpos($currentTemplate, self::NS_SEPARATOR);
 
-        if (! $position) {
+        if ($position === false) {
             return false;
         }
 

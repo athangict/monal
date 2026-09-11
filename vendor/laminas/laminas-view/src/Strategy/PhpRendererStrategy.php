@@ -9,6 +9,12 @@ use Laminas\EventManager\EventManagerInterface;
 use Laminas\View\Renderer\PhpRenderer;
 use Laminas\View\ViewEvent;
 
+/**
+ * @deprecated Since 2.40.0. This class will be removed in 3.0 without replacement when laminas-view removes support
+ *             for rendering strategies.
+ *
+ * @final
+ */
 class PhpRendererStrategy extends AbstractListenerAggregate
 {
     /**
@@ -39,7 +45,6 @@ class PhpRendererStrategy extends AbstractListenerAggregate
     /**
      * Set list of possible content placeholders
      *
-     * @param  array $contentPlaceholders
      * @return PhpRendererStrategy
      */
     public function setContentPlaceholders(array $contentPlaceholders)

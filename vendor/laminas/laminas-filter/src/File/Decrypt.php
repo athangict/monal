@@ -16,6 +16,9 @@ use function is_writable;
 
 /**
  * Decrypts a given file and stores the decrypted file content
+ *
+ * @deprecated Since 2.24.0. This filter will be removed in 3.0. You are encouraged to use an alternative encryption
+ *             library and write your own filter.
  */
 class Decrypt extends Filter\Decrypt
 {
@@ -89,14 +92,14 @@ class Decrypt extends Filter\Decrypt
         }
 
         $content = file_get_contents($value);
-        if (! $content) {
+        if ($content === false) {
             throw new Exception\RuntimeException("Problem while reading file '$value'");
         }
 
         $decrypted = parent::filter($content);
         $result    = file_put_contents($this->filename, $decrypted);
 
-        if (! $result) {
+        if ($result === false) {
             throw new Exception\RuntimeException("Problem while writing file '{$this->filename}'");
         }
 

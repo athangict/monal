@@ -10,6 +10,7 @@ use Laminas\Db\Sql\Expression;
 class UsersTable extends AbstractTableGateway //implements AdapterAwareInterface
 {
 	protected $table = 'sys_users'; //tablename
+	private $hasUuidColumn = null;
 	
 	public function __construct(Adapter $adapter)
     {
@@ -57,7 +58,7 @@ class UsersTable extends AbstractTableGateway //implements AdapterAwareInterface
 	 */
 	public function get($param)
 	{  
-        $where = ( is_array($param) )? $param: array('id' => $param);
+		$where = $this->normalizeUserWhere($param);
 		$adapter = $this->adapter;
 		$sql = new Sql($adapter);
 		$select = $sql->select();
@@ -77,7 +78,7 @@ class UsersTable extends AbstractTableGateway //implements AdapterAwareInterface
      */
     public function getColumn($param, $column)
     {         
-		$where = ( is_array($param) )? $param: array('id' => $param);
+		$where = $this->normalizeUserWhere($param);
 		$fetch = array($column);
 		$adapter = $this->adapter;       
 		$sql = new Sql($adapter);
@@ -104,12 +105,27 @@ class UsersTable extends AbstractTableGateway //implements AdapterAwareInterface
 	{
 	    
 		if ( !is_array($data) ) $data = $data->toArray();
-		$id = isset($data['id']) ? (int)$data['id'] : 0;
+		$where = null;
+		$id = 0;
+
+		if (isset($data['id']) && $data['id'] !== '' && $data['id'] !== null) {
+			$idParam = $data['id'];
+			if (is_numeric($idParam)) {
+				$id = (int) $idParam;
+				$where = array('id' => $id);
+			} elseif ($this->isUuid((string) $idParam) && $this->hasUuidColumn()) {
+				$where = array('uuid' => strtolower((string) $idParam));
+				unset($data['id']);
+			}
+		}
 		
-		if ( $id > 0 )
+		if ($where !== null)
 		{
-			$result = ($this->update($data, array('id'=>$id)))?$id:0;
+			$result = ($this->update($data, $where)) ? (($id > 0) ? $id : 1) : 0;
 		} else {
+			if ($this->hasUuidColumn() && empty($data['uuid'])) {
+				$data['uuid'] = $this->generateUuidV4();
+			}
 			$this->insert($data);
 			$result = $this->getLastInsertValue(); 
 		}	    	    
@@ -123,7 +139,93 @@ class UsersTable extends AbstractTableGateway //implements AdapterAwareInterface
      */
 	public function remove($id)
 	{
-		return $this->delete(array('id' => $id));
+		return $this->delete($this->normalizeUserWhere($id));
+	}
+
+	public function getUuidById($id)
+	{
+		if (!$this->hasUuidColumn()) {
+			return '';
+		}
+
+		$uuid = (string) $this->getColumn((int) $id, 'uuid');
+		return trim($uuid);
+	}
+
+	private function normalizeUserWhere($param)
+	{
+		if (!is_array($param)) {
+			if (is_numeric($param)) {
+				return array('id' => (int) $param);
+			}
+
+			if ($this->isUuid((string) $param) && $this->hasUuidColumn()) {
+				return array('uuid' => strtolower((string) $param));
+			}
+
+			return array('id' => $param);
+		}
+
+		if (isset($param['id']) && !is_numeric($param['id']) && $this->isUuid((string) $param['id']) && $this->hasUuidColumn()) {
+			$param['uuid'] = strtolower((string) $param['id']);
+			unset($param['id']);
+		}
+
+		if (isset($param['uuid'])) {
+			$param['uuid'] = strtolower(trim((string) $param['uuid']));
+		}
+
+		return $param;
+	}
+
+	private function isUuid($value)
+	{
+		return (bool) preg_match('/^[a-f0-9]{8}-[a-f0-9]{4}-[1-5][a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/i', (string) $value);
+	}
+
+	private function generateUuidV4()
+	{
+		try {
+			$bytes = random_bytes(16);
+		} catch (\Exception $e) {
+			return sprintf(
+				'%s-%s-4%s-%s%s-%s',
+				substr(sha1(uniqid((string) mt_rand(), true)), 0, 8),
+				substr(sha1(uniqid((string) mt_rand(), true)), 8, 4),
+				substr(sha1(uniqid((string) mt_rand(), true)), 12, 3),
+				dechex((hexdec(substr(sha1(uniqid((string) mt_rand(), true)), 15, 1)) & 0x3) | 0x8),
+				substr(sha1(uniqid((string) mt_rand(), true)), 16, 3),
+				substr(sha1(uniqid((string) mt_rand(), true)), 19, 12)
+			);
+		}
+
+		$bytes[6] = chr((ord($bytes[6]) & 0x0f) | 0x40);
+		$bytes[8] = chr((ord($bytes[8]) & 0x3f) | 0x80);
+
+		$hex = bin2hex($bytes);
+		return sprintf(
+			'%s-%s-%s-%s-%s',
+			substr($hex, 0, 8),
+			substr($hex, 8, 4),
+			substr($hex, 12, 4),
+			substr($hex, 16, 4),
+			substr($hex, 20, 12)
+		);
+	}
+
+	private function hasUuidColumn()
+	{
+		if ($this->hasUuidColumn !== null) {
+			return $this->hasUuidColumn;
+		}
+
+		$adapter = $this->adapter;
+		$table = str_replace('`', '``', $this->table);
+		$query = "SHOW COLUMNS FROM `{$table}` LIKE 'uuid'";
+		$rows = $adapter->query($query, $adapter::QUERY_MODE_EXECUTE)->toArray();
+		$this->hasUuidColumn = !empty($rows);
+
+		return $this->hasUuidColumn;
 	}
 	/**
 	 * Return Min value of the column
@@ -131,7 +233,7 @@ class UsersTable extends AbstractTableGateway //implements AdapterAwareInterface
 	 * @param String $column
 	 * @return String | Int
 	 */
-	public function getMin($where = NULL, $column)
+	public function getMin($where = NULL, $column = NULL)
 	{
 		$adapter = $this->adapter;
 		$sql = new Sql($adapter);
@@ -159,7 +261,7 @@ class UsersTable extends AbstractTableGateway //implements AdapterAwareInterface
 	 * @param String $column
 	 * @return String | Int
 	 */
-	public function getMax($where=NULL, $column)
+	public function getMax($where=NULL, $column = NULL)
 	{
 		$adapter = $this->adapter;
 		$sql = new Sql($adapter);

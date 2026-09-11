@@ -1,0 +1,7 @@
+/.phpcs-cache
+/.phpunit
+/doc/html/
+/laminas-mkdoc-theme.tgz
+/laminas-mkdoc-theme/
+/phpunit.xml
+/vendor/

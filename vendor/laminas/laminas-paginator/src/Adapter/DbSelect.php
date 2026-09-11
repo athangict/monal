@@ -19,6 +19,11 @@ use function strtolower;
 
 /**
  * @deprecated 2.10.0 Use the adapters in laminas/laminas-paginator-adapter-laminasdb.
+ *
+ * @template-covariant TKey of int
+ * @template-covariant TValue
+ * @implements AdapterInterface<TKey, TValue>
+ *     @final
  */
 class DbSelect implements AdapterInterface
 {
@@ -26,20 +31,6 @@ class DbSelect implements AdapterInterface
 
     /** @var Sql */
     protected $sql;
-
-    /**
-     * Database query
-     *
-     * @var Select
-     */
-    protected $select;
-
-    /**
-     * Database count query
-     *
-     * @var Select|null
-     */
-    protected $countSelect;
 
     /** @var ResultSet */
     protected $resultSetPrototype;
@@ -57,14 +48,14 @@ class DbSelect implements AdapterInterface
      * @throws Exception\InvalidArgumentException
      */
     public function __construct(
-        Select $select,
+        protected Select $select,
         $adapterOrSqlObject,
         ?ResultSetInterface $resultSetPrototype = null,
-        ?Select $countSelect = null
+        /**
+         * Database count query
+         */
+        protected ?Select $countSelect = null
     ) {
-        $this->select      = $select;
-        $this->countSelect = $countSelect;
-
         if ($adapterOrSqlObject instanceof Adapter) {
             $adapterOrSqlObject = new Sql($adapterOrSqlObject);
         }
@@ -82,9 +73,7 @@ class DbSelect implements AdapterInterface
     /**
      * Returns an array of items for a page.
      *
-     * @param  int $offset           Page offset
-     * @param  int $itemCountPerPage Number of items per page
-     * @return array
+     * @inheritDoc
      */
     public function getItems($offset, $itemCountPerPage)
     {

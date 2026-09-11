@@ -11,6 +11,12 @@ use Administration\Model As Administration;
 use Hr\Model As Hr;
 class EmployeeController extends AbstractActionController
 {   
+	protected $_connection;
+	protected $_dir2;
+	protected $_highest_role;
+	protected $_lowest_role;
+	protected $_permissionObj;
+	protected $_safedataObj;
 	private $_container;
 	protected $_table; 		// database table
 	protected $_user; 		// user detail
@@ -50,6 +56,22 @@ class EmployeeController extends AbstractActionController
         $definedTable = $this->_container->get($table);
         return $definedTable;
     }
+
+	private function getApplicationNameForSubject()
+	{
+		$appName = 'Monal-ERP';
+		try {
+			$settings = $this->getDefinedTable(Administration\AppSettingTable::class)->getSettings();
+			$configuredName = trim((string) ($settings['app_name'] ?? ''));
+			if ($configuredName !== '') {
+				$appName = $configuredName;
+			}
+		} catch (\Exception $e) {
+			// Fallback to default app name when settings are unavailable.
+		}
+
+		return $appName;
+	}
     /**
 	 * initial set up
 	 * general variables are defined here
@@ -1011,7 +1033,7 @@ class EmployeeController extends AbstractActionController
 				$mail = array(
 					'email'    => $erow['email'],
 					'name'     => $erow['full_name'],
-					'subject'  => 'BhutanPost-ERP: New User Account Credentails', 
+					'subject'  => $this->getApplicationNameForSubject().': New User Account Credentails', 
 					'message'  => $notify_msg,
 					'cc_array' => [],
 				);
@@ -1075,9 +1097,10 @@ class EmployeeController extends AbstractActionController
 		$bodyPart->setParts(array($bodyMessage));
 	 
 		$message = new \Laminas\Mail\Message();
+		$appName = $this->getApplicationNameForSubject();
 		$message->addFrom('noreply@gmail.com', 'FCBL ERP Team')
 				->addTo($email)
-				->setSubject('FCBL ERP User Credentails')
+				->setSubject($appName . ': User Credentails')
 				->setBody($bodyPart)
 				->setEncoding('UTF-8');
 		$transport  = new \Laminas\Mail\Transport\Sendmail();

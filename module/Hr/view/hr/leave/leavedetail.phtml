@@ -107,7 +107,7 @@ if(sizeof($checkleaveOfficial) >0 && sizeof($this->leavedetail)>0){
 								<i class="fa fa-check-square-o"></i> Approve Leave </a>				<?php 	
 						endif;	*/
 						if($this->userID == $flow['role_id']):
-							$actions = explode('|', $flow['action']);
+							$actions = explode('|', (string) $flow['action']);
 							for($i=0; $i < sizeof($actions); $i++):
 								$buttons = $this->flowactionObj->get($actions[$i]);
 								foreach($buttons as $button):?>

@@ -19,6 +19,8 @@ use function sprintf;
  *
  * Can be mapped directly to specific route plugin names, or used as an
  * abstract factory to map FQCN services to invokables.
+ *
+ * @internal
  */
 class RouteInvokableFactory implements
     AbstractFactoryInterface,
@@ -83,7 +85,7 @@ class RouteInvokableFactory implements
      */
     public function __invoke(ContainerInterface $container, $routeName, ?array $options = null)
     {
-        $options = $options ?: [];
+        $options ??= [];
 
         if (! class_exists($routeName)) {
             throw new ServiceNotCreatedException(sprintf(
@@ -134,7 +136,7 @@ class RouteInvokableFactory implements
      */
     public function createService(ServiceLocatorInterface $container, $normalizedName = null, $routeName = null)
     {
-        $routeName = $routeName ?: RouteInterface::class;
+        $routeName ??= RouteInterface::class;
         return $this($container, $routeName, $this->creationOptions);
     }
 
@@ -142,8 +144,6 @@ class RouteInvokableFactory implements
      * Set options to use when creating a service (v2)
      *
      * @deprecated Since 3.6.0 - This component is no longer compatible with Service Manager v2
-     *
-     * @param array $creationOptions
      */
     public function setCreationOptions(array $creationOptions)
     {

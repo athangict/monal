@@ -17,6 +17,10 @@ use Sales\Model as Sales;
 
 class UserController extends AbstractActionController
 {
+	protected $_connection;
+	protected $_login_location_type;
+	protected $_permissionObj;
+	protected $_safedataObj;
 	private $_container;
 	protected $_table; 		// database table 
     protected $_user; 		// user detail
@@ -108,6 +112,55 @@ class UserController extends AbstractActionController
 		$this->_permissionObj =  $this->PermissionPlugin();
 		$this->_permission = $this->_permissionObj->permission($this->getEvent());
 	}
+
+	private function getApplicationNameForSubject()
+	{
+		$appName = 'Monal-ERP';
+		try {
+			$settings = $this->getDefinedTable(Administration\AppSettingTable::class)->getSettings();
+			$configuredName = trim((string) ($settings['app_name'] ?? ''));
+			if ($configuredName !== '') {
+				$appName = $configuredName;
+			}
+		} catch (\Exception $e) {
+			// Fallback to default app name when settings are unavailable.
+		}
+
+		return $appName;
+	}
+
+	private function resolveUserInternalId($id)
+	{
+		if ($id === null || $id === '') {
+			return 0;
+		}
+
+		$rows = $this->getDefinedTable(Administration\UsersTable::class)->get($id);
+		if (!empty($rows)) {
+			return (int) ($rows[0]['id'] ?? 0);
+		}
+
+		return is_numeric($id) ? (int) $id : 0;
+	}
+
+	private function resolveUserRouteId($id)
+	{
+		if ($id === null || $id === '') {
+			return '';
+		}
+
+		$rows = $this->getDefinedTable(Administration\UsersTable::class)->get($id);
+		if (!empty($rows)) {
+			$row = $rows[0];
+			$uuid = trim((string) ($row['uuid'] ?? ''));
+			if ($uuid !== '') {
+				return $uuid;
+			}
+			return (string) ($row['id'] ?? $id);
+		}
+
+		return (string) $id;
+	}
 	/**
 	 * index Action of User Controller
 	 */
@@ -131,9 +184,9 @@ class UserController extends AbstractActionController
 		
 		
 		return new ViewModel(array(
-				'title'        => 'Users Management',
-				'userlists'    => $userlists,
-				'locationObj'  => $this->getDefinedTable(Administration\LocationTable::class),
+			'title'        => 'Users Management',
+			'userlists'    => $userlists,
+			'locationObj'  => $this->getDefinedTable(Administration\LocationTable::class),
 		)); 
 	}
 	/**
@@ -148,10 +201,28 @@ class UserController extends AbstractActionController
 					$this->getRequest()->getPost()->toArray(),
 					$this->getRequest()->getFiles()->toArray()
 			);
+
+			$email = trim((string) ($form['email'] ?? ''));
+			$mobile = trim((string) ($form['mobile'] ?? ''));
+			$userTable = $this->getDefinedTable(Administration\UsersTable::class);
+			$existingByEmail = ($email !== '') ? $userTable->get(['email' => $email]) : [];
+			$existingByMobile = ($mobile !== '') ? $userTable->get(['mobile' => $mobile]) : [];
+			if (count($existingByEmail) > 0) {
+				$this->flashMessenger()->addMessage("error^ The email {$email} is already registered.");
+				return $this->redirect()->toRoute('user', ['action' => 'create']);
+			}
+			if (count($existingByMobile) > 0) {
+				$this->flashMessenger()->addMessage("error^ The mobile number {$mobile} is already registered.");
+				return $this->redirect()->toRoute('user', ['action' => 'create']);
+			}
+
 			/** Generate Password **/
 			$dynamicSalt = $this->_password->generateDynamicSalt();
 			$staticSalt = $this->_password->getStaticSalt();
-			$generatedPassword =  $this->_password->generatePassword();
+			$generatedPassword = trim((string) ($this->_config['initial_default_password'] ?? ''));
+			if ($generatedPassword === '') {
+				throw new \RuntimeException('INITIAL_DEFAULT_PASSWORD must be configured in environment.');
+			}
 			$password = $this->_password->encryptPassword($staticSalt, $generatedPassword, $dynamicSalt);
 
 			$role = (sizeof($form['role'])<1)?array('0'):$form['role'];
@@ -190,18 +261,24 @@ class UserController extends AbstractActionController
 			$this->_connection->beginTransaction();
 			$result = $this->getDefinedTable(Administration\UsersTable::class)->save($data);
 			if($result > 0):
+				$appName = $this->getApplicationNameForSubject();
 				$notify_msg = "Your user account is created and registered in the system. Please find your sign in credentails below: <br><br>Username: ".$form['email']." or ".$form['mobile']."<br> Password: ".$generatedPassword;
 				$mail = array(
 					'email'    => $form['email'],
 					'name'     => $form['name'],
-					'subject'  => 'BhutanPost-ERP: New User Account Credentails', 
+					'subject'  => $appName.': New User Account Credentails', 
 					'message'  => $notify_msg,
 					'cc_array' => [],
 				);
 				$this->EmailPlugin()->sendmail($mail);
 				$this->_connection->commit();
+				$redirectId = $result;
+				$uuid = (string) $this->getDefinedTable(Administration\UsersTable::class)->getUuidById($result);
+				if ($uuid !== '') {
+					$redirectId = $uuid;
+				}
 				$this->flashMessenger()->addMessage("success^ Successfully created new user and user password sent to ".$form['email']);	 	             
-				return $this->redirect()->toRoute('user', array('action' => 'view', 'id'=>$result));
+				return $this->redirect()->toRoute('user', array('action' => 'view', 'id' => $redirectId));
 			else:
 				$this->_connection->rollback();
 				$this->flashMessenger()->addMessage("error^ Failed to create new user."); 
@@ -332,15 +409,127 @@ class UserController extends AbstractActionController
 	public function viewAction()
 	{  
 	 	$this->init();
+
+		if ($this->_id === 'branding') {
+			$settingTable = $this->getDefinedTable(Administration\AppSettingTable::class);
+			$current = $settingTable->getSettings();
+
+			if ($this->getRequest()->isPost()) {
+				$form = $this->getRequest()->getPost();
+				$files = $this->getRequest()->getFiles()->toArray();
+
+				$appName = trim((string) ($form['app_name'] ?? ''));
+				$appTemplate = trim((string) ($form['app_template'] ?? 'ace'));
+				if ($appTemplate === 'default') {
+					$appTemplate = 'ace';
+				} elseif ($appTemplate === 'ocean') {
+					$appTemplate = 'ace-skin-1';
+				} elseif ($appTemplate === 'sunset') {
+					$appTemplate = 'ace-skin-2';
+				}
+				$appLogo = (string) ($current['app_logo'] ?? 'images/logo.png');
+				$mailFromEmail = trim((string) ($form['mail_from_email'] ?? ($current['mail_from_email'] ?? '')));
+				$mailFromName = trim((string) ($form['mail_from_name'] ?? ($current['mail_from_name'] ?? '')));
+				$smtpHost = trim((string) ($form['smtp_host'] ?? ($current['smtp_host'] ?? '')));
+				$smtpPort = (int) ($form['smtp_port'] ?? ($current['smtp_port'] ?? 587));
+				$smtpEncryption = strtolower(trim((string) ($form['smtp_encryption'] ?? ($current['smtp_encryption'] ?? 'tls'))));
+				$smtpUsername = trim((string) ($form['smtp_username'] ?? ($current['smtp_username'] ?? '')));
+				$smtpPasswordInput = (string) ($form['smtp_password'] ?? '');
+				$smtpPassword = ($smtpPasswordInput !== '') ? $smtpPasswordInput : (string) ($current['smtp_password'] ?? '');
+				$supportEmail = trim((string) ($form['support_email'] ?? ($current['support_email'] ?? '')));
+				$supportPhone = trim((string) ($form['support_phone'] ?? ($current['support_phone'] ?? '')));
+
+				if ($appName === '') {
+					$appName = 'Monal-ERP';
+				}
+
+				$validTemplates = ['ace', 'ace-skin-1', 'ace-skin-2', 'ace-skin-3'];
+				if (!in_array($appTemplate, $validTemplates, true)) {
+					$appTemplate = 'ace';
+				}
+
+				$validEncryptions = ['none', 'ssl', 'tls'];
+				if (!in_array($smtpEncryption, $validEncryptions, true)) {
+					$smtpEncryption = 'tls';
+				}
+				if ($smtpPort <= 0 || $smtpPort > 65535) {
+					$smtpPort = 587;
+				}
+				if ($supportEmail !== '' && filter_var($supportEmail, FILTER_VALIDATE_EMAIL) === false) {
+					$supportEmail = '';
+				}
+
+				if (!empty($files['app_logo']) && (int) ($files['app_logo']['error'] ?? 4) === 0) {
+					$file = $files['app_logo'];
+					$ext = strtolower((string) pathinfo((string) $file['name'], PATHINFO_EXTENSION));
+					$allowed = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
+
+					if (!in_array($ext, $allowed, true)) {
+						$this->flashMessenger()->addMessage('error^ Invalid logo format. Allowed: jpg, jpeg, png, gif, webp.');
+						return $this->redirect()->toRoute('user', ['action' => 'view', 'id' => 'branding']);
+					}
+
+					$uploadRoot = realpath('public');
+					if ($uploadRoot === false) {
+						$this->flashMessenger()->addMessage('error^ Upload directory not found.');
+						return $this->redirect()->toRoute('user', ['action' => 'view', 'id' => 'branding']);
+					}
+
+					$logoDir = $uploadRoot . DIRECTORY_SEPARATOR . 'uploads' . DIRECTORY_SEPARATOR . 'branding';
+					if (!is_dir($logoDir)) {
+						mkdir($logoDir, 0755, true);
+					}
+
+					$fileName = 'brand_logo_' . date('YmdHis') . '_' . rand(1000, 9999) . '.' . $ext;
+					$target = $logoDir . DIRECTORY_SEPARATOR . $fileName;
+
+					if (!move_uploaded_file((string) $file['tmp_name'], $target)) {
+						$this->flashMessenger()->addMessage('error^ Failed to upload logo.');
+						return $this->redirect()->toRoute('user', ['action' => 'view', 'id' => 'branding']);
+					}
+
+					$appLogo = 'uploads/branding/' . $fileName;
+				}
+
+				$data = [
+					'app_name' => $appName,
+					'app_logo' => $appLogo,
+					'app_template' => $appTemplate,
+					'mail_from_email' => $mailFromEmail,
+					'mail_from_name' => $mailFromName,
+					'smtp_host' => $smtpHost,
+					'smtp_port' => $smtpPort,
+					'smtp_encryption' => $smtpEncryption,
+					'smtp_username' => $smtpUsername,
+					'smtp_password' => $smtpPassword,
+					'support_email' => $supportEmail,
+					'support_phone' => $supportPhone,
+					'author' => $this->_author,
+					'created' => $current['created'] ?? $this->_created,
+					'modified' => $this->_modified,
+				];
+
+				$settingTable->saveSettings($data);
+				$this->flashMessenger()->addMessage('success^ Branding settings updated successfully.');
+				return $this->redirect()->toRoute('user', ['action' => 'view', 'id' => 'branding']);
+			}
+
+			$viewModel = new ViewModel([
+				'title' => 'Application Settings',
+				'settings' => $current,
+			]);
+			$viewModel->setTemplate('administration/user/view-branding');
+			return $viewModel;
+		}
 		
 		return new ViewModel(array(
-				'title'	            => 'View User Details',
-				'users'             => $this->getDefinedTable(Administration\UsersTable::class)->get($this->_id),
-				'rolesObj'          => $this->getDefinedTable(Acl\RolesTable::class),
-				'regionObj'         => $this->getDefinedTable(Administration\RegionTable::class),
-				'locationObj'       => $this->getDefinedTable(Administration\LocationTable::class),
-				'activityObj'       => $this->getDefinedTable(Administration\ActivityTable::class),
-				'creditauthorityObj'=> $this->getDefinedTable(Sales\CreditAuthorityTable::class),
+			'title'	            => 'View User Details',
+			'users'             => $this->getDefinedTable(Administration\UsersTable::class)->get($this->_id),
+			'rolesObj'          => $this->getDefinedTable(Acl\RolesTable::class),
+			'regionObj'         => $this->getDefinedTable(Administration\RegionTable::class),
+			'locationObj'       => $this->getDefinedTable(Administration\LocationTable::class),
+			'activityObj'       => $this->getDefinedTable(Administration\ActivityTable::class),
+			'creditauthorityObj'=> $this->getDefinedTable(Sales\CreditAuthorityTable::class),
 		));
 	}
 	/**
@@ -407,7 +596,7 @@ class UserController extends AbstractActionController
 				$this->_connection->rollback();
 				$this->flashMessenger()->addMessage("error^ Failed to update user details.");
 			endif;
-			return $this->redirect()->toRoute('user', array('action' => 'view', 'id'=>$form['user_id']));
+			return $this->redirect()->toRoute('user', array('action' => 'view', 'id' => $this->resolveUserRouteId($form['user_id'])));
 		endif;
 		return new ViewModel(array(
 			'title'		         => 'Update User Details',
@@ -489,13 +678,18 @@ class UserController extends AbstractActionController
 			else:
 				$this->flashMessenger()->addMessage("error^ The current password you have entered is incorrect.");
 			endif;
-			return $this->redirect()->toRoute('user', array('action' => 'view', 'id'=>$form['user_id']));
+			return $this->redirect()->toRoute('user', array('action' => 'view', 'id' => $this->resolveUserRouteId($form['user_id'])));
 		endif; 
+		$userId = $this->resolveUserInternalId($this->_id);
+		if ($userId === 0 && $this->identity()) {
+			$userId = (int) $this->identity()->id;
+		}
+		$isFirstLoginFlow = ((string) $this->params()->fromQuery('first_login', '0') === '1');
 		$ViewModel = new ViewModel(array(
 			'title' => 'Change Password',
-			'users' => $this->getDefinedTable(Administration\UsersTable::class)->get($this->_id),
+			'users' => $this->getDefinedTable(Administration\UsersTable::class)->get($userId),
 		));
-		$ViewModel->setTerminal(true);
+		$ViewModel->setTerminal(!$isFirstLoginFlow);
 		return $ViewModel;
 	}
 	/**
@@ -546,11 +740,12 @@ class UserController extends AbstractActionController
 		$this->_connection->beginTransaction();
 		$result = $this->getDefinedTable(Administration\UsersTable::class)->save($data);
 		if($result > 0):
+			$appName = $this->getApplicationNameForSubject();
 			$notify_msg = "You have requested for password reset. Please find your new password below: <br><br> New Password: ".$generatedPassword;
 			$mail = array(
 				'email'    => $row['email'],
 				'name'     => $row['name'],
-				'subject'  => 'BhutanPost-ERP: Password Reset', 
+				'subject'  => $appName.': Password Reset', 
 				'message'  => $notify_msg,
 				'cc_array' => [],
 			);
@@ -561,7 +756,7 @@ class UserController extends AbstractActionController
 			$this->_connection->rollback();
 			$this->flashMessenger()->addMessage("error^ Failed to reset user password.");
 		endif;
-		return $this->redirect()->toRoute('user', array('action' => 'view', 'id'=>$this->_id));
+		return $this->redirect()->toRoute('user', array('action' => 'view', 'id' => $this->resolveUserRouteId($this->_id)));
 	}
 	/**
 	 * user activity of the user
@@ -569,7 +764,8 @@ class UserController extends AbstractActionController
 	public function useractivityAction()
 	{
 		$this->init();
-		$activitylogs = $this->getDefinedTable(Acl\ActivityLogTable::class)->get(array('author' => $this->_id));
+		$userId = $this->resolveUserInternalId($this->_id);
+		$activitylogs = $this->getDefinedTable(Acl\ActivityLogTable::class)->get(array('author' => $userId));
 		$paginator = new \Laminas\Paginator\Paginator(new \Laminas\Paginator\Adapter\ArrayAdapter($activitylogs));
 			
 		$page = 1;
@@ -578,11 +774,11 @@ class UserController extends AbstractActionController
 		$paginator->setItemCountPerPage(25);
 		$paginator->setPageRange(8);
 		return new ViewModel(array(
-				'title'          => 'Recent Activity',
-				'paginator'      => $paginator,
-				'page'           => $page,
-				'processObj'     => $this->getDefinedTable(Acl\ProcessTable::class),
-				'users'          => $this->getDefinedTable(Administration\UsersTable::class)->get($this->_id),
+			'title'          => 'Recent Activity',
+			'paginator'      => $paginator,
+			'page'           => $page,
+			'processObj'     => $this->getDefinedTable(Acl\ProcessTable::class),
+			'users'          => $this->getDefinedTable(Administration\UsersTable::class)->get($userId),
 		));
 	}
 	/**
@@ -591,7 +787,8 @@ class UserController extends AbstractActionController
 	public function notificationAction()
 	{
 		$this->init();
-		$notifications = $this->getDefinedTable(Acl\NotifyTable::class)->get(array('n.user' => $this->_id));
+		$userId = $this->resolveUserInternalId($this->_id);
+		$notifications = $this->getDefinedTable(Acl\NotifyTable::class)->get(array('n.user' => $userId));
 		$paginator = new \Laminas\Paginator\Paginator(new \Laminas\Paginator\Adapter\ArrayAdapter($notifications));
 			
 		$page = 1;
@@ -600,11 +797,11 @@ class UserController extends AbstractActionController
 		$paginator->setItemCountPerPage(25);
 		$paginator->setPageRange(8);
 		return new ViewModel(array(
-				'title'          => 'Notifications',
-				'paginator'      => $paginator,
-				'page'           => $page,
-				'processObj'     => $this->getDefinedTable(Acl\ProcessTable::class),
-				'users'          => $this->getDefinedTable(Administration\UsersTable::class)->get($this->_id),
+			'title'          => 'Notifications',
+			'paginator'      => $paginator,
+			'page'           => $page,
+			'processObj'     => $this->getDefinedTable(Acl\ProcessTable::class),
+			'users'          => $this->getDefinedTable(Administration\UsersTable::class)->get($userId),
 		));
 	}
 	/**
@@ -633,7 +830,7 @@ class UserController extends AbstractActionController
     public function entryAction()
     {  
         $this->init(); 
-		$user=$this->_id;
+		$user = $this->resolveUserInternalId($this->_id);
 		$attendance	=$this->getDefinedTable(Administration\AttendanceTable::class)->get(array('user'=>$user,'date'=>date('Y-m-d')));
 			$data = array(
 			'user'		=> $user,
@@ -652,7 +849,7 @@ class UserController extends AbstractActionController
 		endif;
 		
 			
-			return $this->redirect()->toRoute('user', array('action' => 'individual', 'id'=>$this->_id));
+			return $this->redirect()->toRoute('user', array('action' => 'individual', 'id' => $this->resolveUserRouteId($this->_id)));
 	
 
 	}
@@ -662,7 +859,7 @@ class UserController extends AbstractActionController
     public function exitAction()
     {  
         $this->init(); 
-		$user=$this->_id;
+		$user = $this->resolveUserInternalId($this->_id);
 		$attendance	=$this->getDefinedTable(Administration\AttendanceTable::class)->get(array('user'=>$user,'date'=>date('Y-m-d')));
 		foreach($attendance as $att);
 			$data = array(
@@ -676,7 +873,7 @@ class UserController extends AbstractActionController
 		else:
 			$this->flashMessenger()->addMessage("error^ Failed to take attendance.");
 		endif;
-		return $this->redirect()->toRoute('user', array('action' => 'individual', 'id'=>$this->_id));
+		return $this->redirect()->toRoute('user', array('action' => 'individual', 'id' => $this->resolveUserRouteId($this->_id)));
 	}
 	/**
 	 * Attendance Action -- view and manage all the users
@@ -706,18 +903,18 @@ class UserController extends AbstractActionController
 			
 		$employee	=$this->getDefinedTable(Hr\EmployeeTable::class)->getEmployeeByActivityLoc($data);
 		//print_r($employee);exit;
-			return new ViewModel(array(
-				'title'          	=> 'Attendance Details',
-				'attendance'      	=> $this->getDefinedTable(Administration\AttendanceTable::class),
-				'data'				=> $data,
-				'employee'			=> $employee,
-				'usercid'			=> $this->getDefinedTable(Administration\UsersTable::class)->getColumn($this->_author,'location'),
-				'region'			=> $this->getDefinedTable(Administration\RegionTable::class)->getAll(),
-				'regionObj'		=> $this->getDefinedTable(Administration\RegionTable::class),
-				'locationObj'     	=> $this->getDefinedTable(Administration\LocationTable::class),
-				'location'     	=> $this->getDefinedTable(Administration\LocationTable::class)->getAll(),
-				'usersObj'          => $this->getDefinedTable(Administration\UsersTable::class),
-				'timing'			=> $this->getDefinedTable(Administration\TimingTable::class)->getColumn(1,'leave'),
+		return new ViewModel(array(
+			'title'          	=> 'Attendance Details',
+			'attendance'      	=> $this->getDefinedTable(Administration\AttendanceTable::class),
+			'data'				=> $data,
+			'employee'			=> $employee,
+			'usercid'			=> $this->getDefinedTable(Administration\UsersTable::class)->getColumn($this->_author,'location'),
+			'region'			=> $this->getDefinedTable(Administration\RegionTable::class)->getAll(),
+			'regionObj'		=> $this->getDefinedTable(Administration\RegionTable::class),
+			'locationObj'     	=> $this->getDefinedTable(Administration\LocationTable::class),
+			'location'     	=> $this->getDefinedTable(Administration\LocationTable::class)->getAll(),
+			'usersObj'          => $this->getDefinedTable(Administration\UsersTable::class),
+			'timing'			=> $this->getDefinedTable(Administration\TimingTable::class)->getColumn(1,'leave'),
 		));
 	}
 	/**
@@ -739,7 +936,7 @@ class UserController extends AbstractActionController
 			else:
 				$this->flashMessenger()->addMessage("error^ Failed to add reason.");	 	             
 			endif;
-			return $this->redirect()->toRoute('user', array('action' => 'individual','id'=>$user));
+			return $this->redirect()->toRoute('user', array('action' => 'individual', 'id' => $this->resolveUserRouteId($user)));
 		}
 		$ViewModel = new ViewModel([
 			'title'        => 'Late Reason',
@@ -767,7 +964,7 @@ class UserController extends AbstractActionController
 			else:
 				$this->flashMessenger()->addMessage("error^ Failed to add reason.");	 	             
 			endif;
-			return $this->redirect()->toRoute('user', array('action' => 'individual', 'id'=>$user));
+			return $this->redirect()->toRoute('user', array('action' => 'individual', 'id' => $this->resolveUserRouteId($user)));
 		}
 		$ViewModel = new ViewModel([
 			'title'        => 'Early Reason',
@@ -809,21 +1006,21 @@ class UserController extends AbstractActionController
 		$employee	=$this->getDefinedTable(Hr\EmployeeTable::class)->getEmployeeByActivityLoc($data);
 		$weekends = self::get_weekend_dates($data['year'], $data['month']);
 		$last_day = date('t', strtotime("{$data['year']}-{$data['month']}"));
-			return new ViewModel(array(
-				'title'          => 'Attendance Details',
-				'attendance'      => $this->getDefinedTable(Administration\AttendanceTable::class),
-				'data'				=> $data,
-				'employee'			=> $employee,
-				'weekends'			=> $weekends,
-				'last_day'			=> $last_day,
-				'timing'			=> $this->getDefinedTable(Administration\TimingTable::class)->getColumn(1,'leave'),
-				'region'			=> $this->getDefinedTable(Administration\RegionTable::class)->getAll(),
-				'regionObj'			=> $this->getDefinedTable(Administration\RegionTable::class),
-				'locationObj'     => $this->getDefinedTable(Administration\LocationTable::class),
-				'location'     => $this->getDefinedTable(Administration\LocationTable::class)->getAll(),
-				'usersObj'          => $this->getDefinedTable(Administration\UsersTable::class),
-				'user'				=> $user,
-		));
+		return new ViewModel(array(
+			'title'          => 'Attendance Details',
+			'attendance'      => $this->getDefinedTable(Administration\AttendanceTable::class),
+			'data'				=> $data,
+			'employee'			=> $employee,
+			'weekends'			=> $weekends,
+			'last_day'			=> $last_day,
+			'timing'			=> $this->getDefinedTable(Administration\TimingTable::class)->getColumn(1,'leave'),
+			'region'			=> $this->getDefinedTable(Administration\RegionTable::class)->getAll(),
+			'regionObj'			=> $this->getDefinedTable(Administration\RegionTable::class),
+			'locationObj'     => $this->getDefinedTable(Administration\LocationTable::class),
+			'location'     => $this->getDefinedTable(Administration\LocationTable::class)->getAll(),
+			'usersObj'          => $this->getDefinedTable(Administration\UsersTable::class),
+			'user'				=> $user,
+	    ));
 	}
 	
 	public static function get_weekend_dates($year, $month) {
@@ -904,16 +1101,16 @@ class UserController extends AbstractActionController
 		);
 		$last_day = date('t', strtotime("{$data['year']}-{$data['month']}"));
 		//$attrecord = $this->getDefinedTable(Administration\AttendanceTable::class)->getDateWise('date',$year,$month,$user);
-			return new ViewModel(array(
-				'title'          	=> 'Individual Attendance',
-				'data'				=> $data,
-				'attendance'      	=>  $this->getDefinedTable(Administration\AttendanceTable::class),
-				'activityObj'		=> $this->getDefinedTable(Administration\ActivityTable::class),
-				'locationObj'     	=> $this->getDefinedTable(Administration\LocationTable::class),
-				'usersObj'          => $this->getDefinedTable(Administration\UsersTable::class),
-				'timing'			=> $this->getDefinedTable(Administration\TimingTable::class)->getColumn(1,'leave'),
-				'user'				=> $user,
-				'lastday'			=> $last_day,
+		return new ViewModel(array(
+			'title'          	=> 'Individual Attendance',
+			'data'				=> $data,
+			'attendance'      	=>  $this->getDefinedTable(Administration\AttendanceTable::class),
+			'activityObj'		=> $this->getDefinedTable(Administration\ActivityTable::class),
+			'locationObj'     	=> $this->getDefinedTable(Administration\LocationTable::class),
+			'usersObj'          => $this->getDefinedTable(Administration\UsersTable::class),
+			'timing'			=> $this->getDefinedTable(Administration\TimingTable::class)->getColumn(1,'leave'),
+			'user'				=> $user,
+			'lastday'			=> $last_day,
 		));
 	}
 

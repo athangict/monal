@@ -17,13 +17,14 @@ use Laminas\Session\Storage\StorageInterface;
 
 use function array_merge;
 use function class_exists;
-use function get_class;
-use function gettype;
+use function get_debug_type;
 use function is_array;
-use function is_object;
 use function is_subclass_of;
 use function sprintf;
 
+/**
+ * @final
+ */
 class SessionManagerFactory implements FactoryInterface
 {
     /**
@@ -62,7 +63,6 @@ class SessionManagerFactory implements FactoryInterface
      * - validators: ...
      *
      * @param string $requestedName
-     * @param array $options
      * @return SessionManager
      */
     public function __invoke(ContainerInterface $container, $requestedName, ?array $options = null)
@@ -81,7 +81,7 @@ class SessionManagerFactory implements FactoryInterface
                     'SessionManager requires that the %s service implement %s; received "%s"',
                     ConfigInterface::class,
                     ConfigInterface::class,
-                    is_object($config) ? get_class($config) : gettype($config)
+                    get_debug_type($config)
                 ));
             }
         }
@@ -93,7 +93,7 @@ class SessionManagerFactory implements FactoryInterface
                     'SessionManager requires that the %s service implement %s; received "%s"',
                     StorageInterface::class,
                     StorageInterface::class,
-                    is_object($storage) ? get_class($storage) : gettype($storage)
+                    get_debug_type($storage)
                 ));
             }
         }
@@ -105,7 +105,7 @@ class SessionManagerFactory implements FactoryInterface
                     'SessionManager requires that the %s service implement %s; received "%s"',
                     SaveHandlerInterface::class,
                     SaveHandlerInterface::class,
-                    is_object($saveHandler) ? get_class($saveHandler) : gettype($saveHandler)
+                    get_debug_type($saveHandler)
                 ));
             }
         }
@@ -153,6 +153,7 @@ class SessionManagerFactory implements FactoryInterface
     }
 
     /**
+     * @deprecated This method will be removed in version 3.0
      * Create a SessionManager instance (v2 usage)
      *
      * @param null|string $canonicalName

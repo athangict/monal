@@ -130,7 +130,7 @@ class BenefitTable extends AbstractTableGateway
 	 * @param String $column
 	 * @return String | Int
 	 */
-	public function getMin($where = NULL, $column)
+	public function getMin($where = NULL, $column = NULL)
 	{
 		$adapter = $this->adapter;
 		$sql = new Sql($adapter);
@@ -158,7 +158,7 @@ class BenefitTable extends AbstractTableGateway
 	 * @param String $column
 	 * @return String | Int
 	 */
-	public function getMax($where=NULL, $column)
+	public function getMax($where=NULL, $column = NULL)
 	{
 		$adapter = $this->adapter;
 		$sql = new Sql($adapter);
@@ -214,7 +214,7 @@ class BenefitTable extends AbstractTableGateway
 	 * @param String $column
 	 * @return Array | Int
 	 */
-	public function getPendingBenefit($column, $where = NULL,$user){
+	public function getPendingBenefit($column, $where = NULL,$user = NULL){
 	 $adapter = $this->adapter;
     $sql = new Sql($adapter);
 
@@ -250,7 +250,7 @@ class BenefitTable extends AbstractTableGateway
 	 * @param String $column
 	 * @return Array | Int
 	 */
-	public function getActionByMe($where = NULL,$user)
+	public function getActionByMe($where = NULL,$user = NULL)
 	{
 		$adapter = $this->adapter;
 		$sql = new Sql($adapter);

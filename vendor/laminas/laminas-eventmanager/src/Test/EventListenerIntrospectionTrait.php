@@ -39,8 +39,7 @@ trait EventListenerIntrospectionTrait
      */
     private function getEventsFromEventManager(EventManager $events)
     {
-        $r = new ReflectionProperty($events, 'events');
-        $r->setAccessible(true);
+        $r         = new ReflectionProperty($events, 'events');
         $listeners = $r->getValue($events);
         return array_keys($listeners);
     }
@@ -64,8 +63,7 @@ trait EventListenerIntrospectionTrait
      */
     private function getListenersForEvent($event, EventManager $events, $withPriority = false)
     {
-        $r = new ReflectionProperty($events, 'events');
-        $r->setAccessible(true);
+        $r        = new ReflectionProperty($events, 'events');
         $internal = $r->getValue($events);
 
         $listeners = [];
@@ -129,7 +127,6 @@ trait EventListenerIntrospectionTrait
     /**
      * Generator for traversing listeners in priority order.
      *
-     * @param array $queue
      * @param bool $withPriority When true, yields priority as key.
      * @return iterable
      */

@@ -44,7 +44,7 @@ class MenuHelper extends AbstractHelper
 		$auth = $this->getAuthenServices(); 
 		
 		$this->_roleId = $auth->hasIdentity() ? $auth->getIdentity()->role : $lowestRole;
-		$user_roles = explode(',',$this->_roleId);
+		$user_roles = explode(',',(string) $this->_roleId);
 		$user_roles = (sizeof($user_roles)<1) ? array($lowestRole) : $user_roles;
 		
 		$this->_userId = $auth->getIdentity()->id;
@@ -61,7 +61,7 @@ class MenuHelper extends AbstractHelper
 		if(sizeof($menus)>1):
 			foreach ($menus as $key => $menu):
 		        extract ($menu);	     
-				switch (strlen($tabindex))
+				switch (strlen((string)($tabindex)))
 				{
 					case 1:
 						$this->_menuHeading[] = array(

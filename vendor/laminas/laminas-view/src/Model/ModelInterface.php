@@ -16,11 +16,15 @@ use Traversable;
  * to the model.
  *
  * Extends "IteratorAggregate"; should allow iterating over children.
+ *
+ * @extends IteratorAggregate<int, ModelInterface>
  */
 interface ModelInterface extends Countable, IteratorAggregate
 {
     /**
      * Set renderer option/hint
+     *
+     * @deprecated Since 2.40.0 Options never had a use-case for view models and will be removed in 3.0
      *
      * @param  string $name
      * @param  mixed $value
@@ -31,7 +35,9 @@ interface ModelInterface extends Countable, IteratorAggregate
     /**
      * Set renderer options/hints en masse
      *
-     * @param  array|Traversable $options
+     * @deprecated Since 2.40.0 Options never had a use-case for view models and will be removed in 3.0
+     *
+     * @param array<string, mixed>|Traversable<string, mixed> $options
      * @return ModelInterface
      */
     public function setOptions($options);
@@ -39,7 +45,9 @@ interface ModelInterface extends Countable, IteratorAggregate
     /**
      * Get renderer options/hints
      *
-     * @return array|Traversable
+     * @deprecated Since 2.40.0 Options never had a use-case for view models and will be removed in 3.0
+     *
+     * @return array<string, mixed>|Traversable<string, mixed>
      */
     public function getOptions();
 
@@ -64,7 +72,7 @@ interface ModelInterface extends Countable, IteratorAggregate
     /**
      * Set view variables en masse
      *
-     * @param  array|ArrayAccess $variables
+     * @param  array<string, mixed>|ArrayAccess<string, mixed> $variables
      * @return ModelInterface
      */
     public function setVariables($variables);
@@ -72,7 +80,7 @@ interface ModelInterface extends Countable, IteratorAggregate
     /**
      * Get view variables
      *
-     * @return array|ArrayAccess
+     * @return array<string, mixed>|ArrayAccess<string, mixed>
      */
     public function getVariables();
 
@@ -105,7 +113,7 @@ interface ModelInterface extends Countable, IteratorAggregate
      *
      * Return specifies an array, but may be any iterable object.
      *
-     * @return array
+     * @return list<ModelInterface>
      */
     public function getChildren();
 

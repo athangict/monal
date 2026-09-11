@@ -22,6 +22,11 @@ use function sprintf;
 
 /**
  * JSON renderer
+ *
+ * @deprecated The JSON renderer will be removed in 3.0 without replacement. Laminas\View will no longer support
+ *             rendering strategies.
+ *
+ * @final
  */
 class JsonRenderer implements Renderer, TreeRendererInterface
 {
@@ -228,7 +233,6 @@ class JsonRenderer implements Renderer, TreeRendererInterface
      * Inject discovered child model values into parent model
      *
      * @todo detect collisions and decide whether to append and/or aggregate?
-     * @param array $children
      */
     protected function injectChildren(Model $model, array $children): void
     {

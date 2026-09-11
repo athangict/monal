@@ -13,6 +13,8 @@ use Hr\Model As Hr;
 use Store\Model As Store;
 class PurchaseController extends AbstractActionController
 {   
+	protected $_connection;
+	protected $_userloc;
 	private $_container;
 	protected $_table; 		// database table 
     protected $_user; 		// user detail

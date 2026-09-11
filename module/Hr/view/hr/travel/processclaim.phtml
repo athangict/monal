@@ -3,7 +3,7 @@
  * View -- of Protection/ProtectionController/processAction
  * chophel@athang.com
  */ 
-	$variables = explode('-', $this->flow_id);
+	$variables = explode('-', (string) $this->flow_id);
 	$claim_id = $variables['0'];
 	$action_id = $variables['1'];
 	$flow_id = $variables['2'];

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Laminas\Form\Element;
 
 use Laminas\Filter\StringTrim;
@@ -9,28 +11,21 @@ use Laminas\InputFilter\InputProviderInterface;
 use Laminas\Validator\Regex as RegexValidator;
 use Laminas\Validator\ValidatorInterface;
 
+/** @final */
 class Tel extends Element implements InputProviderInterface
 {
-    /**
-     * Seed attributes
-     *
-     * @var array
-     */
+    /** @var array<string, scalar|null>  */
     protected $attributes = [
         'type' => 'tel',
     ];
 
-    /**
-     * @var ValidatorInterface
-     */
+    /** @var null|ValidatorInterface */
     protected $validator;
 
     /**
      * Get validator
-     *
-     * @return ValidatorInterface
      */
-    protected function getValidator()
+    protected function getValidator(): ValidatorInterface
     {
         if (null === $this->validator) {
             $this->validator = new RegexValidator("/^[^\r\n]*$/");
@@ -41,14 +36,13 @@ class Tel extends Element implements InputProviderInterface
     /**
      * Provide default input rules for this element
      *
-     * @return array
+     * @inheritDoc
      */
-    public function getInputSpecification()
+    public function getInputSpecification(): array
     {
-        return [
-            'name' => $this->getName(),
-            'required' => true,
-            'filters' => [
+        $spec = [
+            'required'   => true,
+            'filters'    => [
                 ['name' => StringTrim::class],
                 ['name' => StripNewlines::class],
             ],
@@ -56,5 +50,12 @@ class Tel extends Element implements InputProviderInterface
                 $this->getValidator(),
             ],
         ];
+
+        $name = $this->getName();
+        if ($name !== null) {
+            $spec['name'] = $name;
+        }
+
+        return $spec;
     }
 }

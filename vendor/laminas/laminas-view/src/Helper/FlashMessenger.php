@@ -9,7 +9,6 @@ use Laminas\View\Exception\InvalidArgumentException;
 
 use function array_walk_recursive;
 use function call_user_func_array;
-use function get_class;
 use function gettype;
 use function implode;
 use function is_object;
@@ -23,6 +22,8 @@ use function sprintf;
  *
  * @deprecated This helper will be removed in version 3.0 of this component.
  *     At that time, it will be available in laminas/laminas-mvc-plugin-flashmessenger.
+ *
+ * @final
  */
 class FlashMessenger extends AbstractHelper
 {
@@ -108,7 +109,6 @@ class FlashMessenger extends AbstractHelper
      * Render Messages
      *
      * @param  string    $namespace
-     * @param  array     $classes
      * @param  null|bool $autoEscape
      * @return string
      */
@@ -123,7 +123,6 @@ class FlashMessenger extends AbstractHelper
      * Render Current Messages
      *
      * @param  string    $namespace
-     * @param  array     $classes
      * @param  bool|null $autoEscape
      * @return string
      */
@@ -138,8 +137,6 @@ class FlashMessenger extends AbstractHelper
      * Render Messages
      *
      * @param string    $namespace
-     * @param array     $messages
-     * @param array     $classes
      * @param bool|null $autoEscape
      * @return string
      */
@@ -308,7 +305,7 @@ class FlashMessenger extends AbstractHelper
                 '%s expects a %s instance; received %s',
                 __METHOD__,
                 PluginFlashMessenger::class,
-                is_object($pluginFlashMessenger) ? get_class($pluginFlashMessenger) : gettype($pluginFlashMessenger)
+                is_object($pluginFlashMessenger) ? $pluginFlashMessenger::class : gettype($pluginFlashMessenger)
             ));
         }
 

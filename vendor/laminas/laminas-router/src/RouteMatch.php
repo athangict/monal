@@ -27,8 +27,6 @@ class RouteMatch
 
     /**
      * Create a RouteMatch with given parameters.
-     *
-     * @param array $params
      */
     public function __construct(array $params)
     {

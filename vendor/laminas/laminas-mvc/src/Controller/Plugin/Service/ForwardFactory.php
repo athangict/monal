@@ -15,12 +15,12 @@ class ForwardFactory implements FactoryInterface
      * @return Forward
      * @throws ServiceNotCreatedException if Controllermanager service is not found in application service locator
      */
-    public function __invoke(ContainerInterface $container, $name, array $options = null)
+    public function __invoke(ContainerInterface $container, $name, ?array $options = null)
     {
         if (! $container->has('ControllerManager')) {
             throw new ServiceNotCreatedException(sprintf(
                 '%s requires that the application service manager contains a "%s" service; none found',
-                __CLASS__,
+                self::class,
                 'ControllerManager'
             ));
         }

@@ -8,13 +8,19 @@ use Laminas\Http\Response as HttpResponse;
 
 use function call_user_func;
 use function header;
-use function headers_sent;
 
 /**
  * HTTP Response for current PHP environment
  */
 class Response extends HttpResponse
 {
+    /**
+     * @deprecated This property is deprecated, and will be removed
+     *
+     * @var bool
+     */
+    public $headersSent;
+
     /**
      * The current used version
      * (The value will be detected on getVersion)

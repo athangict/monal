@@ -12,6 +12,8 @@ use function time;
 /**
  * DB Table Gateway session save handler
  *
+ * @deprecated This class will be removed without replacement in version 3.0.
+ *
  * @see ReturnTypeWillChange
  */
 class DbTableGateway implements SaveHandlerInterface
@@ -38,39 +40,31 @@ class DbTableGateway implements SaveHandlerInterface
     protected $lifetime;
 
     /**
-     * Laminas Db Table Gateway
-     *
-     * @var TableGateway
-     */
-    protected $tableGateway;
-
-    /**
-     * DbTableGateway Options
-     *
-     * @var DbTableGatewayOptions
-     */
-    protected $options;
-
-    /**
      * Constructor
      */
-    public function __construct(TableGateway $tableGateway, DbTableGatewayOptions $options)
-    {
-        $this->tableGateway = $tableGateway;
-        $this->options      = $options;
+    public function __construct(
+        /**
+         * Laminas Db Table Gateway
+         */
+        protected TableGateway $tableGateway,
+        /**
+         * DbTableGateway Options
+         */
+        protected DbTableGatewayOptions $options
+    ) {
     }
 
     /**
      * Open Session
      *
-     * @param  string $savePath
+     * @param  string $path
      * @param  string $name
      * @return bool
      */
     #[ReturnTypeWillChange]
-    public function open($savePath, $name)
+    public function open($path, $name)
     {
-        $this->sessionSavePath = $savePath;
+        $this->sessionSavePath = $path;
         $this->sessionName     = $name;
         $this->lifetime        = ini_get('session.gc_maxlifetime');
 

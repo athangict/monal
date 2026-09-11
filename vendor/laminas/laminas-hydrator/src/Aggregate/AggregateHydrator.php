@@ -11,6 +11,8 @@ use Laminas\Hydrator\HydratorInterface;
 
 /**
  * Aggregate hydrator that composes multiple hydrators via events
+ *
+ * @final
  */
 class AggregateHydrator implements HydratorInterface, EventManagerAwareInterface
 {

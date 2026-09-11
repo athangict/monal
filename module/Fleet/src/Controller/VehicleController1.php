@@ -31,6 +31,7 @@ class VehicleController extends AbstractActionController
     protected $_auth; 		// checking authentication
     protected $_safedataObj; //safedata controller plugin
     protected $_connection; //Transaction connection
+	protected $_userloc; //location of the current user
     
 	public function __construct(ContainerInterface $container)
     {
@@ -87,7 +88,49 @@ class VehicleController extends AbstractActionController
 		
 		$this->_safedataObj = $this->safedata();
 		$this->_connection = $this->_container->get('Laminas\Db\Adapter\Adapter')->getDriver()->getConnection();
+	}
 
+	private function getCurrentRoleIds()
+	{
+		$roles = array();
+		foreach (explode(',', (string) $this->_login_role) as $role) {
+			$role = trim($role);
+			if ($role !== '' && ctype_digit($role)) {
+				$roles[] = (int) $role;
+			}
+		}
+		return $roles;
+	}
+    
+	private function isPrivilegedUser()
+	{
+		$roles = $this->getCurrentRoleIds();
+		return in_array(99, $roles, true) || in_array(100, $roles, true);
+	}
+    
+	private function getRepairDetailRow($detailId)
+	{
+		$rows = $this->getDefinedTable(Fleet\VehicleRepairMaintaneseDtlsTable::Class)->get($detailId);
+		foreach ($rows as $row) {
+			return $row;
+		}
+		return null;
+	}
+    
+	private function canAccessRepairDetail($detailId)
+	{
+		$detail = $this->getRepairDetailRow($detailId);
+		if ($detail === null || !isset($detail['repair'])) {
+			return false;
+		}
+		if ($this->isPrivilegedUser()) {
+			return true;
+		}
+		$repairs = $this->getDefinedTable(Fleet\VehicleRepairMaintaneseTable::class)->get($detail['repair']);
+		foreach ($repairs as $repair) {
+			return isset($repair['author']) && (int) $repair['author'] === (int) $this->_login_id;
+		}
+		return false;
 	}
 	/**
 	 * vehicle index action
@@ -592,7 +635,7 @@ class VehicleController extends AbstractActionController
 			
 			$year = $form['year'];
 			$month = $form['month'];
-			if(strlen($month)==1){
+			if(strlen((string)($month))==1){
 				$month = '0'.$month;
 			}
 		}else{
@@ -624,7 +667,7 @@ class VehicleController extends AbstractActionController
 	public function viewrepairAction()
 	{
 		$this->init();
-		$params = explode("-", $this->_id);
+		$params = explode("-", (string) $this->_id);
 		if (isset($params['1']) && $params['1'] == '1' && isset($params['2']) && $params['2'] > 0) {
 			$flag = $this->getDefinedTable(Acl\NotifyTable::class)->getColumn($params['2'], 'flag'); 
 				if($flag == "0") {
@@ -717,7 +760,7 @@ class VehicleController extends AbstractActionController
 			endforeach;
 			
 			$next_serial = max($rm_no_list) + 1;	
-			switch(strlen($next_serial)){
+			switch(strlen((string)($next_serial))){
 				case 1: $next_rm_serial = "000".$next_serial; break;
 				case 2: $next_rm_serial = "00".$next_serial;  break;
 				case 3: $next_rm_serial = "0".$next_serial;   break;
@@ -914,7 +957,11 @@ class VehicleController extends AbstractActionController
 	public function deleteAction()
 	{
 		$this->init(); 
-		foreach($this->getDefinedTable(Fleet\VehicleRepairMaintaneseDtlsTable::Class)->get($this->_id) as $repairdetails);
+		$repairdetails = $this->getRepairDetailRow((int) $this->_id);
+		if (empty($repairdetails) || !$this->canAccessRepairDetail((int) $this->_id)) {
+			$this->flashMessenger()->addMessage("error^ Invalid expense detail selection");
+			return $this->redirect()->toRoute('vehicle',array('action' => 'repair'));
+		}
 		//foreach($this->getDefinedTable(Sales\SalesTable::Class)->get($salesd['sales']) as $sales);
 		$result = $this->getDefinedTable(Fleet\VehicleRepairMaintaneseDtlsTable::Class)->remove($this->_id);
 		if($result > 0):
@@ -935,7 +982,11 @@ class VehicleController extends AbstractActionController
 	{
 		
 		$this->init();
-		foreach($this->getDefinedTable(Fleet\VehicleRepairMaintaneseDtlsTable::Class)->get($this->_id) as $repairdetails);
+		$repairdetails = $this->getRepairDetailRow((int) $this->_id);
+		if (empty($repairdetails) || !$this->canAccessRepairDetail((int) $this->_id)) {
+			$this->flashMessenger()->addMessage("error^ Invalid expense detail selection");
+			return $this->redirect()->toRoute('vehicle',array('action' => 'repair'));
+		}
 		$t_id=$repairdetails['repair'];
 		foreach($this->getDefinedTable(Accounts\TransactiondetailTable::Class)->get(array('td.transaction'=>$repairdetails['transaction'])) as $trand){
 			$result2 = $this->getDefinedTable(Accounts\TransactiondetailTable::Class)->remove($trand['id']);
@@ -958,7 +1009,11 @@ class VehicleController extends AbstractActionController
 	public function deleteincomeAction()
 	{
 		$this->init(); 
-		foreach($this->getDefinedTable(Fleet\VehicleRepairMaintaneseDtlsTable::Class)->get($this->_id) as $repairdetails);
+		$repairdetails = $this->getRepairDetailRow((int) $this->_id);
+		if (empty($repairdetails) || !$this->canAccessRepairDetail((int) $this->_id)) {
+			$this->flashMessenger()->addMessage("error^ Invalid income detail selection");
+			return $this->redirect()->toRoute('vehicle',array('action' => 'vehicleincome'));
+		}
 		//foreach($this->getDefinedTable(Sales\SalesTable::Class)->get($salesd['sales']) as $sales);
 		$result = $this->getDefinedTable(Fleet\VehicleRepairMaintaneseDtlsTable::Class)->remove($this->_id);
 		if($result > 0):
@@ -980,7 +1035,7 @@ class VehicleController extends AbstractActionController
 		$this->init();
 		//if($this->getRequest()->isPost()){
 		$admin_locs = $this->getDefinedTable(Administration\UsersTable::class)->getColumn($this->_author,'location');
-        $admin_loc_array = explode(',',$admin_locs);
+        $admin_loc_array = explode(',', (string) $admin_locs);
 		//if($this->getRequest()->isPost()){
 		//	$form = $this->getRequest()->getPost();
 			$xpenseresult = $this->_id;
@@ -1014,7 +1069,7 @@ class VehicleController extends AbstractActionController
 				endforeach;
 				$next_serial = max($pltp_no_list) + 1;
 					
-				switch(strlen($next_serial)){
+				switch(strlen((string)($next_serial))){
 					case 1: $next_dc_serial = "0000".$next_serial; break;
 					case 2: $next_dc_serial = "000".$next_serial;  break;
 					case 3: $next_dc_serial = "00".$next_serial;   break;
@@ -1149,7 +1204,7 @@ class VehicleController extends AbstractActionController
 			endforeach;
 			
 			$next_serial = max($rm_no_list) + 1;	
-			switch(strlen($next_serial)){
+			switch(strlen((string)($next_serial))){
 				case 1: $next_rm_serial = "000".$next_serial; break;
 				case 2: $next_rm_serial = "00".$next_serial;  break;
 				case 3: $next_rm_serial = "0".$next_serial;   break;
@@ -1404,7 +1459,7 @@ class VehicleController extends AbstractActionController
 					endforeach;
 					$next_serial = max($pltp_no_list) + 1;
 						
-					switch(strlen($next_serial)){
+					switch(strlen((string)($next_serial))){
 						case 1: $next_dc_serial = "0000".$next_serial; break;
 						case 2: $next_dc_serial = "000".$next_serial;  break;
 						case 3: $next_dc_serial = "00".$next_serial;   break;
@@ -1694,7 +1749,7 @@ class VehicleController extends AbstractActionController
 			
 			$year = $form['year'];
 			$month = $form['month'];
-			if(strlen($month)==1){
+			if(strlen((string)($month))==1){
 				$month = '0'.$month;
 			}
 		}else{
@@ -1729,7 +1784,7 @@ class VehicleController extends AbstractActionController
 		$this->init();
 		//if($this->getRequest()->isPost()){
 		$admin_locs = $this->getDefinedTable(Administration\UsersTable::class)->getColumn($this->_author,'location');
-        $admin_loc_array = explode(',',$admin_locs);
+        $admin_loc_array = explode(',', (string) $admin_locs);
 		//if($this->getRequest()->isPost()){
 		//	$form = $this->getRequest()->getPost();
 			$incomeresult = $this->_id;
@@ -1764,7 +1819,7 @@ class VehicleController extends AbstractActionController
 				endforeach;
 				$next_serial = max($pltp_no_list) + 1;
 					
-				switch(strlen($next_serial)){
+				switch(strlen((string)($next_serial))){
 					case 1: $next_dc_serial = "0000".$next_serial; break;
 					case 2: $next_dc_serial = "000".$next_serial;  break;
 					case 3: $next_dc_serial = "00".$next_serial;   break;
@@ -1921,7 +1976,7 @@ class VehicleController extends AbstractActionController
 			
 			$year = $form['year'];
 			$month = $form['month'];
-			if(strlen($month)==1){
+			if(strlen((string)($month))==1){
 				$month = '0'.$month;
 			}
 		}else{
@@ -1967,7 +2022,7 @@ class VehicleController extends AbstractActionController
 				array_push($rq_no_list, substr($result['requisition_no'], 8));
 			endforeach;
 			$next_serial = max($rq_no_list) + 1;	
-			switch(strlen($next_serial)){
+			switch(strlen((string)($next_serial))){
 				case 1: $next_rq_serial = "000".$next_serial; break;
 				case 2: $next_rq_serial = "00".$next_serial;  break;
 				case 3: $next_rq_serial = "0".$next_serial;   break;

@@ -223,7 +223,7 @@
 								<?php endif;?>
 								<?php 
 									$admin_locs = $this->usersObj->getColumn($userID,'admin_location');
-									$admin_loc_array = explode(',',$admin_locs);
+									$admin_loc_array = explode(',', (string) $admin_locs);
 									if(in_array($to_location, $admin_loc_array)):
 									//if($this->user_location == $to_location):
 								?>

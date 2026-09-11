@@ -26,6 +26,8 @@ class ContractorController extends AbstractActionController
     protected $_id; 		// route parameter id, usally used by crude
     protected $_auth; 		// checking authentication
     protected $_safedataObj; //safedata controller plugin
+	protected $_connection; // DB transaction connection
+	protected $_userloc; //location of the current user
     
 	public function __construct(ContainerInterface $container)
     {

@@ -1,8 +1,6 @@
 <?php
-
 /**
  * Local Configuration Override
- *
  * This configuration override file is for overriding environment-specific and
  * security-sensitive configuration information. Copy this file without the
  * .dist extension at the end and populate values as needed.
@@ -15,14 +13,24 @@ use Laminas\DB\Adapter;
 use Laminas\ServiceManager\Factory\InvokableFactory;
 use Doctirine\DBAL\Driver\PDOMysqlDriver as PDOMysqlDriver;
 
+$env = static function (string $key, $default = null) {
+	$value = getenv($key);
+	return ($value === false || $value === '') ? $default : $value;
+};
+
 return [
     'db'=>[
 		'driver'=>'Pdo',
-        'dsn'=>'mysql:dbname=monal_bp_2023;hostname=127.0.0.1',
+		'dsn'=>sprintf(
+			'mysql:dbname=%s;hostname=%s;port=%s',
+			$env('DB_NAME', 'monal_erp_2026'),
+			$env('DB_HOST', '127.0.0.1'),
+			$env('DB_PORT', '3306')
+		),
 		'driver-options'=>[
 			PDO::MYSQL_ATTR_INIT_COMMAND=>'SET NAMES\'UTF8\'',
 		],
-        'username'=> 'root',
-        'password' =>'',//'BhutanPost2022*/*'//
+		'username'=> $env('DB_USER', 'root'),
+		'password' =>$env('DB_PASS', ''),
 	],
-];
+]; 

@@ -358,23 +358,37 @@ class PurchaseOrderTable extends AbstractTableGateway
 		$adapter = $this->adapter;
 		$sql = new Sql($adapter);
 		$select = $sql->select();
-		$select->from(array('po'=>$this->table))			 
-			   ->join(array('pd' => 'pur_po_details'), 'po.id = pd.purchase_order')
-			    ->join(array('i'=>'st_items'), 'pd.item = i.id' ,array('item_id'=>'id'))
-			    ->join(array('ig'=>'st_item_group'), 'i.item_group = ig.id',array('group_id'=>'id'))		
+		if($data['item_class']==33||$data['item_class']=='-1'){
+			$select->from(array('po'=>$this->table))			 
+			   ->join(array('pd' => 'pur_po_details'), 'po.id = pd.purchase_order')	
+			->join(array('ic'=>'st_item_class'),'ic.id = pd.item_class',array('class_id'=>'id'))	 				   
 			   ->where->between('po.po_date', $start_date, $end_date);
 			   $select->where(array('po.status' => 4));
-		if($data['location'] != '-1'){
-			$select->where(array('po.destination'=>$data['location']));
 		}
-		if($data['item'] != '-1'){
+		
+	   else{
+		   $select->from(array('po'=>$this->table))			 
+	   ->join(array('pd' => 'pur_po_details'), 'po.id = pd.purchase_order')
+		->join(array('i'=>'st_items'), 'pd.item = i.id' ,array('item_id'=>'id'))
+		->join(array('ig'=>'st_item_group'), 'i.item_group = ig.id',array('group_id'=>'id'))	
+		->join(array('ic'=>'st_item_class'), 'ig.item_class = ic.id' ,array('class_id'=>'id'))				
+	   ->where->between('po.po_date', $start_date, $end_date);
+	   $select->where(array('po.status' => 4));
+	   if($data['item'] != '-1'){
 			$select->where(array('pd.item'=>$data['item']));
 		}
 		if ($data['item_subgroup'] != '-1') {
 			$select->where(array('i.item_group' => $data['item_subgroup']));
 		}
+	   }
+		if($data['location'] != '-1'){
+			$select->where(array('po.destination'=>$data['location']));
+		}
 		if ($data['supplier'] != '-1') {
 			$select->where(array('po.supplier' => $data['supplier']));
+		}
+		if ($data['item_class'] != '-1') {
+			$select->where(array('ic.id' => $data['item_class']));
 		}
 		if($where!=NULL){
 			$select->where($where);

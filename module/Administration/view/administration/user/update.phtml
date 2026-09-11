@@ -59,7 +59,7 @@
 								<label class="control-label" for="role">Role</label>
 								<select multiple="" class="form-control" name="role[]" id="role" data-placeholder="Select" <?php echo $disabled;?> >
 									<option value=''></option>
-									<?php $role_array = explode(',',$row['role']);
+									<?php $role_array = explode(',',(string) $row['role']);
 										foreach($this->permissionObj->getrole() as $role):?>
 										<option value="<?php echo $role['id'];?>" <?php echo (in_array($role['id'],$role_array))?'selected':'';?>>
 											<?php echo $role['role'];?>
@@ -115,7 +115,7 @@
 									<div class="widget-body">
 										<div class="widget-main padding-24"> 
 											<label class="ace grey">
-												<?php $activity_array = explode(",", $row['admin_activity']);
+												<?php $activity_array = explode(",", (string) $row['admin_activity']);
 													$activity_count = $this->permissionObj->getactivityCount();?>
 												<input type="checkbox" class="ace" name="selectall2" id="selectall2" value="1" <?php echo (sizeof($activity_array)==$activity_count)?'checked':'';?> <?php echo $disabled;?> />
 												<span class="lbl fw-bolder"> Select All</span>
@@ -145,7 +145,7 @@
 									<div class="widget-body">
 										<div class="widget-main padding-24">
 											<label class="ace grey">
-												<?php $location_array = explode(",", $row['admin_location']);
+												<?php $location_array = explode(",", (string) $row['admin_location']);
 													$location_count = $this->permissionObj->getlocationCount();?>
 												<input type="checkbox" class="ace" name="selectall" id="selectall" value="1" <?php echo (sizeof($location_array)==$location_count)?'checked':'';?> <?php echo $disabled;?>/>
 												<span class="lbl fw-bolder"> Select All</span>

@@ -87,6 +87,12 @@ class AclPlugin extends AbstractPlugin
         $controllerName = substr($controllerName, 0, -10);
 		$routeName = $routeMatch->getMatchedRouteName();
 		$routeName = (strpos($routeName, '/') !== false)?substr($routeName, 0, strpos($routeName, "/")):$routeName;
+
+		// Public/unauthenticated requests should not run role-mapped ACL row checks.
+		// They are handled by controller-level authentication where applicable.
+		if (!$auth->hasIdentity()) {
+			return $acl;
+		}
 		
 		/** Find the Highest Role **/
 		$hrQuery ="SELECT MAX(`id`) as `h_role` FROM `sys_roles`";

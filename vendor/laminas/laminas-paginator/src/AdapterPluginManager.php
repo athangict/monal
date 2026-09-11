@@ -8,16 +8,8 @@ use Laminas\Paginator\Adapter\AdapterInterface;
 use Laminas\ServiceManager\AbstractPluginManager;
 use Laminas\ServiceManager\Exception\InvalidServiceException;
 use Laminas\ServiceManager\Factory\InvokableFactory;
-use Zend\Paginator\Adapter\ArrayAdapter;
-use Zend\Paginator\Adapter\Callback;
-use Zend\Paginator\Adapter\DbSelect;
-use Zend\Paginator\Adapter\DbTableGateway;
-use Zend\Paginator\Adapter\Iterator;
-use Zend\Paginator\Adapter\NullFill;
 
-use function get_class;
-use function gettype;
-use function is_object;
+use function get_debug_type;
 use function sprintf;
 
 /**
@@ -27,7 +19,8 @@ use function sprintf;
  * AdapterInterface. Additionally, it registers a number of default
  * adapters available.
  *
- * @extends AbstractPluginManager<AdapterInterface>
+ * @extends AbstractPluginManager<AdapterInterface|AdapterAggregateInterface>
+ * @final
  */
 class AdapterPluginManager extends AbstractPluginManager
 {
@@ -60,15 +53,15 @@ class AdapterPluginManager extends AbstractPluginManager
         'laminaspaginatoradapternull' => Adapter\NullFill::class,
 
         // Legacy Zend Framework aliases
-        Callback::class            => Adapter\Callback::class,
-        DbSelect::class            => Adapter\DbSelect::class,
-        DbTableGateway::class      => Adapter\DbTableGateway::class,
-        NullFill::class            => Adapter\NullFill::class,
-        Iterator::class            => Adapter\Iterator::class,
-        ArrayAdapter::class        => Adapter\ArrayAdapter::class,
-        'zendpaginatoradapternull' => Adapter\NullFill::class,
+        'Zend\Paginator\Adapter\Callback'       => Adapter\Callback::class,
+        'Zend\Paginator\Adapter\DbSelect'       => Adapter\DbSelect::class,
+        'Zend\Paginator\Adapter\DbTableGateway' => Adapter\DbTableGateway::class,
+        'Zend\Paginator\Adapter\NullFill'       => Adapter\NullFill::class,
+        'Zend\Paginator\Adapter\Iterator'       => Adapter\Iterator::class,
+        'Zend\Paginator\Adapter\ArrayAdapter'   => Adapter\ArrayAdapter::class,
 
         // v2 normalized FQCNs
+        'zendpaginatoradapternull'           => Adapter\NullFill::class,
         'zendpaginatoradaptercallback'       => Adapter\Callback::class,
         'zendpaginatoradapterdbselect'       => Adapter\DbSelect::class,
         'zendpaginatoradapterdbtablegateway' => Adapter\DbTableGateway::class,
@@ -114,7 +107,7 @@ class AdapterPluginManager extends AbstractPluginManager
         if (! $instance instanceof $this->instanceOf) {
             throw new InvalidServiceException(sprintf(
                 'Plugin of type %s is invalid; must implement %s',
-                is_object($instance) ? get_class($instance) : gettype($instance),
+                get_debug_type($instance),
                 AdapterInterface::class
             ));
         }
@@ -123,12 +116,13 @@ class AdapterPluginManager extends AbstractPluginManager
     /**
      * Validate that a plugin is an adapter (v2)
      *
-     * @param mixed $plugin
+     * @deprecated Since 2.22.0. This method will be removed in 3.0 without replacement.
+     *
      * @throws Exception\RuntimeException
      * @return void
      * @psalm-assert AdapterInterface $instance
      */
-    public function validatePlugin($plugin)
+    public function validatePlugin(mixed $plugin)
     {
         try {
             $this->validate($plugin);

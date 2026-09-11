@@ -16,6 +16,9 @@ use Sales\Model As Sales;
 use Reports\Model As Reports;
 class StockreconcilreportController extends AbstractActionController
 {   
+	protected $_connection;
+	protected $_permissionObj;
+	protected $_user_loc;
 	private $_container;
 	protected $_table; 		// database table 
     protected $_user; 		// user detail

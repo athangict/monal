@@ -79,7 +79,6 @@ class Ini extends AbstractWriter
     /**
      * processConfig(): defined by AbstractWriter.
      *
-     * @param  array $config
      * @return string
      */
     public function processConfig(array $config)
@@ -94,13 +93,13 @@ class Ini extends AbstractWriter
             foreach ($config as $sectionName => $data) {
                 if (! is_array($data)) {
                     $iniString .= $sectionName
-                               .  ' = '
-                               .  $this->prepareValue($data)
-                               .  "\n";
+                               . ' = '
+                               . $this->prepareValue($data)
+                               . "\n";
                 } else {
                     $iniString .= '[' . $sectionName . ']' . "\n"
-                               .  $this->addBranch($data)
-                               .  "\n";
+                               . $this->addBranch($data)
+                               . "\n";
                 }
             }
         }
@@ -111,7 +110,6 @@ class Ini extends AbstractWriter
     /**
      * Add a branch to an INI string recursively.
      *
-     * @param  array $config
      * @param  array $parents
      * @return string
      */
@@ -126,9 +124,9 @@ class Ini extends AbstractWriter
                 $iniString .= $this->addBranch($value, $group);
             } else {
                 $iniString .= implode($this->nestSeparator, $group)
-                           .  ' = '
-                           .  $this->prepareValue($value)
-                           .  "\n";
+                           . ' = '
+                           . $this->prepareValue($value)
+                           . "\n";
             }
         }
 
@@ -149,11 +147,11 @@ class Ini extends AbstractWriter
         }
 
         if (is_bool($value)) {
-            return ($value ? 'true' : 'false');
+            return $value ? 'true' : 'false';
         }
 
         if (false === strpos($value, '"')) {
-            return '"' . $value .  '"';
+            return '"' . $value . '"';
         }
 
         throw new Exception\RuntimeException('Value can not contain double quotes');
@@ -163,7 +161,6 @@ class Ini extends AbstractWriter
      * Root elements that are not assigned to any section needs to be on the
      * top of config.
      *
-     * @param  array $config
      * @return array
      */
     protected function sortRootElements(array $config)

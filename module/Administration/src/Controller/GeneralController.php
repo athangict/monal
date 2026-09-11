@@ -12,6 +12,8 @@ use Acl\Model as Acl;
 
 class GeneralController extends AbstractActionController
 {
+	protected $_connection;
+	protected $_permissionObj;
 	private $_container;
 	protected $_table; 		// database table 
     protected $_user; 		// user detail
@@ -177,7 +179,7 @@ class GeneralController extends AbstractActionController
 	{
 		$this->init();
 		$id = $this->_id;
-		$array_id = explode("_", $id);
+		$array_id = explode("_", (string) $id);
 		$district_id = $array_id[0];
 		$page = (sizeof($array_id)>1)?$array_id[1]:'';
 		
@@ -258,14 +260,14 @@ class GeneralController extends AbstractActionController
 					break;
 			endswitch;
 			$data = array(	
-					'district'     => $form['district'],
-					'block_code'   => $max_code,
-					'block'        => $form['block'],
-					'blockDz'      => $form['blockDz'],
-					'status'       => $form['status'],
-					'author'       => $this->_author,
-					'created'      => $this->_created,
-					'modified'     => $this->_modified,
+				'district'     => $form['district'],
+				'block_code'   => $max_code,
+				'block'        => $form['block'],
+				'blockDz'      => $form['blockDz'],
+				'status'       => $form['status'],
+				'author'       => $this->_author,
+				'created'      => $this->_created,
+				'modified'     => $this->_modified,
 			);
 			$data = $this->_safedataObj->rteSafe($data);
 			$result = $this->getDefinedTable(Administration\BlockTable::class)->save($data);	
@@ -278,9 +280,9 @@ class GeneralController extends AbstractActionController
 						 
 		}
 		$ViewModel = new ViewModel(array(
-				'title'      => 'Add Block',
-				'page'       => $page,
-				'districts'  => $this->getDefinedTable(Administration\DistrictTable::class)->get(array('status'=>'1')),	
+			'title'      => 'Add Block',
+			'page'       => $page,
+			'districts'  => $this->getDefinedTable(Administration\DistrictTable::class)->get(array('status'=>'1')),	
 		));		 
 		$ViewModel->setTerminal(True);
 		return $ViewModel;	
@@ -292,7 +294,7 @@ class GeneralController extends AbstractActionController
 	{
 		$this->init();
 		$id = $this->_id;
-		$array_id = explode("_", $id);
+		$array_id = explode("_", (string) $id);
 		$block_id = $array_id[0];
 		$page = (sizeof($array_id)>1)?$array_id[1]:'';
 		if($this->getRequest()->isPost()){
@@ -316,10 +318,10 @@ class GeneralController extends AbstractActionController
 			return $this->redirect()->toRoute('general/paginator',array('action'=>'block','page'=>$this->_id, 'id'=>$form['district']));
 		}
 		$ViewModel = new ViewModel(array(
-				'title'      => 'Edit Block',
-				'page'       => $page,
-				'districts'  => $this->getDefinedTable(Administration\DistrictTable::class)->get(array('status'=>'1')),	
-				'blocks'     => $this->getDefinedTable(Administration\BlockTable::class)->get($block_id),
+			'title'      => 'Edit Block',
+			'page'       => $page,
+			'districts'  => $this->getDefinedTable(Administration\DistrictTable::class)->get(array('status'=>'1')),	
+			'blocks'     => $this->getDefinedTable(Administration\BlockTable::class)->get($block_id),
 		));		 
 		$ViewModel->setTerminal(True);
 		return $ViewModel;	
@@ -330,7 +332,7 @@ class GeneralController extends AbstractActionController
 	public function villageAction()
 	{	
 		$this->init();
-		$array_id = explode("_", $this->_id);
+		$array_id = explode("_", (string) $this->_id);
 		$district = (sizeof($array_id)>1)?$array_id[0]:'-1';
 		$block = (sizeof($array_id)>1)?$array_id[1]:'-1';
 		if($this->getRequest()->isPost())
@@ -392,14 +394,14 @@ class GeneralController extends AbstractActionController
 					break;
 			endswitch;
 			$data = array(	
-					'block'          => $form['block'],
-					'village_code'   => $max_code,
-					'village'        => $form['village'],
-					'villageDz'      => $form['villageDz'],
-					'status'         => $form['status'],
-					'author'         => $this->_author,
-					'created'        => $this->_created,
-					'modified'       => $this->_modified,
+				'block'          => $form['block'],
+				'village_code'   => $max_code,
+				'village'        => $form['village'],
+				'villageDz'      => $form['villageDz'],
+				'status'         => $form['status'],
+				'author'         => $this->_author,
+				'created'        => $this->_created,
+				'modified'       => $this->_modified,
 			);
 			$data = $this->_safedataObj->rteSafe($data);
 			$result = $this->getDefinedTable(Administration\VillageTable::class)->save($data);	
@@ -412,9 +414,9 @@ class GeneralController extends AbstractActionController
 						 
 		}
 		$ViewModel = new ViewModel(array(
-				'title'      => 'Add Village',
-				'page'       => $page,
-				'blocks'     => $this->getDefinedTable(Administration\BlockTable::class)->get(array('status'=>'1')),	
+			'title'      => 'Add Village',
+			'page'       => $page,
+			'blocks'     => $this->getDefinedTable(Administration\BlockTable::class)->get(array('status'=>'1')),	
 		));		 
 		$ViewModel->setTerminal(True);
 		return $ViewModel;	
@@ -426,19 +428,19 @@ class GeneralController extends AbstractActionController
 	{
 		$this->init();
 		$id = $this->_id;
-		$array_id = explode("_", $id);
+		$array_id = explode("_", (string) $id);
 		$village_id = $array_id[0];
 		$page = (sizeof($array_id)>1)?$array_id[1]:'';
 		if($this->getRequest()->isPost()){
 			$form = $this->getRequest()->getPost();
 			$data = array(	
-					'id'             => $form['village_id'],
-					'block'          => $form['block'],
-					'village'        => $form['village'],
-					'villageDz'      => $form['villageDz'],
-					'status'         => $form['status'],
-					'author'         => $this->_author,
-					'modified'       => $this->_modified,
+				'id'             => $form['village_id'],
+				'block'          => $form['block'],
+				'village'        => $form['village'],
+				'villageDz'      => $form['villageDz'],
+				'status'         => $form['status'],
+				'author'         => $this->_author,
+				'modified'       => $this->_modified,
 			);
 			$data = $this->_safedataObj->rteSafe($data);
 			$result = $this->getDefinedTable(Administration\VillageTable::class)->save($data);	
@@ -451,10 +453,10 @@ class GeneralController extends AbstractActionController
 						 
 		}
 		$ViewModel = new ViewModel(array(
-				'title'      => 'Edit Village',
-				'page'       => $page,
-				'blocks'     => $this->getDefinedTable(Administration\BlockTable::class)->get(array('status'=>'1')),	
-				'villages'   => $this->getDefinedTable(Administration\VillageTable::class)->get($village_id),
+			'title'      => 'Edit Village',
+			'page'       => $page,
+			'blocks'     => $this->getDefinedTable(Administration\BlockTable::class)->get(array('status'=>'1')),	
+			'villages'   => $this->getDefinedTable(Administration\VillageTable::class)->get($village_id),
 		));		 
 		$ViewModel->setTerminal(True);
 		return $ViewModel;	
@@ -510,8 +512,8 @@ class GeneralController extends AbstractActionController
 			return $this->redirect()->toRoute('general/paginator', array('action'=>'bank','page'=>$this->_id, 'id'=>'0'));
         }		
 		$ViewModel = new ViewModel([
-				'title' => 'Add Bank',
-				'page'  => $page,
+			'title' => 'Add Bank',
+			'page'  => $page,
 		]);
 		$ViewModel->setTerminal(True);
 		return $ViewModel;
@@ -523,7 +525,7 @@ class GeneralController extends AbstractActionController
 	{
 		$this->init();
 		$id = $this->_id;
-		$array_id = explode("_", $id);
+		$array_id = explode("_", (string) $id);
 		$bank_id = $array_id[0];
 		$page = (sizeof($array_id)>1)?$array_id[1]:'';
 		
@@ -551,9 +553,9 @@ class GeneralController extends AbstractActionController
 			return $this->redirect()->toRoute('general/paginator', array('action'=>'bank','page'=>$this->_id, 'id'=>'0'));
         }		
 		$ViewModel = new ViewModel([
-				'title'    => 'Edit Bank',
-				'page'     => $page,
-				'banks'    => $this->getDefinedTable(Administration\BankTable::class)->get($bank_id),
+			'title'    => 'Edit Bank',
+			'page'     => $page,
+			'banks'    => $this->getDefinedTable(Administration\BankTable::class)->get($bank_id),
 		]);
 		$ViewModel->setTerminal(True);
 		return $ViewModel;
@@ -629,9 +631,9 @@ class GeneralController extends AbstractActionController
 			return $this->redirect()->toRoute('general/paginator', array('action'=>'city','page'=>$page, 'id'=>'0'));
         }		
 		$ViewModel = new ViewModel([
-				'title' => 'Add city',
-				'page'  => $page,
-				'country'   => $this->getDefinedTable(Administration\CountryTable::class)->getAll(),
+			'title' => 'Add city',
+			'page'  => $page,
+			'country'   => $this->getDefinedTable(Administration\CountryTable::class)->getAll(),
 		]);
 		$ViewModel->setTerminal(True);
 		return $ViewModel;
@@ -664,10 +666,10 @@ class GeneralController extends AbstractActionController
 			return $this->redirect()->toRoute('general/paginator', array('action'=>'city','page'=>$page, 'id'=>'0'));
         }		
 		$ViewModel = new ViewModel([
-				'title' => 'Edit city',
-				'page'  => $page,
-				'city'   => $this->getDefinedTable(Administration\CityTable::class)->get($this->_id),
-				'country'   => $this->getDefinedTable(Administration\CountryTable::class)->getAll(),
+			'title' => 'Edit city',
+			'page'  => $page,
+			'city'   => $this->getDefinedTable(Administration\CityTable::class)->get($this->_id),
+			'country'   => $this->getDefinedTable(Administration\CountryTable::class)->getAll(),
 		]);
 		$ViewModel->setTerminal(True);
 		return $ViewModel;

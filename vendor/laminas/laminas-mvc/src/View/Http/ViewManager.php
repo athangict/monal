@@ -2,6 +2,7 @@
 
 namespace Laminas\Mvc\View\Http;
 
+use Laminas\View\Model\ModelInterface;
 use ArrayAccess;
 use Laminas\EventManager\AbstractListenerAggregate;
 use Laminas\EventManager\EventManagerInterface;
@@ -99,7 +100,7 @@ class ViewManager extends AbstractListenerAggregate
 
         $this->injectViewModelIntoPlugin();
 
-        $injectTemplateListener  = $services->get('Laminas\Mvc\View\Http\InjectTemplateListener');
+        $injectTemplateListener  = $services->get(\Laminas\Mvc\View\Http\InjectTemplateListener::class);
         $createViewModelListener = new CreateViewModelListener();
         $injectViewModelListener = new InjectViewModelListener();
 
@@ -113,31 +114,31 @@ class ViewManager extends AbstractListenerAggregate
         $mvcRenderingStrategy->attach($events);
 
         $sharedEvents->attach(
-            'Laminas\Stdlib\DispatchableInterface',
+            \Laminas\Stdlib\DispatchableInterface::class,
             MvcEvent::EVENT_DISPATCH,
             [$createViewModelListener, 'createViewModelFromArray'],
             -80
         );
         $sharedEvents->attach(
-            'Laminas\Stdlib\DispatchableInterface',
+            \Laminas\Stdlib\DispatchableInterface::class,
             MvcEvent::EVENT_DISPATCH,
             [$routeNotFoundStrategy, 'prepareNotFoundViewModel'],
             -90
         );
         $sharedEvents->attach(
-            'Laminas\Stdlib\DispatchableInterface',
+            \Laminas\Stdlib\DispatchableInterface::class,
             MvcEvent::EVENT_DISPATCH,
             [$createViewModelListener, 'createViewModelFromNull'],
             -80
         );
         $sharedEvents->attach(
-            'Laminas\Stdlib\DispatchableInterface',
+            \Laminas\Stdlib\DispatchableInterface::class,
             MvcEvent::EVENT_DISPATCH,
             [$injectTemplateListener, 'injectTemplate'],
             -90
         );
         $sharedEvents->attach(
-            'Laminas\Stdlib\DispatchableInterface',
+            \Laminas\Stdlib\DispatchableInterface::class,
             MvcEvent::EVENT_DISPATCH,
             [$injectViewModelListener, 'injectViewModel'],
             -100
@@ -162,7 +163,7 @@ class ViewManager extends AbstractListenerAggregate
     /**
      * Configures the MvcEvent view model to ensure it has the template injected
      *
-     * @return \Laminas\View\Model\ModelInterface
+     * @return ModelInterface
      */
     public function getViewModel()
     {

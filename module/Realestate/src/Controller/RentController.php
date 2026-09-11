@@ -15,6 +15,7 @@ use Hr\Model as Hr;
 
 class RentController extends AbstractActionController
 {
+	protected $_login_id;
     private $_container;
     protected $_table; // database table
     protected $_user; // user detail
@@ -135,7 +136,7 @@ class RentController extends AbstractActionController
     public function generaterentAction()
     {
         $this->init();
-        $my = explode('-', $this->_id);
+        $my = explode('-', (string) $this->_id);
         $tenants = $this->getDefinedTable(Realestate\LeasedRentTable::class)->getTenant(array('lr.status'=>1,'b.location'=>$my[2]));
 			foreach($tenants as $row):
 			$floor=$this->getDefinedTable(Realestate\FlatTable::class)->getColumn($row['flat'],'floor');
@@ -174,7 +175,7 @@ class RentController extends AbstractActionController
     {
         $this->init();
 		if(isset($this->_id) & $this->_id!=0):
-			$my = explode('-', $this->_id);
+			$my = explode('-', (string) $this->_id);
 		endif;
 		if(sizeof($my)==0):
 			$my = array('1'); //default selection
@@ -302,7 +303,7 @@ class RentController extends AbstractActionController
 public function submitAction()
 	{
 		$this->init(); 
-		$my = explode('-', $this->_id);
+		$my = explode('-', (string) $this->_id);
 		$rents=$this->getDefinedTable(Realestate\RentTable::Class)->getRentByMonth($my[0],$my[1],$my[2]);
         //print_r($rents);exit;
 		foreach($rents as $rent):

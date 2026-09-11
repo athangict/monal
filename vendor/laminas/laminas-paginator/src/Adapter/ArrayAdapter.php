@@ -4,20 +4,19 @@ declare(strict_types=1);
 
 namespace Laminas\Paginator\Adapter;
 
-use ReturnTypeWillChange; // phpcs:ignore
+use ReturnTypeWillChange;
 
 use function array_slice;
 use function count;
 
+/**
+ * @template-covariant TKey of int
+ * @template-covariant TValue
+ * @implements AdapterInterface<TKey, TValue>
+ *     @final
+ */
 class ArrayAdapter implements AdapterInterface
 {
-    /**
-     * ArrayAdapter
-     *
-     * @var array
-     */
-    protected $array;
-
     /**
      * Item count
      *
@@ -26,11 +25,10 @@ class ArrayAdapter implements AdapterInterface
     protected $count;
 
     /**
-     * @param array $array ArrayAdapter to paginate
+     * @param array<TKey, TValue> $array ArrayAdapter to paginate
      */
-    public function __construct(array $array = [])
+    public function __construct(protected array $array = [])
     {
-        $this->array = $array;
         $this->count = count($array);
     }
 
@@ -39,7 +37,7 @@ class ArrayAdapter implements AdapterInterface
      *
      * @param  int $offset Page offset
      * @param  int $itemCountPerPage Number of items per page
-     * @return array
+     * @return array<TKey, TValue>
      */
     public function getItems($offset, $itemCountPerPage)
     {

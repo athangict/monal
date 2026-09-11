@@ -11,6 +11,9 @@ use Acl\Model as Acl;
 
 class ButtonController extends AbstractActionController
 {
+	protected $_connection;
+	protected $_permissionObj;
+	protected $_safedataObj;
 	private $_container;
 	protected $_table; 		// database table 
     protected $_user; 		// user detail
@@ -137,29 +140,29 @@ class ButtonController extends AbstractActionController
 	{
 		$this->init();
 		$id = $this->_id;
-		$array_id = explode("_", $id);
+		$array_id = explode("_", (string) $id);
 		$menu_id = $array_id[0];
 		$page = (sizeof($array_id)>1)?$array_id[1]:'';
 		if ($this->getRequest()->isPost()):
 			$form = $this->getRequest()->getPost();
 			if($form['btn']==1):
 				$data = array(
-						'id' 	         => $form['acl_id'],
-						'menu'	         => $form['menu'],
-						'display'	     => $form['display'],
-						'description'	 => $form['description'],
-						'author'         => $this->_author,
-						'modified'       => $this->_modified
+					'id' 	         => $form['acl_id'],
+					'menu'	         => $form['menu'],
+					'display'	     => $form['display'],
+					'description'	 => $form['description'],
+					'author'         => $this->_author,
+					'modified'       => $this->_modified
 				);
 			else:
 				$data = array(
-						'id' 	         => $form['acl_id'],
-						'menu'	         => $form['menu'],
-						'display'	     => $form['display'],
-						'icon'           => $form['icon'],
-						'description'	 => $form['description'],
-						'author'         => $this->_author,
-						'modified'       => $this->_modified
+					'id' 	         => $form['acl_id'],
+					'menu'	         => $form['menu'],
+					'display'	     => $form['display'],
+					'icon'           => $form['icon'],
+					'description'	 => $form['description'],
+					'author'         => $this->_author,
+					'modified'       => $this->_modified
 				);
 			endif;
 			$data = $this->_safedataObj->rteSafe($data);
@@ -176,11 +179,11 @@ class ButtonController extends AbstractActionController
 		endif;	
 		
 		$ViewModel = new ViewModel(array(
-				'title'     => 'Edit Menu',
-				'page'      => $page,
-				'acl'       => $this->getDefinedTable(Acl\AclTable::class)->get($menu_id),
-				'icongroupObj' => $this->getDefinedTable(Acl\IcongroupTable::class),
-				'iconObj'      => $this->getDefinedTable(Acl\IconTable::class),
+			'title'     => 'Edit Menu',
+			'page'      => $page,
+			'acl'       => $this->getDefinedTable(Acl\AclTable::class)->get($menu_id),
+			'icongroupObj' => $this->getDefinedTable(Acl\IcongroupTable::class),
+			'iconObj'      => $this->getDefinedTable(Acl\IconTable::class),
 		));
 		
 		$ViewModel->setTerminal(True);
@@ -237,7 +240,7 @@ class ButtonController extends AbstractActionController
 	{
 		$this->init();
 		$id = $this->_id;
-		$array_id = explode("_", $id);
+		$array_id = explode("_", (string) $id);
 		$button_id = $array_id[0];
 		$page = (sizeof($array_id)>1)?$array_id[1]:'';
 		if ($this->getRequest()->isPost()):
@@ -249,28 +252,28 @@ class ButtonController extends AbstractActionController
 			
 			if($form['btn']==1):
 				$data = array(
-						'id' 	         => $form['acl_id'],
-						'parent_page'	 => $form['parent_page'],
-						'button_position'=> $form['button_position'],
-						'icon'           => $form['icon'],
-						'class'          => $button,
-						'btn'	         => $form['btn'],
-						'btn_type'	     => $form['btn_type'],
-						'btn_label'	     => $form['btn_label'],
-						'author'         => $this->_author,
-						'modified'       => $this->_modified
+					'id' 	         => $form['acl_id'],
+					'parent_page'	 => $form['parent_page'],
+					'button_position'=> $form['button_position'],
+					'icon'           => $form['icon'],
+					'class'          => $button,
+					'btn'	         => $form['btn'],
+					'btn_type'	     => $form['btn_type'],
+					'btn_label'	     => $form['btn_label'],
+					'author'         => $this->_author,
+					'modified'       => $this->_modified
 				);
 			else:
 				$data = array(
-						'id' 	         => $form['acl_id'],
-						'parent_page'	 => $form['parent_page'],
-						'button_position'=> $form['button_position'],
-						'class'          => $button,
-						'btn'	         => $form['btn'],
-						'btn_type'	     => $form['btn_type'],
-						'btn_label'	     => $form['btn_label'],
-						'author'         => $this->_author,
-						'modified'       => $this->_modified
+					'id' 	         => $form['acl_id'],
+					'parent_page'	 => $form['parent_page'],
+					'button_position'=> $form['button_position'],
+					'class'          => $button,
+					'btn'	         => $form['btn'],
+					'btn_type'	     => $form['btn_type'],
+					'btn_label'	     => $form['btn_label'],
+					'author'         => $this->_author,
+					'modified'       => $this->_modified
 				);
 			endif;
 			$data = $this->_safedataObj->rteSafe($data);
@@ -287,14 +290,14 @@ class ButtonController extends AbstractActionController
 		endif;	
 		
 		$ViewModel = new ViewModel(array(
-				'title'     => 'Edit Button',
-				'page'      => $page,
-				'acl'       => $this->getDefinedTable(Acl\AclTable::class)->get($button_id),
-				'aclObj'       => $this->getDefinedTable(Acl\AclTable::class),
-				'btnpositions' => $this->getDefinedTable(Acl\ButtonPositionTable::class)->getAll(),
-				'elements'     => $this->getDefinedTable(Acl\ButtonTable::class)->getAll(),
-				'icongroupObj' => $this->getDefinedTable(Acl\IcongroupTable::class),
-				'iconObj'      => $this->getDefinedTable(Acl\IconTable::class),
+			'title'     => 'Edit Button',
+			'page'      => $page,
+			'acl'       => $this->getDefinedTable(Acl\AclTable::class)->get($button_id),
+			'aclObj'       => $this->getDefinedTable(Acl\AclTable::class),
+			'btnpositions' => $this->getDefinedTable(Acl\ButtonPositionTable::class)->getAll(),
+			'elements'     => $this->getDefinedTable(Acl\ButtonTable::class)->getAll(),
+			'icongroupObj' => $this->getDefinedTable(Acl\IcongroupTable::class),
+			'iconObj'      => $this->getDefinedTable(Acl\IconTable::class),
 		)); 
 		
 		$ViewModel->setTerminal(True);
@@ -334,7 +337,7 @@ class ButtonController extends AbstractActionController
     {  
     	$this->init(); 
 		$id = $this->_id;
-		$array_id = explode("_", $id);
+		$array_id = explode("_", (string) $id);
 		$process_id = $array_id[0];
 		$page = $array_id[1];
 		
@@ -342,17 +345,17 @@ class ButtonController extends AbstractActionController
 			$form = $this->getRequest()->getPost();
 			$permission_level = implode(',',$form['permission_level']);
 			$data = array(
-					'id' 	          => $form['process_id'],
-					'process'	      => $form['process'],
-					'description'	  => $form['description'],
-					'permission_level'=> $permission_level,
-					'location'	      => $form['location'],
-					'activity'	      => $form['activity'],
-					'only_if_creator' => $form['only_if_creator'],
-					'status'          => $form['status'],
-					'author'          => $this->_author,
-					'created'         => $this->_created,
-					'modified'        => $this->_modified
+				'id' 	          => $form['process_id'],
+				'process'	      => $form['process'],
+				'description'	  => $form['description'],
+				'permission_level'=> $permission_level,
+				'location'	      => $form['location'],
+				'activity'	      => $form['activity'],
+				'only_if_creator' => $form['only_if_creator'],
+				'status'          => $form['status'],
+				'author'          => $this->_author,
+				'created'         => $this->_created,
+				'modified'        => $this->_modified
 			);
 			$data = $this->_safedataObj->rteSafe($data);
 			$this->_connection->beginTransaction();
@@ -368,10 +371,10 @@ class ButtonController extends AbstractActionController
 		endif;	
 		
 		$ViewModel = new ViewModel(array(
-				'title'      => 'Manage Functional Process',
-				'page'       => $page,
-				'aclprocess' => $this->getDefinedTable(Acl\ProcessTable::class)->get($process_id),
-				'status'     => $this->getDefinedTable(Acl\StatusTable::class)->getAll(),
+			'title'      => 'Manage Functional Process',
+			'page'       => $page,
+			'aclprocess' => $this->getDefinedTable(Acl\ProcessTable::class)->get($process_id),
+			'status'     => $this->getDefinedTable(Acl\StatusTable::class)->getAll(),
 		));
 		
 		$ViewModel->setTerminal(True);
@@ -388,7 +391,7 @@ class ButtonController extends AbstractActionController
 		$level = "<option value='0' selected>All Levels</option>";
 		if($process!='0'):
 			$process_permissions = $this->getDefinedTable(Acl\ProcessTable::class)->getColumn($process,'permission_level');
-			$permission_array = explode(",", $process_permissions);
+			$permission_array = explode(",", (string) $process_permissions);
 			if(sizeof($permission_array)>0):
 				for($i=0;$i<sizeof($permission_array);$i++):
 					$level.="<option value='".$permission_array[$i]."'>".$this->getDefinedTable(Acl\StatusTable::class)->getColumn($permission_array[$i],'status')."</option>";
@@ -438,7 +441,7 @@ class ButtonController extends AbstractActionController
     {  
     	$this->init(); 
 		$id = $this->_id;
-		$array_id = explode("_", $id);
+		$array_id = explode("_", (string) $id);
 		$acl_id = $array_id[0];
 		$page = $array_id[1];
 		
@@ -447,15 +450,15 @@ class ButtonController extends AbstractActionController
 			$process = ($form['system']==1 || $form['process_action']=='10')?'0':$form['process'];
 			$process_action = ($form['system']==1)?'0':$form['process_action'];
 			$data = array(
-					'id' 	         => $form['acl_id'],
-					'role'	         => $form['role'],
-					'process'	     => $process,
-					'process_action' => $process_action,
-					'permission_level' => $form['permission_level'],
-					'dashboard'	     => $form['dashboard'],
-					'system'         => $form['system'],
-					'author'         => $this->_author,
-					'modified'       => $this->_modified
+				'id' 	         => $form['acl_id'],
+				'role'	         => $form['role'],
+				'process'	     => $process,
+				'process_action' => $process_action,
+				'permission_level' => $form['permission_level'],
+				'dashboard'	     => $form['dashboard'],
+				'system'         => $form['system'],
+				'author'         => $this->_author,
+				'modified'       => $this->_modified
 			);
 			$data = $this->_safedataObj->rteSafe($data);
 			$this->_connection->beginTransaction();
@@ -471,13 +474,13 @@ class ButtonController extends AbstractActionController
 		endif;	
 		
 		$ViewModel = new ViewModel(array(
-				'title'     => 'Manage Acl',
-				'page'      => $page,
-				'roles'     => $this->getDefinedTable(Acl\RolesTable::class)->getAll(),
-				'acl'       => $this->getDefinedTable(Acl\AclTable::class)->get($acl_id),
-				'processObj'=> $this->getDefinedTable(Acl\ProcessTable::class),
-				'pactions'  => $this->getDefinedTable(Acl\ProcessActionTable::class)->getAll(),
-				'statusObj' => $this->getDefinedTable(Acl\StatusTable::class),
+			'title'     => 'Manage Acl',
+			'page'      => $page,
+			'roles'     => $this->getDefinedTable(Acl\RolesTable::class)->getAll(),
+			'acl'       => $this->getDefinedTable(Acl\AclTable::class)->get($acl_id),
+			'processObj'=> $this->getDefinedTable(Acl\ProcessTable::class),
+			'pactions'  => $this->getDefinedTable(Acl\ProcessActionTable::class)->getAll(),
+			'statusObj' => $this->getDefinedTable(Acl\StatusTable::class),
 		));
 		
 		$ViewModel->setTerminal(True);

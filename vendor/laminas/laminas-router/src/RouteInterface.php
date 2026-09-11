@@ -4,8 +4,7 @@ declare(strict_types=1);
 
 namespace Laminas\Router;
 
-use Laminas\Stdlib\RequestInterface as Request;
-use Traversable;
+use Laminas\Stdlib\RequestInterface;
 
 /**
  * RouteInterface interface.
@@ -22,7 +21,7 @@ interface RouteInterface
     /**
      * Create a new route with given options.
      *
-     * @param array|Traversable $options
+     * @param iterable $options
      * @return RouteInterface
      */
     public static function factory($options = []);
@@ -32,13 +31,11 @@ interface RouteInterface
      *
      * @return RouteMatch|null
      */
-    public function match(Request $request);
+    public function match(RequestInterface $request);
 
     /**
      * Assemble the route.
      *
-     * @param  array $params
-     * @param  array $options
      * @return mixed
      */
     public function assemble(array $params = [], array $options = []);

@@ -13,6 +13,11 @@ use Accounts\Model As Accounts;
 
 class PayrollController extends AbstractActionController
 {   
+	protected $_connection;
+	protected $_highest_role;
+	protected $_lowest_role;
+	protected $_permissionObj;
+	protected $_safedataObj;
 	private $_container;
 	protected $_table; 		// database table
 	protected $_user; 		// user detail
@@ -138,7 +143,7 @@ class PayrollController extends AbstractActionController
 	public function payrollAction()
 	{
 		$this->init();
-		list($year, $month) = explode('-', $this->_id);
+		list($year, $month) = explode('-', (string) $this->_id);
 		$month = ($month == 0)? date('m'):$month;
 		$year = ($year == 0)? date('Y'):$year;
 		if(!$this->getDefinedTable(Hr\PayrollTable::class)->isPresent(array('month'=>$month, 'year'=>$year))):
@@ -213,7 +218,7 @@ class PayrollController extends AbstractActionController
 	{
 		$this->init();
 		$this->_id = isset($this->_id)?$this->_id:date('Y-m-d');
-		list($year, $month) = explode('-', $this->_id);	  
+		list($year, $month) = explode('-', (string) $this->_id);	  
 	
 		if($year == 0):
 			$max_year = $this->getDefinedTable(Hr\PayrollTable::class)->getMax('year');
@@ -305,7 +310,7 @@ class PayrollController extends AbstractActionController
 	public function definepayAction(){
 		$this->init();
 		if(isset($this->_id) & $this->_id!=0):
-			$payheads = explode('-', $this->_id);
+			$payheads = explode('-', (string) $this->_id);
 		endif;
 		if(sizeof($payheads)==0):
 			$payheads = array('1'); //default selection
@@ -431,7 +436,7 @@ class PayrollController extends AbstractActionController
 	 */
 	public function editpaydetailAction(){
 		$this->init();
-		list($employee, $payhead, $payheads) = explode('-', $this->_id);
+		list($employee, $payhead, $payheads) = explode('-', (string) $this->_id);
 		if($this->getRequest()->isPost()):
 			$form=$this->getRequest()->getPost();	
 			$roundup = $this->getDefinedTable(Hr\PayheadTable::class)->getColumn($payhead, 'roundup');
@@ -504,7 +509,7 @@ class PayrollController extends AbstractActionController
 	 */
 	public function deletepaydetailAction(){
 		$this->init();
-		list($employee, $payhead, $payheads) = explode('-', $this->_id);
+		list($employee, $payhead, $payheads) = explode('-', (string) $this->_id);
 		foreach($this->getDefinedTable(Hr\PaystructureTable::Class)->get(array('sd.employee'=>$employee, 'sd.pay_head'=>$payhead)) as $row);
 		$this->_connection->beginTransaction(); //***Transaction begins here***//
 		$result = $this->getDefinedTable(Hr\PaystructureTable::Class)->remove($row['id']);
@@ -532,7 +537,7 @@ class PayrollController extends AbstractActionController
 	 */
 	public function deleteallpaydetailAction(){
 		$this->init();
-		list($payhead, $payheads) = explode('-', $this->_id);
+		list($payhead, $payheads) = explode('-', (string) $this->_id);
 		$this->_connection->beginTransaction(); //***Transaction begins here***//
 		foreach($this->getDefinedTable(Hr\PaystructureTable::Class)->get(array('sd.pay_head'=>$payhead)) as $row):
 			$result = $this->getDefinedTable(Hr\PaystructureTable::Class)->remove($row['id']);
@@ -1021,7 +1026,7 @@ class PayrollController extends AbstractActionController
 	public function generatepepfAction()
     {
         $this->init();
-        $my = explode('-', $this->_id);
+        $my = explode('-', (string) $this->_id);
         $employee = $this->getDefinedTable(Hr\PayrollTable::class)->get(array('pr.year'=>$my[0],'pr.month'=>$my[1]));
 		//echo '<pre>';print_r($employee);exit;
 			foreach($employee as $row):
@@ -1057,7 +1062,7 @@ class PayrollController extends AbstractActionController
 	public function submitpepfAction()
     {
         $this->init();
-        $my = explode('-', $this->_id);
+        $my = explode('-', (string) $this->_id);
         $pepf = $this->getDefinedTable(Hr\PepfTable::class)->get(array('year'=>$my[0],'month'=>$my[1]));
         $locationlist = $this->getDefinedTable(Hr\PepfTable::class)->getDistinct('location',array('year'=>$my[0],'month'=>$my[1]));
 		//echo '<pre>';print_r($locationlist);exit;
@@ -1173,7 +1178,7 @@ class PayrollController extends AbstractActionController
     {
         $this->init();
 		if(isset($this->_id) & $this->_id!=0):
-			$my = explode('-', $this->_id);
+			$my = explode('-', (string) $this->_id);
 		endif;
 		if(sizeof($my)==0):
 			$my = array('1'); //default selection
@@ -1695,7 +1700,7 @@ class PayrollController extends AbstractActionController
 	{
 		$this->init();
 		
-		list($year, $month) = explode('-', $this->_id);
+		list($year, $month) = explode('-', (string) $this->_id);
 		
 		if($this->getRequest()->isPost()):
 			$form = $this->getRequest()->getPost();

@@ -4,6 +4,7 @@ namespace Laminas\Session\SaveHandler;
 
 use Laminas\Session\Exception\InvalidArgumentException;
 use MongoDB\BSON\Binary;
+use MongoDB\BSON\Int64;
 use MongoDB\BSON\UTCDateTime;
 use MongoDB\Client as MongoClient;
 use MongoDB\Collection as MongoCollection;
@@ -18,17 +19,12 @@ use function time;
 /**
  * MongoDB session save handler
  *
+ * @deprecated This class will be removed without replacement in version 3.0.
+ *
  * @see ReturnTypeWillChange
  */
 class MongoDB implements SaveHandlerInterface
 {
-    /**
-     * MongoClient instance
-     *
-     * @var MongoClient
-     */
-    protected $mongoClient;
-
     /**
      * MongoCollection instance
      *
@@ -63,7 +59,7 @@ class MongoDB implements SaveHandlerInterface
      * @param MongoClient $mongoClient
      * @throws InvalidArgumentException
      */
-    public function __construct($mongoClient, MongoDBOptions $options)
+    public function __construct(protected $mongoClient, MongoDBOptions $options)
     {
         if (null === ($database = $options->getDatabase())) {
             throw new InvalidArgumentException('The database option cannot be empty');
@@ -72,20 +68,18 @@ class MongoDB implements SaveHandlerInterface
         if (null === ($collection = $options->getCollection())) {
             throw new InvalidArgumentException('The collection option cannot be empty');
         }
-
-        $this->mongoClient = $mongoClient;
-        $this->options     = $options;
+        $this->options = $options;
     }
 
     /**
      * Open session
      *
-     * @param string $savePath
+     * @param string $path
      * @param string $name
      * @return bool
      */
     #[ReturnTypeWillChange]
-    public function open($savePath, $name)
+    public function open($path, $name)
     {
         // Note: session save path is not used
         $this->sessionName = $name;
@@ -171,7 +165,9 @@ class MongoDB implements SaveHandlerInterface
             '$set' => [
                 $this->options->getDataField()     => new Binary((string) $data, Binary::TYPE_GENERIC),
                 $this->options->getLifetimeField() => $this->lifetime,
-                $this->options->getModifiedField() => new UTCDateTime(floor(microtime(true) * 1000)),
+                $this->options->getModifiedField() => new UTCDateTime(
+                    new Int64((string) floor(microtime(true) * 1000.0))
+                ),
             ],
         ];
 
@@ -227,11 +223,11 @@ class MongoDB implements SaveHandlerInterface
          * each document. Doing so would require a $where query to work with the
          * computed value (modified + lifetime) and be very inefficient.
          */
-        $microseconds = floor(microtime(true) * 1000) - $maxlifetime * 1000;
+        $microseconds = floor(microtime(true) * 1000.0) - (float) $maxlifetime * 1000.0;
 
         $result = $this->mongoCollection->deleteMany(
             [
-                $this->options->getModifiedField() => ['$lt' => new UTCDateTime($microseconds)],
+                $this->options->getModifiedField() => ['$lt' => new UTCDateTime(new Int64((string) $microseconds))],
             ],
             $this->options->getSaveOptions()
         );
