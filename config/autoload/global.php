@@ -75,5 +75,4 @@ return [
     'static_salt' => ($staticSaltOverride !== '') ? $staticSaltOverride : $dynamicStaticSalt,
     'legacy_static_salt' => $legacyStaticSalt,
     'initial_default_password' => $initialDefaultPassword,
-    'ditt_api_census'    => 'http://api.censusditt.bt/final_DCRC_API/',
 ];
