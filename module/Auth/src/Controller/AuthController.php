@@ -106,12 +106,13 @@ class AuthController extends AbstractActionController
     {
 		$messages = null;
 		$auth = new AuthenticationService();
+        $ssoEnabled = (bool) ($this->config['sso']['enabled'] ?? false);
         if($auth->hasIdentity() && $this->params()->fromRoute('id') != "NoKeepAlive"):
 			 return $this->redirect()->toRoute('home');
         endif;
         // Check if this is an SSO authorization request (OIDC parameters in URL)
         $clientId = $this->params()->fromQuery('client_id');
-        if ($clientId) {
+        if ($ssoEnabled && $clientId) {
             $this->ssoService->setClientId((string) $clientId);
             // If SSO parameters are present in the query string, redirect to SSO login
             $sso_login_url = $this->ssoService->getSSOLoginURL();
@@ -270,7 +271,10 @@ class AuthController extends AbstractActionController
 				$this->flashMessenger()->addMessage('warning^Your session has expired, please login again.');
 			endif;
         }
-        $sso_login_url = $this->ssoService->getSSOLoginURL();
+        $sso_login_url = null;
+        if ($ssoEnabled) {
+            $sso_login_url = $this->ssoService->getSSOLoginURL();
+        }
         $ViewModel = new ViewModel(array(
 			'title' => 'Log into System',
             'sso_login_url' => $sso_login_url

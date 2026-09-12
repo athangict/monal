@@ -10,7 +10,7 @@
 /**
  * List of enabled modules for this application.
  *
- * This should be an array of module namespaces used in the application.
+ * This should be an array of mhttps://youtube.com/odule namespaces used in the application.
  */
 return [
     'Laminas\Mail',
@@ -41,5 +41,4 @@ return [
     'Realestate',
     'Asset',
     'Pswf',
-    
 ];

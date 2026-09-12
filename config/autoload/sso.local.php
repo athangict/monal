@@ -5,10 +5,13 @@ $env = static function (string $key, $default = null) {
     return ($value === false || $value === '') ? $default : $value;
 };
 
+$ssoEnabled = filter_var((string) $env('SSO_ENABLED', 'false'), FILTER_VALIDATE_BOOLEAN);
+
 return [
 
     'openid_config'=> [],
     'sso' => [
+        'enabled' => $ssoEnabled,
         'client_id' => $env('SSO_CLIENT_ID', 'mythimphu_2026'),
         'client_secret' => $env('SSO_CLIENT_SECRET', ''),
         'redirect_uri' => $env('SSO_REDIRECT_URI', 'http://localhost/monalv8.2/public/auth/callback'),
