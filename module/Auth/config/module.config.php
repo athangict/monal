@@ -78,6 +78,10 @@ return [
                 $config = $container->get('config') ?? [];
                 return new \Auth\Service\SSOService($config);
             },
+            \Auth\Service\SSOProvisioningService::class => function ($container) {
+                $config = $container->get('config') ?? [];
+                return new \Auth\Service\SSOProvisioningService($config);
+            },
         ],
     ],
 ];

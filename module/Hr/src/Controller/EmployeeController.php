@@ -9,6 +9,7 @@ use Interop\Container\ContainerInterface;
 use Acl\Model As Acl;
 use Administration\Model As Administration;
 use Hr\Model As Hr;
+use Auth\Service\SSOProvisioningService;
 class EmployeeController extends AbstractActionController
 {   
 	protected $_connection;
@@ -71,6 +72,107 @@ class EmployeeController extends AbstractActionController
 		}
 
 		return $appName;
+	}
+
+	private function getSsoRoleFromLocalRoles(string $localRoles): string
+	{
+		$roleIds = array_filter(array_map('trim', explode(',', $localRoles)), static function ($value) {
+			return $value !== '';
+		});
+
+		$roleNames = [];
+		foreach ($roleIds as $roleId) {
+			if (!is_numeric($roleId)) {
+				continue;
+			}
+			$roleName = strtolower(trim((string) $this->getDefinedTable(Acl\RolesTable::class)->getColumn((int) $roleId, 'role')));
+			if ($roleName !== '') {
+				$roleNames[] = $roleName;
+			}
+		}
+
+		$allRoles = implode(' ', $roleNames);
+		if (strpos($allRoles, 'admin') !== false) {
+			return 'TENANT_ADMIN';
+		}
+		if (strpos($allRoles, 'operator') !== false || strpos($allRoles, 'manager') !== false) {
+			return 'TENANT_OPERATOR';
+		}
+		if (strpos($allRoles, 'audit') !== false) {
+			return 'TENANT_AUDITOR';
+		}
+
+		return 'MEMBER';
+	}
+
+	private function splitName(string $fullName): array
+	{
+		$cleanName = trim(preg_replace('/\s+/', ' ', $fullName));
+		if ($cleanName === '') {
+			return ['', ''];
+		}
+
+		$parts = explode(' ', $cleanName);
+		$firstName = (string) array_shift($parts);
+		$lastName = trim(implode(' ', $parts));
+
+		return [$firstName, $lastName];
+	}
+
+	private function buildSsoUsername(string $email, string $mobile, string $cid): string
+	{
+		$username = trim((string) strstr($email, '@', true));
+		if ($username === '') {
+			$username = $mobile !== '' ? $mobile : $cid;
+		}
+		$username = preg_replace('/[^a-zA-Z0-9._-]/', '', (string) $username);
+		if ($username === '') {
+			$username = 'user_' . substr(md5(uniqid('', true)), 0, 10);
+		}
+
+		return $username;
+	}
+
+	private function provisionUserInSso(array $localUser, string $plainPassword, string $localRoles): array
+	{
+		/** @var SSOProvisioningService $ssoProvisioning */
+		$ssoProvisioning = $this->_container->get(SSOProvisioningService::class);
+		if (! $ssoProvisioning->isEnabled()) {
+			return [
+				'success' => true,
+				'skipped' => true,
+				'message' => 'SSO provisioning is disabled.',
+			];
+		}
+
+		$email = trim((string) ($localUser['email'] ?? ''));
+		$mobile = trim((string) ($localUser['mobile'] ?? ''));
+		$cid = trim((string) ($localUser['cid'] ?? ''));
+		$name = trim((string) ($localUser['name'] ?? ''));
+		[$firstName, $lastName] = $this->splitName($name);
+
+		return $ssoProvisioning->provisionUser([
+			'username' => $this->buildSsoUsername($email, $mobile, $cid),
+			'email' => $email,
+			'firstName' => $firstName,
+			'lastName' => $lastName,
+			'phoneNumber' => $mobile,
+			'role' => $this->getSsoRoleFromLocalRoles($localRoles),
+			'password' => $plainPassword,
+		]);
+	}
+
+	private function syncLocalUuidWithSsoId(int $localUserId, array $ssoProvisioningResult): void
+	{
+		$ssoUserId = trim((string) ($ssoProvisioningResult['sso_user_id'] ?? ''));
+		if ($ssoUserId === '') {
+			throw new \RuntimeException('SSO user ID was not returned, so local UUID could not be synchronized.');
+		}
+
+		$this->getDefinedTable(Administration\UsersTable::class)->save([
+			'id' => $localUserId,
+			'uuid' => strtolower($ssoUserId),
+		]);
 	}
     /**
 	 * initial set up
@@ -1027,9 +1129,23 @@ class EmployeeController extends AbstractActionController
 					'modified'      => $this->_modified,
 			);
 			$result1 = $this->getDefinedTable(Hr\EmployeeTable::class)->save($data2);
+			$ssoProvisioningResult = [];
+			try {
+				$ssoProvisioningResult = $this->provisionUserInSso([
+					'name' => (string) ($erow['full_name'] ?? ''),
+					'email' => (string) ($erow['email'] ?? ''),
+					'mobile' => (string) ($erow['mobile'] ?? ''),
+					'cid' => (string) ($erow['cid'] ?? ''),
+				], $generatedPassword, '2');
+				$this->syncLocalUuidWithSsoId((int) $result, $ssoProvisioningResult);
+			} catch (\Throwable $e) {
+				$this->_connection->rollback();
+				$this->flashMessenger()->addMessage('error^ Failed to create user in SSO: ' . $e->getMessage());
+				return $this->redirect()->toRoute('employee', array('action' => 'view', 'id' => $this->_id));
+			}
 			
 			if($result > 0):
-				$notify_msg = "Your user account is created and registered in the system. Please find your sign in credentails below: <br><br>Username: ".$form['email']." or ".$form['mobile']."<br> Password: ".$generatedPassword;
+				$notify_msg = "Your user account is created and registered in the system. Please find your sign in credentails below: <br><br>Username: ".$erow['email']." or ".$erow['mobile']."<br> Password: ".$generatedPassword;
 				$mail = array(
 					'email'    => $erow['email'],
 					'name'     => $erow['full_name'],
@@ -1039,7 +1155,14 @@ class EmployeeController extends AbstractActionController
 				);
 				$this->EmailPlugin()->sendmail($mail);
 				$this->_connection->commit();
-				$this->flashMessenger()->addMessage("success^ Successfully created new user and user password sent to ".$form['email']);	 	             
+				if (!empty($ssoProvisioningResult['skipped'])) {
+					$this->flashMessenger()->addMessage('warning^ User created locally, but SSO provisioning is disabled (SSO_ENABLED=false).');
+				} elseif (!empty($ssoProvisioningResult['already_exists'])) {
+					$this->flashMessenger()->addMessage('info^ User already existed in SSO, local account created successfully.');
+				} else {
+					$this->flashMessenger()->addMessage('success^ User created in both local system and SSO.');
+				}
+				$this->flashMessenger()->addMessage("success^ Successfully created new user and user password sent to ".$erow['email']);	 	             
 				return $this->redirect()->toRoute('employee', array('action' => 'view', 'id'=>$this->_id));
 			else:
 				$this->_connection->rollback();

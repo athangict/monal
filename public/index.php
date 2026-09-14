@@ -52,7 +52,8 @@ if (is_readable($envFile)) {
                 $value = substr($value, 1, -1);
             }
 
-            if (getenv($key) === false) {
+            $shouldOverride = (strpos($key, 'SSO_') === 0) || (getenv($key) === false);
+            if ($shouldOverride) {
                 putenv($key . '=' . $value);
                 $_ENV[$key] = $value;
                 $_SERVER[$key] = $value;

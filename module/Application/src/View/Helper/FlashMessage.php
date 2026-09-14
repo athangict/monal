@@ -13,34 +13,47 @@ class FlashMessage extends AbstractHelper
     {     
         $flashMessenger = new FlashMessenger();
 
-        if($flashMessenger->hasMessages())
-        {
-            $flashMessage = $flashMessenger->getMessages();
-            $alertMessages = "";
-            foreach ($flashMessage as $message):
-                $title = substr($message, 0, strpos($message, '^'));
-                $message = strlen((string)($title)) > 0 ? substr($message, strpos($message, '^') + 1) : $message;
-                $title = strlen((string)($title)) > 0 ? $title : 'error';
-                $display_title = ucfirst($title);	
-                echo <<<EOF
-                    <script type="text/javascript">
-                        toastr.options = {
-                            "closeButton": true,
-                            "positionClass": "toast-bottom-right",
-                            "onclick": null,
-                            "showDuration": "1000",
-                            "hideDuration": "1000",
-                            "timeOut": "8000",
-                            "extendedTimeOut": "1000",
-                            "showEasing": "swing",
-                            "hideEasing": "linear",
-                            "showMethod": "fadeIn",
-                            "hideMethod": "fadeOut"
-                        }
-                        toastr.$title("$message", "$display_title");
-                    </script>
-                EOF;
-            endforeach;
+        $flashMessage = [];
+        if ($flashMessenger->hasMessages()) {
+            $flashMessage = array_merge($flashMessage, $flashMessenger->getMessages());
         }
+        if ($flashMessenger->hasCurrentMessages()) {
+            $flashMessage = array_merge($flashMessage, $flashMessenger->getCurrentMessages());
+            $flashMessenger->clearCurrentMessages();
+        }
+
+        if (count($flashMessage) < 1) {
+            return;
+        }
+
+        foreach ($flashMessage as $message):
+            $title = substr((string) $message, 0, strpos((string) $message, '^'));
+            $message = strlen((string) ($title)) > 0 ? substr((string) $message, strpos((string) $message, '^') + 1) : (string) $message;
+            $title = strtolower(strlen((string) ($title)) > 0 ? (string) $title : 'error');
+            if (!in_array($title, ['success', 'error', 'info', 'warning'], true)) {
+                $title = 'info';
+            }
+            $display_title = ucfirst($title);
+            $encodedMessage = json_encode((string) $message);
+            $encodedDisplayTitle = json_encode((string) $display_title);
+            echo <<<EOF
+                <script type="text/javascript">
+                    toastr.options = {
+                        "closeButton": true,
+                        "positionClass": "toast-bottom-right",
+                        "onclick": null,
+                        "showDuration": "1000",
+                        "hideDuration": "1000",
+                        "timeOut": "8000",
+                        "extendedTimeOut": "1000",
+                        "showEasing": "swing",
+                        "hideEasing": "linear",
+                        "showMethod": "fadeIn",
+                        "hideMethod": "fadeOut"
+                    }
+                    toastr.$title($encodedMessage, $encodedDisplayTitle);
+                </script>
+            EOF;
+        endforeach;
     }
 }

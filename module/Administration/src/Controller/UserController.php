@@ -14,6 +14,7 @@ use Administration\Model as Administration;
 use Acl\Model as Acl;
 use Hr\Model as Hr;
 use Sales\Model as Sales;
+use Auth\Service\SSOProvisioningService;
 
 class UserController extends AbstractActionController
 {
@@ -161,6 +162,182 @@ class UserController extends AbstractActionController
 
 		return (string) $id;
 	}
+
+	private function commitIfTransactionActive(): void
+	{
+		if (! $this->isTransactionActive()) {
+			return;
+		}
+
+		try {
+			$this->_connection->commit();
+		} catch (\PDOException $e) {
+			if (stripos((string) $e->getMessage(), 'no active transaction') !== false) {
+				return;
+			}
+			throw $e;
+		}
+	}
+
+	private function rollbackIfTransactionActive(): void
+	{
+		if (! $this->isTransactionActive()) {
+			return;
+		}
+
+		$this->_connection->rollback();
+	}
+
+	private function isTransactionActive(): bool
+	{
+		$laminasInTransaction = true;
+		if (method_exists($this->_connection, 'inTransaction')) {
+			$laminasInTransaction = (bool) $this->_connection->inTransaction();
+		}
+
+		if (! $laminasInTransaction) {
+			return false;
+		}
+
+		if (! method_exists($this->_connection, 'getResource')) {
+			return true;
+		}
+
+		$resource = $this->_connection->getResource();
+		if ($resource instanceof \PDO) {
+			return $resource->inTransaction();
+		}
+
+		return true;
+	}
+
+	private function getSsoRoleFromLocalRoles(string $localRoles): string
+	{
+		$roleIds = array_filter(array_map('trim', explode(',', $localRoles)), static function ($value) {
+			return $value !== '';
+		});
+
+		$roleNames = [];
+		foreach ($roleIds as $roleId) {
+			if (!is_numeric($roleId)) {
+				continue;
+			}
+			$roleName = strtolower(trim((string) $this->getDefinedTable(Acl\RolesTable::class)->getColumn((int) $roleId, 'role')));
+			if ($roleName !== '') {
+				$roleNames[] = $roleName;
+			}
+		}
+
+		$allRoles = implode(' ', $roleNames);
+		if (strpos($allRoles, 'admin') !== false) {
+			return 'TENANT_ADMIN';
+		}
+		if (strpos($allRoles, 'operator') !== false || strpos($allRoles, 'manager') !== false) {
+			return 'TENANT_OPERATOR';
+		}
+		if (strpos($allRoles, 'audit') !== false) {
+			return 'TENANT_AUDITOR';
+		}
+
+		return 'MEMBER';
+	}
+
+	private function splitName(string $fullName): array
+	{
+		$cleanName = trim(preg_replace('/\s+/', ' ', $fullName));
+		if ($cleanName === '') {
+			return ['', ''];
+		}
+
+		$parts = explode(' ', $cleanName);
+		$firstName = (string) array_shift($parts);
+		$lastName = trim(implode(' ', $parts));
+
+		return [$firstName, $lastName];
+	}
+
+	private function buildSsoUsername(string $email, string $mobile, string $cid): string
+	{
+		$username = trim((string) strstr($email, '@', true));
+		if ($username === '') {
+			$username = $mobile !== '' ? $mobile : $cid;
+		}
+		$username = preg_replace('/[^a-zA-Z0-9._-]/', '', (string) $username);
+		if ($username === '') {
+			$username = 'user_' . substr(md5(uniqid('', true)), 0, 10);
+		}
+
+		return $username;
+	}
+
+	private function ensureSsoPasswordPolicy(string $password): string
+	{
+		$password = trim($password);
+		if ($password === '') {
+			$password = 'Temp1234!';
+		}
+
+		if (!preg_match('/[a-z]/', $password)) {
+			$password .= 'a';
+		}
+		if (!preg_match('/[A-Z]/', $password)) {
+			$password .= 'A';
+		}
+		if (!preg_match('/\d/', $password)) {
+			$password .= '7';
+		}
+		if (!preg_match('/[^a-zA-Z0-9]/', $password)) {
+			$password .= '!';
+		}
+
+		if (strlen($password) < 8) {
+			$password .= substr('xY3!mN8@', 0, 8 - strlen($password));
+		}
+
+		return $password;
+	}
+
+	private function provisionUserInSso(array $localUser, string $plainPassword, string $localRoles): array
+	{
+		/** @var SSOProvisioningService $ssoProvisioning */
+		$ssoProvisioning = $this->_container->get(SSOProvisioningService::class);
+		if (! $ssoProvisioning->isEnabled()) {
+			return [
+				'success' => true,
+				'skipped' => true,
+				'message' => 'SSO provisioning is disabled.',
+			];
+		}
+
+		$email = trim((string) ($localUser['email'] ?? ''));
+		$mobile = trim((string) ($localUser['mobile'] ?? ''));
+		$cid = trim((string) ($localUser['cid'] ?? ''));
+		$name = trim((string) ($localUser['name'] ?? ''));
+		[$firstName, $lastName] = $this->splitName($name);
+
+		return $ssoProvisioning->provisionUser([
+			'username' => $this->buildSsoUsername($email, $mobile, $cid),
+			'email' => $email,
+			'firstName' => $firstName,
+			'lastName' => $lastName,
+			'phoneNumber' => $mobile,
+			'role' => $this->getSsoRoleFromLocalRoles($localRoles),
+			'password' => $plainPassword,
+		]);
+	}
+
+	private function syncLocalUuidWithSsoId(int $localUserId, array $ssoProvisioningResult): void
+	{
+		$ssoUserId = trim((string) ($ssoProvisioningResult['sso_user_id'] ?? ''));
+		if ($ssoUserId === '') {
+			throw new \RuntimeException('SSO user ID was not returned, so local UUID could not be synchronized.');
+		}
+
+		$this->getDefinedTable(Administration\UsersTable::class)->save([
+			'id' => $localUserId,
+			'uuid' => strtolower($ssoUserId),
+		]);
+	}
 	/**
 	 * index Action of User Controller
 	 */
@@ -223,14 +400,18 @@ class UserController extends AbstractActionController
 			if ($generatedPassword === '') {
 				throw new \RuntimeException('INITIAL_DEFAULT_PASSWORD must be configured in environment.');
 			}
+			$generatedPassword = $this->ensureSsoPasswordPolicy($generatedPassword);
 			$password = $this->_password->encryptPassword($staticSalt, $generatedPassword, $dynamicSalt);
 
-			$role = (sizeof($form['role'])<1)?array('0'):$form['role'];
-			$role = implode(',',$role);
-			$admin_location = (sizeof($form['admin_location'])<1)?array('0'):$form['admin_location'];
-			$admin_location = implode(',',$admin_location);
-			$admin_activity = (sizeof($form['admin_activity'])<1)?array('0'):$form['admin_activity'];
-			$admin_activity = implode(',',$admin_activity);
+			$role = $form['role'] ?? [];
+			$role = is_array($role) ? $role : [$role];
+			$role = implode(',', (count($role) < 1) ? ['0'] : $role);
+			$admin_location = $form['admin_location'] ?? [];
+			$admin_location = is_array($admin_location) ? $admin_location : [$admin_location];
+			$admin_location = implode(',', (count($admin_location) < 1) ? ['0'] : $admin_location);
+			$admin_activity = $form['admin_activity'] ?? [];
+			$admin_activity = is_array($admin_activity) ? $admin_activity : [$admin_activity];
+			$admin_activity = implode(',', (count($admin_activity) < 1) ? ['0'] : $admin_activity);
 
 			$location_type_id = $this->getDefinedTable(Administration\LocationTable::class)->getColumn($form['location'],'location_type');
 
@@ -261,6 +442,16 @@ class UserController extends AbstractActionController
 			$this->_connection->beginTransaction();
 			$result = $this->getDefinedTable(Administration\UsersTable::class)->save($data);
 			if($result > 0):
+				$ssoProvisioningResult = [];
+				try {
+					$ssoProvisioningResult = $this->provisionUserInSso($data, $generatedPassword, $role);
+					$this->syncLocalUuidWithSsoId((int) $result, $ssoProvisioningResult);
+				} catch (\Throwable $e) {
+					$this->rollbackIfTransactionActive();
+					$this->flashMessenger()->addMessage('error^ Failed to create user in SSO: ' . $e->getMessage());
+					return $this->redirect()->toRoute('user', ['action' => 'create']);
+				}
+
 				$appName = $this->getApplicationNameForSubject();
 				$notify_msg = "Your user account is created and registered in the system. Please find your sign in credentails below: <br><br>Username: ".$form['email']." or ".$form['mobile']."<br> Password: ".$generatedPassword;
 				$mail = array(
@@ -271,16 +462,23 @@ class UserController extends AbstractActionController
 					'cc_array' => [],
 				);
 				$this->EmailPlugin()->sendmail($mail);
-				$this->_connection->commit();
+				$this->commitIfTransactionActive();
 				$redirectId = $result;
 				$uuid = (string) $this->getDefinedTable(Administration\UsersTable::class)->getUuidById($result);
 				if ($uuid !== '') {
 					$redirectId = $uuid;
 				}
+				if (!empty($ssoProvisioningResult['skipped'])) {
+					$this->flashMessenger()->addMessage('warning^ User created locally, but SSO provisioning is disabled (SSO_ENABLED=false).');
+				} elseif (!empty($ssoProvisioningResult['already_exists'])) {
+					$this->flashMessenger()->addMessage('info^ User already existed in SSO, local account created successfully.');
+				} else {
+					$this->flashMessenger()->addMessage('success^ User created in both local system and SSO.');
+				}
 				$this->flashMessenger()->addMessage("success^ Successfully created new user and user password sent to ".$form['email']);	 	             
 				return $this->redirect()->toRoute('user', array('action' => 'view', 'id' => $redirectId));
 			else:
-				$this->_connection->rollback();
+				$this->rollbackIfTransactionActive();
 				$this->flashMessenger()->addMessage("error^ Failed to create new user."); 
 				return $this->redirect()->toRoute('user');
 			endif;
@@ -556,12 +754,15 @@ class UserController extends AbstractActionController
 					'modified'        => $this->_modified
 				);
 			else:
-				$role = (sizeof($form['role'])<1)?array('0'):$form['role'];
-				$role = implode(',',$role);
-				$admin_location = (sizeof($form['admin_location'])<1)?array('0'):$form['admin_location'];
-				$admin_location = implode(',',$admin_location);
-				$admin_activity = (sizeof($form['admin_activity'])<1)?array('0'):$form['admin_activity'];
-				$admin_activity = implode(',',$admin_activity);
+				$role = $form['role'] ?? [];
+				$role = is_array($role) ? $role : [$role];
+				$role = implode(',', (count($role) < 1) ? ['0'] : $role);
+				$admin_location = $form['admin_location'] ?? [];
+				$admin_location = is_array($admin_location) ? $admin_location : [$admin_location];
+				$admin_location = implode(',', (count($admin_location) < 1) ? ['0'] : $admin_location);
+				$admin_activity = $form['admin_activity'] ?? [];
+				$admin_activity = is_array($admin_activity) ? $admin_activity : [$admin_activity];
+				$admin_activity = implode(',', (count($admin_activity) < 1) ? ['0'] : $admin_activity);
 
 				$location_type_id = $this->getDefinedTable(Administration\LocationTable::class)->getColumn($form['location'],'location_type');
 

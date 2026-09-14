@@ -977,7 +977,7 @@ class AuthController extends AbstractActionController
 
         } catch (\Exception $e) {
             $errorMessage = $e->getMessage();
-            if (strpos($errorMessage, 'SSO user UUID is not linked') !== false) {
+            if (strpos($errorMessage, 'SSO user UUID is not linked') !== false || strpos($errorMessage, 'SSO account is not linked to any local user') !== false) {
                 $errorMessage = 'Your SSO account is not linked to your Application Account. Please contact administrator.';
             } elseif (strpos($errorMessage, 'SSO subject (sub) is missing') !== false) {
                 $errorMessage = 'Your SSO account is missing a required identifier. Please contact administrator.';
@@ -1051,10 +1051,6 @@ class AuthController extends AbstractActionController
                 if (!empty($rows)) {
                     $localUser = $rows[0];
                 }
-
-                if ($localUser === null) {
-                    throw new \Exception('SSO user UUID is not linked to any local account.');
-                }
             } elseif (!empty($userData['id'])) {
                 $rows = $usersTable->get($userData['id']);
                 if (!empty($rows)) {
@@ -1091,14 +1087,9 @@ class AuthController extends AbstractActionController
                 $userData['admin_activity'] = (string) ($localUser['admin_activity'] ?? '0');
                 $userData['mobile'] = $localUser['mobile'] ?? null;
                 $userData['photo'] = $localUser['photo'] ?? '0';
+                $userData['sso_subject'] = $rawSubject;
             } else {
-                if ($rawSubject !== '' && $this->isUuidValue($rawSubject)) {
-                    $userData['uuid'] = strtolower($rawSubject);
-                }
-                $userData['role'] = '';
-                $userData['admin_location'] = '0';
-                $userData['admin_activity'] = '0';
-                $userData['photo'] = '0';
+                throw new \Exception('SSO account is not linked to any local user (uuid/email/username).');
             }
 
             if (empty($userData['role'])) {
