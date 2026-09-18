@@ -8,7 +8,6 @@ $env = static function (string $key, $default = null) {
 $ssoEnabled = filter_var((string) $env('SSO_ENABLED', 'false'), FILTER_VALIDATE_BOOLEAN);
 
 return [
-
     'openid_config'=> [],
     'sso' => [
         'enabled' => $ssoEnabled,
