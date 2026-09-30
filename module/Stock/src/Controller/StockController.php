@@ -390,7 +390,7 @@ class StockController extends AbstractActionController
 				case 3: $next_code_serial = "0".$next_serial;   break;
 				default: $next_code_serial = $next_serial;      break;
 			}
-			$itemCode = $item_code_list; 
+			$itemCode = $next_code_serial;
 			$form = $this->getRequest()->getPost();
 			$group = $this->getDefinedTable(Stock\ItemSubGroupTable::class)->getColumn($form['item_subgroup'],'item_group');		
 				$data1 = array(

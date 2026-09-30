@@ -319,9 +319,6 @@ class PosController extends AbstractActionController
 				'jrnl_no'=>$form['jrnl_no'],
 				'phone'=>$form['phone'],
 				'salesperson'=>$form['sales_person'],
-				'gst_rate'=>$form['gst_rate'],
-				'gst_amount'=>$form['gst_amt'],
-				'grand_total'=>$form['grand_total'],
 				'ref_no'=>$form['ref_no'],
 				'status'=>2,
 				'author' =>$this->_author,
@@ -377,7 +374,6 @@ class PosController extends AbstractActionController
 				'source_locs'=>$source_locs,
 				'group'			=> $this->getDefinedTable(Stock\OpeningStockTable::class),
 				'itemgroups' => $this->getDefinedTable(Stock\ItemGroupTable::class)-> getAll(),
-				'gst' => $this->getDefinedTable(Stock\GstRateTable::class)-> getAll(),
 				'uomObj'	  => $this->getDefinedTable(Stock\UomTable::class),
 				'accountObj' => $this->getDefinedTable(Accounts\BankaccountTable::class),
 				'cashObj' => $this->getDefinedTable(Accounts\CashaccountTable::class),
@@ -438,9 +434,6 @@ class PosController extends AbstractActionController
 				'ref_no'		=>$form['ref_no'],
 				'status'		=>2,
 				'discount'		=>$form['discount'],
-				'gst_rate'=>$form['gst_rate'],
-				'gst_amount'=>$form['gst_amt'],
-				'grand_total'=>$form['grand_total'],
 				'modified' 		=>$this->_modified,
 		);
 		$data = $this->_safedataObj->rteSafe($data);
@@ -650,7 +643,7 @@ class PosController extends AbstractActionController
 				foreach($results as $result):
 					array_push($pltp_no_list, substr($result['voucher_no'], -4));
 				endforeach;
-				$next_serial = max($pltp_no_list) + 1;
+				$next_serial = (sizeof($pltp_no_list) > 0) ? (max($pltp_no_list) + 1) : 1;
 					
 				switch(strlen($next_serial)){
 					case 1: $next_dc_serial = "0000".$next_serial; break;
@@ -758,7 +751,7 @@ class PosController extends AbstractActionController
 					$headexpense = 178;
 					$subheadexpense = 1565;
 				}
-				$voucher_amt=$sales['cost_price']+$sales['grand_total'];
+				$voucher_amt=$sales['cost_price']+$sales['payment_amount'];
 				if($sales['discount']==100){
 					$data1 = array(
 						'voucher_date' => $form['sales_date'],
@@ -932,7 +925,7 @@ class PosController extends AbstractActionController
 						'sub_head' => $subhead,
 						'bank_ref_type' => '',
 						'bank_trans_journal'=>$sales['jrnl_no'],
-						'debit' =>$sales['grand_total'],
+						'debit' =>$sales['payment_amount'],
 						'credit' => '0.00',
 						'activity'=>$form['location'],
 						'ref_no'=> $ref_no, 
@@ -945,30 +938,6 @@ class PosController extends AbstractActionController
 					);
 					$tdetailsdata1 = $this->_safedataObj->rteSafe($tdetailsdata1);
 					$result2 = $this->getDefinedTable(Accounts\TransactiondetailTable::class)->save($tdetailsdata1);
-					if($sales['gst_amount']>0){
-						$gsttransaction = array(
-							'transaction' => $resultt,
-							'voucher_dates' => $form['sales_date'],
-							'voucher_types' => 7,
-							'location' => $form['location'],
-							'head' => $this->getDefinedTable(Accounts\SubheadTable::class)->getColumn(array('id'=>3292),'head'),
-							'sub_head' => 3292,
-							'bank_ref_type' => '',
-							'bank_trans_journal'=>$sales['jrnl_no'],
-							'debit' =>0,
-							'credit' => $sales['gst_amount'],
-							'activity'=>$form['location'],
-							'ref_no'=> $ref_no, 
-							'against'=>0,
-							'type' => '1',//user inputted  data
-							'status' => 4, // status initiated
-							'author' =>$this->_author,
-							'created' =>$this->_created,
-							'modified' =>$this->_modified,
-						);
-						$gsttransaction = $this->_safedataObj->rteSafe($gsttransaction);
-						$gst = $this->getDefinedTable(Accounts\TransactiondetailTable::class)->save($gsttransaction);
-					}
 					if($itemg['item_group']==68 || $itemg['item_group']==69){
 						$tdetailsdata = array(
 							'transaction' => $resultt,
@@ -1386,7 +1355,7 @@ class PosController extends AbstractActionController
 				foreach($results as $result):
 					array_push($pltp_no_list, substr($result['voucher_no'], -4));
 				endforeach;
-				$next_serial = max($pltp_no_list) + 1;
+				$next_serial = (sizeof($pltp_no_list) > 0) ? (max($pltp_no_list) + 1) : 1;
 					
 				switch(strlen($next_serial)){
 					case 1: $next_dc_serial = "0000".$next_serial; break;
@@ -1519,462 +1488,7 @@ class PosController extends AbstractActionController
 	$ViewModel->setTerminal(True);
 	return $ViewModel;
 	}
-	/**
-	 * jointstamp action of joint stamp out
-	 */
-	public function jointstampAction()
-	{
-		$this->init();
-		$year = '';
-		$month = '';
-		$admin_locs = $this->getDefinedTable(Administration\UsersTable::class)->getColumn($this->_author,'admin_location');
-		$admin_loc_array = explode(',',$admin_locs);
-		if($this->getRequest()->isPost())
-		{
-			$form = $this->getRequest()->getPost();
-			$year = $form['year'];
-			$month = $form['month'];
-			if(strlen($month)==1){
-				$month = '0'.$month;
-			}
-			$location = $form['location'];
-		}else{
-			$month = ($month == '')?date('m'):$month;
-			$year = ($year == '')? date('Y'):$year;
-			
-			$location = $this->_userloc;
-			$location = (in_array($location,$admin_loc_array))?$location:'-1'; 
-		}
-		$minYear = $this->getDefinedTable(Sales\SalesTable::class)->getMin('sales_date');
-		$minYear = ($minYear == "")?date('Y-m-d'):$minYear;
-		$minYear = date('Y', strtotime($minYear));
-		$data = array(
-				'year' => $year,
-				'month' => $month,
-				'minYear' => $minYear,
-				'location' => $location,
-		);
-		$salesrecord = $this->getDefinedTable(Sales\SalesTable::class)->getDateWiseConsumable('sales_date',$year,$month,$location,array('s.type'=>1));
-		return new ViewModel(array(
-				'title' 	  		=> 'Joint Stamp',
-				'data'        		=> $data,
-				'salesrecord' 		=> $salesrecord,
-		        'customerObj' 		=> $this->getDefinedTable(Accounts\PartyTable::class),
-				'locationObj' 		=> $this->getDefinedTable(Administration\LocationTable::class),
-				'admin_location'	=> $admin_loc_array,
-				'account'			=>$this->getDefinedTable(Accounts\BankaccountTable::class),
-				'cash'				=>$this->getDefinedTable(Accounts\CashaccountTable::class),
-				'itemObj'			=>$this->getDefinedTable(Stock\ItemTable::class),
-				'admin_role' 		=> $this->getDefinedTable(Administration\UsersTable::class)->getColumn($this->_author,'role'),
-				
-		));
-	}
-	/**
-	 * Add joint stamp action of Joint stamp out
-	 */
-	public function addjointstampAction()
-	{
-		$this->init();
-		$admin_locs = $this->getDefinedTable(Administration\UsersTable::class)->getColumn($this->_author,'admin_location');
-		$admin_loc_array = explode(',',$admin_locs);
-		$sales_no = $this->_id;
-		$source_locs = $this->getDefinedTable(Administration\UsersTable::class)->getColumn($this->_author,'location');
-		if($this->getRequest()->isPost()):
-    		$form = $this->getRequest()->getPost();
-			$source_loc = $form['location']; 
-			$location_prefix = $this->getDefinedTable(Administration\LocationTable::class)->getcolumn($form['location'],'prefix');
-			$machine_no = '0';
-    		$date = date('ym',strtotime($form['sales_date']));
-			$tmp_SLNo = $location_prefix."JS".$machine_no.$date;
-						$results = $this->getDefinedTable(Sales\SalesTable::class)->getMonthlySL($tmp_SLNo);
-					
-						if(sizeof($results) < 1 ):
-							$next_serial = "0001";
-						else:
-							$sheet_no_list = array();
-							foreach($results as $result):
-								array_push($sheet_no_list, substr($result['sales_no'], -3));
-							endforeach;
-							//print_r(max($sheet_no_list));exit;
-							$next_serial = max($sheet_no_list) + 1;
-						endif;
-						switch(strlen($next_serial)){
-							case 1: $next_sl_serial = "0000".$next_serial; break;
-							case 2: $next_sl_serial = "000".$next_serial;  break;
-							case 3: $next_sl_serial = "00".$next_serial;   break;
-							case 4: $next_sl_serial = "0".$next_serial;   break;
-							default: $next_sl_serial = $next_serial;      break;
-						}            			
-						$sales_no = $tmp_SLNo.$next_sl_serial;
-						//print_r($sales_no);exit;
-			$data = array(			
-				'sales_no'=>$sales_no,		
-				'sales_date' => $form['sales_date'],
-				'location' => $form['location'],
-				'credit'=>"n",
-				'customer'=>0,
-				'payment_type'=>0,
-				'discount'=>0,
-				'due_date'=>"0000-00-00",
-				'account_no'=>0,
-				'jrnl_no'=>0,
-				'phone'=>0,
-				'salesperson'=>$form['sales_person'],
-				'ref_no'=>0,
-				'status'=>2,
-				'type'=>1,
-				'author' =>$this->_author,
-				'created' =>$this->_created,
-				'modified' =>$this->_modified,
-		);
-		$data = $this->_safedataObj->rteSafe($data);
-		$result = $this->getDefinedTable(Sales\SalesTable::class)->save($data);	
-		if($result > 0):
-			$item=$form['item'];
-			$uom=$form['basic_uom'];
-			$rate=$form['rate'];
-			$quantity=$form['quantity'];
-			$basic_qty=$form['stock_qty'];
-			$amount=$form['amount'];
-			for($i=0; $i < sizeof($item); $i++):
-				if(isset($item[$i]) && is_numeric($item[$i])):
-					$data1 = array(
-						'sales' => $result,
-						'item' => $item[$i],
-						'uom' => $uom[$i],
-						'rate' => $rate[$i],
-						'quantity' => $quantity[$i],
-						'basic_quantity' => $basic_qty[$i],
-						'scheme_dtls'	=>1,
-						'batch'=>1,
-						'free_item'		=>0,
-						'free_item_uom'	=>1,
-						'discount_qty'	=>0,
-						'author' =>$this->_author,
-						'created' =>$this->_created,
-						'modified' =>$this->_modified,
-					);
-					$result1 = $this->getDefinedTable(Sales\SalesDetailsTable::class)->save($data1);
-					if($result1 <= 0):
-						break;
-					endif;
-				endif;
-			endfor;
-			$this->flashMessenger()->addMessage("success^ New Class successfully added");
-		else:
-			$this->flashMessenger()->addMessage("error^ Failed to add new Class");
-		endif;
-		return $this->redirect()->toRoute('pos',array('action' => 'viewjointstamp','id'=>$sales_no));			 
-			
-		endif;
-		
-		return new ViewModel( array(
-				'title'         => 'Consumable Item ',
-				'locationObj'   => $this->getDefinedTable(Administration\LocationTable::class),
-				'employees' 	=> $this->getDefinedTable(Administration\UsersTable::class)->get($this->_author),
-				'admin_location' => $admin_loc_array,
-				'source_locs'=>$source_locs,
-				'group'			=> $this->getDefinedTable(Stock\OpeningStockTable::class),
-				'itemgroups' => $this->getDefinedTable(Stock\ItemGroupTable::class)-> get(array('id'=>[69,68,66,65,63])),
-				'uomObj'	  => $this->getDefinedTable(Stock\UomTable::class),
-				'accountObj' => $this->getDefinedTable(Accounts\BankaccountTable::class),
-				'cashObj' => $this->getDefinedTable(Accounts\CashaccountTable::class),
-		));
-	}
-		/**
-	 * Edit Joint stamp action for joint stamp out
-	 */
-	public function editjointstampAction()
-	{
-		$this->init();
-		$employees='';
-		$admin_locs = $this->getDefinedTable(Administration\UsersTable::class)->getColumn($this->_author,'admin_location');
-		$admin_loc_array = explode(',',$admin_locs);
-		$assigned_act = $this->getDefinedTable(Administration\UsersTable::class)->getColumn($this->_author,'name');//assigned_activity
-		$assigned_act_array = explode(',',$assigned_act);
-		$employees = $this->getDefinedTable(Administration\UsersTable::class)->get($this->_author);
-		if($this->getRequest()->isPost()):
-    		$form = $this->getRequest()->getPost();
-			$data = array(	
-				'id'			=>$this->_id,		
-				'sales_no'		=>$form['sales_no'],		
-				'sales_date' 	=>$form['sales_date'],
-				'location' 		=>$form['location'],
-				'salesperson'	=>$form['sales_person'],
-				'status'		=>2,
-				'type'=>1,
-				'author' 		=>$this->_author,
-				'created' 		=>$this->_created,
-				'modified' 		=>$this->_modified,
-		);
-		$data = $this->_safedataObj->rteSafe($data);
-		$result = $this->getDefinedTable(Sales\SalesTable::class)->save($data);	
-		if($result > 0):
-			$id=$form['id'];
-			$item=$form['item'];
-			$uom=$form['basic_uom'];
-			$rate=$form['rate'];
-			$quantity=$form['quantity'];
-			$basic_qty=$form['stock_qty'];
-			$amount=$form['amount'];
-			for($i=0; $i <sizeof($id); $i++):
-					$data1 = array(
-						'id' 	=> $id[$i],
-						'sales' => $result,
-						'item' => $item[$i],
-						'uom' => $uom[$i],
-						'rate' => $rate[$i],
-						'quantity' => $quantity[$i],
-						'basic_quantity' => $basic_qty[$i],
-						'scheme_dtls'	=>1,
-						'batch'=>1,
-						'free_item'		=>0,
-						'free_item_uom'	=>1,
-						'discount_qty'	=>0,
-						'author' =>$this->_author,
-						'created' =>$this->_created,
-						'modified' =>$this->_modified,
-					);
-					
-					$result1 = $this->getDefinedTable(Sales\SalesDetailsTable::class)->save($data1);
-				endfor;
-				
-			if(sizeof($id)<sizeof($item)){
-				for($i=sizeof($id); $i < sizeof($item); $i++):
-					$data1 = array(
-						'sales' => $result,
-						'item' => $item[$i],
-						'uom' => $uom[$i],
-						'rate' => $rate[$i],
-						'quantity' => $quantity[$i],
-						'basic_quantity' => $basic_qty[$i],
-						'scheme_dtls'	=>1,
-						'batch'=>1,
-						'free_item'		=>0,
-						'free_item_uom'	=>1,
-						'discount_qty'	=>0,
-						'author' =>$this->_author,
-						'created' =>$this->_created,
-						'modified' =>$this->_modified,
-					);
-					$result1 = $this->getDefinedTable(Sales\SalesDetailsTable::class)->save($data1);
-			endfor;
-			}
-			exit;
-			$this->flashMessenger()->addMessage("success^ New Class successfully added");
-		else:
-			$this->flashMessenger()->addMessage("error^ Failed to add new Class");
-		endif;
-		foreach($this->getDefinedTable(Sales\SalesTable::class)->get($result) as $sales);
-		return $this->redirect()->toRoute('pos',array('action' => 'viewjointstamp','id'=>$sales['sales_no']));			 
-			
-		endif;
-		
-		return new ViewModel( array(
-				'title'         => 'Edit Joint stamp',
-				'locationObj'   => $this->getDefinedTable(Administration\LocationTable::class),
-				'itemObj' 		=> $this->getDefinedTable(Stock\ItemTable::class),
-				'item' 			=> $this->getDefinedTable(Stock\ItemTable::class)->getAll(),
-				'uomObj' 		=> $this->getDefinedTable(Stock\UomTable::class),
-				'itemuomObj' 	=> $this->getDefinedTable(Stock\ItemUomTable::class),
-				'customers'		=> $this->getDefinedTable(Accounts\PartyTable::class)->getAll(),
-				'sales' 		=> $this->getDefinedTable(Sales\SalesTable::class)->get($this->_id),
-				'salesdtl' 		=> $this->getDefinedTable(Sales\SalesDetailsTable::class),
-				'employees' 	=> $employees,
-				'admin_location' => $admin_loc_array,
-				'assigned_act_array' => $assigned_act_array,
-				'group'			=> $this->getDefinedTable(Stock\OpeningStockTable::class),
-				'itemgroups' => $this->getDefinedTable(Stock\ItemGroupTable::class)-> get(array('item_class'=>31)),
-				'itemgroupsObj' => $this->getDefinedTable(Stock\ItemGroupTable::class),
-				'uomObj'	  => $this->getDefinedTable(Stock\UomTable::class),
-		));
-	}
-	/**
-	 * view Joint stamp action
-	 */
-	public function viewjointstampAction()
-	{
-		$this->init();
-		$sales  = $this->getDefinedTable(Sales\SalesTable::class)->get(array('sales_no'=>$this->_id));
-		foreach($sales as $sale);
-	//	print_r($sale['id']);
-		return new ViewModel(array(
-				'title' 	  => 'View Joint Stamp',
-				'sales' 	  => $this->getDefinedTable(Sales\SalesTable::class)->get(array('sales_no'=>$this->_id)),
-				'saledetails' => $this->getDefinedTable(Sales\SalesDetailsTable::class)->get(array('sales'=>$sale['id'])),
-				'itemObj' 	  => $this->getDefinedTable(Stock\ItemTable::class),
-				'uomObj'	  => $this->getDefinedTable(Stock\UomTable::class),
-				'batchObj'	  => $this->getDefinedTable(Stock\BatchTable::class),
-		        'locationObj' => $this->getDefinedTable(Administration\LocationTable::class),
-		        'customerObj' => $this->getDefinedTable(Accounts\PartyTable::class),
-		        'userObj'   => $this->getDefinedTable(Administration\UsersTable::class),
-				'userRoleObj'  => $this->getDefinedTable(Acl\RolesTable::class),
-				'userID' => $this->_author,
-				'employeeObj' => $this->getDefinedTable(Hr\EmployeeTable::class),
-				'accountObj' => $this->getDefinedTable(Accounts\BankaccountTable::class),
-				'cashObj' => $this->getDefinedTable(Accounts\CashaccountTable::class),
-		));
-	}
-	/**
-	 * confirm consumable Action
-	 */
-	public function confirmjointstampAction()
-	{
-		$this->init();
-		$sale_no=$this->_id;
-		$sales = $this->getDefinedTable(Sales\SalesTable::class)->get(array('sales_no'=>$sale_no));
-		foreach($sales as $row);
-		if($this->getRequest()->isPost())
-		{
-			$form = $this->getRequest()->getPost();
-			$salesen=$this->getDefinedTable(Sales\SalesDetailsTable::class)->get(array('sales'=>$form['sales']));
-			/**
-			 * Generating voucher no
-			 */
-			$loc = $this->getDefinedTable(Administration\LocationTable::class)->getcolumn($form['location'], 'prefix');
-			$prefix = $this->getDefinedTable(Accounts\JournalTable::class)->getcolumn(7,'prefix');
-			$date = date('ym',$row['sales_date']);
-				$tmp_VCNo = $loc.'-'.$prefix.$date;
-				
-				$results = $this->getDefinedTable(Accounts\TransactionTable::class)->getSerial($tmp_VCNo);
-				
-				$pltp_no_list = array();
-				foreach($results as $result):
-					array_push($pltp_no_list, substr($result['voucher_no'], -3));
-				endforeach;
-				$next_serial = max($pltp_no_list) + 1;
-					
-				switch(strlen($next_serial)){
-					case 1: $next_dc_serial = "0000".$next_serial; break;
-					case 2: $next_dc_serial = "000".$next_serial;  break;
-					case 3: $next_dc_serial = "00".$next_serial;   break;
-					case 4: $next_dc_serial = "0".$next_serial;    break;
-					default: $next_dc_serial = $next_serial;       break;
-				}	
-				$voucher_no = $tmp_VCNo.$next_dc_serial;
-			/**
-			 * Generating voucher no ended
-			 */
-			$region=$this->getDefinedTable(Administration\LocationTable::class)->getColumn($form['location'],'region');
-			foreach($salesen as $sale):
-				$openingdtls=$this->getDefinedTable(Stock\OpeningStockDtlsTable::class)->get(array('location'=>$form['location'],'item'=>$sale['item']));
-				$salestable=$this->getDefinedTable(Sales\SalesTable::class)->get($form['sales']);
-				foreach($salestable as $salestables);
-					$total=$salestables['payment_amount']+($sale['rate']*$sale['quantity']);
-				foreach($openingdtls as $openingdtl);
-						$quantity=$openingdtl['quantity']-$sale['quantity'];
-						if($openingdtl['sales']==0||$openingdtl['sales']==""):
-							$totalsale=$sale['quantity'];
-						else:
-							$totalsale=$sale['quantity']+$openingdtl['sales'];
-						endif;
-						$cost=$sale['quantity']*$openingdtl['cost_price'];
-					$cost_price=$cost+$salestables['cost_price'];
-
-					$os=$this->getDefinedTable(Stock\OpeningStockTable::class)->get(array('id'=>$openingdtl['opening_stock']));
-					foreach($os as $os);
-					$squantity=$os['quantity']-$sale['quantity'];
-
-				$data=array(
-					'id'=>$form['sales'],
-					'payment_amount'=>$total,
-					'cost_price'=>$cost_price,
-					'status'=>4,
-					'author' => $this->_author,
-					'created' => $this->_created,
-					'modified' => $this->_modified,	
-				);
-				$result = $this->getDefinedTable(Sales\SalesTable::class)->save($data);	
-				$data=array(
-					'id'=>$openingdtl['id'],
-					'sales'=>$totalsale,
-					'quantity'=>$quantity,
-					'author' => $this->_author,
-					'created' => $this->_created,
-					'modified' => $this->_modified,	
-				);
-				$result= $this->getDefinedTable(Stock\OpeningStockDtlsTable::class)->save($data);
-				$data=array(
-					'id'=>$os['id'],
-					'quantity'=>$squantity,
-					'author' => $this->_author,
-					'created' => $this->_created,
-					'modified' => $this->_modified,	
-				);
-				$result = $this->getDefinedTable(Stock\OpeningStockTable::class)->save($data);
-			endforeach;
-				foreach($this->getDefinedTable(Sales\SalesTable::class)->get(array('sales_no'=>$form['sales_no'])) as $sales);
-				$data1 = array(
-					'voucher_date' => $form['sales_date'],
-					'voucher_type' => 7,
-					'region'   =>$region,
-					'doc_id'   =>"Joint Stamp Out",
-					'voucher_no' => $voucher_no,
-					'remark' => $form['sales_no'],
-					'voucher_amount' => str_replace( ",", "",$sales['payment_amount']),
-					'status' => 4, // status initiated 
-					'author' =>$this->_author,
-					'created' =>$this->_created,  
-					'modified' =>$this->_modified,
-				);
-				$resultt = $this->getDefinedTable(Accounts\TransactionTable::class)->save($data1);
-				$tdetailsdata = array(
-					'transaction' => $resultt,
-					'voucher_dates' => $form['sales_date'],
-					'voucher_types' => 7,
-					'location' => $form['location'],
-					'head' =>$this->getDefinedTable(Accounts\SubheadTable::class)->getColumn(2137,'head'),
-					'sub_head' =>2137,
-					'bank_ref_type' => '',
-					'debit' =>'0.000',
-					'credit' =>$sales['payment_amount'],
-					'ref_no'=> '', 
-					'type' => '1',//user inputted  data
-					'status' => 4, // status initiated
-					'activity'=>$form['location'],
-					'author' =>$this->_author,
-					'created' =>$this->_created,
-					'modified' =>$this->_modified,
-				);
-				$tdetailsdata = $this->_safedataObj->rteSafe($tdetailsdata);
-				$result1 = $this->getDefinedTable(Accounts\TransactiondetailTable::class)->save($tdetailsdata);
-				$tdetailsdata2 = array(
-					'transaction' => $resultt,
-					'voucher_dates' => $form['sales_date'],
-					'voucher_types' => 7,
-					'location' => $form['location'],
-					'head' =>$this->getDefinedTable(Accounts\SubheadTable::class)->getColumn(1565,'head'),
-					'sub_head' =>1565,
-					'bank_ref_type' => '',
-					'debit' =>str_replace( ",", "",$sales['payment_amount']),
-					'activity'=>$form['location'],
-					'credit' =>'0.000',
-					'ref_no'=> $ref, 
-					'type' => '1',//user inputted  data
-					'status' => 4, // status initiated
-					'author' =>$this->_author,
-					'created' =>$this->_created,
-					'modified' =>$this->_modified,
-				);
-				$tdetailsdata2 = $this->_safedataObj->rteSafe($tdetailsdata2);
-				$result2 = $this->getDefinedTable(Accounts\TransactiondetailTable::class)->save($tdetailsdata2);
-			if($result2>0):
-			$this->flashMessenger()->addMessage("success^ successfully Confirmed Joint Stamp Out");
-			else:
-				$this->flashMessenger()->addMessage("error^ Failed to Confirm Joint Stamp Out");
-			endif;
-			return $this->redirect()->toRoute('pos',array('action' => 'viewjointstamp','id'=>$form['sales_no']));	
-	}
-		$ViewModel = new ViewModel(array(
-			'title' 	  => 'Confirm Joint Stamp Out',
-				'sales'       =>$sales,
-		        'stocks' => $this->getDefinedTable(Stock\OpeningStockTable::class),
-				'locationObj' => $this->getDefinedTable(Administration\LocationTable::class),
-	));
-
-	$ViewModel->setTerminal(True);
-	return $ViewModel;
-	}
+	
 	/**
 	 * recipt for the sales made
 	 */
@@ -2117,11 +1631,14 @@ class PosController extends AbstractActionController
 		$subgroup = $form['item_subgroup'];
 
 		$itemOptions = "<option value='-1'>All</option>";
-		if($locationId==-1){
+		if($locationId==-1 || $locationId==''){
 			$itemlist = $this->getDefinedTable(Stock\ItemTable::class)->get(array('item_group'=>$subgroup));
 		}
 		else{
-		$itemlist = $this->getDefinedTable(Stock\OpeningStockDtlsTable::class)->getitems(array('osd.location'=>$locationId,'i.item_group'=>$subgroup));
+			$itemlist = $this->getDefinedTable(Stock\OpeningStockDtlsTable::class)->getitems(array('osd.location'=>$locationId,'i.item_group'=>$subgroup));
+			if (sizeof($itemlist) == 0) {
+				$itemlist = $this->getDefinedTable(Stock\ItemTable::class)->get(array('item_group'=>$subgroup));
+			}
 		}
 		//echo($itemlist);
 		foreach($itemlist as $item):
@@ -2142,6 +1659,9 @@ class PosController extends AbstractActionController
 		$form = $this->getRequest()->getPost();
 		$item =$form['item'];
 		$location=$form['location'];
+		$rate = 0;
+		$quantity = 0;
+		$cost_price = 0;
 		//console.log($location);
 		$itemdetails = $this->getDefinedTable(Stock\OpeningStockDtlsTable::class)->get(array('item'=>$item,'location'=>$location));
 		foreach($itemdetails as $items):

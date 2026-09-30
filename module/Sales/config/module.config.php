@@ -109,20 +109,6 @@ return array(
 					),
 				),
             ),
-			'museum' => array(
-				'type'    => 'Segment',
-				'options' => array(
-					'route'       => '/museum[/:action[/:id]]',
-					'constraints' => array(
-						'action'     => '[a-zA-Z][a-zA-Z0-9_-]*',
-						'id'     	 => '[a-zA-Z0-9_-]*',
-					),
-					'defaults' => array(
-						'controller' => Controller\MuseumController::class,
-						'action'     => 'index',
-					),
-				),
-            ),
 			'pos' => array(
 				'type'    => 'Segment',
 				'options' => array(
@@ -137,48 +123,6 @@ return array(
 					),
 				),
             ),
-			'masterpos' => array(
-				'type'    => 'Segment',
-				'options' => array(
-					'route'       => '/masterpos[/:action[/:id]]',
-					'constraints' => array(
-						'action'     => '[a-zA-Z][a-zA-Z0-9_-]*',
-						'id'     	 => '[a-zA-Z0-9_-]*',
-					),
-					'defaults' => array(
-						'controller' => Controller\MasterposController::class,
-						'action'     => 'scope',
-					),
-				),
-            ),
-			'postage' => array(
-				'type'    => 'Segment',
-				'options' => array(
-					'route'       => '/postage[/:action[/:id]]',
-					'constraints' => array(
-						'action'     => '[a-zA-Z][a-zA-Z0-9_-]*',
-						'id'     	 => '[a-zA-Z0-9_-]*',
-					),
-					'defaults' => array(
-						'controller' => Controller\PostageController::class,
-						'action'     => 'index',
-					),
-				),
-            ),
-			'postbox' => array(
-				'type'    => 'Segment',
-				'options' => array(
-					'route'    => '/postbox[/:action[/:id]]',
-					'constraints' => array(
-							'action'     => '[a-zA-Z][a-zA-Z0-9_-]*',
-							'id'     	 => '[a-zA-Z0-9_-]*',
-					),
-					'defaults' => array(
-							'controller' => Controller\PostController::class,
-							'action'   => 'registration',
-					),
-				),
-	    	),    
 		),
 	),	
 	'view_manager' => array(
