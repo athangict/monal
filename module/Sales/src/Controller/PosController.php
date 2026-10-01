@@ -367,16 +367,16 @@ class PosController extends AbstractActionController
 		endif;
 		
 		return new ViewModel( array(
-				'title'         => 'Sales Entry',
-				'locationObj'   => $this->getDefinedTable(Administration\LocationTable::class),
-				'employees' 	=> $this->getDefinedTable(Administration\UsersTable::class)->get($this->_author),
-				'admin_location' => $admin_loc_array,
-				'source_locs'=>$source_locs,
-				'group'			=> $this->getDefinedTable(Stock\OpeningStockTable::class),
-				'itemgroups' => $this->getDefinedTable(Stock\ItemGroupTable::class)-> getAll(),
-				'uomObj'	  => $this->getDefinedTable(Stock\UomTable::class),
-				'accountObj' => $this->getDefinedTable(Accounts\BankaccountTable::class),
-				'cashObj' => $this->getDefinedTable(Accounts\CashaccountTable::class),
+			'title'         => 'Sales Entry',
+			'locationObj'   => $this->getDefinedTable(Administration\LocationTable::class),
+			'employees' 	=> $this->getDefinedTable(Administration\UsersTable::class)->get($this->_author),
+			'admin_location' => $admin_loc_array,
+			'source_locs'=>$source_locs,
+			'group'			=> $this->getDefinedTable(Stock\OpeningStockTable::class),
+			'itemgroups' => $this->getDefinedTable(Stock\ItemGroupTable::class)-> getAll(),
+			'uomObj'	  => $this->getDefinedTable(Stock\UomTable::class),
+			'accountObj' => $this->getDefinedTable(Accounts\BankaccountTable::class),
+			'cashObj' => $this->getDefinedTable(Accounts\CashaccountTable::class),
 		));
 	}
 		/**
@@ -512,25 +512,25 @@ class PosController extends AbstractActionController
 		endif;
 		
 		return new ViewModel( array(
-				'title'         => 'Edit Sales',
-				'locationObj'   => $this->getDefinedTable(Administration\LocationTable::class),
-				'itemObj' 		=> $this->getDefinedTable(Stock\ItemTable::class),
-				'item' 			=> $this->getDefinedTable(Stock\ItemTable::class)->getAll(),
-				'uomObj' 		=> $this->getDefinedTable(Stock\UomTable::class),
-				'itemuomObj' 	=> $this->getDefinedTable(Stock\ItemUomTable::class),
-				'customers'		=> $this->getDefinedTable(Accounts\PartyTable::class)->getAll(),
-				'sales' 		=> $this->getDefinedTable(Sales\SalesTable::class)->get($this->_id),
-				'salesdtl' 		=> $this->getDefinedTable(Sales\SalesDetailsTable::class),
-				'accounts' 		=> $this->getDefinedTable(Accounts\BankaccountTable::class)->get(array('ba.location'=>[$this->_userloc,1])),
-				'cash' 			=> $this->getDefinedTable(Accounts\CashaccountTable::class)->get(array('ca.location'=>[$this->_userloc,1])),
-				'employees' 	=> $employees,
-				'admin_location' => $admin_loc_array,
-				'assigned_act_array' => $assigned_act_array,
-				'group'			=> $this->getDefinedTable(Stock\OpeningStockTable::class),
-				'itemgroups' => $this->getDefinedTable(Stock\ItemGroupTable::class)-> getAll(),
-				'itemgroupsObj' => $this->getDefinedTable(Stock\ItemGroupTable::class),
-				'uomObj'	  => $this->getDefinedTable(Stock\UomTable::class),
-				'gst' => $this->getDefinedTable(Stock\GstRateTable::class)-> getAll(),
+			'title'         => 'Edit Sales',
+			'locationObj'   => $this->getDefinedTable(Administration\LocationTable::class),
+			'itemObj' 		=> $this->getDefinedTable(Stock\ItemTable::class),
+			'item' 			=> $this->getDefinedTable(Stock\ItemTable::class)->getAll(),
+			'uomObj' 		=> $this->getDefinedTable(Stock\UomTable::class),
+			'itemuomObj' 	=> $this->getDefinedTable(Stock\ItemUomTable::class),
+			'customers'		=> $this->getDefinedTable(Accounts\PartyTable::class)->getAll(),
+			'sales' 		=> $this->getDefinedTable(Sales\SalesTable::class)->get($this->_id),
+			'salesdtl' 		=> $this->getDefinedTable(Sales\SalesDetailsTable::class),
+			'accounts' 		=> $this->getDefinedTable(Accounts\BankaccountTable::class)->get(array('ba.location'=>[$this->_userloc,1])),
+			'cash' 			=> $this->getDefinedTable(Accounts\CashaccountTable::class)->get(array('ca.location'=>[$this->_userloc,1])),
+			'employees' 	=> $employees,
+			'admin_location' => $admin_loc_array,
+			'assigned_act_array' => $assigned_act_array,
+			'group'			=> $this->getDefinedTable(Stock\OpeningStockTable::class),
+			'itemgroups' => $this->getDefinedTable(Stock\ItemGroupTable::class)-> getAll(),
+			'itemgroupsObj' => $this->getDefinedTable(Stock\ItemGroupTable::class),
+			'uomObj'	  => $this->getDefinedTable(Stock\UomTable::class),
+			'gst' => $this->getDefinedTable(Stock\GstRateTable::class)-> getAll(),
 		));
 	}
 	/**
@@ -547,14 +547,11 @@ class PosController extends AbstractActionController
 		foreach($this->getDefinedTable(Sales\SalesTable::Class)->get($salesd['sales']) as $sales);
 		$result = $this->getDefinedTable(Sales\SalesDetailsTable::Class)->remove($this->_id);
 		if($result > 0):
-
 				$this->flashMessenger()->addMessage("success^ Item deleted successfully");
 			else:
 				$this->_connection->rollback(); // rollback transaction over failure
 				$this->flashMessenger()->addMessage("error^ Failed to delete item");
 			endif;
-			//end			
-		
 			return $this->redirect()->toRoute('pos',array('action' => 'editsales','id'=>$sales['id']));	
 	}
 	/**
@@ -571,14 +568,11 @@ class PosController extends AbstractActionController
 		foreach($this->getDefinedTable(Sales\SalesTable::Class)->get($salesd['sales']) as $sales);
 		$result = $this->getDefinedTable(Sales\SalesDetailsTable::Class)->remove($this->_id);
 		if($result > 0):
-
 				$this->flashMessenger()->addMessage("success^ Item deleted successfully");
 			else:
 				$this->_connection->rollback(); // rollback transaction over failure
 				$this->flashMessenger()->addMessage("error^ Failed to delete item");
 			endif;
-			//end			
-		
 			return $this->redirect()->toRoute('pos',array('action' => 'viewsales','id'=>$sales['sales_no']));	
 	}
 	/**
