@@ -3142,8 +3142,13 @@ class TransactionController extends AbstractActionController
 			foreach($ids as $tasid):
 				$againstID =  $this->getDefinedTable(Pswf\TransactiondetailTable::class)->getColumn($tasid['id'], 'against');
 				$creditAmount =  $this->getDefinedTable(Pswf\TransactiondetailTable::class)->getColumn($tasid['id'], 'credit');
+				$debitAmount =  $this->getDefinedTable(Pswf\TransactiondetailTable::class)->getColumn($tasid['id'], 'debit');
+				$appliedAmount = (float) str_replace(',', '', (string) $creditAmount);
+				if($appliedAmount <= 0){
+					$appliedAmount = (float) str_replace(',', '', (string) $debitAmount);
+				}
 				if($againstID!=null && $againstID!=0):
-					if($creditAmount!='0.00'):
+					if($appliedAmount > 0):
 						if($tasid['against_status']==3):
 							$against=0;
 						else:
@@ -4523,7 +4528,12 @@ class TransactionController extends AbstractActionController
 			foreach($ids as $tasid):
 				$againstID =  $this->getDefinedTable(Pswf\TransactiondetailTable::class)->getColumn($tasid['id'], 'against');
 				$creditAmount =  $this->getDefinedTable(Pswf\TransactiondetailTable::class)->getColumn($tasid['id'], 'credit');
-				if($creditAmount!='0.00'):
+				$debitAmount =  $this->getDefinedTable(Pswf\TransactiondetailTable::class)->getColumn($tasid['id'], 'debit');
+				$appliedAmount = (float) str_replace(',', '', (string) $creditAmount);
+				if($appliedAmount <= 0){
+					$appliedAmount = (float) str_replace(',', '', (string) $debitAmount);
+				}
+				if($againstID!=null && $againstID!=0 && $appliedAmount > 0):
 					if($tasid['against_status']==3):
 						$against=0;
 					else:

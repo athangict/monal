@@ -110,6 +110,12 @@
 						}
 						$this.has('div').contents().unwrap();
 					}),
+					reportdom.find('table#nivoice-tab0 tr').each(function(){
+						// Keep only the first 3 converted columns (tb1/tb2/tb3) per row.
+						// Some views contain duplicate convert-tb blocks that would otherwise
+						// create extra narrow cells and break footer/signature text wrapping.
+						$(this).children('td:gt(2)').remove();
+					}),
 					reportdom.find('span').each(function(){
 						$(this).removeClass().removeAttr('style');
 					}),
@@ -180,6 +186,23 @@
 								$this.remove();
 						}
 						$this.has('div').contents().unwrap();
+					}),
+					reportdom.find('table#nivoice-tab0 tr').each(function(){
+						var $row = $(this);
+						var rowText = $row.text().toLowerCase();
+						if(rowText.indexOf('prepared by') !== -1 || rowText.indexOf('authorized signatory') !== -1){
+							// Remove blank/whitespace-only cells introduced by duplicate convert blocks.
+							$row.children('td').each(function(){
+								var text = $(this).text().replace(/\s|&nbsp;/g, '');
+								if(text.length === 0){
+									$(this).remove();
+								}
+							});
+							// Keep the signature row as left and right blocks.
+							$row.children('td:gt(1)').remove();
+							$row.children('td:first').attr('style', 'text-align:left;width:65%;vertical-align:top;');
+							$row.children('td:last').attr('style', 'text-align:right;width:35%;vertical-align:top;');
+						}
 					}),
 					reportdom.find('span').each(function(){
 						$(this).removeClass().removeAttr('style');
@@ -512,6 +535,65 @@
 								$this.remove();
 						}
 						$this.has('div').contents().unwrap();
+					}),
+					reportdom.find('.print-title').each(function(){
+						var style = $(this).attr('style') || '';
+						style = style.replace(/display\s*:\s*none;?/ig, '');
+						$(this).attr('style', style + 'display:block;');
+					}),
+					(function(){
+						reportdom.find('table#nivoice-tab0 tr').each(function(){
+							var $row = $(this);
+							var text = $row.text().toLowerCase();
+							if(text.indexOf('voucher no') !== -1 && text.indexOf('voucher amount') !== -1 && text.indexOf('cheque no') !== -1){
+								$row.children('td:first').attr('style', 'width:65%;text-align:left;vertical-align:top;');
+								$row.children('td:last').attr('style', 'width:35%;text-align:right;vertical-align:top;');
+							}
+						});
+
+						var $signatureRows = reportdom.find('table#nivoice-tab0 tr').filter(function(){
+							var text = $(this).text().toLowerCase();
+							return text.indexOf('prepared by') !== -1 || text.indexOf('authorized signatory') !== -1;
+						});
+						if(!$signatureRows.length){
+							return;
+						}
+
+						var preparedHtml = '';
+						$signatureRows.each(function(){
+							if(preparedHtml === ''){
+								var rowText = $(this).text().toLowerCase();
+								if(rowText.indexOf('prepared by') !== -1){
+									preparedHtml = $.trim($(this).find('label').first().html() || $(this).find('td:first').text() || '');
+								}
+							}
+						});
+
+						var $anchorTable = $signatureRows.last().closest('table#nivoice-tab0');
+						$signatureRows.remove();
+
+						if(preparedHtml === ''){
+							preparedHtml = 'Prepared by:';
+						}
+
+						$anchorTable.append('<tr><td colspan="2" style="height:36px;border:none;"></td></tr>');
+						$anchorTable.append(
+							'<tr>' +
+							'<td style="text-align:left;width:65%;vertical-align:top;">' +
+							'<label style="font-size:13px;font-family:Times New Roman, serif;line-height:1.3;font-weight:400;margin:0;">' + preparedHtml + '</label>' +
+							'</td>' +
+							'<td style="text-align:right;width:35%;vertical-align:top;padding-top:2px;">' +
+							'<label style="font-size:13px;font-family:Times New Roman, serif;line-height:1.3;font-weight:700;margin:0;">Authorized Signatory</label>' +
+							'</td>' +
+							'</tr>'
+						);
+					})(),
+					reportdom.find('table#nivoice-tab0').each(function(){
+						// Remove empty converted helper rows/tables that create large gaps.
+						var compact = $(this).text().replace(/[\s\u00a0]|&nbsp;/g, '').toLowerCase();
+						if(compact.length === 0){
+							$(this).remove();
+						}
 					}),
 					reportdom.find('span').each(function(){
 						$(this).removeClass().removeAttr('style');

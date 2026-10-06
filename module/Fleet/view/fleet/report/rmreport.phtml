@@ -69,7 +69,7 @@
 				</div>
 				<div class="row col-lg-12">
 					<div class="clearfix">
-					<input type="hidden" name="transport" id="transport" value="<?php echo ($data["transport"] == -1 || !isset($data['transport']))? "All Transport":$this->TObject->getColumn($data['transport'],'code');?>">
+					<input type="hidden" name="transport" id="transport" value="<?php echo (!isset($data['transport']) || $data['transport'] == -1)? "All Transport":$this->TObject->getColumn($data['transport'],'code');?>">
 					<input type="hidden" name="st_date" id="st_date" value="<?php echo $data['start_date']?>">
 					<input type="hidden" name="ed_date" id="ed_date" value="<?php echo $data['end_date'];?>">
 					</div>

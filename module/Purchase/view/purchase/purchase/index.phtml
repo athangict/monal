@@ -6,7 +6,10 @@
  */
  	$this->headTitle($this->title);
 ?>
-<?php $minYear = date('Y', strtotime($minYear)); ?> 
+<?php
+	$minYearTs = !empty($minYear) ? strtotime((string) $minYear) : false;
+	$minYear = ($minYearTs !== false) ? date('Y', $minYearTs) : date('Y');
+?> 
 <div class="card">
 	<div class="card-header">
 		<div class="row">

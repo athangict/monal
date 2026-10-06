@@ -7,14 +7,19 @@ foreach ($transactiondtls as $tdtls):
         && ($tdtls->against_status < 4)
     ):
 
-        $debit  = (float) $tdtls->debit;
-        $credit = (float) $tdtls->credit;
+        $remaining = isset($remainingAmounts[(int) $tdtls->id]) ? $remainingAmounts[(int) $tdtls->id] : array('debit' => '0.000', 'credit' => '0.000');
+        $debit  = (float) $remaining['debit'];
+        $credit = (float) $remaining['credit'];
         $amountLabel = '';
 
         if ($debit > $credit && $debit > 0) {
-            $amountLabel = ' [D:' . $tdtls->debit . ']';
+            $amountLabel = ' [D:' . $remaining['debit'] . ']';
         } elseif ($credit > 0) {
-            $amountLabel = ' [C:' . $tdtls->credit . ']';
+            $amountLabel = ' [C:' . $remaining['credit'] . ']';
+        }
+
+        if ($debit <= 0 && $credit <= 0) {
+            continue;
         }
 ?>
         <option value="<?php echo $tdtls->id; ?>">

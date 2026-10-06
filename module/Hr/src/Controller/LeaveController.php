@@ -951,7 +951,7 @@ class LeaveController extends AbstractActionController
 	/**
 	 * Notification Action
 	 */
-	public function notify($leave_id,$privilege_id,$remarks = NULL,$flow_result)
+	public function notify($leave_id,$privilege_id,$remarks,$flow_result)
 	{
 		$userlists='';
 		$applications = $this->getDefinedTable(Hr\LeaveTable::class)->get($leave_id);
@@ -1016,7 +1016,7 @@ class LeaveController extends AbstractActionController
 	/**
 	 * Notification Action
 	 */
-	public function notifyforencash($leave_id,$privilege_id,$remarks = NULL,$flow_result)
+	public function notifyforencash($leave_id,$privilege_id,$remarks,$flow_result)
 	{
 		$userlists='';
 		$applications = $this->getDefinedTable(Hr\LeaveEncashTable::class)->get($leave_id);

@@ -188,15 +188,50 @@ class AjaxresponseController extends AbstractActionController
 		$subHead = $this->params()->fromPost('sub_head', $this->_id);
 		$where = new \Laminas\Db\Sql\Where();
 		$where->equalTo('sub_head', $subHead)
-			->equalTo('against', 0)
+			->equalTo('status', 4)
 			->isNotNull('ref_no')
 			->notEqualTo('ref_no', '')
 			->expression('TRIM(ref_no) <> ?', array(''));
 
+		$transactiondtlsResult = $this->getDefaultTable("fa_transaction_details")->select(function($select) use ($where) {
+			$select->where($where);
+		});
+
+		$transactiondtls = array();
+		$remainingAmounts = array();
+		foreach($transactiondtlsResult as $tdtls){
+			$transactiondtls[] = $tdtls;
+			$sourceId = (int) $tdtls->id;
+			$sourceDebit = (float) str_replace(',', '', (string) $tdtls->debit);
+			$sourceCredit = (float) str_replace(',', '', (string) $tdtls->credit);
+			$sourceAmount = ($sourceDebit > 0) ? $sourceDebit : $sourceCredit;
+
+			$usedAmount = 0.0;
+			$usedRows = $this->getDefaultTable('fa_transaction_details')->select(array('against' => $sourceId, 'status' => 4));
+			foreach($usedRows as $usedRow){
+				$usedDebit = (float) str_replace(',', '', (string) $usedRow['debit']);
+				$usedCredit = (float) str_replace(',', '', (string) $usedRow['credit']);
+				$usedAmount += ($usedDebit > 0) ? $usedDebit : $usedCredit;
+			}
+			$remainingAmount = max($sourceAmount - $usedAmount, 0);
+
+			if($sourceDebit > 0){
+				$remainingDebit = $remainingAmount;
+				$remainingCredit = 0;
+			}else{
+				$remainingCredit = $remainingAmount;
+				$remainingDebit = 0;
+			}
+
+			$remainingAmounts[$sourceId] = array(
+				'debit' => number_format($remainingDebit, 3, '.', ''),
+				'credit' => number_format($remainingCredit, 3, '.', ''),
+			);
+		}
+
 		$viewModel = new ViewModel(array(
-			'transactiondtls' => $this->getDefaultTable("fa_transaction_details")->select(function($select) use ($where) {
-				$select->where($where);
-			}),
+			'transactiondtls' => $transactiondtls,
+			'remainingAmounts' => $remainingAmounts,
 		));
 		$viewModel->setTerminal(true);
 		return  $viewModel;
@@ -214,15 +249,37 @@ class AjaxresponseController extends AbstractActionController
 		$creditAmount = '0.000';
 
 		if ($referenceValue !== '' && $referenceValue !== null) {
+			$referenceId = 0;
 			if (is_numeric($referenceValue)) {
-				$debitAmount = $transactiondetailTable->getColumn($referenceValue, 'debit');
-				$creditAmount = $transactiondetailTable->getColumn($referenceValue, 'credit');
+				$referenceId = (int) $referenceValue;
 			} else {
 				$rows = $this->getDefaultTable('fa_transaction_details')->select(array('ref_no' => $referenceValue));
 				foreach ($rows as $row) {
-					$debitAmount = $row['debit'];
-					$creditAmount = $row['credit'];
+					$referenceId = (int) $row['id'];
 					break;
+				}
+			}
+
+			if($referenceId > 0){
+				$sourceDebit = (float) str_replace(',', '', (string) $transactiondetailTable->getColumn($referenceId, 'debit'));
+				$sourceCredit = (float) str_replace(',', '', (string) $transactiondetailTable->getColumn($referenceId, 'credit'));
+				$sourceAmount = ($sourceDebit > 0) ? $sourceDebit : $sourceCredit;
+
+				$usedAmount = 0.0;
+				$usedRows = $this->getDefaultTable('fa_transaction_details')->select(array('against' => $referenceId, 'status' => 4));
+				foreach($usedRows as $usedRow){
+					$usedDebit = (float) str_replace(',', '', (string) $usedRow['debit']);
+					$usedCredit = (float) str_replace(',', '', (string) $usedRow['credit']);
+					$usedAmount += ($usedDebit > 0) ? $usedDebit : $usedCredit;
+				}
+				$remainingAmount = max($sourceAmount - $usedAmount, 0);
+
+				if($sourceDebit > 0){
+					$debitAmount = number_format($remainingAmount, 3, '.', '');
+					$creditAmount = '0.000';
+				}else{
+					$creditAmount = number_format($remainingAmount, 3, '.', '');
+					$debitAmount = '0.000';
 				}
 			}
 		}

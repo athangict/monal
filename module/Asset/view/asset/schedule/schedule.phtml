@@ -109,6 +109,11 @@
 					$lastDayOfPreviousMonth = $firstDayOfCurrentMonth->modify('-1 day');
 					$daysInPreviousMonth = (int)$lastDayOfPreviousMonth->format('d');
 					$current_dep=$this->depreciationObj->getCurrentDep($atype['id'],$currentYear,'dep_amount');
+					$acc_dep_current = 0;
+					$disposed_asset_dep = 0;
+					$closing2 = $opening;
+					$netcurrent = $closing1 - $closing2;
+					$netprevious = $astop['totalasset'] - $opening;
 					//
 					if(!empty($assets)){
 						$current_dep=$this->depreciationObj->getCurrentDep($atype['id'],$currentYear,'dep_amount');

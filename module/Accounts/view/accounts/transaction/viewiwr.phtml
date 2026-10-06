@@ -34,6 +34,9 @@
 		<div class="widget-body">
 			<div class="widget-main padding-24">
 				<div id="report-print">
+					<div class="print-title" style="display:none; border-bottom:1px solid #666; padding-bottom:3px; margin-bottom:8px;">
+						<b><?php echo $voucher_type;?> | <?php echo $voucher_no;?> | <?php $this->status($status);?></b>
+					</div>
 					<div class="row" id="convert-tb0">
 						<div class="col-lg-9" id="convert-tb1">
 							<ul class="list-unstyled spaced">
@@ -163,6 +166,6 @@
 	$('#print').genpdfinvoice3({
 		content: '#report-print',
 		src:"<?php echo $this->url('print', array('action' => 'index'));?>",
-		orentation:"L",//L =landscape, P = potrait
+		orentation:"P",//L =landscape, P = potrait
 	});
 </script>

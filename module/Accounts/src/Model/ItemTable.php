@@ -23,14 +23,18 @@ class ItemTable extends AbstractTableGateway
 	 */
 	public function getAll()
 	{  
-	    $adapter = $this->adapter;
-	    $sql = new Sql($adapter);
-	    $select = $sql->select();
-	    $select->from($this->table);
-	    
-	    $selectString = $sql->getSqlStringForSqlObject($select);
-	    $results = $adapter->query($selectString, $adapter::QUERY_MODE_EXECUTE)->toArray();
-	    return $results;
+	    try {
+	    	$adapter = $this->adapter;
+	    	$sql = new Sql($adapter);
+	    	$select = $sql->select();
+	    	$select->from($this->table);
+	    	
+	    	$selectString = $sql->getSqlStringForSqlObject($select);
+	    	$results = $adapter->query($selectString, $adapter::QUERY_MODE_EXECUTE)->toArray();
+	    	return $results;
+	    } catch (\Throwable $e) {
+	    	return array();
+	    }
 	}
 	
 	/**
@@ -40,16 +44,20 @@ class ItemTable extends AbstractTableGateway
 	 */
 	public function get($param)
 	{
-		$where = ( is_array($param) )? $param: array('id' => $param);
-		$adapter = $this->adapter;
-		$sql = new Sql($adapter);
-		$select = $sql->select();
-		$select->from($this->table)
-		       ->where($where);
-		$selectString = $sql->getSqlStringForSqlObject($select);
-		//echo $selectString;exit;
-		$results = $adapter->query($selectString, $adapter::QUERY_MODE_EXECUTE)->toArray();
-		return $results;
+		try {
+			$where = ( is_array($param) )? $param: array('id' => $param);
+			$adapter = $this->adapter;
+			$sql = new Sql($adapter);
+			$select = $sql->select();
+			$select->from($this->table)
+			       ->where($where);
+			$selectString = $sql->getSqlStringForSqlObject($select);
+			//echo $selectString;exit;
+			$results = $adapter->query($selectString, $adapter::QUERY_MODE_EXECUTE)->toArray();
+			return $results;
+		} catch (\Throwable $e) {
+			return array();
+		}
 	}
 	
 	/**
@@ -60,6 +68,7 @@ class ItemTable extends AbstractTableGateway
      */
     public function getColumn($param, $column)
     {         
+		    try {
             $where = ( is_array($param) )? $param: array('id' => $param);
             $fetch = array($column);
             $adapter = $this->adapter;       
@@ -76,7 +85,10 @@ class ItemTable extends AbstractTableGateway
                $columns =  $result[$column];
             endforeach; 
           
-            return $columns;       
+				return $columns;
+				} catch (\Throwable $e) {
+				 	return '';
+				}
     }
 	
 	/**

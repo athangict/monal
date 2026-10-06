@@ -2825,6 +2825,11 @@ class TransactionController extends AbstractActionController
 	{
 		return $this->viewagainstAction();
 	}
+
+	public function commitRAction()
+	{
+		return $this->commitAAction();
+	}
 	/**---------------------------RECEIPT------------------------------------------------------------- */
 	/**
 	 *  index action
@@ -2982,9 +2987,16 @@ class TransactionController extends AbstractActionController
 					if(isset($location[$i]) && is_numeric($location[$i])):
 					    /**FOR AGAINST UPDATE-*/
 						 $against_st[$i]=0;
-					    if($credit[$i]!='0.000'):
-							$validity[$i]= $this->getDefinedTable(Accounts\TransactiondetailTable::class)->getColumn($against[$i],'debit');
-					     	$against_st[$i] = ($validity[$i] != $credit[$i]) ? '3' : 0; 
+					    if((!empty($credit[$i]) || !empty($debit[$i])) && !empty($against[$i])):
+							$ref_debit = $this->getDefinedTable(Accounts\TransactiondetailTable::class)->getColumn($against[$i],'debit');
+							$ref_credit = $this->getDefinedTable(Accounts\TransactiondetailTable::class)->getColumn($against[$i],'credit');
+							$ref_debit_amount = (float) str_replace(',', '', (string) $ref_debit);
+							$ref_credit_amount = (float) str_replace(',', '', (string) $ref_credit);
+							$actual_amount = ($ref_debit_amount > 0) ? $ref_debit_amount : $ref_credit_amount;
+							$entered_credit = (float) str_replace(',', '', (string) $credit[$i]);
+							$entered_debit = (float) str_replace(',', '', (string) $debit[$i]);
+							$applied_amount = ($entered_credit > 0) ? $entered_credit : $entered_debit;
+					     	$against_st[$i] = ($applied_amount > 0 && $applied_amount < $actual_amount) ? '3' : 0; 
 						 endif;
 					  /**END-*/
 						$tdetailsdata = array(
@@ -3022,7 +3034,7 @@ class TransactionController extends AbstractActionController
 				if($result1 > 0):
 					$this->_connection->commit(); // commit transaction on success
 					$this->flashMessenger()->addMessage("success^ New Transaction successfully added | ".$voucher_no);
-					return $this->redirect()->toRoute('transaction', array('action' =>'viewagainst', 'id' => $result));
+					return $this->redirect()->toRoute('transaction', array('action' =>'viewreference', 'id' => $result));
 				else:
 					$this->_connection->rollback(); // rollback transaction over failure
 					$this->flashMessenger()->addMessage("Failed^ Failed to add new Transaction");		
@@ -3165,22 +3177,22 @@ class TransactionController extends AbstractActionController
 				if($result1 <= 0):
 					$this->_connection->rollback();
 					$this->flashMessenger()->addMessage("error^ Failed to save one or more transaction detail rows.");
-					return $this->redirect()->toRoute('transaction', array('action' =>'viewagainst', 'id' => $this->_id));
+					return $this->redirect()->toRoute('transaction', array('action' =>'viewreference', 'id' => $this->_id));
 				endif;
 				if (!$this->removeMissingTransactionDetails($result, $submitted_detail_ids)):
 					$this->_connection->rollback();
 					$this->flashMessenger()->addMessage("error^ Invalid detail row selection detected. Please reload and try again.");
-					return $this->redirect()->toRoute('transaction', array('action' =>'viewagainst', 'id' => $this->_id));
+					return $this->redirect()->toRoute('transaction', array('action' =>'viewreference', 'id' => $this->_id));
 				endif;
 				$this->_connection->commit(); // commit transaction on success
 				$this->flashMessenger()->addMessage("success^ Transaction successfully updated | ".$voucher_no);
-				return $this->redirect()->toRoute('transaction', array('action' =>'viewagainst', 'id' => $this->_id));
+				return $this->redirect()->toRoute('transaction', array('action' =>'viewreference', 'id' => $this->_id));
 			}
 			else
 			{
 				$this->_connection->rollback(); // rollback transaction over failure
 				$this->flashMessenger()->addMessage("error^ Failed to modify  Transaction");	
-				return $this->redirect()->toRoute('transaction', array('action' =>'viewagainst', 'id' => $this->_id));
+				return $this->redirect()->toRoute('transaction', array('action' =>'viewreference', 'id' => $this->_id));
 			}
 		}
 		$user_region= $this->getDefinedTable(Administration\UsersTable::class)->getColumn($this->_login_id,'region');
@@ -3210,14 +3222,18 @@ class TransactionController extends AbstractActionController
 	 **/
 	public function viewagainstAction(){
 		$this->init();
-		return new ViewModel(array(
+		$viewModel = new ViewModel(array(
 		    'login_id'  =>$this->_login_id,
 			'transactionrow' => $this->getDefinedTable(Accounts\TransactionTable::class)->get($this->_id),
 			'transactiondetails' => $this->getDefinedTable(Accounts\TransactiondetailTable::class)->get(array('transaction' => $this->_id)),
+			'transactionObj' => $this->getDefinedTable(Accounts\TransactionTable::class),
+			'tdetailsObj' => $this->getDefinedTable(Accounts\TransactiondetailTable::class),
 			'userObj' => $this->getDefinedTable(Administration\UsersTable::class),
 			'empObj' => $this->getDefinedTable(Hr\EmployeeTable::class),
             'bank_ref_typeObj' => $this->getDefinedTable(Accounts\BankreftypeTable::class),
 		));
+		$viewModel->setTemplate('accounts/transaction/viewreference');
+		return $viewModel;
 	}
 	/**
 	 * commit addagainstcredit action
@@ -3248,8 +3264,13 @@ class TransactionController extends AbstractActionController
 			foreach($ids as $tasid):
 				$againstID =  $this->getDefinedTable(Accounts\TransactiondetailTable::class)->getColumn($tasid['id'], 'against');
 				$creditAmount =  $this->getDefinedTable(Accounts\TransactiondetailTable::class)->getColumn($tasid['id'], 'credit');
+				$debitAmount =  $this->getDefinedTable(Accounts\TransactiondetailTable::class)->getColumn($tasid['id'], 'debit');
+				$appliedAmount = (float) str_replace(',', '', (string) $creditAmount);
+				if($appliedAmount <= 0){
+					$appliedAmount = (float) str_replace(',', '', (string) $debitAmount);
+				}
 				if($againstID!=null && $againstID!=0):
-					if($creditAmount!='0.00'):
+					if($appliedAmount > 0):
 						if($tasid['against_status']==3):
 							$against=0;
 						else:
@@ -3267,7 +3288,7 @@ class TransactionController extends AbstractActionController
 		    endforeach;//exit;
 			$this->flashMessenger()->addMessage("success^  Transaction Commited Successfully | ".$voucher_no);
 		endif;
-		return $this->redirect()->toRoute("transaction", array("action"=>"viewagainst", "id" => $this->_id));
+		return $this->redirect()->toRoute("transaction", array("action"=>"viewreference", "id" => $this->_id));
 	}
 	/**ADD AGAINST DEBIT_AGAINST--------------------------------------
 	 * It fetch credit from previous transaction and autofill the debit
@@ -4305,10 +4326,16 @@ class TransactionController extends AbstractActionController
 					    $against_st[$i]=0;
 						$validity[$i]='0.000';
 						//$against[$i]=0;
-					    if($credit[$i]!='0.000'):
-							$validity[$i]= $this->getDefinedTable(Accounts\TransactiondetailTable::class)->getColumn($against[$i],'debit');
-						   // Calculate against_st based on validity and debit
-					     	$against_st[$i] = ($validity[$i] != $credit[$i]) ? '3' : 0; // Set to '3' if condition met, otherwise empty
+					    if((!empty($credit[$i]) || !empty($debit[$i])) && !empty($against[$i])):
+							$ref_debit = $this->getDefinedTable(Accounts\TransactiondetailTable::class)->getColumn($against[$i],'debit');
+							$ref_credit = $this->getDefinedTable(Accounts\TransactiondetailTable::class)->getColumn($against[$i],'credit');
+							$ref_debit_amount = (float) str_replace(',', '', (string) $ref_debit);
+							$ref_credit_amount = (float) str_replace(',', '', (string) $ref_credit);
+							$actual_amount = ($ref_debit_amount > 0) ? $ref_debit_amount : $ref_credit_amount;
+							$entered_credit = (float) str_replace(',', '', (string) $credit[$i]);
+							$entered_debit = (float) str_replace(',', '', (string) $debit[$i]);
+							$applied_amount = ($entered_credit > 0) ? $entered_credit : $entered_debit;
+					     	$against_st[$i] = ($applied_amount > 0 && $applied_amount < $actual_amount) ? '3' : 0;
 						endif;
 						$tdetailsdata = array(
 							'transaction' => $result,
@@ -4695,7 +4722,12 @@ class TransactionController extends AbstractActionController
 			foreach($ids as $tasid):
 				$againstID =  $this->getDefinedTable(Accounts\TransactiondetailTable::class)->getColumn($tasid['id'], 'against');
 				$creditAmount =  $this->getDefinedTable(Accounts\TransactiondetailTable::class)->getColumn($tasid['id'], 'credit');
-				if($creditAmount!='0.00'):
+				$debitAmount =  $this->getDefinedTable(Accounts\TransactiondetailTable::class)->getColumn($tasid['id'], 'debit');
+				$appliedAmount = (float) str_replace(',', '', (string) $creditAmount);
+				if($appliedAmount <= 0){
+					$appliedAmount = (float) str_replace(',', '', (string) $debitAmount);
+				}
+				if($againstID!=null && $againstID!=0 && $appliedAmount > 0):
 					if($tasid['against_status']==3):
 						$against=0;
 					else:

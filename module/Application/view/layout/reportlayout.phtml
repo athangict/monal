@@ -21,7 +21,7 @@ $skinClass = isset($skinClassMap[$appTemplate]) ? $skinClassMap[$appTemplate] : 
 <?= $this->doctype() ?>
 <html lang="en">
     <head>
-		<?php $assetVersion = '20260831-1'; ?>
+		<?php $assetVersion = '20261005-2'; ?>
         <meta charset="utf-8">
 				<?= $this->headTitle($appName . ' ')->setSeparator(' - ')->setAutoEscape(false) ?>
 
@@ -41,7 +41,7 @@ $skinClass = isset($skinClassMap[$appTemplate]) ? $skinClassMap[$appTemplate] : 
 		<?php echo $this->headScript()->prependFile($this->basePath() . '/old/js/respond.min.js', 'text/javascript', array('conditional' => 'IE'))
 									->prependFile($this->basePath() . '/old/js/html5shiv.min.js', 'text/javascript', array('conditional' => 'IE'))
 									->prependFile($this->basePath() . '/old/js/jquery.browser.js')
-									->prependFile($this->basePath() . '/old/js/ch_genpdf.js')
+									->prependFile($this->basePath() . '/old/js/ch_genpdf.js?v=' . $assetVersion)
 									->prependFile($this->basePath() . '/old/js/ch_addrow.js?v=' . $assetVersion)
 									->prependFile($this->basePath() . '/old/js/jquery.mousewheel.js')
 									->prependFile($this->basePath() . '/old/js/jquery.jscrollpane.custom.min.js')
