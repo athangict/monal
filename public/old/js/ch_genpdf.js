@@ -239,7 +239,7 @@
 								"<div class='modal-content text-center'>"+
 								"<span data-dismiss='modal' aria-label='Close' style=' cursor:pointer; position:absolute; top:-12px; right:-10px;'><span class='white fa fa-times-circle fa-2x'></span></span>"+
 								"<img id='loadingMessage' src='"+baseUrl+"/images/loading.gif'>"+
-								"<iframe src='"+options.src+"' width='100%'  frameborder='0' style='overflow:hidden; min-height:1200px; margin-bottom:-5px;' scrolling='no' id='iframe' name='iframe'> </iframe>"+
+								"<iframe src='about:blank' width='100%'  frameborder='0' style='overflow:hidden; min-height:1200px; margin-bottom:-5px;' scrolling='no' id='iframe' name='iframe'> </iframe>"+
 								"</div>"+
 								"</div>"+
 								"</div>"+
@@ -251,38 +251,57 @@
 								"</form>";
 			var reportdom =$(options.content).clone(true);
 			$.when($('body').append(rc)).done(function(){
-				$.when(				
-					reportdom.find('a').each(function(){
-						$(this).remove();
-					}),
-					reportdom.find('table').addClass('table-condensed'),
-					reportdom.find('div#convert-table').wrap('<table width="100%" id="profile-tab0"><tr></tr></table>'),
-					reportdom.find('span#convert-tab1').wrap('<td width="30%"><div width="100%"> </div></td>'),
-					reportdom.find('span#convert-tab2').wrap('<td></td>'),
-					reportdom.find('div').each(function(){
-						var $this = $(this);
-						if(!$this.hasClass('space')){
-							if($this.html().replace(/\s|&nbsp;/g, '').length == 0)
-								$this.remove();
-						}
-						$this.has('div').contents().unwrap();
-					}),
-					reportdom.find('span').each(function(){
-						$(this).removeClass().removeAttr('style');
-					}),
-					reportdom.contents().filter(function() { return (this.nodeType == 3 && !/\S/.test(this.nodeValue)); }).remove(),
-					$('form#report_form #dom').val($.trim(reportdom.html())),
-					$('form#report_form #title').val($(document).find("title").text())
-				).done(function(){	
-					$.when($('form#report_form').submit(), $('form#report_form').submit(function(event){
-						event.preventDefault();
-					})).done(function(){			
-						$('#pdfmodal').modal({show:true});
-					});	
+				var escapeHtml = function(value) {
+					return $('<div>').text($.trim(value || '')).html();
+				};
+				var profile = reportdom.find('#convert-tab2');
+				var image = reportdom.find('#convert-tab1 img').first().attr('src') || '';
+				var partyCode = escapeHtml(profile.find('h4 .middle').first().text());
+				var partyRole = escapeHtml(profile.find('h4 .label').first().text());
+				var profileRows = '';
+				profile.find('.profile-info-row').each(function() {
+					var label = escapeHtml($(this).find('.profile-info-name').text());
+					var value = escapeHtml($(this).find('.profile-info-value').text().replace(/\s+/g, ' '));
+					profileRows += '<tr>' +
+						'<td width="30%" style="background-color:#f1f5f9;color:#334155;font-weight:bold;border:1px solid #cbd5e1;padding:7px;">' + label + '</td>' +
+						'<td width="70%" style="color:#1f2937;border:1px solid #cbd5e1;padding:7px;">' + (value || '&nbsp;') + '</td>' +
+						'</tr>';
 				});
+				var subheadRows = '';
+				reportdom.find('table tr').each(function() {
+					var cells = $(this).find('td');
+					if (cells.length) {
+						subheadRows += '<tr>';
+						cells.each(function() {
+							subheadRows += '<td style="border:1px solid #cbd5e1;padding:6px;color:#1f2937;">' +
+								escapeHtml($(this).text()) + '</td>';
+						});
+						subheadRows += '</tr>';
+					}
+				});
+				var reportHtml = '<h2 style="font-size:18px;color:#1d4ed8;">' + partyCode +
+					(partyRole ? ' <span style="font-size:10px;color:#475569;">' + partyRole + '</span>' : '') +
+					'</h2>' +
+					(image ? '<p><img src="' + image.replace(/"/g, '&quot;') + '" width="140" /></p>' : '') +
+					'<table width="100%" cellpadding="6" cellspacing="0" style="border-collapse:collapse;color:#1f2937;">' +
+					profileRows +
+					'</table>' +
+					'<br /><h3 style="font-size:14px;color:#1d4ed8;">Subhead</h3>' +
+					'<table width="100%" cellpadding="6" cellspacing="0" style="border-collapse:collapse;">' +
+					'<tr>' +
+					'<td width="8%" style="background-color:#e2e8f0;border:1px solid #cbd5e1;padding:6px;font-weight:bold;">#</td>' +
+					'<td width="25%" style="background-color:#e2e8f0;border:1px solid #cbd5e1;padding:6px;font-weight:bold;">Head Type</td>' +
+					'<td width="32%" style="background-color:#e2e8f0;border:1px solid #cbd5e1;padding:6px;font-weight:bold;">Head</td>' +
+					'<td width="35%" style="background-color:#e2e8f0;border:1px solid #cbd5e1;padding:6px;font-weight:bold;">Description</td>' +
+					'</tr>' + subheadRows +
+					'</table>';
+				$('form#report_form #dom').val(reportHtml);
+				$('form#report_form #title').val($(document).find("title").text());
 				$('#iframe').load(function () {
 					$('#loadingMessage').css('display', 'none');
 				});
+				$('#pdfmodal').modal({show:true});
+				$('form#report_form')[0].submit();
 			});
 		});
 	}

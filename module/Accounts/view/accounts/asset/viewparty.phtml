@@ -5,6 +5,7 @@
  * 
  */
 	$this->headTitle($this->title);
+	$this->headScript()->appendFile($this->basePath() . '/old/js/ch_genpdf.js?v=20261006-4');
 	$party='';
 ?>
 <?php echo $this->partial('accounts/asset/partial.phtml', array('active' => 'party')); ?>

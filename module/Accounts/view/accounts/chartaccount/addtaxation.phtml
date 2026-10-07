@@ -1,0 +1,99 @@
+<?php
+/**
+ * View -- of Accounts/ChartaccountController/addtaxationAction
+ */
+?>
+<form id="#form" method="post" action="<?php echo $this->url('chartaccount', array('action' => 'addtaxation')); ?>" enctype="multipart/form-data">
+	<div class="modal-header">
+		<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+		<h4 class="modal-title"><i class="fa fa-asterisk"></i> New Taxation</h4>
+	</div>
+	<div class="modal-body">
+		<div class="panel panel-default">
+			<div class="panel-body">
+				<div class="form-group">
+					<label for="taxation" class="control-label">Taxation</label>
+					<input class="form-control" name="taxation" id="taxation" size="30" placeholder="Taxation name" required>
+				</div>
+				<div class="form-group">
+					<label for="code" class="control-label">Code</label>
+					<input class="form-control" name="code" id="code" size="30" placeholder="Code">
+				</div>
+				<div class="form-group">
+					<label for="head_type" class="control-label">Head Type</label>
+					<select id="head_type" name="head_type" class="form-control" data-placeholder="Select" required>
+						<option value=""></option>
+						<?php foreach ($headtype as $headtypeRow):?>
+							<option value="<?php echo $headtypeRow['id'];?>">
+								<?php echo $headtypeRow['head_type']; ?>
+							</option>
+						<?php endforeach;?>
+					</select>
+				</div>
+				<div class="form-group">
+					<label for="head" class="control-label">Head</label>
+					<select id="head" name="head" class="form-control" data-placeholder="Select" required>
+						<option value=""></option>
+					</select>
+				</div>
+			</div>
+		</div>
+	</div>
+	<div class="modal-footer">
+		<button type="submit" class="btn btn-success"><i class="fa fa-check"></i> Save</button>
+		<button type="button" class="btn btn-warning" data-dismiss="modal"><i class="fa fa-times"></i> Cancel</button>
+	</div>
+</form>
+<script>
+$(function(){
+	$("#head_type").change(function() {
+		$("#head").load('<?php echo $this->url("ajresponse", array("action" => "gethead")); ?>/'+ $("#head_type").val(), function() {
+			$("#head").trigger("chosen:updated");
+			$('form').formValidation('revalidateField','head');
+		});
+    });
+
+	const fv = FormValidation.formValidation(document.getElementById('#form'), {
+		fields: {
+			taxation: {
+				validators: {
+					notEmpty: {
+						message: 'Please provide taxation name.'
+					}
+				}
+			},
+			head_type: {
+				validators: {
+					notEmpty: {
+						message: 'Please select head type.'
+					}
+				}
+			},
+			head: {
+				validators: {
+					notEmpty: {
+						message: 'Please select head.'
+					}
+				}
+			},
+		},
+		plugins: {
+			trigger: new FormValidation.plugins.Trigger(),
+			bootstrap3: new FormValidation.plugins.Bootstrap3(),
+			submitButton: new FormValidation.plugins.SubmitButton(),
+			defaultSubmit: new FormValidation.plugins.DefaultSubmit(),
+		},
+	}).on('core.element.validated', function (e) {
+		if (e.valid) {
+			$('div#'+ e.field.replace('[]','') +'_chosen').removeClass('is-invalid');
+			$('div#'+ e.field.replace('[]','') +'_chosen').addClass('is-valid');
+		} else {
+			$('div#'+ e.field.replace('[]','') +'_chosen').removeClass('is-valid');
+			$('div#'+ e.field.replace('[]','') +'_chosen').addClass('is-invalid');
+		}
+	});
+	$('form select').chosen().change(function () {
+		fv.revalidateField($(this).attr('name'));
+	});
+});
+</script>

@@ -1,4 +1,6 @@
 <?php
+$report = $this->sessioncontent('report');
+$report = is_array($report) ? $report : array();
 $html = '
 <html>
 <head>
@@ -16,26 +18,26 @@ $html = '
 </head>
 <body>
   <div id="content">
-'.$this->sessioncontent('report')['dom'].'
+'.(isset($report['dom']) ? $report['dom'] : '').'
   </div>
 </body>
 </html>
 ';
 //echo $html;
 
-use Dompdf\Dompdf;
-use Dompdf\Options;
+$orientation = isset($report['orentation']) && $report['orentation'] === 'L' ? 'L' : 'P';
+$size = isset($report['size']) && $report['size'] !== '' ? $report['size'] : 'A4';
+$title = isset($report['title']) ? $report['title'] : 'Report';
 
+$pdf = new \TCPDF($orientation, 'mm', $size, true, 'UTF-8', false);
+$pdf->setPrintHeader(false);
+$pdf->setPrintFooter(false);
+$pdf->SetTitle($title);
+$pdf->SetFont('helvetica', '', 10);
+$pdf->SetMargins(10, 10, 10);
+$pdf->SetAutoPageBreak(true, 10);
+$pdf->AddPage();
+$pdf->writeHTML($html, true, false, true, false, '');
 
-$orentation = ($this->sessioncontent('report')['orentation'] =="L")? "landscape":"portrait";
-$size = $this->sessioncontent('report')['size'];
-$pdf = new Dompdf();
-$pdf->set_Option('isHtml5ParserEnabled', true);
-$pdf->set_paper($size, $orentation);
-$pdf->load_html($html);
-//$pdf->set_Option('defaultMediaType', 'all');
-//$pdf->set_Option('isFontSubsettingEnabled', true);
-
-$name = $this->sessioncontent('report')['title'].date('ymd').'.pdf'; 
-$pdf->render();
-$pdf->stream($name, array("Attachment" => 0));
+$safeTitle = preg_replace('/[^A-Za-z0-9_-]+/', '_', $title);
+$pdf->Output(($safeTitle !== '' ? $safeTitle : 'Report') . date('ymd') . '.pdf', 'I');

@@ -115,16 +115,11 @@
 					</tr>
 					<?php if($data['tier'] > 0):?>
 					<tr>
-						<th> <?php echo "From".$data['start_date']."to".$data['end_date'];?> </th>
-						<th> <?php $prevoius_start_year = date('y', strtotime($data['start_date'])) - 1;
-						$prevoius_start_month = date('m', strtotime($data['start_date']));
-						$prevoius_start_day = date('d', strtotime($data['start_date']));
-						$pre_end_year = date('y', strtotime($data['end_date'])) - 1;
-						$pre_end_month = date('m', strtotime($data['end_date']));
-						$pre_end_day = date('d', strtotime($data['end_date']));
-						$pre_starting_date = date('Y-m-d', strtotime($prevoius_start_year.'-'.$prevoius_start_month.'-'.$prevoius_start_day));
-						$pre_ending_date = date('Y-m-d', strtotime($pre_end_year.'-'.$pre_end_month.'-'.$pre_end_day));
-						echo "From".$pre_starting_date."to".$pre_ending_date;?> </th>
+						<th> <?php echo "From ".$data['start_date']." to ".$data['end_date'];?> </th>
+						<th> <?php
+						$pre_starting_date = date('Y-m-d', strtotime('-1 year', strtotime($data['start_date'])));
+						$pre_ending_date = date('Y-m-d', strtotime('-1 year', strtotime($data['end_date'])));
+						echo "From ".$pre_starting_date." to ".$pre_ending_date;?> </th>
 					</tr>
 					<?php else: ?>
 					<tr>

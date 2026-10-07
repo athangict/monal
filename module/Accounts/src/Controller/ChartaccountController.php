@@ -357,6 +357,167 @@ class ChartaccountController extends AbstractActionController
 		return $ViewModel;
 	}
 	/**
+	 * taxation action
+	 */
+	public function taxationAction()
+	{
+		$this->init();
+		$taxationTable = $this->getDefinedTable(Accounts\TaxationTable::class)->getAll();
+		$paginator = new \Laminas\Paginator\Paginator(new \Laminas\Paginator\Adapter\ArrayAdapter($taxationTable));
+		$page = 1;
+		if ($this->params()->fromRoute('page')) $page = $this->params()->fromRoute('page');
+		$paginator->setCurrentPageNumber((int)$page);
+		$paginator->setItemCountPerPage(20);
+		$paginator->setPageRange(8);	
+		return new ViewModel(array(
+			'title'       => 'Taxation',
+			'paginator'   => $paginator,
+			'page'        => $page,
+		));
+	}
+	/**
+	 * function/action to add taxation
+	 */
+	public function addtaxationAction()
+	{
+		$this->init();
+		if($this->getRequest()->isPost()){
+			$form = $this->getRequest()->getPost();
+			$data = array(
+				'taxation' => $form['taxation'],
+				'class' => $form['code'],
+				'head_type' => $form['head_type'],
+				'head' => $form['head'],
+				'author' =>$this->_author,
+				'created' =>$this->_created,
+				'modified' =>$this->_modified,
+			);
+			$data = $this->_safedataObj->rteSafe($data);
+			$this->_connection->beginTransaction();
+			try{
+				$result = $this->getDefinedTable(Accounts\TaxationTable::class)->save($data);
+				if($result > 0):
+					$this->syncTaxationSubhead($result, $form['head'], $form['taxation'], $form['code']);
+					$this->_connection->commit();
+					$this->flashMessenger()->addMessage("success^ New taxation successfully added");
+				else:
+					$this->_connection->rollback();
+					$this->flashMessenger()->addMessage("Failed^ Failed to add taxation");
+				endif;
+			}catch(\Exception $e){
+				$this->_connection->rollback();
+				throw $e;
+			}
+			return $this->redirect()->toRoute('chartaccount', array('action'=>'taxation'));
+		}
+		$ViewModel = new ViewModel(array(
+			'headtype' => $this->getDefinedTable(Accounts\HeadtypeTable::class)->getAll(),
+		));
+		$ViewModel->setTerminal(True);
+		return $ViewModel;
+	}
+	/**
+	 * edittaxation action
+	 **/
+	public function edittaxationAction()
+	{
+		$this->init();
+		if($this->getRequest()->isPost())
+		{
+			$form=$this->getRequest()->getPost();
+			$data=array(
+				'id' => $this->_id,
+				'taxation' => $form['taxation'],
+				'class' => $form['code'],
+				'head_type' => $form['head_type'],
+				'head' => $form['head'],
+				'author' =>$this->_author,
+				'modified' =>$this->_modified,
+			);
+			$data = $this->_safedataObj->rteSafe($data);
+			$this->_connection->beginTransaction();
+			try{
+				$result = $this->getDefinedTable(Accounts\TaxationTable::class)->save($data);
+				if($result > 0):
+					$this->syncTaxationSubhead($result, $form['head'], $form['taxation'], $form['code']);
+					$this->_connection->commit();
+					$this->flashMessenger()->addMessage("success^ Taxation successfully updated");
+				else:
+					$this->_connection->rollback();
+					$this->flashMessenger()->addMessage("Failed^ Failed to update taxation");
+				endif;
+			}catch(\Exception $e){
+				$this->_connection->rollback();
+				throw $e;
+			}
+			return $this->redirect()->toRoute('chartaccount', array('action'=>'taxation'));
+		}
+
+		$ViewModel = new ViewModel(array(
+			'taxation' => $this->getDefinedTable(Accounts\TaxationTable::class)->get($this->_id),
+			'headtype' => $this->getDefinedTable(Accounts\HeadtypeTable::class)->getAll(),
+			'headObj' => $this->getDefinedTable(Accounts\HeadTable::class),
+		));
+		$ViewModel->setTerminal(True);
+		return $ViewModel;
+	}
+
+	protected function getTaxationTypeId()
+	{
+		$typeRows = $this->getDefinedTable(Accounts\TypeTable::class)->get(array('type' => 'Taxation'));
+		if(!empty($typeRows) && isset($typeRows[0]['id'])):
+			return (int)$typeRows[0]['id'];
+		endif;
+
+		$typeData = array(
+			'type' => 'Taxation',
+			'author' => $this->_author,
+			'created' => $this->_created,
+			'modified' => $this->_modified,
+		);
+		$typeData = $this->_safedataObj->rteSafe($typeData);
+		return (int)$this->getDefinedTable(Accounts\TypeTable::class)->save($typeData);
+	}
+
+	protected function syncTaxationSubhead($taxationId, $headId, $taxationName, $taxationCode = '')
+	{
+		if((int)$headId < 1):
+			return;
+		endif;
+		$typeId = $this->getTaxationTypeId();
+		$subheads = $this->getDefinedTable(Accounts\SubheadTable::class)->get(array('sh.ref_id' => $taxationId, 'sh.type' => $typeId));
+		$subheadId = (count($subheads) > 0 && isset($subheads[0]['id'])) ? $subheads[0]['id'] : 0;
+		$taxationCode = trim((string)$taxationCode);
+		$shcode = ($taxationCode !== '') ? $taxationCode : substr(trim($taxationName), 0, 14);
+		if($shcode === ''):
+			$shcode = 'TAX-'.$taxationId;
+		endif;
+		$subheadData = array(
+			'head' => $headId,
+			'type' => $typeId,
+			'ref_id' => $taxationId,
+			'code' => $shcode,
+			'name' => $taxationName,
+			'author' => $this->_author,
+			'modified' => $this->_modified,
+		);
+		if($subheadId > 0):
+			$subheadData['id'] = $subheadId;
+		else:
+			$subheadData['created'] = $this->_created;
+		endif;
+		$subheadData = $this->_safedataObj->rteSafe($subheadData);
+		$this->getDefinedTable(Accounts\SubheadTable::class)->save($subheadData);
+
+		if(count($subheads) > 1):
+			for($i = 1; $i < count($subheads); $i++):
+				if(isset($subheads[$i]['id'])):
+					$this->getDefinedTable(Accounts\SubheadTable::class)->remove($subheads[$i]['id']);
+				endif;
+			endfor;
+		endif;
+	}
+	/**
 	 *  head action
 	 */
 	public function headAction()
@@ -632,13 +793,26 @@ class ChartaccountController extends AbstractActionController
 			//}else{ $subheadID = "0"; }
 			//if($subheadID < 1): 
 				$type = $form['type'];
-				$Ref_id = $form['code'];
+				$Ref_id = (isset($form['code']) && $form['code'] !== '') ? $form['code'] : '-1';
+				$head = (isset($form['head']) && $form['head'] !== '') ? $form['head'] : '';
+				$shcode = isset($form['shcode']) ? trim($form['shcode']) : '';
+				$shname = isset($form['shname']) ? trim($form['shname']) : '';
+				if($head === ''):
+					$this->flashMessenger()->addMessage("Failed^ Please select Head.");
+					return $this->redirect()->toRoute('chartaccount', array('action'=>'subhead'));
+				endif;
+				if($shname === ''):
+					$shname = $this->getDefinedTable(Accounts\TypeTable::class)->getColumn($type, 'type');
+				endif;
+				if($shcode === ''):
+					$shcode = substr($shname, 0, 14);
+				endif;
 				$data = array(
-					'head' => $form['head'],
+					'head' => $head,
 					'type' => $type,
 					'ref_id' => $Ref_id,
-					'code' => $form['shcode'],
-					'name' => $form['shname'],
+					'code' => $shcode,
+					'name' => $shname,
 					'author' =>$this->_author,
 					'created' =>$this->_created,
 					'modified' =>$this->_modified,
@@ -725,9 +899,21 @@ class ChartaccountController extends AbstractActionController
 		$form = $this->getRequest()->getPost();
 		
 		$type = $form['type'];
+		$taxationTypeId = $this->getTaxationTypeId();
 		//echo $type;
 		//$type=3;
 		$code.="<option value='-1'>other</option>";
+		if((int)$type === (int)$taxationTypeId):
+			$taxations = $this->getDefinedTable(Accounts\TaxationTable::class)->getAll();
+			foreach($taxations as $taxation):
+				$taxationLabel = isset($taxation['taxation']) ? $taxation['taxation'] : '';
+				if($taxationLabel != ''):
+					$code .="<option value='".$taxation['id']."'>".$taxationLabel."</option>";
+				endif;
+			endforeach;
+			echo json_encode(array('code' => $code));
+			exit;
+		endif;
 		switch ($type){
 			case 1: // Sub Head for Assets
 				    $codeAlls = $this->getDefinedTable(Accounts\AssetsTable::class)->getAll();
@@ -777,7 +963,12 @@ class ChartaccountController extends AbstractActionController
 						$code .="<option value='".$codeAll['id']."'>".$codeAll['full_name']."(".$codeAll['designation'].")</option>";
 					endforeach;
 					break;
-			//default: 	
+			default:
+					$typeName = $this->getDefinedTable(Accounts\TypeTable::class)->getColumn($type, 'type');
+					if(!empty($typeName)):
+						$code .="<option value='".$type."'>".$typeName."</option>";
+					endif;
+					break;
 		}
 		echo json_encode(array(
 			'code' => $code,
@@ -795,6 +986,24 @@ class ChartaccountController extends AbstractActionController
 		$form = $this->getRequest()->getPost();		
 		$subheadID = $form['sub_head'];
 		$type = $form['type'];
+		$taxationTypeId = $this->getTaxationTypeId();
+		$shcode = '';
+		if($subheadID == '-1'):
+			echo json_encode(array(
+				'scode' => '',
+				'shname' => '',
+			));
+			exit;
+		endif;
+		if((int)$type === (int)$taxationTypeId):
+			$shcode = $this->getDefinedTable(Accounts\TaxationTable::class)->getColumn($subheadID, 'taxation');
+			$scode = substr($shcode, 0, 14);
+			echo json_encode(array(
+				'scode' => $scode,
+				'shname' => $shcode,
+			));
+			exit;
+		endif;
 		switch ($type){
 			case 1: // Sub Head for Assets
 				    $shcode = $this->getDefinedTable(Accounts\AssetsTable::class)->getColumn($subheadID, 'code');
@@ -820,6 +1029,9 @@ class ChartaccountController extends AbstractActionController
 			case 8: // Sub head for Employee
 			      	$shcode = $this->getDefinedTable(Hr\EmployeeTable::class)->getColumn($subheadID, 'full_name');
 				    break;
+			default:
+					$shcode = $this->getDefinedTable(Accounts\TypeTable::class)->getColumn($type, 'type');
+					break;
 		}
 		$scode = substr($shcode, 0, 14);
 		echo json_encode(array(
@@ -847,7 +1059,6 @@ class ChartaccountController extends AbstractActionController
             'title'       => 'Journal',
             'paginator'   => $paginator,
 			'page'        => $page,
-			'voucherObj'  => $this->getDefinedTable(Accounts\VoucherTable::class),
         ));
     }  
      /**
@@ -859,7 +1070,6 @@ class ChartaccountController extends AbstractActionController
         if($this->getRequest()->isPost()){
             $form = $this->getRequest()->getPost();
             $data = array( 
-				'code' => $form['code'],
 				'journal' => $form['journal'],
 				'prefix' => $form['prefix'],
 				'author' =>$this->_author,
@@ -875,9 +1085,7 @@ class ChartaccountController extends AbstractActionController
             endif;
             return $this->redirect()->toRoute('chartaccount', array('action'=>'journal'));             
         }
-       $ViewModel = new ViewModel(array(
-	       'vouchers' => $this->getDefinedTable(Accounts\VoucherTable::class)->getAll(),
-        ));      
+       $ViewModel = new ViewModel(array());      
         $ViewModel->setTerminal(True);
         return $ViewModel;            
     }
@@ -892,7 +1100,6 @@ class ChartaccountController extends AbstractActionController
             $form=$this->getRequest()->getPost();
             $data=array(
                 'id' => $this->_id,
-                'code' => $form['code'],
                 'journal' => $form['journal'],
                 'prefix' => $form['prefix'],
                 'author' =>$this->_author,
@@ -909,7 +1116,6 @@ class ChartaccountController extends AbstractActionController
         }
         $ViewModel = new ViewModel(array(
         	'journal' => $this->getDefinedTable(Accounts\JournalTable::class)->get($this->_id),
-			'vouchers' => $this->getDefinedTable(Accounts\VoucherTable::class)->getAll(),
         ));             
         $ViewModel->setTerminal(True);
         return $ViewModel;

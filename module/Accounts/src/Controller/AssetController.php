@@ -639,118 +639,137 @@ class AssetController extends AbstractActionController
 		endif;
 		$request=$this->getRequest();
 		if ($request->isPost()):
-			$data = array_merge_recursive(
-				$request->getPost()->toArray(),
-				$request->getFiles()->toArray()
-			);  
-		  
-			if(!$this->flashMessenger()->hasCurrentMessages()):
-				$size = new Size(array('max'=>2000000));
-				$ext = new Extension('jpg, png, gif');
-				
-				$adapter = new \Laminas\File\Transfer\Adapter\Http();
-				$adapter->setValidators(array($size, $ext), $data['fileupload']);
-				
-				foreach ($adapter->getFileInfo() as $file => $info):
-					$path = pathinfo($info['name']);
-					if($path['filename']):
-					
-						$a= rand(0,10);
-						$b=chr(rand(97,122));
-						$c=chr(rand(97,122));
-						$d= rand(0,11000);
-						
-						$ext = strtolower($path['extension']);
-						$fileName =  md5($File['name'].$a.$b.$c.$d). '.' .$ext; //file path of the main picture
-						
-						$directory = $this->_dir."/party/";
-						//for thumb image
-						$img = $info['tmp_name'];
-						
-						//----------------------------------- ACTUAL IMAGE-----------------------------
-						$imgWidth = 180;
-						$imgHeight = 200;
-						$im = imageCreateTrueColor($imgWidth, $imgHeight);
-						
-						switch($ext):
-						case 'jpg':
-						case 'jpeg': $im_org = imagecreatefromjpeg($img);
-							imageCopyResampled($im, $im_org, 0, 0, 0, 0, $imgWidth, $imgHeight, imageSX($im_org), imageSY($im_org));
-							imageJpeg($im, $directory . $fileName, 100);
-						break;
-						
-						case 'png': $im_org = imagecreatefrompng($img);
-							imageCopyResampled($im, $im_org, 0, 0, 0, 0, $imgWidth, $imgHeight, imageSX($im_org), imageSY($im_org));
-							imagepng($im, $directory . $fileName, 100);
-						break;
-						
-						case 'gif': $im_org = imagecreatefromgif($img);
-							imageCopyResampled($im, $im_org, 0, 0, 0, 0, $imgWidth, $imgHeight, imageSX($im_org), imageSY($im_org));
-							imagegif($im, $directory . $fileName, 100);
-						break;
-						
-						default : 	$fileName = 'avatar.jpg';
-						break;
-						endswitch;
-						//---------------------------------------END OF ACTUAL IMAGE------------------------
-						//change uploaded user photo permission
-						if ( $handle = @opendir($directory) ):
-							if( !@is_dir($directory . $fileName) ):
-							chmod($directory . $fileName, 0777);
-							endif;
-							if( !@is_dir($directory."/thumb/". $fileName) ):
-							chmod($directory."/thumb/". $fileName, 0777);
-							endif;
-						endif;
-						
-						@closedir($handle);
-					endif;
-				endforeach;
-				$prev_photo = $this->getDefinedTable(Accounts\PartyTable::class)->getColumn($this->_id, $column="photo");
-				$data = array(
-					'id'  		 => $this->_id, 
-					'photo'      => $fileName,
-					'created'    => $this->_created,
-					'modified'   => $this->_modified
-				);
-				if($adapter->isValid()):
-					$data = $this->_safedataObj->rteSafe($data);
-					$result = $this->getDefinedTable(Accounts\PartyTable::class)->save($data);
-					
-					if($result > 0):
-						$this->flashMessenger()->addMessage("success^ User photo successfully changed");
-						//change uploade user photo permission
-						if ( $handle = @opendir($directory) ):
-							if( !@is_dir($directory . $prev_photo) ):
-							   @unlink($directory . $prev_photo);
-							endif;
-						endif;
-						@closedir($handle);		 	             
-						return $this->redirect()->toRoute('asset', array('action' => 'viewparty', 'id'=>$result));
-					else:
-						// when user couldnot be added into database
-						$this->flashMessenger()->addMessage("error^ Someting went wrong and couldnot change photo");
-						
-						//deleted uploaded photo
-						if ( $handle = @opendir($directory) ):
-							if( !@is_dir($directory . $fileName) ):
-							   @unlink($directory . $fileName);
-							endif;
-						endif;
-						@closedir($handle);	 	             
-					endif;
-				else:
-					// when user photo couldnot be added/uploaded
-					foreach($adapter->getMessages() as $sms):
-						$fmessage ='error^'.$sms;
-					endforeach;
-					$this->flashMessenger()->addMessage($fmessage); 
-				endif;
+			$files = $request->getFiles()->toArray();
+			if (empty($files['fileupload']['name'])):
+				$this->flashMessenger()->addMessage("error^ Please select a photo to upload");
+				return $this->redirect()->toRoute('asset', array('action'=>'viewparty', 'id'=>$this->_id));
 			endif;
+
+			$adapter = new \Laminas\File\Transfer\Adapter\Http();
+			$adapter->setValidators(
+				array(new Size(array('max'=>2000000)), new Extension('jpg, jpeg, png, gif')),
+				$files['fileupload']
+			);
+			if (!$adapter->isValid()):
+				foreach ($adapter->getMessages() as $message):
+					$this->flashMessenger()->addMessage('error^'.$message);
+				endforeach;
+				return $this->redirect()->toRoute('asset', array('action'=>'viewparty', 'id'=>$this->_id));
+			endif;
+
+			$fileInfo = $adapter->getFileInfo();
+			$info = isset($fileInfo['fileupload']) ? $fileInfo['fileupload'] : reset($fileInfo);
+			if (!is_array($info) || empty($info['name']) || empty($info['tmp_name']) || !is_file($info['tmp_name'])):
+				$this->flashMessenger()->addMessage("error^ The uploaded photo could not be read");
+				return $this->redirect()->toRoute('asset', array('action'=>'viewparty', 'id'=>$this->_id));
+			endif;
+			$path = pathinfo($info['name']);
+			$extension = isset($path['extension']) ? strtolower($path['extension']) : '';
+			if (empty($path['filename']) || !in_array($extension, array('jpg', 'jpeg', 'png', 'gif'), true)):
+				$this->flashMessenger()->addMessage("error^ The selected file is not a supported image");
+				return $this->redirect()->toRoute('asset', array('action'=>'viewparty', 'id'=>$this->_id));
+			endif;
+
+			$directory = $this->_dir . DIRECTORY_SEPARATOR . 'party' . DIRECTORY_SEPARATOR;
+			if (!$this->_dir || !is_dir($this->_dir)):
+				$this->flashMessenger()->addMessage("error^ The photo upload base directory is not available");
+				return $this->redirect()->toRoute('asset', array('action'=>'viewparty', 'id'=>$this->_id));
+			endif;
+			if (!is_dir($directory) && !mkdir($directory, 0777, true) && !is_dir($directory)):
+				$this->flashMessenger()->addMessage("error^ Unable to create the party photo upload directory");
+				return $this->redirect()->toRoute('asset', array('action'=>'viewparty', 'id'=>$this->_id));
+			endif;
+
+			$imageInfo = @getimagesize($info['tmp_name']);
+			if ($imageInfo === false):
+				$this->flashMessenger()->addMessage("error^ The uploaded file is not a valid image");
+				return $this->redirect()->toRoute('asset', array('action'=>'viewparty', 'id'=>$this->_id));
+			endif;
+
+			switch ($extension):
+				case 'jpg':
+				case 'jpeg':
+					$sourceImage = @imagecreatefromjpeg($info['tmp_name']);
+					break;
+				case 'png':
+					$sourceImage = @imagecreatefrompng($info['tmp_name']);
+					break;
+				case 'gif':
+					$sourceImage = @imagecreatefromgif($info['tmp_name']);
+					break;
+			endswitch;
+
+			if ($sourceImage === false):
+				$this->flashMessenger()->addMessage("error^ Unable to read the uploaded image");
+				return $this->redirect()->toRoute('asset', array('action'=>'viewparty', 'id'=>$this->_id));
+			endif;
+
+			$fileName = bin2hex(random_bytes(16)) . '.' . $extension;
+			$targetImage = imagecreatetruecolor(180, 200);
+			if ($targetImage === false):
+				imagedestroy($sourceImage);
+				$this->flashMessenger()->addMessage("error^ Unable to prepare the uploaded photo");
+				return $this->redirect()->toRoute('asset', array('action'=>'viewparty', 'id'=>$this->_id));
+			endif;
+			imagecopyresampled(
+				$targetImage,
+				$sourceImage,
+				0,
+				0,
+				0,
+				0,
+				180,
+				200,
+				imagesx($sourceImage),
+				imagesy($sourceImage)
+			);
+
+			switch ($extension):
+				case 'jpg':
+				case 'jpeg':
+					$imageSaved = imagejpeg($targetImage, $directory . $fileName, 100);
+					break;
+				case 'png':
+					$imageSaved = imagepng($targetImage, $directory . $fileName);
+					break;
+				case 'gif':
+					$imageSaved = imagegif($targetImage, $directory . $fileName);
+					break;
+			endswitch;
+			imagedestroy($sourceImage);
+			imagedestroy($targetImage);
+
+			if (!$imageSaved):
+				$this->flashMessenger()->addMessage("error^ Unable to save the uploaded photo");
+				return $this->redirect()->toRoute('asset', array('action'=>'viewparty', 'id'=>$this->_id));
+			endif;
+
+			$prev_photo = $this->getDefinedTable(Accounts\PartyTable::class)->getColumn($this->_id, 'photo');
+			$data = array(
+				'id' => $this->_id,
+				'photo' => $fileName,
+				'created' => $this->_created,
+				'modified' => $this->_modified
+			);
+			$data = $this->_safedataObj->rteSafe($data);
+			$result = $this->getDefinedTable(Accounts\PartyTable::class)->save($data);
+
+			if ($result > 0):
+				if (!empty($prev_photo) && $prev_photo !== $fileName && is_file($directory . $prev_photo)):
+					unlink($directory . $prev_photo);
+				endif;
+				$this->flashMessenger()->addMessage("success^ User photo successfully changed");
+				return $this->redirect()->toRoute('asset', array('action' => 'viewparty', 'id'=>$result));
+			endif;
+
+			if (is_file($directory . $fileName)):
+				unlink($directory . $fileName);
+			endif;
+			$this->flashMessenger()->addMessage("error^ Something went wrong and could not change the photo");
 			return $this->redirect()->toRoute('asset', array('action'=>'viewparty', 'id'=>$this->_id));
 		else:
 			$photo = $this->getDefinedTable(Accounts\PartyTable::class)->getColumn($this->_id,'photo'); 
-								 
+			$userimg = null;
 			if($photo !=""):  
 				$filename = $this->_dir."/user/". $photo; 
 				$userimg = null;

@@ -77,8 +77,8 @@ class TransactiondetailTable extends AbstractTableGateway
 			   //->join(array('a'=>'adm_activity'), 'a.id = td.activity', array('activity', 'activity_id' => 'id'))
 			   ->join(array('h'=>'fa_head'), 'h.id = td.head', array('head' => 'code', 'head_id' => 'id'))
 			   ->join(array('sh'=>'fa_sub_head'), 'sh.id = td.sub_head', array('sub_head' => 'code', 'sub_head_name' => 'name','sub_head_id' => 'id'));
-	    $select->where(array("sub_head" =>$data['subhead'],"td.voucher_types"=>12))
-			   ->where->between('voucher_dates',$data['start_date'],$data['end_date']);
+	    $select->where(array("td.sub_head" =>$data['subhead'],"t.status" => 4))
+			   ->where->between('t.voucher_date',$data['start_date'],$data['end_date']);
 		
 		$selectString = $sql->getSqlStringForSqlObject($select);
 		//echo $selectString;exit;
@@ -101,8 +101,8 @@ class TransactiondetailTable extends AbstractTableGateway
 			   //->join(array('a'=>'adm_activity'), 'a.id = td.activity', array('activity', 'activity_id' => 'id'))
 			   ->join(array('h'=>'fa_head'), 'h.id = td.head', array('head' => 'code', 'head_id' => 'id'))
 			   ->join(array('sh'=>'fa_sub_head'), 'sh.id = td.sub_head', array('sub_head' => 'code', 'sub_head_name' => 'name','sub_head_id' => 'id'));
-	    $select->where(array("sub_head" =>$data['subhead']))
-			   ->where->between('voucher_dates',$data['start_date'],$data['end_date']);
+	    $select->where(array("td.sub_head" =>$data['subhead'],"t.status" => 4))
+			   ->where->between('t.voucher_date',$data['start_date'],$data['end_date']);
 		
 		$selectString = $sql->getSqlStringForSqlObject($select);
 		//echo $selectString;exit;
@@ -454,13 +454,16 @@ class TransactiondetailTable extends AbstractTableGateway
 	 */
 	public function getSumbyClass($activity,$region,$location,$start_date,$end_date, $column, $class)
 	{	
+		$sub0 = new Select("fa_transaction");
+		$sub0->columns(array("id"))
+			 ->where(array("status" => "4"))
+			 ->where->between('voucher_date', $start_date, $end_date);
+
 		$adapter = $this->adapter;  	 
 		$sql = new Sql($adapter);
 		$select = $sql->select();
 		$select->from($this->table)
-			   ->columns(array( new Expression('SUM('.$column.') as total')))
-			   ->where(array("status" => "4")) //committed status
-			   ->where->between('voucher_dates', $start_date, $end_date);
+			   ->columns(array( new Expression('SUM('.$column.') as total')));
 		$sub1 = new Select("fa_group");
 		$sub1->columns(array("id"))
 			->where(array("class" => $class));
@@ -482,6 +485,7 @@ class TransactiondetailTable extends AbstractTableGateway
 			endif;
 		endif;
 		$select->where->in('head', $sub2);
+		$select->where->in('transaction', $sub0);
 		$select->order(array('created ASC'));
 		$selectString = $sql->getSqlStringForSqlObject($select);
 		//echo $selectString; exit;
@@ -502,13 +506,16 @@ class TransactiondetailTable extends AbstractTableGateway
 	 */
 	public function getSumbyGroup($activity,$region,$location,$start_date,$end_date, $column, $group)
 	{		
+		$sub0 = new Select("fa_transaction");
+		$sub0->columns(array("id"))
+			 ->where(array("status" => "4"))
+			 ->where->between('voucher_date', $start_date, $end_date);
+
 		$adapter = $this->adapter;  	 
 		$sql = new Sql($adapter);
 		$select = $sql->select();
 		$select->from($this->table)
-			   ->columns(array( new Expression('SUM('.$column.') as total')))
-			   ->where(array("status" => "4")) //committed status
-			   ->where->between('voucher_dates', $start_date, $end_date);
+			   ->columns(array( new Expression('SUM('.$column.') as total')));
 		$sub1 = new Select("fa_head");
 		$sub1->columns(array("id"))
 			 ->where(array("group"=>$group));
@@ -527,6 +534,7 @@ class TransactiondetailTable extends AbstractTableGateway
 			endif;
 		endif;
 		$select->where->in('head', $sub1);
+		$select->where->in('transaction', $sub0);
 		$select->order(array('created ASC'));
 		$selectString = $sql->getSqlStringForSqlObject($select);
 		//echo $selectString; //exit;
@@ -547,15 +555,18 @@ class TransactiondetailTable extends AbstractTableGateway
 	 */
 	public function getSumbyHead($activity,$region,$location,$start_date,$end_date, $column, $head)
 	{
+		$sub0 = new Select("fa_transaction");
+		$sub0->columns(array("id"))
+			 ->where(array("status" => "4"))
+			 ->where->between('voucher_date', $start_date, $end_date);
+
 		$adapter = $this->adapter;  	 
 		$sql = new Sql($adapter);
 		$select = $sql->select();
 		$select->from(array('t'=>$this->table))
 		       ->join(array('h'=>'fa_head'), 'h.id=t.head', array('head'=>'name', 'head_id'=>'id'));
 		$select->columns(array( new Expression('SUM('.$column.') as total')))
-			   ->where(array("h.id" => $head))
-			   ->where(array("status" => "4")) //committed status
-			   ->where->between('voucher_dates', $start_date, $end_date);
+			   ->where(array("h.id" => $head));
 		if($activity != -1):
 			$select->where(array("activity" => $activity));
 		endif;
@@ -569,6 +580,7 @@ class TransactiondetailTable extends AbstractTableGateway
 				$select->where->in("location", $sub_loc);
 			endif;
 		endif;
+		$select->where->in('t.transaction', $sub0);
 		//$select->order(array('created ASC'));
 		$selectString = $sql->getSqlStringForSqlObject($select);
 	    $selectString ; //exit;
@@ -590,14 +602,17 @@ class TransactiondetailTable extends AbstractTableGateway
 	 */
 	public function getSumbyHeads($activity,$region,$location,$start_date,$end_date, $column, $head)
 	{
+		$sub0 = new Select("fa_transaction");
+		$sub0->columns(array("id"))
+			 ->where(array("status" => "4"))
+			 ->where->between('voucher_date', $start_date, $end_date);
+
 		$adapter = $this->adapter;  	 
 		$sql = new Sql($adapter);
 		$select = $sql->select();
 		$select->from(array('t'=>$this->table))
 		       ->columns(array( new Expression('SUM('.$column.') as total')))
-			   ->where(array("head" => $head))
-			   ->where(array("status" => "4")) //committed status
-			   ->where->between('voucher_dates', $start_date, $end_date);
+			   ->where(array("head" => $head));
 		if($activity != -1):
 			$select->where(array("activity" => $activity));
 		endif;
@@ -611,6 +626,7 @@ class TransactiondetailTable extends AbstractTableGateway
 				$select->where->in("location", $sub_loc);
 			endif;
 		endif;
+		$select->where->in('t.transaction', $sub0);
 		//$select->order(array('created ASC'));
 		$selectString = $sql->getSqlStringForSqlObject($select);
 	    $selectString ; //exit;
@@ -632,14 +648,17 @@ class TransactiondetailTable extends AbstractTableGateway
 	 */		
 	public function getSumbySubhead($activity,$region,$location,$start_date,$end_date, $column, $sub_head)
 	{
+		$sub0 = new Select("fa_transaction");
+		$sub0->columns(array("id"))
+			 ->where(array("status" => "4"))
+			 ->where->between('voucher_date', $start_date, $end_date);
+
 		$adapter = $this->adapter;  	 
 		$sql = new Sql($adapter);
 		$select = $sql->select();
 		$select->from($this->table)
 			   ->columns(array( new Expression('SUM('.$column.') as total')))
-			   ->where(array("sub_head" => $sub_head))
-			   ->where(array("status" => "4")) //committed status
-			   ->where->between('voucher_dates', $start_date, $end_date);
+			   ->where(array("sub_head" => $sub_head));
 		if($activity != -1):
 			$select->where(array("activity" => $activity));
 		endif;
@@ -653,6 +672,7 @@ class TransactiondetailTable extends AbstractTableGateway
 				$select->where->in("location", $sub_loc);
 			endif;
 		endif;
+		$select->where->in('transaction', $sub0);
 		$select->order(array('created ASC'));
 		$selectString = $sql->getSqlStringForSqlObject($select);
 		//echo $selectString; exit;
@@ -672,21 +692,127 @@ class TransactiondetailTable extends AbstractTableGateway
 	 * @return Int
 	 */
 	public function getOpeningBalance($activity,$region,$location,$start_date,$end_date, $id, $tier)
-	{	 		
-		if($tier == 1):
-			$total_debit = $this->getSumbySubheadTBOpening($activity,$region,$location,$start_date, 'debit', $id);
-			$total_credit = $this->getSumbySubheadTBOpening($activity,$region,$location,$start_date, 'credit', $id);  			
-		elseif($tier == 2):
-			$total_debit = $this->getSumbyHeadTBOpening($activity,$region,$location,$start_date, 'debit', $id);
-			$total_credit = $this->getSumbyHeadTBOpening($activity,$region,$location,$start_date, 'credit', $id);	
-		elseif($tier == 3):
-			$total_debit = $this->getSumbyGroupTBOpening($activity,$region,$location,$start_date, 'debit', $id);
-			$total_credit = $this->getSumbyGroupTBOpening($activity,$region,$location,$start_date, 'credit', $id);
-		elseif($tier == 4):
-			$total_debit = $this->getSumbyClassTBOpening($activity,$region,$location,$start_date, 'debit', $id);
-			$total_credit = $this->getSumbyClassTBOpening($activity,$region,$location,$start_date, 'credit', $id);
+	{	
+		$carry = $this->getClosingCarryForwardForTier($region, $location, $start_date, $id, $tier);
+		$opening_tx_start = date('Y-01-01', strtotime($start_date));
+		if($carry['has']):
+			$opening_tx_start = $carry['year'].'-01-01';
 		endif;
-		return  $total_debit - $total_credit;		
+		$total_debit = 0;
+		$total_credit = 0;
+
+		if($tier == 1):
+			if($carry['has']):
+				$total_debit = $this->getSumbySubheadTBPeriod($activity,$region,$location,$opening_tx_start,$start_date, 'debit', $id);
+				$total_credit = $this->getSumbySubheadTBPeriod($activity,$region,$location,$opening_tx_start,$start_date, 'credit', $id);
+			else:
+				$total_debit = $this->getSumbySubheadTBOpening($activity,$region,$location,$start_date, 'debit', $id);
+				$total_credit = $this->getSumbySubheadTBOpening($activity,$region,$location,$start_date, 'credit', $id);
+			endif;
+		elseif($tier == 2):
+			if($carry['has']):
+				$total_debit = $this->getSumbyHeadTBPeriod($activity,$region,$location,$opening_tx_start,$start_date, 'debit', $id);
+				$total_credit = $this->getSumbyHeadTBPeriod($activity,$region,$location,$opening_tx_start,$start_date, 'credit', $id);
+			else:
+				$total_debit = $this->getSumbyHeadTBOpening($activity,$region,$location,$start_date, 'debit', $id);
+				$total_credit = $this->getSumbyHeadTBOpening($activity,$region,$location,$start_date, 'credit', $id);
+			endif;
+		elseif($tier == 3):
+			if($carry['has']):
+				$total_debit = $this->getSumbyGroupTBPeriod($activity,$region,$location,$opening_tx_start,$start_date, 'debit', $id);
+				$total_credit = $this->getSumbyGroupTBPeriod($activity,$region,$location,$opening_tx_start,$start_date, 'credit', $id);
+			else:
+				$total_debit = $this->getSumbyGroupTBOpening($activity,$region,$location,$start_date, 'debit', $id);
+				$total_credit = $this->getSumbyGroupTBOpening($activity,$region,$location,$start_date, 'credit', $id);
+			endif;
+		elseif($tier == 4):
+			if($carry['has']):
+				$total_debit = $this->getSumbyClassTBPeriod($activity,$region,$location,$opening_tx_start,$start_date, 'debit', $id);
+				$total_credit = $this->getSumbyClassTBPeriod($activity,$region,$location,$opening_tx_start,$start_date, 'credit', $id);
+			else:
+				$total_debit = $this->getSumbyClassTBOpening($activity,$region,$location,$start_date, 'debit', $id);
+				$total_credit = $this->getSumbyClassTBOpening($activity,$region,$location,$start_date, 'credit', $id);
+			endif;
+		endif;
+		return  $carry['dr_minus_cr'] + $total_debit - $total_credit;
+	}
+
+	protected function getClosingCarryForwardForTier($region, $location, $start_date, $id, $tier)
+	{
+		$start_year = (int)date('Y', strtotime($start_date));
+		for($year = $start_year; $year >= ($start_year - 10); $year--):
+			$carry = $this->getClosingCarryForwardForTierByYear($region, $location, $year, $id, $tier);
+			if($carry['has']):
+				return $carry;
+			endif;
+		endfor;
+		return array(
+			'has' => false,
+			'total_dr' => 0.0,
+			'total_cr' => 0.0,
+			'dr_minus_cr' => 0.0,
+			'cr_minus_dr' => 0.0,
+			'year' => null,
+		);
+	}
+
+	protected function getClosingCarryForwardForTierByYear($region, $location, $year, $id, $tier)
+	{
+		$adapter = $this->adapter;
+		$sql = new Sql($adapter);
+		$select = $sql->select();
+		$select->from(array('cb' => 'fa_closing_balance'))
+			   ->columns(array(
+				   'total_dr' => new Expression('COALESCE(SUM(closing_dr),0)'),
+				   'total_cr' => new Expression('COALESCE(SUM(closing_cr),0)'),
+				   'row_count' => new Expression('COUNT(*)')
+			   ))
+			   ->where(array('year' => $year));
+
+		if($location != -1):
+			$select->where(array('location' => $location));
+		elseif($region != -1):
+			$sub_loc = new Select("adm_location");
+			$sub_loc->columns(array("id"))
+					->where(array("region" => $region));
+			$select->where->in("location", $sub_loc);
+		endif;
+
+		if($tier == 1):
+			$select->where(array('sub_head' => $id));
+		elseif($tier == 2):
+			$select->where(array('head' => $id));
+		elseif($tier == 3):
+			$sub_head = new Select("fa_head");
+			$sub_head->columns(array("id"))
+			         ->where(array("group" => $id));
+			$select->where->in('head', $sub_head);
+		elseif($tier == 4):
+			$sub_group = new Select("fa_group");
+			$sub_group->columns(array("id"))
+			          ->where(array("class" => $id));
+			$sub_head = new Select("fa_head");
+			$sub_head->columns(array("id"))
+			         ->where->in("group", $sub_group);
+			$select->where->in('head', $sub_head);
+		endif;
+
+		$selectString = $sql->getSqlStringForSqlObject($select);
+		$results = $adapter->query($selectString, $adapter::QUERY_MODE_EXECUTE)->toArray();
+		$result = isset($results[0]) ? $results[0] : array('total_dr' => 0, 'total_cr' => 0, 'row_count' => 0);
+
+		$total_dr = (float)$result['total_dr'];
+		$total_cr = (float)$result['total_cr'];
+		$row_count = (int)$result['row_count'];
+
+		return array(
+			'has' => ($row_count > 0),
+			'total_dr' => $total_dr,
+			'total_cr' => $total_cr,
+			'dr_minus_cr' => $total_dr - $total_cr,
+			'cr_minus_dr' => $total_cr - $total_dr,
+			'year' => $year,
+		);
 	}
 	/**
 	 * get sum by subhead TBO
@@ -698,14 +824,17 @@ class TransactiondetailTable extends AbstractTableGateway
 	 */		
 	public function getSumbySubheadTBOpening($activity,$region,$location,$start_date,$column, $sub_head)
 	{
+		$sub0 = new Select("fa_transaction");
+		$sub0->columns(array("id"))
+			 ->where(array("status" => "4"))
+			 ->where->lessThan('voucher_date', $start_date);
+
 		$adapter = $this->adapter;  	 
 		$sql = new Sql($adapter);
 		$select = $sql->select();
 		$select->from($this->table)
 			   ->columns(array( new Expression('SUM('.$column.') as total')))
-			   ->where(array("sub_head" => $sub_head))
-			   ->where(array("status" => "4")); //committed status
-		$select->where->lessThan('voucher_dates', $start_date);
+			   ->where(array("sub_head" => $sub_head));
 		if($activity != -1):
 			$select->where(array("activity" => $activity));
 		endif;
@@ -719,6 +848,7 @@ class TransactiondetailTable extends AbstractTableGateway
 				$select->where->in("location", $sub_loc);
 			endif;
 		endif;
+		$select->where->in('transaction', $sub0);
 		$select->order(array('created ASC'));
 		$selectString = $sql->getSqlStringForSqlObject($select);
 		//echo $selectString; exit;
@@ -740,14 +870,17 @@ class TransactiondetailTable extends AbstractTableGateway
 	 */
 	public function getSumbyHeadTBOpening($activity,$region,$location,$start_date, $column, $head)
 	{
+		$sub0 = new Select("fa_transaction");
+		$sub0->columns(array("id"))
+			 ->where(array("status" => "4"))
+			 ->where->lessThan('voucher_date', $start_date);
+
 		$adapter = $this->adapter;  	 
 		$sql = new Sql($adapter);
 		$select = $sql->select();
 		$select->from($this->table)
 			   ->columns(array( new Expression('SUM('.$column.') as total')))
-			   ->where(array("head" => $head))
-			   ->where(array("status" => "4")) //committed status
-			   ->where->lessThan('voucher_dates', $start_date);
+			   ->where(array("head" => $head));
 		if($activity != -1):
 			$select->where(array("activity" => $activity));
 		endif;
@@ -761,6 +894,7 @@ class TransactiondetailTable extends AbstractTableGateway
 				$select->where->in("location", $sub_loc);
 			endif;
 		endif;
+		$select->where->in('transaction', $sub0);
         $select->order(array('transaction ASC'));
 		$select->order(array('created ASC'));
 		$selectString = $sql->getSqlStringForSqlObject($select);
@@ -782,6 +916,11 @@ class TransactiondetailTable extends AbstractTableGateway
 	 */
 	public function getSumbyGroupTBOpening($activity,$region,$location,$start_date, $column, $group)
 	{	
+		$sub0 = new Select("fa_transaction");
+		$sub0->columns(array("id"))
+			 ->where(array("status" => "4"))
+			 ->where->lessThan('voucher_date', $start_date);
+
 		$sub1 = new Select("fa_head");
 		$sub1->columns(array("id"))
 			 ->where(array("group"=>$group));
@@ -790,9 +929,7 @@ class TransactiondetailTable extends AbstractTableGateway
 		$sql = new Sql($adapter);
 		$select = $sql->select();
 		$select->from($this->table)
-			   ->columns(array( new Expression('SUM('.$column.') as total')))
-			   ->where(array("status" => "4")) //committed status
-			   ->where->lessThan('voucher_dates', $start_date);
+			   ->columns(array( new Expression('SUM('.$column.') as total')));
 			   
 		if($activity != -1):
 			$select->where(array("activity" => $activity));
@@ -808,6 +945,7 @@ class TransactiondetailTable extends AbstractTableGateway
 			endif;
 		endif;
 		$select->where->in('head', $sub1);
+		$select->where->in('transaction', $sub0);
         $select->order(array('transaction ASC'));
 		$select->order(array('created ASC'));
 		$selectString = $sql->getSqlStringForSqlObject($select);
@@ -829,6 +967,11 @@ class TransactiondetailTable extends AbstractTableGateway
 	 */
 	public function getSumbyClassTBOpening($activity,$region,$location,$start_date, $column, $class)
 	{		
+		$sub0 = new Select("fa_transaction");
+		$sub0->columns(array("id"))
+			 ->where(array("status" => "4"))
+			 ->where->lessThan('voucher_date', $start_date);
+
 		$sub1 = new Select("fa_group");
 		$sub1->columns(array("id"))
 			 ->where(array("class" => $class));
@@ -841,9 +984,7 @@ class TransactiondetailTable extends AbstractTableGateway
 		$sql = new Sql($adapter);
 		$select = $sql->select();
 		$select->from($this->table)
-			   ->columns(array( new Expression('SUM('.$column.') as total')))
-			   ->where(array("status" => "4")) //committed status
-			   ->where->lessThan('voucher_dates', $start_date);
+			   ->columns(array( new Expression('SUM('.$column.') as total')));
 			   
 		if($activity != -1):
 			$select->where(array("activity" => $activity));
@@ -859,6 +1000,7 @@ class TransactiondetailTable extends AbstractTableGateway
 			endif;
 		endif;
 		$select->where->in('head', $sub2);
+		$select->where->in('transaction', $sub0);
         $select->order(array('transaction ASC'));
 		$select->order(array('created ASC'));
 		$selectString = $sql->getSqlStringForSqlObject($select);
@@ -870,6 +1012,162 @@ class TransactiondetailTable extends AbstractTableGateway
 	   endforeach;  
 	   return $sum;	    
 	}
+
+	public function getSumbySubheadTBPeriod($activity,$region,$location,$period_start,$period_end,$column, $sub_head)
+	{
+		$sub0 = new Select("fa_transaction");
+		$sub0->columns(array("id"))
+			 ->where(array("status" => "4"))
+			 ->where->greaterThanOrEqualTo('voucher_date', $period_start)
+			 ->lessThan('voucher_date', $period_end);
+
+		$adapter = $this->adapter;
+		$sql = new Sql($adapter);
+		$select = $sql->select();
+		$select->from($this->table)
+			   ->columns(array( new Expression('SUM('.$column.') as total')))
+			   ->where(array("sub_head" => $sub_head));
+		if($activity != -1):
+			$select->where(array("activity" => $activity));
+		endif;
+		if($region != -1):
+			if($location != -1):
+				$select->where(array("location" => $location));
+			else:
+				$sub_loc = new Select("adm_location");
+				$sub_loc->columns(array("id"))
+						->where(array("region" => $region));
+				$select->where->in("location", $sub_loc);
+			endif;
+		endif;
+		$select->where->in('transaction', $sub0);
+		$results = $adapter->query($sql->getSqlStringForSqlObject($select), $adapter::QUERY_MODE_EXECUTE)->toArray();
+
+		foreach ($results as $result):
+			$sum =  $result['total'];
+		endforeach;
+		return $sum;
+	}
+
+	public function getSumbyHeadTBPeriod($activity,$region,$location,$period_start,$period_end,$column, $head)
+	{
+		$sub0 = new Select("fa_transaction");
+		$sub0->columns(array("id"))
+			 ->where(array("status" => "4"))
+			 ->where->greaterThanOrEqualTo('voucher_date', $period_start)
+			 ->lessThan('voucher_date', $period_end);
+
+		$adapter = $this->adapter;
+		$sql = new Sql($adapter);
+		$select = $sql->select();
+		$select->from($this->table)
+			   ->columns(array( new Expression('SUM('.$column.') as total')))
+			   ->where(array("head" => $head));
+		if($activity != -1):
+			$select->where(array("activity" => $activity));
+		endif;
+		if($region != -1):
+			if($location != -1):
+				$select->where(array("location" => $location));
+			else:
+				$sub_loc = new Select("adm_location");
+				$sub_loc->columns(array("id"))
+						->where(array("region" => $region));
+				$select->where->in("location", $sub_loc);
+			endif;
+		endif;
+		$select->where->in('transaction', $sub0);
+		$results = $adapter->query($sql->getSqlStringForSqlObject($select), $adapter::QUERY_MODE_EXECUTE)->toArray();
+
+		foreach ($results as $result):
+			$sum =  $result['total'];
+		endforeach;
+		return $sum;
+	}
+
+	public function getSumbyGroupTBPeriod($activity,$region,$location,$period_start,$period_end,$column, $group)
+	{
+		$sub0 = new Select("fa_transaction");
+		$sub0->columns(array("id"))
+			 ->where(array("status" => "4"))
+			 ->where->greaterThanOrEqualTo('voucher_date', $period_start)
+			 ->lessThan('voucher_date', $period_end);
+
+		$sub1 = new Select("fa_head");
+		$sub1->columns(array("id"))
+			 ->where(array("group"=>$group));
+
+		$adapter = $this->adapter;
+		$sql = new Sql($adapter);
+		$select = $sql->select();
+		$select->from($this->table)
+			   ->columns(array( new Expression('SUM('.$column.') as total')));
+		if($activity != -1):
+			$select->where(array("activity" => $activity));
+		endif;
+		if($region != -1):
+			if($location != -1):
+				$select->where(array("location" => $location));
+			else:
+				$sub_loc = new Select("adm_location");
+				$sub_loc->columns(array("id"))
+						->where(array("region" => $region));
+				$select->where->in("location", $sub_loc);
+			endif;
+		endif;
+		$select->where->in('head', $sub1);
+		$select->where->in('transaction', $sub0);
+		$results = $adapter->query($sql->getSqlStringForSqlObject($select), $adapter::QUERY_MODE_EXECUTE)->toArray();
+
+		foreach ($results as $result):
+			$sum =  $result['total'];
+		endforeach;
+		return $sum;
+	}
+
+	public function getSumbyClassTBPeriod($activity,$region,$location,$period_start,$period_end,$column, $class)
+	{
+		$sub0 = new Select("fa_transaction");
+		$sub0->columns(array("id"))
+			 ->where(array("status" => "4"))
+			 ->where->greaterThanOrEqualTo('voucher_date', $period_start)
+			 ->lessThan('voucher_date', $period_end);
+
+		$sub1 = new Select("fa_group");
+		$sub1->columns(array("id"))
+			 ->where(array("class" => $class));
+
+		$sub2 = new Select("fa_head");
+		$sub2->columns(array("id"))
+			 ->where->in("group", $sub1);
+
+		$adapter = $this->adapter;
+		$sql = new Sql($adapter);
+		$select = $sql->select();
+		$select->from($this->table)
+			   ->columns(array( new Expression('SUM('.$column.') as total')));
+		if($activity != -1):
+			$select->where(array("activity" => $activity));
+		endif;
+		if($region != -1):
+			if($location != -1):
+				$select->where(array("location" => $location));
+			else:
+				$sub_loc = new Select("adm_location");
+				$sub_loc->columns(array("id"))
+						->where(array("region" => $region));
+				$select->where->in("location", $sub_loc);
+			endif;
+		endif;
+		$select->where->in('head', $sub2);
+		$select->where->in('transaction', $sub0);
+		$results = $adapter->query($sql->getSqlStringForSqlObject($select), $adapter::QUERY_MODE_EXECUTE)->toArray();
+
+		foreach ($results as $result):
+			$sum =  $result['total'];
+		endforeach;
+		return $sum;
+	}
 	/**GET CLOSING BALANCE FOR TRIAL BALANCE FROM ASSET & LAIBILITIES----------------------------------------------------------------------------------------------- */
 	/**
 	 * Calculate closing balance
@@ -880,16 +1178,9 @@ class TransactiondetailTable extends AbstractTableGateway
 	 */
 	public function getClosingBalanceAL($activity,$region,$location,$start_date,$end_date, $id, $tier)
 	{		
-		//extract($options);
-		
-		$adapter = $this->adapter;  
-		$sql = new Sql($adapter);
-		
-		$year = date('Y', strtotime($start_date));
-		$year1 = date('Y', strtotime($start_date)) - 10;
-        $starting_date = date('Y-m-d',strtotime('01-01-'.$year1));
+		$opening_balance = $this->getOpeningBalance($activity,$region,$location,$start_date,$end_date, $id, $tier);
+		$starting_date = $start_date;
 		$ending_date = $end_date;
-		//echo $starting_date;
 		if($tier == 1):
 			$total_debit = $this->getSumbySubhead($activity,$region,$location,$starting_date,$ending_date, 'debit', $id);
 			$total_credit = $this->getSumbySubhead($activity,$region,$location,$starting_date,$ending_date, 'credit', $id); 			
@@ -903,7 +1194,7 @@ class TransactiondetailTable extends AbstractTableGateway
 			$total_debit = $this->getSumbyClass($activity,$region,$location,$starting_date,$ending_date, 'debit', $id);
 			$total_credit = $this->getSumbyClass($activity,$region,$location,$starting_date,$ending_date, 'credit', $id);
 		endif;
-		return  $total_debit - $total_credit;	
+		return  $opening_balance + $total_debit - $total_credit;	
 	}
 	/** GET CLOSING BALANCE FOR TRIAL BALANCE FROM INCOME & EXPENSES--------------------------------------------------------------------------------------------------*/
 	/**
@@ -1024,14 +1315,14 @@ class TransactiondetailTable extends AbstractTableGateway
 	 */
 	public function getClosingBalanceforPresBS($activity,$region,$location,$starting_date,$ending_date, $id,$class_id,$tier)
 	{	
-		$starting_date = $starting_date;
-		$ending_date = $ending_date;
-        $adapter = $this->adapter;  
-		$sql = new Sql($adapter);
-		$year = date('Y', strtotime($starting_date));
-		$year1 = date('Y', strtotime($starting_date)) - 8;
-        $starting_date = date('Y-m-d',strtotime('01-01-'.$year1));
-		$ending_date = $ending_date;
+		$carry = $this->getClosingCarryForwardForTier($region, $location, $starting_date, $id, $tier);
+		if($carry['has']):
+			$starting_date = $carry['year'].'-01-01';
+		else:
+			$year = date('Y', strtotime($starting_date));
+			$year1 = $year - 8;
+			$starting_date = date('Y-m-d',strtotime('01-01-'.$year1));
+		endif;
 		if($tier == 1):
 			$total_debit = $this->getSumbySubheadforPresBS($activity,$region,$location,$starting_date,$ending_date, 'debit', $id);
 			$total_credit = $this->getSumbySubheadforPresBS($activity,$region,$location,$starting_date,$ending_date, 'credit', $id);  			
@@ -1046,9 +1337,9 @@ class TransactiondetailTable extends AbstractTableGateway
 			$total_credit = $this->getSumbyClassforPresBS($activity,$region,$location,$starting_date,$ending_date, 'credit', $id);
 		endif;
 		if($class_id=='1'){
-			return $total_debit - $total_credit;	
+			return $carry['dr_minus_cr'] + $total_debit - $total_credit;	
 		}else{
-			return $total_credit - $total_debit;
+			return $carry['cr_minus_dr'] + $total_credit - $total_debit;
 		}					
 		}
 		/**
@@ -1060,14 +1351,14 @@ class TransactiondetailTable extends AbstractTableGateway
 	 */
 	public function getClosingBalanceforPresBSCLASS($activity,$region,$location,$starting_date,$ending_date, $id,$tier)
 	{	
-		$starting_date = $starting_date;
-		$ending_date = $ending_date;
-        $adapter = $this->adapter;  
-		$sql = new Sql($adapter);
-		$year = date('Y', strtotime($starting_date));
-		$year1 = date('Y', strtotime($starting_date)) - 8;
-        $starting_date = date('Y-m-d',strtotime('01-01-'.$year1));
-		$ending_date = $ending_date;
+		$carry = $this->getClosingCarryForwardForTier($region, $location, $starting_date, $id, $tier);
+		if($carry['has']):
+			$starting_date = $carry['year'].'-01-01';
+		else:
+			$year = date('Y', strtotime($starting_date));
+			$year1 = $year - 8;
+			$starting_date = date('Y-m-d',strtotime('01-01-'.$year1));
+		endif;
 		if($tier == 1):
 			$total_debit = $this->getSumbySubheadforPresBS($activity,$region,$location,$starting_date,$ending_date, 'debit', $id);
 			$total_credit = $this->getSumbySubheadforPresBS($activity,$region,$location,$starting_date,$ending_date, 'credit', $id);  			
@@ -1081,7 +1372,7 @@ class TransactiondetailTable extends AbstractTableGateway
 			$total_debit = $this->getSumbyClassforPresBS($activity,$region,$location,$starting_date,$ending_date, 'debit', $id);
 			$total_credit = $this->getSumbyClassforPresBS($activity,$region,$location,$starting_date,$ending_date, 'credit', $id);
 		endif;
-		return $total_debit - $total_credit;	
+		return $carry['dr_minus_cr'] + $total_debit - $total_credit;	
 		
 		}
 	/**
@@ -1094,14 +1385,17 @@ class TransactiondetailTable extends AbstractTableGateway
 	 */		
 	public function getSumbySubheadforPresBS($activity,$region,$location,$starting_date,$ending_date, $column, $sub_head)
 	{	
+		$sub0 = new Select("fa_transaction");
+		$sub0->columns(array("id"))
+			 ->where(array("status" => "4"))
+			 ->where->between('voucher_date', $starting_date, $ending_date);
+
 		$adapter = $this->adapter;  	 
 		$sql = new Sql($adapter);
 		$select = $sql->select();
 		$select->from($this->table)
 			   ->columns(array( new Expression('SUM('.$column.') as total')))
-			   ->where(array("sub_head" => $sub_head))
-			   ->where(array("status" => "4")) //committed status
-			   ->where->between('voucher_dates', $starting_date, $ending_date);
+			   ->where(array("sub_head" => $sub_head));
 		if($activity != -1):
 			$select->where(array("activity" => $activity));
 		endif;
@@ -1115,6 +1409,7 @@ class TransactiondetailTable extends AbstractTableGateway
 				$select->where->in("location", $sub_loc);
 			endif;
 		endif;
+		$select->where->in('transaction', $sub0);
 		$selectString = $sql->getSqlStringForSqlObject($select);
 		//echo $selectString; exit; 
 		$results = $adapter->query($selectString, $adapter::QUERY_MODE_EXECUTE)->toArray();           
@@ -1134,15 +1429,18 @@ class TransactiondetailTable extends AbstractTableGateway
 	 */
 	public function getSumbyHeadforPresBS($activity,$region,$location,$starting_date,$ending_date,$column, $head)
 	{
+		$sub0 = new Select("fa_transaction");
+		$sub0->columns(array("id"))
+			 ->where(array("status" => "4"))
+			 ->where->between('voucher_date', $starting_date, $ending_date);
+
 		$adapter = $this->adapter;  	 
 		$sql = new Sql($adapter);
 		$select = $sql->select();
 		$select->from(array('t'=>$this->table))
 		       ->join(array('h'=>'fa_head'), 'h.id=t.head', array('head'=>'name', 'head_id'=>'id'));
 		$select->columns(array( new Expression('SUM('.$column.') as total')))
-			   ->where(array("h.id" => $head))
-			   ->where(array("status" => "4")) //committed status
-			   ->where->between('voucher_dates', $starting_date, $ending_date);
+			   ->where(array("h.id" => $head));
 		if($activity != -1):
 			$select->where(array("activity" => $activity));
 		endif;
@@ -1156,6 +1454,7 @@ class TransactiondetailTable extends AbstractTableGateway
 				$select->where->in("location", $sub_loc);
 			endif;
 		endif;
+		$select->where->in('t.transaction', $sub0);
 		$selectString = $sql->getSqlStringForSqlObject($select);
 		// $selectString; exit;
 		$results = $adapter->query($selectString, $adapter::QUERY_MODE_EXECUTE)->toArray();           
@@ -1175,6 +1474,11 @@ class TransactiondetailTable extends AbstractTableGateway
 	 */
 	public function getSumbyGroupforPresBS($activity,$region,$location,$starting_date,$ending_date, $column, $group)
 	{		
+		$sub0 = new Select("fa_transaction");
+		$sub0->columns(array("id"))
+			 ->where(array("status" => "4"))
+			 ->where->between('voucher_date', $starting_date, $ending_date);
+
 		$sub1 = new Select("fa_head");
 		$sub1->columns(array("id"))
 			 ->where(array("group"=>$group));
@@ -1183,9 +1487,7 @@ class TransactiondetailTable extends AbstractTableGateway
 		$sql = new Sql($adapter);
 		$select = $sql->select();
 		$select->from($this->table)
-			   ->columns(array( new Expression('SUM('.$column.') as total')))
-			   ->where(array("status" => "4")) //committed status
-			   ->where->between('voucher_dates', $starting_date, $ending_date);
+			   ->columns(array( new Expression('SUM('.$column.') as total')));
 			   
 		if($activity != -1):
 			$select->where(array("activity" => $activity));
@@ -1201,6 +1503,7 @@ class TransactiondetailTable extends AbstractTableGateway
 			endif;
 		endif;
 		$select->where->in('head', $sub1);
+		$select->where->in('transaction', $sub0);
 
 		$selectString = $sql->getSqlStringForSqlObject($select);
 		//echo $selectString;exit;
@@ -1220,6 +1523,10 @@ class TransactiondetailTable extends AbstractTableGateway
 	 */
 	public function getSumbyClassforPresBS($activity,$region,$location,$starting_date,$ending_date, $column, $class)
 	{		
+		$sub0 = new Select("fa_transaction");
+		$sub0->columns(array("id"))
+			 ->where(array("status" => "4"))
+			 ->where->between('voucher_date', $starting_date, $ending_date);
 		
 		$sub1 = new Select("fa_group");
 		$sub1->columns(array("id"))
@@ -1233,9 +1540,7 @@ class TransactiondetailTable extends AbstractTableGateway
 		$sql = new Sql($adapter);
 		$select = $sql->select();
 		$select->from($this->table)
-			   ->columns(array( new Expression('SUM('.$column.') as total')))
-			   ->where(array("status" => "4")) //committed status
-			   ->where->between('voucher_dates', $starting_date,$ending_date);
+			   ->columns(array( new Expression('SUM('.$column.') as total')));
 			   
 		if($activity != -1):
 			$select->where(array("activity" => $activity));
@@ -1251,6 +1556,7 @@ class TransactiondetailTable extends AbstractTableGateway
 			endif;
 		endif;
 		$select->where->in('head', $sub2);
+		$select->where->in('transaction', $sub0);
 		$selectString = $sql->getSqlStringForSqlObject($select);
 		//echo $selectString; exit; 
 		$results = $adapter->query($selectString, $adapter::QUERY_MODE_EXECUTE)->toArray();           
@@ -1270,14 +1576,14 @@ class TransactiondetailTable extends AbstractTableGateway
 	 */
 	public function getClosingBalanceforPrevBS($activity,$region,$location,$starting_date,$ending_date, $id, $tier)
 	{	
-		$starting_date = $starting_date;
-		$ending_date = $ending_date;
-		$adapter = $this->adapter;  
-		$sql = new Sql($adapter);
-		$year = date('Y', strtotime($starting_date));
-		$year1 = date('Y', strtotime($starting_date)) - 10;
-        $starting_date = date('Y-m-d',strtotime('01-01-'.$year1));
-		$ending_date = $ending_date;
+		$carry = $this->getClosingCarryForwardForTier($region, $location, $starting_date, $id, $tier);
+		if($carry['has']):
+			$starting_date = $carry['year'].'-01-01';
+		else:
+			$year = date('Y', strtotime($starting_date));
+			$year1 = $year - 10;
+			$starting_date = date('Y-m-d',strtotime('01-01-'.$year1));
+		endif;
 		if($tier == 1):
 			$total_debit = $this->getSumbySubheadforPrevBS($activity,$region,$location,$starting_date,$ending_date, 'debit', $id);
 			$total_credit = $this->getSumbySubheadforPrevBS($activity,$region,$location,$starting_date,$ending_date, 'credit', $id);  			
@@ -1291,7 +1597,7 @@ class TransactiondetailTable extends AbstractTableGateway
 			$total_debit = $this->getSumbyClassforPrevBS($activity,$region,$location,$starting_date,$ending_date, 'debit', $id);
 			$total_credit = $this->getSumbyClassforPrevBS($activity,$region,$location,$starting_date,$ending_date, 'credit', $id);
 		endif;
-		return $total_debit - $total_credit;			
+		return $carry['dr_minus_cr'] + $total_debit - $total_credit;			
 	}
 	 /**
 	 * get sum by subhead
@@ -1303,15 +1609,17 @@ class TransactiondetailTable extends AbstractTableGateway
 	 */		
 	public function getSumbySubheadforPrevBS($activity,$region,$location,$starting_date,$ending_date, $column, $sub_head)
 	{
+		$sub0 = new Select("fa_transaction");
+		$sub0->columns(array("id"))
+			 ->where(array("status" => "4"))
+			 ->where->between('voucher_date', $starting_date, $ending_date);
 		
 		$adapter = $this->adapter;  	 
 		$sql = new Sql($adapter);
 		$select = $sql->select();
 		$select->from($this->table)
 			   ->columns(array( new Expression('SUM('.$column.') as total')))
-			   ->where(array("sub_head" => $sub_head))
-			   ->where(array("status" => "4")) //committed status
-			   ->where->between('voucher_dates', $starting_date, $ending_date);
+			   ->where(array("sub_head" => $sub_head));
 		if($activity != -1):
 			$select->where(array("activity" => $activity));
 		endif;
@@ -1325,6 +1633,7 @@ class TransactiondetailTable extends AbstractTableGateway
 				$select->where->in("location", $sub_loc);
 			endif;
 		endif;
+		$select->where->in('transaction', $sub0);
 		$selectString = $sql->getSqlStringForSqlObject($select);
 		$results = $adapter->query($selectString, $adapter::QUERY_MODE_EXECUTE)->toArray();           
 		
@@ -1343,15 +1652,18 @@ class TransactiondetailTable extends AbstractTableGateway
 	 */
 	public function getSumbyHeadforPrevBS($activity,$region,$location,$starting_date,$ending_date,$column, $head)
 	{
+		$sub0 = new Select("fa_transaction");
+		$sub0->columns(array("id"))
+			 ->where(array("status" => "4"))
+			 ->where->between('voucher_date', $starting_date, $ending_date);
+
 		$adapter = $this->adapter;  	 
 		$sql = new Sql($adapter);
 		$select = $sql->select();
 		 $select->from(array('t'=>$this->table))
 		       ->join(array('h'=>'fa_head'), 'h.id=t.head', array('head'=>'name', 'head_id'=>'id'));
 		$select->columns(array( new Expression('SUM('.$column.') as total')))
-			   ->where(array("h.id" => $head))
-			   ->where(array("status" => "4")) //committed status
-			   ->where->between('voucher_dates', $starting_date, $ending_date);
+			   ->where(array("h.id" => $head));
 		if($activity != -1):
 			$select->where(array("activity" => $activity));
 		endif;
@@ -1366,6 +1678,7 @@ class TransactiondetailTable extends AbstractTableGateway
 			endif;
 		endif;
 
+		$select->where->in('t.transaction', $sub0);
 		$selectString = $sql->getSqlStringForSqlObject($select);
 		//echo $selectString; exit;
 		$results = $adapter->query($selectString, $adapter::QUERY_MODE_EXECUTE)->toArray();           
@@ -1385,6 +1698,11 @@ class TransactiondetailTable extends AbstractTableGateway
 	 */
 	public function getSumbyGroupforPrevBS($activity,$region,$location,$starting_date,$ending_date, $column, $group)
 	{		 
+		$sub0 = new Select("fa_transaction");
+		$sub0->columns(array("id"))
+			 ->where(array("status" => "4"))
+			 ->where->between('voucher_date', $starting_date, $ending_date);
+
 		$sub1 = new Select("fa_head");
 		$sub1->columns(array("id"))
 			 ->where(array("group"=>$group));
@@ -1393,9 +1711,7 @@ class TransactiondetailTable extends AbstractTableGateway
 		$sql = new Sql($adapter);
 		$select = $sql->select();
 		$select->from($this->table)
-			   ->columns(array( new Expression('SUM('.$column.') as total')))
-			   ->where(array("status" => "4")) //committed status
-			   ->where->between('voucher_dates', $starting_date, $ending_date);
+			   ->columns(array( new Expression('SUM('.$column.') as total')));
 			   
 		if($activity != -1):
 			$select->where(array("activity" => $activity));
@@ -1411,6 +1727,7 @@ class TransactiondetailTable extends AbstractTableGateway
 			endif;
 		endif;
 		$select->where->in('head', $sub1);
+		$select->where->in('transaction', $sub0);
 		$selectString = $sql->getSqlStringForSqlObject($select);
 		//echo $selectString;exit;
 		$results = $adapter->query($selectString, $adapter::QUERY_MODE_EXECUTE)->toArray();           
@@ -1430,6 +1747,11 @@ class TransactiondetailTable extends AbstractTableGateway
 	 */
 	public function getSumbyClassforPrevBS($activity,$region,$location,$starting_date,$ending_date, $column, $class)
 	{		
+		$sub0 = new Select("fa_transaction");
+		$sub0->columns(array("id"))
+			 ->where(array("status" => "4"))
+			 ->where->between('voucher_date', $starting_date, $ending_date);
+
 		$sub1 = new Select("fa_group");
 		$sub1->columns(array("id"))
 			 ->where(array("class" => $class));
@@ -1442,9 +1764,7 @@ class TransactiondetailTable extends AbstractTableGateway
 		$sql = new Sql($adapter);
 		$select = $sql->select();
 		$select->from($this->table)
-			   ->columns(array( new Expression('SUM('.$column.') as total')))
-			   ->where(array("status" => "4")) //committed status
-			   ->where->between('voucher_dates', $starting_date,$ending_date);
+			   ->columns(array( new Expression('SUM('.$column.') as total')));
 			   
 		if($activity != -1):
 			$select->where(array("activity" => $activity));
@@ -1460,6 +1780,7 @@ class TransactiondetailTable extends AbstractTableGateway
 			endif;
 		endif;
 		$select->where->in('head', $sub2);
+		$select->where->in('transaction', $sub0);
 		$selectString = $sql->getSqlStringForSqlObject($select);
 		//echo $selectString; exit; 
 		$results = $adapter->query($selectString, $adapter::QUERY_MODE_EXECUTE)->toArray();           
@@ -1648,14 +1969,17 @@ class TransactiondetailTable extends AbstractTableGateway
 	 */		
 	public function getSumbySubheadforPresPLS($activity,$region,$location,$starting_date,$ending_date, $column, $sub_head)
 	{
+		$sub0 = new Select("fa_transaction");
+		$sub0->columns(array("id"))
+			 ->where(array("status" => "4"))
+			 ->where->between('voucher_date', $starting_date, $ending_date);
+
 		$adapter = $this->adapter;  	 
 		$sql = new Sql($adapter);
 		$select = $sql->select();
 		$select->from($this->table)
 			   ->columns(array( new Expression('SUM('.$column.') as total')))
-			   ->where(array("sub_head" => $sub_head))
-			   ->where(array("status" => "4")) //committed status
-			   ->where->between('voucher_dates', $starting_date, $ending_date);
+			   ->where(array("sub_head" => $sub_head));
 		if($activity != -1):
 			$select->where(array("activity" => $activity));
 		endif;
@@ -1669,6 +1993,7 @@ class TransactiondetailTable extends AbstractTableGateway
 				$select->where->in("location", $sub_loc);
 			endif;
 		endif;
+		$select->where->in('transaction', $sub0);
 		$selectString = $sql->getSqlStringForSqlObject($select);
 		$results = $adapter->query($selectString, $adapter::QUERY_MODE_EXECUTE)->toArray();           
 		
@@ -1687,15 +2012,18 @@ class TransactiondetailTable extends AbstractTableGateway
 	 */
 	public function getSumbyHeadforPresPLS($activity,$region,$location,$starting_date,$ending_date,$column, $head)
 	{
+		$sub0 = new Select("fa_transaction");
+		$sub0->columns(array("id"))
+			 ->where(array("status" => "4"))
+			 ->where->between('voucher_date', $starting_date, $ending_date);
+
 		$adapter = $this->adapter;  	 
 		$sql = new Sql($adapter);
 		$select = $sql->select();
 		$select->from(array('t'=>$this->table))
 		       ->join(array('h'=>'fa_head'), 'h.id=t.head', array('head'=>'name', 'head_id'=>'id'));
 		$select ->columns(array( new Expression('SUM('.$column.') as total')))
-			   ->where(array("h.id" => $head))
-			   ->where(array("status" => "4")) //committed status
-			   ->where->between('voucher_dates', $starting_date, $ending_date);
+			   ->where(array("h.id" => $head));
 		if($activity != -1):
 			$select->where(array("activity" => $activity));
 		endif;
@@ -1709,6 +2037,7 @@ class TransactiondetailTable extends AbstractTableGateway
 				$select->where->in("location", $sub_loc);
 			endif;
 		endif;
+		$select->where->in('t.transaction', $sub0);
 		$selectString = $sql->getSqlStringForSqlObject($select);
 		//echo $selectString; exit;
 		$results = $adapter->query($selectString, $adapter::QUERY_MODE_EXECUTE)->toArray();           
@@ -1728,14 +2057,17 @@ class TransactiondetailTable extends AbstractTableGateway
 	 */
 	public function getSumbyHeadforPresPLSS($activity,$region,$location,$starting_date,$ending_date,$column, $head)
 	{
+		$sub0 = new Select("fa_transaction");
+		$sub0->columns(array("id"))
+			 ->where(array("status" => "4"))
+			 ->where->between('voucher_date', $starting_date, $ending_date);
+
 		$adapter = $this->adapter;  	 
 		$sql = new Sql($adapter);
 		$select = $sql->select();
 		$select->from($this->table)
 		       ->columns(array( new Expression('SUM('.$column.') as total')))
-			   ->where(array("head" => $head))
-			   ->where(array("status" => "4")) //committed status
-			   ->where->between('voucher_dates', $starting_date, $ending_date);
+			   ->where(array("head" => $head));
 		if($activity != -1):
 			$select->where(array("activity" => $activity));
 		endif;
@@ -1749,6 +2081,7 @@ class TransactiondetailTable extends AbstractTableGateway
 				$select->where->in("location", $sub_loc);
 			endif;
 		endif;
+		$select->where->in('transaction', $sub0);
 		$selectString = $sql->getSqlStringForSqlObject($select);
 		//echo $selectString; exit;
 		$results = $adapter->query($selectString, $adapter::QUERY_MODE_EXECUTE)->toArray();           
@@ -1767,7 +2100,12 @@ class TransactiondetailTable extends AbstractTableGateway
 	 * @return int
 	 */
 	public function getSumbyGroupforPresPLS($activity,$region,$location,$starting_date,$ending_date, $column, $group)
-	{			 
+	{
+		$sub0 = new Select("fa_transaction");
+		$sub0->columns(array("id"))
+			 ->where(array("status" => "4"))
+			 ->where->between('voucher_date', $starting_date, $ending_date);
+
 		$sub1 = new Select("fa_head");
 		$sub1->columns(array("id"))
 			 ->where(array("group"=>$group));
@@ -1776,9 +2114,7 @@ class TransactiondetailTable extends AbstractTableGateway
 		$sql = new Sql($adapter);
 		$select = $sql->select();
 		$select->from($this->table)
-			   ->columns(array( new Expression('SUM('.$column.') as total')))
-			   ->where(array("status" => "4")) //committed status
-			   ->where->between('voucher_dates', $starting_date, $ending_date);
+			   ->columns(array( new Expression('SUM('.$column.') as total')));
 			   
 		if($activity != -1):
 			$select->where(array("activity" => $activity));
@@ -1793,7 +2129,8 @@ class TransactiondetailTable extends AbstractTableGateway
 				$select->where->in("location", $sub_loc);
 			endif;
 		endif;
-		$select->where->in('head', $sub1);
+		$select->where->in('head', $sub1)
+			   ->where->in('transaction', $sub0);
 		$selectString = $sql->getSqlStringForSqlObject($select);
 		//echo $selectString;exit;
 		$results = $adapter->query($selectString, $adapter::QUERY_MODE_EXECUTE)->toArray();           
@@ -1813,6 +2150,11 @@ class TransactiondetailTable extends AbstractTableGateway
 	 */
 	public function getSumbyClassforPresPLS($activity,$region,$location,$starting_date,$ending_date, $column, $class)
 	{		
+		$sub0 = new Select("fa_transaction");
+		$sub0->columns(array("id"))
+			 ->where(array("status" => "4"))
+			 ->where->between('voucher_date', $starting_date, $ending_date);
+
 		$sub1 = new Select("fa_group");
 		$sub1->columns(array("id"))
 			 ->where(array("class" => $class));
@@ -1825,9 +2167,7 @@ class TransactiondetailTable extends AbstractTableGateway
 		$sql = new Sql($adapter);
 		$select = $sql->select();
 		$select->from($this->table)
-			   ->columns(array( new Expression('SUM('.$column.') as total')))
-			   ->where(array("status" => "4")) //committed status
-			   ->where->between('voucher_dates', $starting_date,$ending_date);
+			   ->columns(array( new Expression('SUM('.$column.') as total')));
 			   
 		if($activity != -1):
 			$select->where(array("activity" => $activity));
@@ -1843,6 +2183,7 @@ class TransactiondetailTable extends AbstractTableGateway
 			endif;
 		endif;
 		$select->where->in('head', $sub2);
+		$select->where->in('transaction', $sub0);
 		$selectString = $sql->getSqlStringForSqlObject($select);
 		//echo $selectString; exit; 
 		$results = $adapter->query($selectString, $adapter::QUERY_MODE_EXECUTE)->toArray();           
@@ -1997,6 +2338,10 @@ class TransactiondetailTable extends AbstractTableGateway
 	 */
 	public function getSumbyHeadforPrevPLS($activity,$region,$location,$starting_date,$ending_date,$column, $head)
 	{
+		$sub0 = new Select("fa_transaction");
+		$sub0->columns(array("id"))
+			 ->where(array("status" => "4"))
+			 ->where->between('voucher_date', $starting_date, $ending_date);
 		
 		$adapter = $this->adapter;  	 
 		$sql = new Sql($adapter);
@@ -2004,9 +2349,7 @@ class TransactiondetailTable extends AbstractTableGateway
 		$select->from(array('t'=>$this->table))
 		       ->join(array('h'=>'fa_head'), 'h.id=t.head', array('head'=>'name', 'head_id'=>'id'));
 		$select->columns(array( new Expression('SUM('.$column.') as total')))
-			   ->where(array("h.id" => $head))
-			   ->where(array("status" => "4")) //committed status
-			   ->where->between('voucher_dates', $starting_date, $ending_date);
+			   ->where(array("h.id" => $head));
 		if($activity != -1):
 			$select->where(array("activity" => $activity));
 		endif;
@@ -2020,6 +2363,7 @@ class TransactiondetailTable extends AbstractTableGateway
 				$select->where->in("location", $sub_loc);
 			endif;
 		endif;
+		$select->where->in('t.transaction', $sub0);
 		$selectString = $sql->getSqlStringForSqlObject($select);
 		//echo $selectString; exit;
 		$results = $adapter->query($selectString, $adapter::QUERY_MODE_EXECUTE)->toArray();           
@@ -2460,10 +2804,10 @@ class TransactiondetailTable extends AbstractTableGateway
 	 * @param Int $id
 	 * @return Int
 	 */
-	public function getOpeningBalanceforAnnexture($start_date,$id,$class)
+	public function getOpeningBalanceforAnnexture($start_date,$id,$class,$location = -1)
 	{	
-		$total_debit = $this->getSumbySubheadforAnnextureOpening($start_date, 'debit', $id);
-		$total_credit = $this->getSumbySubheadforAnnextureOpening($start_date ,'credit', $id); 
+		$total_debit = $this->getSumbySubheadforAnnextureOpening($start_date, 'debit', $id, $location);
+		$total_credit = $this->getSumbySubheadforAnnextureOpening($start_date ,'credit', $id, $location); 
 		/*ASSET & EXPENSE(Debit-Credit) && INCOME & LIBILITIES(Credit-Debit)*/
 		if($class=='1'|| $class=='4'){
 			return $total_debit - $total_credit;	
@@ -2487,16 +2831,23 @@ class TransactiondetailTable extends AbstractTableGateway
 	 * @param Int $sub_head
 	 * @return int
 	 */		
-	public function getSumbySubheadforAnnextureOpening($start_date,$column,$sub_head)
+	public function getSumbySubheadforAnnextureOpening($start_date,$column,$sub_head,$location = -1)
 	{
+		$sub0 = new Select("fa_transaction");
+		$sub0->columns(array("id"))
+			 ->where(array("status" => "4")) // committed transaction
+			 ->where->lessThan('voucher_date', $start_date);
+
 		$adapter = $this->adapter;  	 
 		$sql = new Sql($adapter);
 		$select = $sql->select();
 		$select->from($this->table)
 			   ->columns(array( new Expression('SUM('.$column.') as total')))
-			   ->where(array("sub_head" => $sub_head))
-			   ->where(array("status" => "4")) //committed status
-			   ->where->lessThan('voucher_dates',$start_date);
+			   ->where(array("sub_head" => $sub_head));
+		if($location != -1):
+			$select->where(array("location" => $location));
+		endif;
+		$select->where->in('transaction', $sub0);
 		$select->order(array('created ASC'));
 		$selectString = $sql->getSqlStringForSqlObject($select);
 	   //echo $selectString; exit;
@@ -2517,14 +2868,18 @@ class TransactiondetailTable extends AbstractTableGateway
 	 */		
 	public function getSumbySubheadforAnnexture($location,$start_date,$end_date, $column,$sub_head)
 	{	
+		$sub0 = new Select("fa_transaction");
+		$sub0->columns(array("id"))
+			 ->where(array("status" => "4")) // committed transaction
+			 ->where->between('voucher_date', $start_date, $end_date);
+
 		$adapter = $this->adapter;  	 
 		$sql = new Sql($adapter);
 		$select = $sql->select();
 		$select->from($this->table)
 			   ->columns(array( new Expression('SUM('.$column.') as total')))
-			   ->where(array("sub_head" => $sub_head))
-			   ->where(array("status" => "4")) //committed status
-			   ->where->between('voucher_dates', $start_date, $end_date);
+			   ->where(array("sub_head" => $sub_head));
+		$select->where->in('transaction', $sub0);
 			   if($location != -1):
 				    $select->where(array("location" => $location));
 			   endif;

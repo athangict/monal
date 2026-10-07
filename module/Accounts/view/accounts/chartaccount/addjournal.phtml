@@ -14,19 +14,9 @@
     <div class="modal-body">
         <div class="panel panel-default">                       
             <div class="panel-body"> 
-			    <div class="form-group">
-					<label for="voucher_main" class="control-label">Parent Vouchers</label>
-					<select id="voucher_main" name="voucher_main" class="form-control" data-placeholder="Select" required >
-						<option value=""></option>
-						<?php foreach ($vouchers as $pv):?>
-							<option value="<?php echo $pv['id'];?>">
-							<?php echo $pv['name']; ?></option>
-						<?php endforeach;?>
-					</select>
-				</div>
                 <div class="form-group">
-                  <label for="voucher">Voucher Type</label>
-                  <input type="text" class="form-control" name="voucher" id="voucher"  size="30" placeholder="voucher" required > 
+                  <label for="journal">Voucher Type</label>
+                  <input type="text" class="form-control" name="journal" id="journal"  size="30" placeholder="Voucher type" required > 
                 </div>  
                 <div class="form-group">
                   <label for="prefix">Prefix</label>
@@ -44,24 +34,17 @@
 $(function(){
 	const fv = FormValidation.formValidation(document.getElementById('#form'), {
 		fields: {
-			main_voucher: {
+			journal: {
 				validators: {
 					notEmpty: {
-						message: 'Please select main_voucher.'
-					}
-				}
-			},
-			voucher: {
-				validators: {
-					notEmpty: {
-						message: 'Please provide  voucher.'
+						message: 'Please provide voucher type.'
 					}
 				}
 			},
             prefix: {
 				validators: {
 					notEmpty: {
-						message: 'Please provide  Prefix.'
+						message: 'Please provide prefix.'
 					}
 				}
 			},

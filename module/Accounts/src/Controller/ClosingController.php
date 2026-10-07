@@ -250,4 +250,125 @@ class ClosingController extends AbstractActionController
 		$ViewModel->setTerminal(True);
 		return $ViewModel;
 	}
+
+	public function runmonthlycloseAction()
+	{
+		$this->init();
+		if(!$this->getRequest()->isPost()):
+			$this->flashMessenger()->addMessage('Failed^ Please submit monthly close details.');
+			return $this->redirect()->toRoute('report', array('action' => 'profitloss'));
+		endif;
+
+		$form = $this->getRequest()->getPost();
+		$region = (isset($form['region']) && $form['region'] !== '') ? (int)$form['region'] : -1;
+		$location = (isset($form['location']) && $form['location'] !== '') ? (int)$form['location'] : -1;
+		$activity = ($location > 0) ? $location : -1;
+		$periodEnd = isset($form['period_end']) ? $form['period_end'] : date('Y-m-t');
+		$periodStart = isset($form['period_start']) && $form['period_start'] !== '' ? $form['period_start'] : date('Y-m-01', strtotime($periodEnd));
+		$forceReclose = (isset($form['force_reclose']) && (int)$form['force_reclose'] === 1) ? 1 : 0;
+		$closeNote = isset($form['close_note']) ? trim((string)$form['close_note']) : '';
+		$existingSnapshot = $this->getDefinedTable(Accounts\PeriodsnapshotTable::class)->getByPeriod($periodEnd, $region, $location);
+		$isAdmin = $this->hasPrivilegedMonthlyCloseRole();
+
+		if(!empty($existingSnapshot) && $forceReclose !== 1):
+			$this->flashMessenger()->addMessage('Failed^ This period is already closed. Use Force Re-close (admin) to recompute.');
+			return $this->redirect()->toRoute('report', array('action' => 'profitloss'));
+		endif;
+
+		if($forceReclose === 1 && !$isAdmin):
+			$this->flashMessenger()->addMessage('Failed^ You do not have permission to force re-close.');
+			return $this->redirect()->toRoute('report', array('action' => 'profitloss'));
+		endif;
+
+		$connection = $this->_container->get('Laminas\Db\Adapter\Adapter')->getDriver()->getConnection();
+		$connection->beginTransaction();
+		try {
+			$openingRetained = 0.0;
+			$latestSnapshot = $this->getDefinedTable(Accounts\PeriodsnapshotTable::class)->getLatestBefore($periodStart, $region, $location);
+			if(!empty($latestSnapshot) && isset($latestSnapshot['retained_earnings'])):
+				$openingRetained = (float)$latestSnapshot['retained_earnings'];
+			endif;
+
+			$periodNetProfit = $this->calculateNetProfitForPeriod($activity, $region, $location, $periodStart, $periodEnd);
+			$retainedEarnings = $openingRetained + $periodNetProfit;
+
+			$snapshotData = array(
+				'period_end' => $periodEnd,
+				'start_date' => $periodStart,
+				'region' => $region,
+				'location' => $location,
+				'net_profit' => $periodNetProfit,
+				'retained_earnings' => $retainedEarnings,
+				'author' => $this->_author,
+				'modified' => $this->_modified,
+			);
+			if(!empty($existingSnapshot) && isset($existingSnapshot['id'])):
+				$snapshotData['id'] = $existingSnapshot['id'];
+			else:
+				$snapshotData['created'] = $this->_created;
+			endif;
+			$result = $this->getDefinedTable(Accounts\PeriodsnapshotTable::class)->save($snapshotData);
+			if($result > 0):
+				$runNo = $this->getDefinedTable(Accounts\PeriodsnapshotlogTable::class)->getMaxRunNo($periodEnd, $region, $location) + 1;
+				$logData = array(
+					'period_end' => $periodEnd,
+					'start_date' => $periodStart,
+					'region' => $region,
+					'location' => $location,
+					'action' => (!empty($existingSnapshot) ? 'RECLOSE' : 'CLOSE'),
+					'run_no' => $runNo,
+					'force_reclose' => $forceReclose,
+					'note' => $closeNote,
+					'net_profit' => $periodNetProfit,
+					'retained_earnings' => $retainedEarnings,
+					'author' => $this->_author,
+					'created' => $this->_created,
+				);
+				$this->getDefinedTable(Accounts\PeriodsnapshotlogTable::class)->save($logData);
+				$connection->commit();
+				$this->flashMessenger()->addMessage('success^ Monthly close snapshot saved successfully.');
+			else:
+				$connection->rollback();
+				$this->flashMessenger()->addMessage('Failed^ Failed to save monthly close snapshot.');
+			endif;
+		} catch(\Exception $e) {
+			$connection->rollback();
+			throw $e;
+		}
+		return $this->redirect()->toRoute('report', array('action' => 'profitloss'));
+	}
+
+	private function calculateNetProfitForPeriod($activity, $region, $location, $startDate, $endDate)
+	{
+		$netProfit = 0.0;
+		$profitLossClasses = $this->getDefinedTable(Accounts\ClassTable::class)->getProfitlossClass($activity, $region, $location, $startDate, $endDate);
+		foreach($profitLossClasses as $classRow):
+			$classId = isset($classRow['id']) ? $classRow['id'] : 0;
+			if($classId > 0):
+				$netProfit += (float)$this->getDefinedTable(Accounts\TransactiondetailTable::class)->getClosingBalanceforPresPLSCLASS(
+					$activity,
+					$region,
+					$location,
+					$startDate,
+					$endDate,
+					$classId,
+					$classId,
+					4
+				);
+			endif;
+		endforeach;
+		return $netProfit;
+	}
+
+	private function hasPrivilegedMonthlyCloseRole()
+	{
+		$privilegedRoles = array('100','99');
+		$roles = explode(',', (string)$this->_login_role);
+		foreach($roles as $role):
+			if(in_array(trim($role), $privilegedRoles, true)):
+				return true;
+			endif;
+		endforeach;
+		return in_array((string)$this->_login_role, $privilegedRoles, true);
+	}
 }

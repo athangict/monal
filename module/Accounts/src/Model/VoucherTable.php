@@ -10,6 +10,7 @@ use Laminas\Db\Sql\Expression;
 class VoucherTable extends AbstractTableGateway 
 {
 	protected $table = 'fa_voucher_main'; //tablename
+	protected $tableAvailable = null;
 
 	public function __construct(Adapter $adapter)
     {
@@ -22,6 +23,9 @@ class VoucherTable extends AbstractTableGateway
 	 */
 	public function getAll()
 	{  
+	    if(!$this->isTableAvailable()){
+	    	return array();
+	    }
 	    $adapter = $this->adapter;
 	    $sql = new Sql($adapter);
 	    $select = $sql->select();
@@ -39,6 +43,9 @@ class VoucherTable extends AbstractTableGateway
 	 */
 	public function get($param)
 	{
+		if(!$this->isTableAvailable()){
+			return array();
+		}
 		$where = ( is_array($param) )? $param: array('id' => $param);
 		$adapter = $this->adapter;
 		$sql = new Sql($adapter);
@@ -59,6 +66,9 @@ class VoucherTable extends AbstractTableGateway
      */
     public function getColumn($param, $column)
     {         
+            if(!$this->isTableAvailable()){
+            	return '';
+            }
             $where = ( is_array($param) )? $param: array('id' => $param);
             $fetch = array($column);
             $adapter = $this->adapter;       
@@ -71,6 +81,7 @@ class VoucherTable extends AbstractTableGateway
             $selectString = $sql->getSqlStringForSqlObject($select);
             $results = $adapter->query($selectString, $adapter::QUERY_MODE_EXECUTE)->toArray();          
            
+		   $columns = '';
            foreach ($results as $result):
               $columns =  $result[$column];
            endforeach; 
@@ -85,6 +96,9 @@ class VoucherTable extends AbstractTableGateway
 	 */
 	public function save($data)
 	{
+		if(!$this->isTableAvailable()){
+			return 0;
+		}
 	    if ( !is_array($data) ) $data = $data->toArray();
 	    $id = isset($data['id']) ? (int)$data['id'] : 0;
 	    
@@ -105,6 +119,9 @@ class VoucherTable extends AbstractTableGateway
      */
 	public function remove($id)
 	{
+		if(!$this->isTableAvailable()){
+			return false;
+		}
 		return $this->delete(array('id' => $id));
 	}
 	
@@ -115,6 +132,9 @@ class VoucherTable extends AbstractTableGateway
 	*/
 	public function isPresent($column, $value)
 	{
+		if(!$this->isTableAvailable()){
+			return FALSE;
+		}
 		$column = $column; $value = $value;
 		$resultSet = $this->select(function(Select $select) use ($column, $value){
 			$select->where(array($column => $value));
@@ -132,6 +152,9 @@ class VoucherTable extends AbstractTableGateway
 	 */
 	public function getMin($where = NULL, $column = NULL)
 	{
+		if(!$this->isTableAvailable()){
+			return NULL;
+		}
 		$adapter = $this->adapter;
 		$sql = new Sql($adapter);
 		$select = $sql->select();
@@ -160,6 +183,9 @@ class VoucherTable extends AbstractTableGateway
 	 */
 	public function getMax($where=NULL, $column = NULL)
 	{
+		if(!$this->isTableAvailable()){
+			return NULL;
+		}
 		$adapter = $this->adapter;
 		$sql = new Sql($adapter);
 		$select = $sql->select();
@@ -188,6 +214,9 @@ class VoucherTable extends AbstractTableGateway
 	 */
 	public function getMaxRow($column,$param)
 	{
+		if(!$this->isTableAvailable()){
+			return array();
+		}
 		$where = ( is_array($param) )? $param: array('id' => $param);
 		$adapter = $this->adapter;
 		
@@ -215,6 +244,9 @@ class VoucherTable extends AbstractTableGateway
 	 */
 	public function getMinRow($column,$param)
 	{
+		if(!$this->isTableAvailable()){
+			return array();
+		}
 		$where = ( is_array($param) )? $param: array('id' => $param);
 		$adapter = $this->adapter;
 	
@@ -233,5 +265,16 @@ class VoucherTable extends AbstractTableGateway
 		$results = $adapter->query($selectString, $adapter::QUERY_MODE_EXECUTE)->toArray();
 		return $results;
 	}
-}
 
+	protected function isTableAvailable()
+	{
+		if($this->tableAvailable !== null){
+			return $this->tableAvailable;
+		}
+		$table = str_replace("`", "``", $this->table);
+		$sql = "SELECT COUNT(*) AS total FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = '".$table."'";
+		$results = $this->adapter->query($sql, $this->adapter::QUERY_MODE_EXECUTE)->toArray();
+		$this->tableAvailable = !empty($results) && isset($results[0]['total']) && (int)$results[0]['total'] > 0;
+		return $this->tableAvailable;
+	}
+}

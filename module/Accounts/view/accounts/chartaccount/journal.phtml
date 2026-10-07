@@ -5,7 +5,7 @@
  */
 	$this->headTitle($this->title);
 ?>
-<?php echo $this->tabs_helper(array(611,612,613,614,615,630,617,629)); ?>
+<?php echo $this->tabs_helper(array(611,612,613,614,615,630,617,629,633)); ?>
 <div class="card">
     <div class="card-header">
 		<div class="btn-group pull-right">
@@ -19,7 +19,6 @@
 					<th>#</th>
 					<th>Voucher Types</th>
 					<th>Prefix</th>
-					<th>Parent Voucher</th>
 					<?php if($this->button(1)!=""):?>
 						<th class="no-sort no-printpdf">Action</th>
 					<?php endif;?>	
@@ -31,7 +30,6 @@
 					<td><?php  echo $i++; ?></td>								       
 					<td class="fw-bold"><?php echo $row['journal'];?></td>
 					<td><?php echo $row['prefix']; ?></td>
-					<td><?php echo $this->voucherObj->getColumn($row['voucher_main'],'name'); ?></td>
 					<?php if($this->button(1)!=""):?>
 						<td><?php echo $this->button(1, $row['id'].'_'.$page);?></td>
 					<?php endif;?>

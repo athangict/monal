@@ -10,6 +10,7 @@ use Laminas\Db\Sql\Expression;
 class ClosingbalanceTable extends AbstractTableGateway 
 {
 	protected $table = 'fa_closing_balance'; //tablename
+	protected $tableColumns = null;
 
 	public function __construct(Adapter $adapter)
     {
@@ -116,6 +117,7 @@ class ClosingbalanceTable extends AbstractTableGateway
 	public function save($data)
 	{
 	    if ( !is_array($data) ) $data = $data->toArray();
+	    $data = $this->filterDataByExistingColumns($data);
 	    $id = isset($data['id']) ? (int)$data['id'] : 0;
 	    
 	    if ( $id > 0 )
@@ -126,6 +128,34 @@ class ClosingbalanceTable extends AbstractTableGateway
 	    	$result = $this->getLastInsertValue(); 
 	    }	    	    
 	    return $result;	     
+	}
+
+	protected function filterDataByExistingColumns(array $data)
+	{
+		$columns = $this->getTableColumns();
+		if (empty($columns)) {
+			return $data;
+		}
+
+		return array_intersect_key($data, array_flip($columns));
+	}
+
+	protected function getTableColumns()
+	{
+		if (is_array($this->tableColumns)) {
+			return $this->tableColumns;
+		}
+
+		$sql = sprintf('SHOW COLUMNS FROM `%s`', $this->table);
+		$results = $this->adapter->query($sql, $this->adapter::QUERY_MODE_EXECUTE)->toArray();
+		$columns = array();
+		foreach ($results as $row) {
+			if (isset($row['Field'])) {
+				$columns[] = $row['Field'];
+			}
+		}
+		$this->tableColumns = $columns;
+		return $this->tableColumns;
 	}
 
 	/**
@@ -346,4 +376,3 @@ class ClosingbalanceTable extends AbstractTableGateway
 		return FALSE;
 	}
 }
-

@@ -99,13 +99,48 @@ class PdfxlsController extends AbstractActionController
      */
     public function pdfAction()
     {		
-		$dom='No document';
 		$request = $this->getRequest();
-		if($request->isPost()):
-			$data = $request->getPost();
-		//	echo"<pre>"; print_r($data); exit; 
-			$this->sessionArray()->addContent('report', $data);
+		if ($request->isPost()):
+			$data = $request->getPost()->toArray();
+			if (!isset($data['dom']) || trim($data['dom']) === ''):
+				$response = $this->getResponse();
+				$response->setStatusCode(400);
+				$response->getHeaders()->addHeaderLine('Content-Type', 'text/plain; charset=utf-8');
+				$response->setContent('No report content was provided.');
+				return $response;
+			endif;
+
+			$orientation = isset($data['orentation']) && strtoupper($data['orentation']) === 'L' ? 'L' : 'P';
+			$allowedSizes = array('A3', 'A4', 'A5', 'Letter', 'Legal');
+			$size = isset($data['size']) && in_array($data['size'], $allowedSizes, true) ? $data['size'] : 'A4';
+			$title = isset($data['title']) ? trim(strip_tags($data['title'])) : 'Report';
+			$pdf = new \TCPDF($orientation, 'mm', $size, true, 'UTF-8', false);
+			$pdf->setPrintHeader(false);
+			$pdf->setPrintFooter(false);
+			$pdf->SetTitle($title);
+			$pdf->SetFont('helvetica', '', 10);
+			$pdf->SetMargins(12, 10, 12);
+			$pdf->SetAutoPageBreak(true, 12);
+			$pdf->AddPage();
+			$pdf->writeHTML(
+				'<style>body{font-family:helvetica;font-size:10pt;color:#1f2937;} table{border-collapse:collapse;} th{font-weight:bold;background-color:#e2e8f0;} td,th{border:1px solid #cbd5e1;padding:6px;}</style>' .
+				$data['dom'],
+				true,
+				false,
+				true,
+				false,
+				''
+			);
+
+			$pdfContent = $pdf->Output('', 'S');
+			$response = $this->getResponse();
+			$response->getHeaders()->addHeaderLine('Content-Type', 'application/pdf');
+			$response->getHeaders()->addHeaderLine('Content-Disposition', 'inline; filename="report.pdf"');
+			$response->getHeaders()->addHeaderLine('Content-Length', (string) strlen($pdfContent));
+			$response->setContent($pdfContent);
+			return $response;
 		endif;
+
 		$viewModel = new ViewModel(array(
 				'author' => $this->_author
 		));

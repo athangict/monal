@@ -3,42 +3,52 @@
  * View -- of Report/AccountsreportController/plsAction
  */
 	$this->headTitle($this->title);
-	
+	$grand_pres_total_income=0;
+	$grand_pres_totalC=0;
+	$grand_prev_totalC=0;
+	$grand_pres_totaltax=0;
+	$grand_prev_totaltax=0;
+	$grand_pres_profitloss=0;
+	$grand_prev_profitloss=0;
+	$grand_pres_total_expenditure=0;
+	$grand_prev_total_income=0;
+	$grand_prev_total_expenditure=0;
+	$tax1=0;
+	$tax2=0;
 ?>
 <?php echo $this->tabs_helper(array(684,691,685,686,687,688,689,690,699)); ?>
+<style>
+	.tb-toggle:focus,
+	.tb-toggle:active {
+		outline: none !important;
+		box-shadow: none !important;
+	}
+	#monthly-close-form {
+		margin-top: 8px;
+	}
+	.monthly-close-actions {
+		display: flex;
+		flex-direction: column;
+		align-items: flex-end;
+		gap: 6px;
+	}
+	.monthly-close-actions label {
+		margin: 0;
+	}
+	.monthly-close-actions input[type="checkbox"] {
+		vertical-align: middle;
+		margin-top: 0;
+	}
+	.generate-report-button {
+		margin-top: 26px;
+	}
+</style>
 <div class="card">
 	<div class="card-header">
 		<div class="row">
 			<div class="col-lg-12">
 				<form data-toggle="validator" id="#form" method="post" action="<?php echo $this->url('report', array('action' => 'profitloss')); ?>"  enctype="multipart/form-data" >    
 					<div class="row">    
-						<div class="form-group col-lg-2">
-							<label for="tier" class="control-label">Tier</label>
-							<select name="tier" id="tier" class="form-control" data-paceholder="Select">
-								<option value=""></option>
-								<?php 
-									$st1 = ($data["tier"]==1)? 'selected':'';
-									$st2 = ($data["tier"]==2)? 'selected':'';
-									$st3 = ($data["tier"]==3)? 'selected':'';
-									$st4 = ($data["tier"]==4)? 'selected':'';
-									$grand_pres_total_income=0;
-									$grand_pres_totalC=0;
-									$grand_prev_totalC=0;
-									$grand_pres_totaltax=0;
-									$grand_prev_totaltax=0;
-									$grand_pres_profitloss=0;
-									$grand_prev_profitloss=0;
-									$grand_pres_total_expenditure=0;
-									$grand_prev_total_income=0;
-									$grand_prev_total_expenditure=0;
-									$tax1=0;$tax2=0;
-								?>
-								<option value="4" <?php echo $st4; ?>> Class </option>
-								<option value="3" <?php echo $st3; ?>> Group </option>
-								<option value="2" <?php echo $st2; ?>> Head </option>
-								<option value="1" <?php echo $st1; ?>> Sub Head </option>
-							</select>
-						</div> 
 						<div class="form-group col-lg-2">
 							<label class="control-label" for="start_date">Start Date</label>
 							<div class="date input-group" id="start_date" data-date="<?php echo $data['start_date'];?>" data-date-format="yyyy-mm-dd" >
@@ -78,12 +88,38 @@
 								endif;?>							
 							</select>
 						</div> 
-					</div> 
-					<div class="row">
-						<div class="col-lg-12">
-							<button type="submit" class="btn btn-sm btn-success pull-right"><i class="fa fa-gear"></i> Generate </button>
+						<div class="form-group col-lg-2 col-lg-offset-2">
+							<label class="control-label" aria-hidden="true">&nbsp;</label>
+							<button type="submit" class="btn btn-sm btn-success pull-right generate-report-button"><i class="fa fa-gear"></i> Generate </button>
 						</div>
-					</div>			
+					</div> 
+				</form>
+				<form id="monthly-close-form" method="post" action="<?php echo $this->url('report', array('action' => 'profitloss')); ?>" class="form-horizontal">
+					<input type="hidden" name="run_monthly_close" value="1">
+					<input type="hidden" name="period_start" id="mc_period_start" value="<?php echo $data['start_date'];?>">
+					<input type="hidden" name="period_end" id="mc_period_end" value="<?php echo $data['end_date'];?>">
+					<input type="hidden" name="region" id="mc_region" value="<?php echo $data['region'];?>">
+					<input type="hidden" name="location" id="mc_location" value="<?php echo $data['location'];?>">
+					<input type="hidden" name="start_date" id="mc_start_date" value="<?php echo $data['start_date'];?>">
+					<input type="hidden" name="end_date" id="mc_end_date" value="<?php echo $data['end_date'];?>">
+					<?php if(isset($canForceReclose, $hasExistingCloseSnapshot) && $canForceReclose && $hasExistingCloseSnapshot): ?>
+					<div class="row">
+						<div class="col-lg-12" id="force-note-wrap" style="display:none; margin-top:8px;">
+							<input type="text" class="form-control" name="close_note" id="mc_close_note" maxlength="500" placeholder="Reason for re-close">
+						</div>
+					</div>
+					<input type="hidden" name="force_reclose" id="mc_force_reclose" value="0">
+					<?php endif; ?>
+					<div class="monthly-close-actions">
+						<?php if(isset($canForceReclose, $hasExistingCloseSnapshot) && $canForceReclose && $hasExistingCloseSnapshot): ?>
+						<label>
+							<input type="checkbox" id="force_reclose_chk" value="1"> Force Re-close (Admin)
+						</label>
+						<?php endif; ?>
+						<button type="submit" class="btn btn-sm btn-primary" onclick="return confirm('Run monthly close snapshot for selected period and scope?');">
+							<i class="fa fa-refresh"></i> Run Monthly Close Snapshot
+						</button>
+					</div>
 				</form>
 			</div>
 		</div>
@@ -107,16 +143,11 @@
 					<?php 
 					if($data['tier'] > 0):?>
 						<tr>
-							<th> <?php echo "From".$data['start_date']."to".$data['end_date'];?> </th>
-							<th> <?php $prevoius_start_year = date('y', strtotime($data['start_date'])) - 1;
-							$prevoius_start_month = date('m', strtotime($data['start_date']));
-							$prevoius_start_day = date('d', strtotime($data['start_date']));
-							$pre_end_year = date('y', strtotime($data['end_date'])) - 1;
-							$pre_end_month = date('m', strtotime($data['end_date']));
-							$pre_end_day = date('d', strtotime($data['end_date']));
-							$pre_starting_date = date('Y-m-d', strtotime($prevoius_start_year.'-'.$prevoius_start_month.'-'.$prevoius_start_day));
-							$pre_ending_date = date('Y-m-d', strtotime($pre_end_year.'-'.$pre_end_month.'-'.$pre_end_day));
-							echo "From".$pre_starting_date."to".$pre_ending_date;?> </th>
+							<th> <?php echo "From ".$data['start_date']." to ".$data['end_date'];?> </th>
+							<th> <?php
+							$pre_starting_date = date('Y-m-d', strtotime('-1 year', strtotime($data['start_date'])));
+							$pre_ending_date = date('Y-m-d', strtotime('-1 year', strtotime($data['end_date'])));
+							echo "From ".$pre_starting_date." to ".$pre_ending_date;?> </th>
 						</tr>
 					<?php 
 				    else: ?>
@@ -128,6 +159,7 @@
 				    endif; ?>
 				</thead>
 				<tbody id="trial_balance">
+					<?php $isTraversal = false; ?>
 					<?php 
 					if($data['tier'] <= 4):
 						foreach($this->classObj->getProfitlossClass($data['activity'],$data['region'],$data['location'],$data['start_date'],$data['end_date']) as $classrow): //class 
@@ -143,8 +175,8 @@
 							$total_prev_pl = array();?>
 							<?php 
 							if($data['tier'] <= 4):?>
-							<tr class="warning">
-								<td class=""><?php echo $classrow['name'];?> </td>
+							<tr class="warning tb-row tb-class" data-level="class" data-node="class-<?php echo $classrow['id'];?>">
+								<td class=""><a href="#" class="tb-toggle" data-node="class-<?php echo $classrow['id'];?>"><span class="tb-caret">+</span> <?php echo $classrow['name'];?></a></td>
 							<?php 
 						    endif;?>
 								<?php 
@@ -180,14 +212,14 @@
 							</tr>
 							<?php endif;?> 
 							<?php 
-							if($data['tier'] <= 3):  
+							if($isTraversal):  
 								foreach($this->groupObj->getTransactionGroup($data['activity'],$data['region'],$data['location'],$data['start_date'],$data['end_date'], array('class'=>$classrow['id'])) as $grouprow): 
 								/*Finding Class(implement the asset liabilities formulae)*/
 								#$head_id = $this->subheadObj->getColumn($subheadrow['id'],'head');
 								#$group_id = $this->headObj->getColumn($headrow['id'],'group');
 								$class_id =$this->groupObj->getColumn($grouprow['id'],'class');?>													
-									<tr class="info">
-										<td class="text-danger">&nbsp;<?php echo $grouprow['name'];?></td>
+									<tr class="info tb-row tb-group" data-level="group" data-node="group-<?php echo $grouprow['id'];?>" data-parent="class-<?php echo $classrow['id'];?>" style="display:none;">
+										<td class="text-danger">&nbsp;<a href="#" class="tb-toggle" data-node="group-<?php echo $grouprow['id'];?>"><span class="tb-caret">+</span> <?php echo $grouprow['name'];?></a></td>
 										<?php 
 											$pres_closing_balance = $this->transactiondetailObj->getClosingBalanceforPresPLSCLASS($data['activity'],$data['region'],$data['location'],$data['start_date'],$data['end_date'], $grouprow['id'],$class_id, 3);	
 											$prev_closing_balance = $this->transactiondetailObj->getClosingBalanceforPrevPLS($data['activity'],$data['region'],$data['location'],$pre_starting_date,$pre_ending_date, $grouprow['id'], 3);	
@@ -198,15 +230,15 @@
 											<td style ="text-align:right"><?php echo number_format($prev_closing_balance,2,'.',',');?></td>
 									</tr>
 									<?php 
-									if($data['tier'] <= 2):
+									if($isTraversal):
 										//foreach($this->headformatObj->get(array('group'=>$grouprow['id'])) as $htype):
 										foreach($this->headObj->getTransactionHead($data['activity'],$data['region'],$data['location'],$data['start_date'],$data['end_date'], array('group'=>$grouprow['id'])) as $headrow): 
 										 /*Finding Class(implement the asset liabilities formulae)*/
 											#$head_id = $this->subheadObj->getColumn($subheadrow['id'],'head');
 											$group_id = $this->headObj->getColumn($headrow['id'],'group');
 											$class_id =$this->groupObj->getColumn($group_id,'class');?>													
-											<tr class="success">
-												<td class="text-success">&nbsp;&nbsp;<?php echo $this->headObj->getColumn($headrow['id'],'name');?></td>
+											<tr class="success tb-row tb-head" data-level="head" data-node="head-<?php echo $headrow['id'];?>" data-parent="group-<?php echo $grouprow['id'];?>" style="display:none;">
+												<td class="text-success">&nbsp;&nbsp;<a href="#" class="tb-toggle" data-node="head-<?php echo $headrow['id'];?>"><span class="tb-caret">+</span> <?php echo $this->headObj->getColumn($headrow['id'],'name');?></a></td>
 												<?php 
 													$pres_closing_balance = $this->transactiondetailObj->getClosingBalanceforPresPLSCLASS($data['activity'],$data['region'],$data['location'],$data['start_date'],$data['end_date'], $headrow['id'],$class_id, 2);
 													$prev_closing_balance = $this->transactiondetailObj->getClosingBalanceforPrevPLS($data['activity'],$data['region'],$data['location'],$pre_starting_date,$pre_ending_date, $headrow['id'], 2);
@@ -217,13 +249,13 @@
 													<td style ="text-align:right"><?php echo number_format($prev_closing_balance,2,'.',',');?></td>
 											</tr>
 											<?php 
-											if($data['tier'] <= 1):
+											if($isTraversal):
 												foreach($this->subheadObj->getTransactionSubhead($data['activity'],$data['region'],$data['location'],$data['start_date'],$data['end_date'], array('head'=>$headrow['id'])) as $subheadrow): 
                                 			       /*Finding Class(implement the asset liabilities formulae)*/
 													$head_id = $this->subheadObj->getColumn($subheadrow['id'],'head');
 													$group_id = $this->headObj->getColumn($head_id,'group');
 													$class_id =$this->groupObj->getColumn($group_id,'class');?>															
-													<tr class="subheadrow">
+													<tr class="subheadrow tb-row tb-subhead" data-level="subhead" data-parent="head-<?php echo $headrow['id'];?>" style="display:none;">
 														<td>&nbsp;&nbsp;&nbsp;&nbsp;<?php echo $subheadrow['code'].'-'.$subheadrow['name'];?></td>
 														<?php 
 															$pres_closing_balance = $this->transactiondetailObj->getClosingBalanceforPresPLSCLASS($data['activity'],$data['region'],$data['location'],$data['start_date'],$data['end_date'], $subheadrow['id'],$class_id, 1);	
@@ -344,6 +376,27 @@ $(function(){
 	$('#end_date').on('changeDate',function(){
 		$('form').formValidation('revalidateField', $(this).attr('id'));
 	});
+	$('#monthly-close-form').on('submit', function(){
+		var sDate = $('#start_date input').val() || $('input[name="start_date"]').val();
+		var eDate = $('#end_date input').val() || $('input[name="end_date"]').val();
+		$('#mc_period_start').val(sDate);
+		$('#mc_period_end').val(eDate);
+		$('#mc_start_date').val(sDate);
+		$('#mc_end_date').val(eDate);
+		$('#mc_region').val($('#region').val());
+		$('#mc_location').val($('#location').val());
+		if($('#force_reclose_chk').length){
+			$('#mc_force_reclose').val($('#force_reclose_chk').is(':checked') ? '1' : '0');
+		}
+	});
+	$('#force_reclose_chk').on('change', function(){
+		if($(this).is(':checked')){
+			$('#force-note-wrap').show();
+		}else{
+			$('#force-note-wrap').hide();
+			$('#mc_close_note').val('');
+		}
+	});
         $("#region").change(function() { 
 			$.post( "<?php echo $this->url('ajresponse', array('action' => 'getlocation')); ?>/"+ $("#region").val(), function( data ) {
 				var newdata ="<option value='-1'>All</option>"+data
@@ -354,13 +407,7 @@ $(function(){
 	var title_table = 'Profit Loss Statement Report: ' +' from '+$('input#start_date').val()+' to '+$('input#end_date').val();
 	const fv = FormValidation.formValidation(document.getElementById('#form'), {
 		fields: {
-			'tier': {
-				validators: {
-					notEmpty: {
-						message: 'Please select tier'
-					}
-				}
-			},
+			
 		},
 		plugins: {
 			trigger: new FormValidation.plugins.Trigger(),
@@ -378,7 +425,123 @@ $(function(){
 		}
 	});	
 	$('#dataTables').DataTable({
-		"paging":   false,
+		"paging": false,
+		"buttons": [
+			{ extend: 'copy', exportOptions: { modifier: { selected: null }, rows: function (idx, data, node) { return $(node).is(':visible'); } } },
+			{ extend: 'csv', exportOptions: { modifier: { selected: null }, rows: function (idx, data, node) { return $(node).is(':visible'); } } },
+			{ extend: 'excel', exportOptions: { modifier: { selected: null }, rows: function (idx, data, node) { return $(node).is(':visible'); } } },
+			{ extend: 'pdf', exportOptions: { modifier: { selected: null }, rows: function (idx, data, node) { return $(node).is(':visible'); } } },
+			{ extend: 'print', exportOptions: { modifier: { selected: null }, rows: function (idx, data, node) { return $(node).is(':visible'); } } }
+		]
 	});
+
+	$('.tb-toggle .tb-caret').attr('data-state', 'collapsed');
+
+	function setCaret($toggle, state) {
+		var $caret = $toggle.find('.tb-caret').first();
+		$caret.attr('data-state', state);
+		if (state === 'loading') {
+			$caret.html('<i class="fa fa-spinner fa-spin" aria-hidden="true"></i>');
+			return;
+		}
+		if (state === 'expanded') {
+			$caret.text('-');
+			return;
+		}
+		$caret.text('+');
+	}
+
+	function isExpanded($toggle) {
+		return $toggle.find('.tb-caret').first().attr('data-state') === 'expanded';
+	}
+
+	function hideChildren(nodeId) {
+		var $children = $('tr.tb-row[data-parent="' + nodeId + '"]');
+		$children.each(function(){
+			var childNode = $(this).attr('data-node');
+			$(this).hide();
+			if (childNode) {
+				hideChildren(childNode);
+			}
+			setCaret($(this).find('.tb-toggle').first(), 'collapsed');
+		});
+	}
+
+	function getNextLevel(level) {
+		if (level === 'class') { return 'group'; }
+		if (level === 'group') { return 'head'; }
+		if (level === 'head') { return 'subhead'; }
+		return '';
+	}
+
+	function getParentId(nodeId) {
+		var parts = (nodeId || '').split('-');
+		return parts.length > 1 ? parts[1] : '';
+	}
+
+	function loadChildren($toggle, $row, nodeId) {
+		var nextLevel = getNextLevel($row.attr('data-level'));
+		if (!nextLevel || $row.attr('data-loaded') === '1' || $row.attr('data-loading') === '1') {
+			return;
+		}
+		$row.attr('data-loading', '1');
+		setCaret($toggle, 'loading');
+		$toggle.attr('aria-busy', 'true');
+
+		$.post(
+			"<?php echo $this->url('report', array('action' => 'fetchreportlevel'));?>",
+			{
+				report: 'profitloss',
+				level: nextLevel,
+				parent_id: getParentId(nodeId),
+				activity: $('#location').val(),
+				region: $('#region').val(),
+				location: $('#location').val(),
+				start_date: $('input[name="start_date"]').val(),
+				end_date: $('input[name="end_date"]').val()
+			},
+			function(response) {
+				$row.attr('data-loaded', '1');
+				if (response && response.success && response.rows) {
+					$row.after(response.rows);
+					$('tr.tb-row[data-parent="' + nodeId + '"]').show();
+					setCaret($toggle, 'expanded');
+				} else {
+					setCaret($toggle, 'collapsed');
+				}
+			},
+			'json'
+		).fail(function() {
+			setCaret($toggle, 'collapsed');
+			console.error('Failed to load profit/loss children for node:', nodeId);
+			window.alert('Unable to load the selected level right now. Please try again.');
+		}).always(function() {
+			$row.attr('data-loading', '0');
+			$toggle.removeAttr('aria-busy');
+		});
+	}
+
+	$(document).on('click', '.tb-toggle', function(e){
+		e.preventDefault();
+		var $toggle = $(this);
+		var $row = $toggle.closest('tr.tb-row');
+		if ($row.attr('data-loading') === '1') {
+			return;
+		}
+		var nodeId = $toggle.attr('data-node');
+		var $children = $('tr.tb-row[data-parent="' + nodeId + '"]');
+		if (!$children.length && $row.attr('data-level') !== 'subhead') {
+			loadChildren($toggle, $row, nodeId);
+			return;
+		}
+
+		if (isExpanded($toggle)) {
+			setCaret($toggle, 'collapsed');
+			hideChildren(nodeId);
+		} else {
+			setCaret($toggle, 'expanded');
+			$children.show();
+		}
+		});
 });
 </script>

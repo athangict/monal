@@ -1,0 +1,119 @@
+<?php
+/**
+ * View -- of Accounts/ChartaccountController/edittaxationAction
+ */
+?>
+<?php
+foreach($this->taxation as $taxationRow):
+	extract($taxationRow);
+endforeach;
+?>
+<form id="#form" method="post" action="<?php echo $this->url('chartaccount', array('action' => 'edittaxation', 'id' => $id)); ?>" enctype="multipart/form-data">
+	<div class="modal-header">
+		<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+		<h4 class="modal-title"><i class="fa fa-pencil-square-o"></i> Edit Taxation</h4>
+	</div>
+	<div class="modal-body">
+		<div class="panel panel-default">
+			<div class="panel-body">
+				<div class="form-group">
+					<label for="taxation" class="control-label">Taxation</label>
+					<input type="text" class="form-control" name="taxation" id="taxation" value="<?php echo $taxation;?>" size="30" required>
+				</div>
+				<div class="form-group">
+					<label for="code" class="control-label">Code</label>
+					<input type="text" class="form-control" name="code" id="code" value="<?php echo isset($class) ? $class : '';?>" size="30">
+				</div>
+				<div class="form-group">
+					<label for="head_type" class="control-label">Head Type</label>
+					<select id="head_type" name="head_type" class="form-control" data-placeholder="Select" required>
+						<option value=""></option>
+						<?php foreach ($headtype as $headtypeRow):
+							$selected = (isset($head_type) && $head_type == $headtypeRow['id']) ? 'selected' : '';
+						?>
+							<option value="<?php echo $headtypeRow['id'];?>" <?php echo $selected; ?>>
+								<?php echo $headtypeRow['head_type']; ?>
+							</option>
+						<?php endforeach;?>
+					</select>
+				</div>
+				<div class="form-group">
+					<label for="head" class="control-label">Head</label>
+					<select id="head" name="head" class="form-control" data-placeholder="Select" required>
+						<option value=""></option>
+						<?php
+						$selectedHeadType = isset($head_type) ? $head_type : '';
+						if($selectedHeadType != ''):
+							foreach ($headObj->get(array('h.head_type' => $selectedHeadType)) as $headRow):
+								$selected = (isset($head) && $head == $headRow['id']) ? 'selected' : '';
+						?>
+								<option value="<?php echo $headRow['id'];?>" <?php echo $selected; ?>>
+									<?php echo $headRow['name']; ?>
+								</option>
+						<?php
+							endforeach;
+						endif;
+						?>
+					</select>
+				</div>
+			</div>
+		</div>
+	</div>
+	<div class="modal-footer">
+		<button type="submit" class="btn btn-success"><i class="fa fa-check"></i> Save</button>
+		<button type="button" class="btn btn-warning" data-dismiss="modal"><i class="fa fa-times"></i> Cancel</button>
+	</div>
+</form>
+<script>
+$('document').ready(function(){
+	$("#head_type").change(function() {
+		$("#head").load('<?php echo $this->url("ajresponse", array("action" => "gethead")); ?>/'+ $("#head_type").val(), function() {
+			$("#head").trigger("chosen:updated");
+			$('form').formValidation('revalidateField','head');
+		});
+    });
+
+	const fv = FormValidation.formValidation(document.getElementById('#form'), {
+		fields: {
+			taxation: {
+				validators: {
+					notEmpty: {
+						message: 'Please provide taxation name.'
+					}
+				}
+			},
+			head_type: {
+				validators: {
+					notEmpty: {
+						message: 'Please select head type.'
+					}
+				}
+			},
+			head: {
+				validators: {
+					notEmpty: {
+						message: 'Please select head.'
+					}
+				}
+			},
+		},
+		plugins: {
+			trigger: new FormValidation.plugins.Trigger(),
+			bootstrap3: new FormValidation.plugins.Bootstrap3(),
+			submitButton: new FormValidation.plugins.SubmitButton(),
+			defaultSubmit: new FormValidation.plugins.DefaultSubmit(),
+		},
+	}).on('core.element.validated', function (e) {
+		if (e.valid) {
+			$('div#'+ e.field.replace('[]','') +'_chosen').removeClass('is-invalid');
+			$('div#'+ e.field.replace('[]','') +'_chosen').addClass('is-valid');
+		} else {
+			$('div#'+ e.field.replace('[]','') +'_chosen').removeClass('is-valid');
+			$('div#'+ e.field.replace('[]','') +'_chosen').addClass('is-invalid');
+		}
+	});
+	$('form select').chosen().change(function () {
+		fv.revalidateField($(this).attr('name'));
+	});
+});
+</script>

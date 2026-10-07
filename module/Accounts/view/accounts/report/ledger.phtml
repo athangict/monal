@@ -264,7 +264,7 @@
 									$i = 1;
 									$grand_debit =0;$grand_credit=0;
 									$closing_balance =  $opening_balance;
-									foreach($this->transactionObj->getTransactionIDforLedger($data['location'],$data['activity'],$data['start_date'],$data['end_date'],array('sub_head'=> $subheadrow['id'])) as $transaction):
+									foreach($this->transactionObj->getTransactionIDforLedger($data['location'],$data['activity'],$data['start_date'],$data['end_date'],array('sub_head'=> $data['sub_head'])) as $transaction):
 											
 										$total_debit = $this->transactiondetailObj->getSumbyTransactionIDforLedger($data['location'],$data['activity'],$data['start_date'],$data['end_date'], 'debit', array('transaction' => $transaction['id'],'sub_head'=>$data['sub_head']));
 										$total_credit = $this->transactiondetailObj->getSumbyTransactionIDforLedger($data['location'],$data['activity'],$data['start_date'],$data['end_date'], 'credit', array('transaction' => $transaction['id'],'sub_head'=>$data['sub_head']));
@@ -425,4 +425,3 @@ $(function(){
 	});
 });
 </script>
-

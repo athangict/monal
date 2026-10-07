@@ -21,25 +21,9 @@
 	    	<div class="panel-body"> 
 	        	<div class="row">  
 					<div class="col-lg-12"> 
-					    <div class="form-group">
-							<label for="voucher_main" class="control-label">Parent Voucher</label>
-							<select id="voucher_main" name="voucher_main" class="form-control" data-placeholder="Select" required >
-								<option value=""></option>
-								<?php 
-								foreach ($vouchers as $pv):
-								$selected = ($voucher_main == $pv['id'])?'selected':'';
-								?>
-									<option value="<?php echo $pv['id'];?>" <?php echo $selected;?>>
-									<?php echo $pv['name'];?>
-									</option>
-								<?php 
-								endforeach;
-								?>
-							</select>
-						</div> 
 						<div class="form-group" class="control-label">
-							<label for="voucher">Journal</label>
-							<input type="text" class="form-control" name="voucher" id="voucher" value="<?php echo $journal;?>" size="30" placeholder="Journal" required > 
+							<label for="journal">Journal</label>
+							<input type="text" class="form-control" name="journal" id="journal" value="<?php echo $journal;?>" size="30" placeholder="Journal" required > 
 						</div>  
 						<div class="form-group" class="control-label">
 							<label for="prefix">Prefix</label>
@@ -59,13 +43,6 @@
 $('document').ready(function(){
 	const fv = FormValidation.formValidation(document.getElementById('#form'), {
 		fields: {
-			code: {
-				validators: {
-					notEmpty: {
-						message: 'Please provide Code.'
-					}
-				}
-			},
 			journal: {
 				validators: {
 					notEmpty: {

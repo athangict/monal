@@ -82,8 +82,6 @@ $minYear = date('Y', strtotime($minYear)); ?>
 			</thead>
 			<tbody>
 				<?php $i=1+(($page-1)*25); foreach ($paginator as $row):
-					$voucher_main_id= $this->voucherObj->getColumn($row['voucher_id'],'voucher_main');
-					 //echo '<pre>';print_r($paginator);//exit;
 					if($row['voucher_id']==12)://2==credit Voucher?>
 						<tr data-href="<?php echo $this->button(4,$row['id']); ?>">
 							<td><?php echo $i++; ?> </td>
@@ -122,4 +120,3 @@ $minYear = date('Y', strtotime($minYear)); ?>
 		orentation:"P",//L =landscape, P = potrait
 	});
 </script>
-
