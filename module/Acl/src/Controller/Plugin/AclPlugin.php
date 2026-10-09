@@ -31,6 +31,7 @@ class AclPlugin extends AbstractPlugin
 			$user_id = 0;
 			$user_role = 1;	
 		}
+		$user_roles = array_map('trim', explode(',', (string) $user_role));
 		
 		/** Get Database Adapter **/
 		$this->dbAdapter = $this->_container->get('Laminas\Db\Adapter\Adapter');
@@ -47,13 +48,7 @@ class AclPlugin extends AbstractPlugin
 		foreach($results as $result):
 			$acl->addRole(new Role($result['id']));
         endforeach;
-		$user_roles = explode(',',$user_role);
-		$user_roles = (sizeof($user_roles)<1) ? array('1') : $user_roles;
-		$user_roles_array = array();
-		for($i=0;$i<sizeof($user_roles);$i++):
-			array_push($user_roles_array,$user_roles[$i]);
-		endfor;
-		$acl->addRole(new Role('SessionUserRole'), $user_roles_array);
+		$acl->addRole(new Role('SessionUserRole'), $user_roles);
         # end ROLES ########################################
 		
 		# RESOURCES ########################################
@@ -102,7 +97,7 @@ class AclPlugin extends AbstractPlugin
 		$highest_role = $hrow['h_role'];
 		
 		/** Get Count of ACL Mapped With Role & Role Mapped with Module**/
-		if($highest_role==$user_role){
+		if(in_array((string) $highest_role, $user_roles, true)){
 			$count = '1';
 			$usermoduleQuery = "select module as mapped_module from sys_modules";
 		}else{

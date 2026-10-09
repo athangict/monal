@@ -1,5 +1,5 @@
 <option value=""></option>
 <?php foreach ($subheads as $subhead):?>
-        <option value="<?php echo $subhead->id; ?>"><?php echo $subhead->code; ?>-<?php echo $subhead->name; ?></option>
+        <option value="<?php echo $subhead->id; ?>"><?php echo \Accounts\Support\AccountLabel::html($subhead->name, $subhead->code); ?></option>
 <?php endforeach;  ?>
 	

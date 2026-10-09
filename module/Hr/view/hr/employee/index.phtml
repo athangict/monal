@@ -64,6 +64,13 @@
 					</select>
 				</div>
 			</form>
+			<?php if ($canAddEmployee): ?>
+				<div class="text-right">
+					<a class="btn btn-primary" href="<?php echo $this->url('employee', array('action' => 'addemployee')); ?>">
+						<i class="ace-icon fa fa-plus"></i> Add Employee
+					</a>
+				</div>
+			<?php endif; ?>
 			</div>
 		</div>
 		</div>
@@ -125,4 +132,3 @@
 		$('#dataTables').DataTable({"paging":   true,});
 	});
 </script>
-

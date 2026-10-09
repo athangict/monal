@@ -123,7 +123,7 @@
 															<?php 
 																foreach ($heads as $head):
 															?>
-																<option value="<?php echo $head['id'];?>"><?php echo $head['code'];?></option>
+																<option value="<?php echo $head['id'];?>"><?php echo \Accounts\Support\AccountLabel::html($head['name'], $head['code']);?></option>
 															<?php 
 																endforeach;
 															?>
@@ -190,7 +190,7 @@
 															<?php 
 																foreach ($heads as $head):
 															?>
-																<option value="<?php echo $head['id'];?>"> <?php echo $head['code'];?></option>
+																<option value="<?php echo $head['id'];?>"> <?php echo \Accounts\Support\AccountLabel::html($head['name'], $head['code']);?></option>
 															<?php 
 																endforeach;
 															?>

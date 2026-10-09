@@ -71,8 +71,11 @@
 								<span class="input-group-addon add-on"><i class="fa fa-calendar"></i></span>
 							</div>
 						</div>
-						<div class="col-lg-12">
-							<button type = "submit" class="btn btn-sm btn-success pull-right"><i class="fa fa-gear"></i> Generate </button>
+						<div class="form-group col-lg-2">
+							<label class="control-label">&nbsp;</label>
+							<div>
+								<button type = "submit" class="btn btn-sm btn-success"><i class="fa fa-gear"></i> Generate </button>
+							</div>
 						</div>
 					</div>			
 				</form>
@@ -150,7 +153,7 @@
 									$grand_credit += $total_credit;?>		
 									<?php if(($opening_balance!=0) || ($closing_balance!=0) || ($total_debit!=0) || ($total_credit!=0)):?>	
 										<tr class="warning tb-row tb-class" data-level="class" data-node="class-<?php echo $classrow['id'];?>">
-											<td class=""><a href="#" class="tb-toggle" data-node="class-<?php echo $classrow['id'];?>"><span class="tb-caret">+</span> <?php echo $classrow['name'];?></a></td>
+											<td class=""><a href="#" class="tb-toggle" data-node="class-<?php echo $classrow['id'];?>"><span class="tb-caret">+</span> <?php echo \Accounts\Support\AccountLabel::html($classrow['name']);?></a></td>
 											<td style="text-align:right"><?php echo number_format((float)$opening_balance, 2, '.', ',');?></td>
 											<td><?php echo $cr_or_dr_ob;//echo $this->decimal($opening_cr);?></td>
 											<td style="text-align:right"><?php echo number_format((float)$total_debit, 2, '.', ',');?></td>
@@ -196,7 +199,7 @@
 											<?php 
 											if(($opening_balance!=0) || ($closing_balance!=0) || ($total_debit!=0) || ($total_credit!=0)):?>										
 												<tr class="info tb-row tb-group" data-level="group" data-node="group-<?php echo $grouprow['id'];?>" data-parent="class-<?php echo $classrow['id'];?>" style="display:none;">
-													<td>&nbsp;&nbsp;&nbsp;<a href="#" class="tb-toggle" data-node="group-<?php echo $grouprow['id'];?>"><span class="tb-caret">+</span> <?php echo $grouprow['name'];?></a></td>
+													<td>&nbsp;&nbsp;&nbsp;<a href="#" class="tb-toggle" data-node="group-<?php echo $grouprow['id'];?>"><span class="tb-caret">+</span> <?php echo \Accounts\Support\AccountLabel::html($grouprow['name']);?></a></td>
 													<td style="text-align:right"><?php echo number_format((float)$opening_balance, 2, '.', ',');?></td>
 													<td><?php echo $cr_or_dr_ob;//echo $this->decimal($opening_cr);?></td>
 													<td style="text-align:right"><?php echo number_format((float)$total_debit, 2, '.', ',');?></td>
@@ -251,7 +254,7 @@
 														<?php 
 															if(($opening_balance!=0) || ($closing_balance!=0) || ($total_debit!=0) || ($total_credit!=0)):?>										
 																<tr class="success tb-row tb-head" data-level="head" data-node="head-<?php echo $headrow['id'];?>" data-parent="group-<?php echo $grouprow['id'];?>" style="display:none;">
-																	<td class="">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#" class="tb-toggle" data-node="head-<?php echo $headrow['id'];?>"><span class="tb-caret">+</span> <?php echo $this->headObj->getColumn($headrow['id'],'code');?></a></td>
+																	<td class="">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#" class="tb-toggle" data-node="head-<?php echo $headrow['id'];?>"><span class="tb-caret">+</span> <?php echo \Accounts\Support\AccountLabel::html($headrow['name'], $headrow['code']);?></a></td>
 																	<td style="text-align:right"><?php echo number_format((float)$opening_balance, 2, '.', ',');?></td>
 																	<td><?php echo $cr_or_dr_ob;//echo $this->decimal($opening_cr);?></td>
 																	<td style="text-align:right"><?php echo number_format((float)$total_debit, 2, '.', ',');?></td>
@@ -300,7 +303,7 @@
 															endif;?>
 															<?php if(($opening_balance!=0) || ($closing_balance!=0) || ($total_debit!=0) || ($total_credit!=0)):?>													
 																<tr class="subheadrow tb-row tb-subhead" data-level="subhead" data-parent="head-<?php echo $headrow['id'];?>" style="display:none;">
-																	<td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<?php echo $subheadrow['code'].'-'.$subheadrow['name'];?></td>
+																	<td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<?php echo \Accounts\Support\AccountLabel::html($subheadrow['name'], $subheadrow['code']);?></td>
 																	<td style="text-align:right"><?php echo number_format((float)$opening_balance, 2, '.', ',');?></td>
 																	<td><?php echo $cr_or_dr_ob;//echo $this->decimal($opening_cr);?></td>
 																	<td style="text-align:right"><?php echo number_format((float)$total_debit, 2, '.', ',');?></td>
@@ -440,14 +443,15 @@
 		});
 		
 		var title_table = 'Trial Balance Report: ' +' from '+$('input#start_date').val()+' to '+$('input#end_date').val();
+		<?php echo $this->partial('accounts/report/hierarchy-export-options.phtml'); ?>
 		$('#dataTables').DataTable({
 			"paging": false,
 			"buttons": [
-				{ extend: 'copy', exportOptions: { modifier: { selected: null }, rows: function (idx, data, node) { return $(node).is(':visible'); } } },
-				{ extend: 'csv', exportOptions: { modifier: { selected: null }, rows: function (idx, data, node) { return $(node).is(':visible'); } } },
-				{ extend: 'excel', exportOptions: { modifier: { selected: null }, rows: function (idx, data, node) { return $(node).is(':visible'); } } },
-				{ extend: 'pdf', exportOptions: { modifier: { selected: null }, rows: function (idx, data, node) { return $(node).is(':visible'); } } },
-				{ extend: 'print', exportOptions: { modifier: { selected: null }, rows: function (idx, data, node) { return $(node).is(':visible'); } } }
+				{ extend: 'copy', exportOptions: hierarchyExportOptions },
+				{ extend: 'csv', exportOptions: hierarchyExportOptions },
+				{ extend: 'excel', exportOptions: hierarchyExportOptions },
+				{ extend: 'pdf', exportOptions: hierarchyExportOptions },
+				{ extend: 'print', exportOptions: hierarchyExportOptions }
 			]
 		});
 
@@ -485,7 +489,8 @@
 
 		function getNextLevel(level) {
 			if (level === 'class') { return 'group'; }
-			if (level === 'group') { return 'head'; }
+			if (level === 'group') { return 'headtype'; }
+			if (level === 'headtype') { return 'head'; }
 			if (level === 'head') { return 'subhead'; }
 			return '';
 		}
@@ -509,7 +514,8 @@
 				{
 					report: 'trialbalance',
 					level: nextLevel,
-					parent_id: getParentId(nodeId),
+					parent_id: getParentId(nodeId).split('_')[0],
+					head_type_id: $row.attr('data-level') === 'headtype' ? getParentId(nodeId).split('_')[1] : '',
 					activity: $('#location').val(),
 					region: $('#region').val(),
 					location: $('#location').val(),

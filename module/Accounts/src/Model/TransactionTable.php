@@ -500,6 +500,19 @@ class TransactionTable extends AbstractTableGateway
 	
 		return  $results;
 	}
+
+	public function getNextSerial($prefix)
+	{
+		$maximum = 0;
+		foreach ($this->getSerial($prefix) as $transaction) {
+			$suffix = substr($transaction['voucher_no'], strlen($prefix));
+			if ($suffix === '' || !ctype_digit($suffix)) {
+				throw new \UnexpectedValueException('Invalid voucher serial for prefix ' . $prefix . '.');
+			}
+			$maximum = max($maximum, (int) $suffix);
+		}
+		return $maximum + 1;
+	}
 	
     /**
 	 * Return records of given year and month
@@ -705,4 +718,3 @@ class TransactionTable extends AbstractTableGateway
 		return $results;
 	}
 }
-

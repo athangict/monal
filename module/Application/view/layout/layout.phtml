@@ -34,7 +34,7 @@ $skinClass = isset($skinClassMap[$appTemplate]) ? $skinClassMap[$appTemplate] : 
         <?php echo $this->headLink(array('rel' => 'shortcut icon', 'type' => 'image/vnd.microsoft.icon', 'href' => $this->basePath() . '/images/favicon.png'))
 			->prependStylesheet($this->basePath() . '/css/app-templates.css')
 		
-			->prependStylesheet($this->basePath() . '/css/athang.css')
+			->prependStylesheet($this->basePath() . '/css/athang.css?v=' . filemtime(dirname(__DIR__, 4) . DIRECTORY_SEPARATOR . 'public' . DIRECTORY_SEPARATOR . 'css' . DIRECTORY_SEPARATOR . 'athang.css'))
 			->prependStylesheet($this->basePath() . '/leaflet.fullscreen/leaflet.fullscreen.css')
 			->prependStylesheet($this->basePath() . '/leaflet/leaflet.css')
 			->prependStylesheet($this->basePath() . '/css/select2.min.css')

@@ -3238,12 +3238,18 @@
 							type: 'GET',
 							dataType: 'json',
 							success: function (data) {
-								var debitAmount = parseFloat(data);
-								$('#credit-' + refid).val(debitAmount);
-								$('#credit-' + refid).trigger('chosen:updated');
-								/** INITIALIZE THE DEBIT TO 0.00 */
-								$('#debit-' + refid).val('0.00');
-							    $('#debit-' + refid).trigger('chosen:updated');
+								var debitAmount = 0;
+								var creditAmount = 0;
+								if (typeof data === 'object' && data !== null) {
+									debitAmount = parseFloat(data.debit || 0);
+									creditAmount = parseFloat(data.credit || 0);
+								} else {
+									creditAmount = parseFloat(data || 0);
+								}
+								$('#debit-' + refid).val(debitAmount.toFixed(2));
+								$('#debit-' + refid).trigger('chosen:updated');
+								$('#credit-' + refid).val(creditAmount.toFixed(2));
+							    $('#credit-' + refid).trigger('chosen:updated');
 							},
 							error: function (error) {
 								console.error('Failed to fetch debit amount FROM THE TRANSACTION.');
@@ -3445,9 +3451,16 @@
 					type: 'GET',
 					dataType: 'json',
 					success: function (data) {
-						var debitAmount = parseFloat(data);
-						$('#credit-' + id).val(debitAmount.toFixed(2));
-						$('#debit-' + id).val('0.00');
+						var debitAmount = 0;
+						var creditAmount = 0;
+						if (typeof data === 'object' && data !== null) {
+							debitAmount = parseFloat(data.debit || 0);
+							creditAmount = parseFloat(data.credit || 0);
+						} else {
+							creditAmount = parseFloat(data || 0);
+						}
+						$('#debit-' + id).val(debitAmount.toFixed(2));
+						$('#credit-' + id).val(creditAmount.toFixed(2));
 						trns_totamt(obj, options);
 					},
 					error: function (error) {
@@ -3557,11 +3570,17 @@
 							type: 'GET',
 							dataType: 'json',
 							success: function (data) {
-								var creditAmount = parseFloat(data);
-								$('#debit-' + refid).val(creditAmount);
+								var debitAmount = 0;
+								var creditAmount = 0;
+								if (typeof data === 'object' && data !== null) {
+									debitAmount = parseFloat(data.debit || 0);
+									creditAmount = parseFloat(data.credit || 0);
+								} else {
+									debitAmount = parseFloat(data || 0);
+								}
+								$('#debit-' + refid).val(debitAmount.toFixed(2));
 								$('#debit-' + refid).trigger('chosen:updated');
-								/** INITIALIZE THE DEBIT TO 0.00 */
-								$('#credit-' + refid).val('0.00');
+								$('#credit-' + refid).val(creditAmount.toFixed(2));
 							    $('#credit-' + refid).trigger('chosen:updated');
 							},
 							error: function (error) {
@@ -3763,11 +3782,18 @@
 					type: 'GET',
 					dataType: 'json',
 					success: function (data) {
-						var debitAmount = parseFloat(data);
-						$('#debit-' + id).val(debitAmount.toFixed(2));
-						$('#credit-' + id).val('0.00');
-						trns_totamt(obj, options);
-					},
+					var debitAmount = 0;
+					var creditAmount = 0;
+					if (typeof data === 'object' && data !== null) {
+						debitAmount = parseFloat(data.debit || 0);
+						creditAmount = parseFloat(data.credit || 0);
+					} else {
+						debitAmount = parseFloat(data || 0);
+					}
+					$('#debit-' + id).val(debitAmount.toFixed(2));
+					$('#credit-' + id).val(creditAmount.toFixed(2));
+					trns_totamt(obj, options);
+				},
 					error: function (error) {
 						// Handle errors if the AJAX request fails
 						console.error('Failed to fetch debit amount.');

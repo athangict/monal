@@ -95,11 +95,33 @@ class ChartaccountController extends AbstractActionController
 	public function indexAction()
 	{
 		$this->init();
+		$headTypesByGroup = array();
+		foreach ($this->getDefinedTable(Accounts\HeadtypeTable::class)->getAll() as $headType) {
+			if ($headType['group'] !== null) {
+				$headTypesByGroup[$headType['group']][$headType['id']] = array(
+					'name' => $headType['head_type'],
+					'heads' => array(),
+					'needsGroupAssignment' => false,
+				);
+			}
+		}
+		foreach ($this->getDefinedTable(Accounts\HeadTable::class)->getAll('h.id ASC') as $head) {
+			$groupId = $head['group_id'];
+			$headTypeId = $head['headtype_id'];
+			if (!isset($headTypesByGroup[$groupId][$headTypeId])) {
+				$headTypesByGroup[$groupId][$headTypeId] = array(
+					'name' => $head['head_type'],
+					'heads' => array(),
+					'needsGroupAssignment' => true,
+				);
+			}
+			$headTypesByGroup[$groupId][$headTypeId]['heads'][] = $head;
+		}
 		return new ViewModel(array(
 			'title' => 'Chart of Account',
 			'classes' => $this->getDefinedTable(Accounts\ClassTable::class)->getAll(),
 			'groupObj' => $this->getDefinedTable(Accounts\GroupTable::class),
-			'headObj' => $this->getDefinedTable(Accounts\HeadTable::class),
+			'headTypesByGroup' => $headTypesByGroup,
 			'subheadObj' => $this->getDefinedTable(Accounts\SubheadTable::class),
 		));
 	}
@@ -303,8 +325,14 @@ class ChartaccountController extends AbstractActionController
 	
 		if($this->getRequest()->isPost()){
 			$form = $this->getRequest()->getPost();
+			$group = $form['group'];
+			if (!is_scalar($group) || !ctype_digit((string) $group) || !$this->getDefinedTable(Accounts\GroupTable::class)->get((int) $group)) {
+				$this->flashMessenger()->addMessage('error^ Please select a valid Group.');
+				return $this->redirect()->toRoute('chartaccount', array('action'=>'headtype'));
+			}
 			$data = array(
 				'head_type' => $form['head_type'],
+				'group' => (int) $group,
 				'author' =>$this->_author,
 				'created' =>$this->_created,
 				'modified' =>$this->_modified,
@@ -320,7 +348,7 @@ class ChartaccountController extends AbstractActionController
 			return $this->redirect()->toRoute('chartaccount', array('action'=>'headtype'));
 		}
 		$ViewModel = new ViewModel(array(
-			
+			'groups' => $this->getDefinedTable(Accounts\GroupTable::class)->getAll(),
 		));
 		$ViewModel->setTerminal(True);
 		return $ViewModel;
@@ -334,9 +362,15 @@ class ChartaccountController extends AbstractActionController
 		if($this->getRequest()->isPost())
 		{
 			$form=$this->getRequest()->getPost();
+			$group = $form['group'];
+			if (!is_scalar($group) || !ctype_digit((string) $group) || !$this->getDefinedTable(Accounts\GroupTable::class)->get((int) $group)) {
+				$this->flashMessenger()->addMessage('error^ Please select a valid Group.');
+				return $this->redirect()->toRoute('chartaccount', array('action'=>'headtype'));
+			}
 			$data=array(
 				'id' => $this->_id,
 				'head_type' => $form['head_type'],
+				'group' => (int) $group,
 				'author' =>$this->_author,
 				'modified' =>$this->_modified,
 			);
@@ -352,6 +386,7 @@ class ChartaccountController extends AbstractActionController
 	
 		$ViewModel = new ViewModel(array(
 			'headtype' => $this->getDefinedTable(Accounts\HeadtypeTable::class)->get($this->_id),
+			'groups' => $this->getDefinedTable(Accounts\GroupTable::class)->getAll(),
 		));
 		$ViewModel->setTerminal(True);
 		return $ViewModel;
@@ -523,7 +558,7 @@ class ChartaccountController extends AbstractActionController
 	public function headAction()
 	{
 		$this->init();
-		$headTable = $this->getDefinedTable(Accounts\HeadTable::class)->getAll();
+		$headTable = $this->getDefinedTable(Accounts\HeadTable::class)->getAll('h.id ASC');
 		$paginator = new \Laminas\Paginator\Paginator(new \Laminas\Paginator\Adapter\ArrayAdapter($headTable));
 		$page = 1;
 		if ($this->params()->fromRoute('page')) $page = $this->params()->fromRoute('page');
@@ -545,6 +580,10 @@ class ChartaccountController extends AbstractActionController
 		$this->init();
 		if($this->getRequest()->isPost()){
 			$form = $this->getRequest()->getPost();
+			if (!$this->isValidHeadGroup($form['group'], $form['head_type'])) {
+				$this->flashMessenger()->addMessage('error^ Please select a valid Group and a Head Type belonging to that Group.');
+				return $this->redirect()->toRoute('chartaccount', array('action'=>'head'));
+			}
 			$data = array(
 				'code' => $form['code'],
 				'name' => $form['name'],
@@ -580,6 +619,10 @@ class ChartaccountController extends AbstractActionController
 		if($this->getRequest()->isPost())
 		{
 			$form=$this->getRequest()->getPost();
+			if (!$this->isValidHeadGroup($form['group'], $form['head_type'])) {
+				$this->flashMessenger()->addMessage('error^ Please select a valid Group and a Head Type belonging to that Group.');
+				return $this->redirect()->toRoute('chartaccount', array('action'=>'head'));
+			}
 			$data=array(
 				'id' => $this->_id,
 				'code' => $form['code'],
@@ -606,6 +649,19 @@ class ChartaccountController extends AbstractActionController
 		$ViewModel->setTerminal(True);
 		return $ViewModel;
 	}
+	private function isValidHeadGroup($group, $headType)
+	{
+		if (!is_scalar($group) || !ctype_digit((string) $group) || (int) $group < 1
+			|| !is_scalar($headType) || !ctype_digit((string) $headType) || (int) $headType < 1) {
+			return false;
+		}
+		return !empty($this->getDefinedTable(Accounts\GroupTable::class)->get((int) $group))
+			&& !empty($this->getDefinedTable(Accounts\HeadtypeTable::class)->get(array(
+				'id' => (int) $headType,
+				'group' => (int) $group,
+			)));
+	}
+
 	/**
 	 *  patyrole action
 	 */

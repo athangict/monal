@@ -209,7 +209,7 @@ $this->headTitle($this->title);
 							<tr>
 								<td><?php echo $transdtl['remark'];?></td>
 								<td><?php if($location_id == '7'):
-								        echo $txn_heads = $this->transactiondetailObj->getCashBookHead(array('td.transaction'=>$transactions['transaction_id']));
+								        echo \Accounts\Support\AccountLabel::html($this->transactiondetailObj->getCashBookHead(array('td.transaction'=>$transactions['transaction_id']), true));
 								    endif;
 								?></td>
                                 <td><?php echo $transdtl['voucher_no']; ?></td>

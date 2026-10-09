@@ -9,6 +9,18 @@
 /* ---------------------------------------------------------------------- */
 .leaflet-map { height: 280px; }
 
+.table > tbody > tr.tb-headtype > td,
+.table > tbody > tr.tb-headtype:hover > td,
+.dd-handle.account-headtype,
+.dd-handle.account-headtype:hover {
+  background-color: #fff0e5;
+  color: #754426;
+}
+.tb-headtype .tb-toggle,
+.account-headtype-legend {
+  color: #754426;
+}
+
 .leaflet-tooltip-own {
   background-color: rgba(0, 0, 0, 0) !important;
   color: #fff !important;

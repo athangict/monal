@@ -636,6 +636,8 @@ class UserController extends AbstractActionController
 				$smtpPassword = ($smtpPasswordInput !== '') ? $smtpPasswordInput : (string) ($current['smtp_password'] ?? '');
 				$supportEmail = trim((string) ($form['support_email'] ?? ($current['support_email'] ?? '')));
 				$supportPhone = trim((string) ($form['support_phone'] ?? ($current['support_phone'] ?? '')));
+				$incomeTaxRate = (float) ($form['income_tax_rate'] ?? ($current['income_tax_rate'] ?? 30));
+				$includeOciInNet = isset($form['include_oci_in_net']) ? 1 : 0;
 
 				if ($appName === '') {
 					$appName = 'Monal-ERP';
@@ -655,6 +657,12 @@ class UserController extends AbstractActionController
 				}
 				if ($supportEmail !== '' && filter_var($supportEmail, FILTER_VALIDATE_EMAIL) === false) {
 					$supportEmail = '';
+				}
+				if ($incomeTaxRate < 0) {
+					$incomeTaxRate = 0;
+				}
+				if ($incomeTaxRate > 100) {
+					$incomeTaxRate = 100;
 				}
 
 				if (!empty($files['app_logo']) && (int) ($files['app_logo']['error'] ?? 4) === 0) {
@@ -702,6 +710,8 @@ class UserController extends AbstractActionController
 					'smtp_password' => $smtpPassword,
 					'support_email' => $supportEmail,
 					'support_phone' => $supportPhone,
+					'income_tax_rate' => $incomeTaxRate,
+					'include_oci_in_net' => $includeOciInNet,
 					'author' => $this->_author,
 					'created' => $current['created'] ?? $this->_created,
 					'modified' => $this->_modified,

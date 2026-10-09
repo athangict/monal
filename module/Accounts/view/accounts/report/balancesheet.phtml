@@ -17,24 +17,16 @@
 		outline: none !important;
 		box-shadow: none !important;
 	}
+	#dataTables {
+		width: 100% !important;
+	}
 </style>
 <div class="card">
 	<div class="card-header">
 		<div class="row">
-			<div class="col-lg-12">
+			<div class="col-xs-12 col-lg-12">
 				<form data-toggle="validator" id="#form" method="post" action="<?php echo $this->url('report', array('action' => 'balancesheet')); ?>"  enctype="multipart/form-data" >    
-					<div class="row"> 
-                        <div class="form-group col-lg-12">
-							<div class="alert alert-info">
-							<strong>How to view Balance Sheet Report?</strong>
-							<ol>
-								<em class="text-success">
-								<li>Choose the <strong>Region and Location</strong> for specific parameter. By default it will take 'All'</li>
-								<li><strong>Select Start Date:</strong> If there is no <strong>Transaction</strong> in the current year, then you must select the Previous year date</li>
-								<li>Click <strong>Generate</strong> button</li></em>
-							</ol>
-							</div>
-						</div>					
+					<div class="row">
 						<div class="form-group col-lg-2">
 							<label class="control-label" for="start_date">Start Date</label>
 							<div class="date input-group" id="start_date" data-date="<?php echo $data['start_date'];?>" data-date-format="yyyy-mm-dd" >
@@ -73,13 +65,14 @@
 								<?php endforeach;
 								endif;?>							
 							</select>
-						</div> 
-					</div> 
-					<div class="row">
-						<div class="col-lg-12">
-							<button type="submit" class="btn btn-sm btn-success pull-right"><i class="fa fa-gear"></i> Generate </button>
 						</div>
-					</div>			
+						<div class="form-group col-lg-2">
+							<label class="control-label">&nbsp;</label>
+							<div>
+								<button type="submit" class="btn btn-sm btn-success"><i class="fa fa-gear"></i> Generate </button>
+							</div>
+						</div>
+					</div>
 				</form>
 			</div>
 		</div>
@@ -88,14 +81,14 @@
 <div class="hr hr-dotted"></div>
 <div class="space-12"></div>
 <div class="row">
-	<div class="col-lg-12">	
+	<div class="col-xs-12 col-lg-12">	
 		<div class="clearfix">
 			<label> <i class="red fa fa-tags"></i> Activity: </label>  <span><?php echo $act = ($data["activity"] == -1)? "All Activities": $this->activityObj->getColumn($data["activity"], 'activity');?></span>
 			<label>  <i class="blue fa fa-globe"></i> Region: </label> <span><?php echo $loc = ($data["region"] == -1)? "All Regions": $this->regionObj->getColumn($data["region"], 'region');?></span>
 			<label>  <i class="orange fa fa-map-marker"></i> Location: </label> <span><?php echo $loc = ($data["location"] == -1)? "All Locations": $this->locationObj->getColumn($data["location"], 'location');?></span>
 		</div>
 		<div>
-			<table class="table table-bordered table-striped table-condensed" id = "dataTables">
+			<table class="table table-bordered table-striped table-condensed" id = "dataTables" style="width:100%;">
 				<thead>
 					<tr>
 						<th rowspan="2">Particulars</th>
@@ -125,8 +118,8 @@
 							$grand_pres_total = array();
 							$grand_prev_total = array();?>
 							<?php if($data['tier'] <= 4):?>
-								<tr class="classrow tb-row tb-class" data-level="class" data-node="class-<?php echo $classrow['id'];?>">
-									<td class="text-danger"><strong><a href="#" class="tb-toggle" data-node="class-<?php echo $classrow['id'];?>"><span class="tb-caret">+</span> <?php echo $classrow['name'];?></a></strong></td>
+								<tr class="warning classrow tb-row tb-class" data-level="class" data-node="class-<?php echo $classrow['id'];?>">
+									<td class="text-danger"><strong><a href="#" class="tb-toggle" data-node="class-<?php echo $classrow['id'];?>"><span class="tb-caret">+</span> <?php echo \Accounts\Support\AccountLabel::html($classrow['name']);?></a></strong></td>
 							<?php endif;?>
 									<?php 
 										$pres_closing_balance = $this->transactiondetailObj->getClosingBalanceforPresBSCLASS($data['activity'],$data['region'],$data['location'],$data['start_date'],$data['end_date'], $classrow['id'], 4);	
@@ -148,8 +141,8 @@
 										#$head_id = $this->subheadObj->getColumn($subheadrow['id'],'head');
 										#$group_id = $this->headObj->getColumn($headrow['id'],'group');
 										$class_id =$this->groupObj->getColumn($grouprow['id'],'class');?>													
-										<tr class="grouprow tb-row tb-group" data-level="group" data-node="group-<?php echo $grouprow['id'];?>" data-parent="class-<?php echo $classrow['id'];?>" style="display:none;">
-											<td class="text-success"><strong><a href="#" class="tb-toggle" data-node="group-<?php echo $grouprow['id'];?>"><span class="tb-caret">+</span> <?php echo $grouprow['name'];?></a></strong></td>
+										<tr class="info grouprow tb-row tb-group" data-level="group" data-node="group-<?php echo $grouprow['id'];?>" data-parent="class-<?php echo $classrow['id'];?>" style="display:none;">
+											<td class="text-success"><strong><a href="#" class="tb-toggle" data-node="group-<?php echo $grouprow['id'];?>"><span class="tb-caret">+</span> <?php echo \Accounts\Support\AccountLabel::html($grouprow['name']);?></a></strong></td>
 											<?php 
 												$pres_closing_balance = $this->transactiondetailObj->getClosingBalanceforPresBS($data['activity'],$data['region'],$data['location'],$data['start_date'],$data['end_date'], $grouprow['id'],$class_id,3);	
 												$prev_closing_balance = $this->transactiondetailObj->getClosingBalanceforPrevBS($data['activity'],$data['region'],$data['location'],$pre_starting_date,$pre_ending_date, $grouprow['id'],$class_id, 3);	
@@ -169,8 +162,8 @@
 											$class_id =$this->groupObj->getColumn($group_id,'class');?>													
 												<?php 
 												//if($data['tier'] == 2)://?>
-												<tr class="headrow tb-row tb-head" data-level="head" data-node="head-<?php echo $headrow['id'];?>" data-parent="group-<?php echo $grouprow['id'];?>" style="display:none;">
-													<td class="text-secondary"><strong><a href="#" class="tb-toggle" data-node="head-<?php echo $headrow['id'];?>"><span class="tb-caret">+</span> <?php echo $this->headObj->getColumn($headrow['id'],'name');?></a></strong></td>
+												<tr class="success headrow tb-row tb-head" data-level="head" data-node="head-<?php echo $headrow['id'];?>" data-parent="group-<?php echo $grouprow['id'];?>" style="display:none;">
+													<td class="text-secondary"><strong><a href="#" class="tb-toggle" data-node="head-<?php echo $headrow['id'];?>"><span class="tb-caret">+</span> <?php echo \Accounts\Support\AccountLabel::html($headrow['name'], $headrow['code']);?></a></strong></td>
 													<?php 
 														$pres_closing_balance = $this->transactiondetailObj->getClosingBalanceforPresBS($data['activity'],$data['region'],$data['location'],$data['start_date'],$data['end_date'], $headrow['id'],$class_id, 2);
 														$prev_closing_balance = $this->transactiondetailObj->getClosingBalanceforPrevBS($data['activity'],$data['region'],$data['location'],$pre_starting_date,$pre_ending_date, $headrow['id'], 2);
@@ -188,7 +181,7 @@
 														$group_id = $this->headObj->getColumn($head_id,'group');
 		                                                $class_id =$this->groupObj->getColumn($group_id,'class');?>															
 														<tr class="subheadrow tb-row tb-subhead" data-level="subhead" data-parent="head-<?php echo $headrow['id'];?>" style="display:none;">
-															<td>&nbsp;&nbsp;&nbsp;&nbsp;<?php echo $subheadrow['code'].'-'.$subheadrow['name'];?></td>
+															<td>&nbsp;&nbsp;&nbsp;&nbsp;<?php echo \Accounts\Support\AccountLabel::html($subheadrow['name'], $subheadrow['code']);?></td>
 															<?php 
 																$pres_closing_balance = $this->transactiondetailObj->getClosingBalanceforPresBS($data['activity'],$data['region'],$data['location'],$data['start_date'],$data['end_date'], $subheadrow['id'],$class_id,$data['tier']);	
 																$prev_closing_balance = $this->transactiondetailObj->getClosingBalanceforPrevBS($data['activity'],$data['region'],$data['location'],$pre_starting_date,$pre_ending_date, $subheadrow['id'], 1);	
@@ -206,7 +199,7 @@
 									endforeach;
 								endif; ?>
 								<tr class="classrow">
-										<td><strong> Total <?php echo $classrow['name'];?>: </strong></td>
+										<td><strong> Total <?php echo \Accounts\Support\AccountLabel::html($classrow['name']);?>: </strong></td>
 									<?php foreach($grand_pres_total as $total):foreach($grand_prev_total as $total1):?>
 										<td style ="text-align:right"><strong><?php echo number_format($total,3,'.',',');?></strong></td>
 										<td style ="text-align:right"><strong><?php echo number_format($total1,2,'.',',');?></strong></td>
@@ -261,14 +254,15 @@ $(function(){
 			}
 		});
 	var title_table = 'Profit Loss Statement Report: ' +' from '+$('input#start_date').val()+' to '+$('input#end_date').val();
+	<?php echo $this->partial('accounts/report/hierarchy-export-options.phtml'); ?>
 	$('#dataTables').DataTable({
 		"paging": false,
 		"buttons": [
-			{ extend: 'copy', exportOptions: { modifier: { selected: null }, rows: function (idx, data, node) { return $(node).is(':visible'); } } },
-			{ extend: 'csv', exportOptions: { modifier: { selected: null }, rows: function (idx, data, node) { return $(node).is(':visible'); } } },
-			{ extend: 'excel', exportOptions: { modifier: { selected: null }, rows: function (idx, data, node) { return $(node).is(':visible'); } } },
-			{ extend: 'pdf', exportOptions: { modifier: { selected: null }, rows: function (idx, data, node) { return $(node).is(':visible'); } } },
-			{ extend: 'print', exportOptions: { modifier: { selected: null }, rows: function (idx, data, node) { return $(node).is(':visible'); } } }
+			{ extend: 'copy', exportOptions: hierarchyExportOptions },
+			{ extend: 'csv', exportOptions: hierarchyExportOptions },
+			{ extend: 'excel', exportOptions: hierarchyExportOptions },
+			{ extend: 'pdf', exportOptions: hierarchyExportOptions },
+			{ extend: 'print', exportOptions: hierarchyExportOptions }
 		]
 	});
 
@@ -306,7 +300,8 @@ $(function(){
 
 	function getNextLevel(level) {
 		if (level === 'class') { return 'group'; }
-		if (level === 'group') { return 'head'; }
+		if (level === 'group') { return 'headtype'; }
+		if (level === 'headtype') { return 'head'; }
 		if (level === 'head') { return 'subhead'; }
 		return '';
 	}
@@ -330,7 +325,8 @@ $(function(){
 			{
 				report: 'balancesheet',
 				level: nextLevel,
-				parent_id: getParentId(nodeId),
+				parent_id: getParentId(nodeId).split('_')[0],
+				head_type_id: $row.attr('data-level') === 'headtype' ? getParentId(nodeId).split('_')[1] : '',
 				activity: $('#location').val(),
 				region: $('#region').val(),
 				location: $('#location').val(),

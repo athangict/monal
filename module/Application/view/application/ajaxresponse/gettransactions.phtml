@@ -3,8 +3,9 @@
 foreach ($transactiondtls as $tdtls):
 
     if (
-        ($tdtls->status == 4 && isset($tdtls->ref_no) && trim((string)$tdtls->ref_no) !== '')
-        && ($tdtls->against_status < 4)
+        $tdtls->status == 4
+        && isset($tdtls->ref_no)
+        && trim((string)$tdtls->ref_no) !== ''
     ):
 
         $remaining = isset($remainingAmounts[(int) $tdtls->id]) ? $remainingAmounts[(int) $tdtls->id] : array('debit' => '0.000', 'credit' => '0.000');

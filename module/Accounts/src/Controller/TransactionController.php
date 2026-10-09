@@ -483,42 +483,94 @@ class TransactionController extends AbstractActionController
 		));
 	}
 	/**
-	 * Delete Journal Transaction Action
+	 * Resolve revoked status id dynamically from sys_status.
+	 * Fallback to 24 when status row is unavailable.
+	 */
+	private function getRevokedStatusId()
+	{
+		$revokedStatus = 24;
+		$revokedStatusRows = $this->getDefinedTable(Acl\StatusTable::class)->get(array('status' => 'revoked'));
+		if(!empty($revokedStatusRows) && isset($revokedStatusRows[0]['id']) && (int)$revokedStatusRows[0]['id'] > 0):
+			$revokedStatus = (int)$revokedStatusRows[0]['id'];
+		endif;
+		return $revokedStatus;
+	}
+
+	/**
+	 * Legacy action kept for backward compatibility.
+	 * Now performs voucher revoke instead of hard delete.
 	 */
 	public function deletejournalAction()
 	{
+		return $this->revokevoucherAction();
+	}
+
+	/**
+	 * Revoke Voucher Action
+	 */
+	public function revokevoucherAction()
+	{
 		$this->init();
-		if (!$this->canAccessTransaction((int) $this->_id)) {
-			$this->flashMessenger()->addMessage("error^ You are not allowed to delete this transaction");
+		if (!$this->canAccessTransaction((int)$this->_id)) {
+			$this->flashMessenger()->addMessage("error^ You are not allowed to revoke this transaction");
 			return $this->redirect()->toRoute('transaction', array('action' => 'index'));
 		}
-		if($this->getRequest()->isPost()){
-			$form = $this->getRequest()->getPost();
-			$voucher = $this->getDefinedTable(Accounts\TransactionTable::class)->getColumn($this->_id,'voucher_type');
-			$transactiondetails_id = $this->getDefinedTable(Accounts\TransactiondetailTable::class)->get(array('td.transaction'=>$this->_id));
-			$result = false;
-			$result2 = 0;
-			foreach($transactiondetails_id as $transactiondetails_ids):
-				$result = $this->getDefinedTable(Accounts\TransactiondetailTable::class)->remove($transactiondetails_ids['id']);
-			endforeach;
-			if($result):
-			$result2 = $this->getDefinedTable(Accounts\TransactionTable::class)->remove($this->_id);
-			endif;
-			if($result2 > 0):
-				$this->flashMessenger()->addMessage("success^ successfully deleted  data");
-			else:
-				$this->flashMessenger()->addMessage("notice^ Failed to delete  data");
-			endif;
-			if($voucher==1):
-				return $this->redirect()->toRoute('transaction', array('action'=>'index'));
-			else:
-				return $this->redirect()->toRoute('transaction', array('action'=>'index'));
-			endif;
+		if (!$this->isPrivilegedUser()) {
+			$this->flashMessenger()->addMessage("error^ Only highest role user can revoke voucher");
+			return $this->redirect()->toRoute('transaction', array('action' => 'index'));
 		}
+
+		$transaction = $this->getDefinedTable(Accounts\TransactionTable::class)->get($this->_id);
+		if (empty($transaction)) {
+			$this->flashMessenger()->addMessage("notice^ Transaction not found");
+			return $this->redirect()->toRoute('transaction', array('action' => 'index'));
+		}
+
+		$revokedStatus = $this->getRevokedStatusId();
+
+		if($this->getRequest()->isPost()):
+			$this->_connection->beginTransaction();
+			try{
+				$result = $this->getDefinedTable(Accounts\TransactionTable::class)->save(array(
+					'id' => $this->_id,
+					'status' => $revokedStatus,
+					'modified' => $this->_modified,
+				));
+
+				$detailResult = true;
+				$transactiondetails = $this->getDefinedTable(Accounts\TransactiondetailTable::class)->get(array('td.transaction' => $this->_id));
+				foreach($transactiondetails as $row):
+					$detailSaved = $this->getDefinedTable(Accounts\TransactiondetailTable::class)->save(array(
+						'id' => $row['id'],
+						'status' => $revokedStatus,
+						'modified' => $this->_modified,
+					));
+					if(!$detailSaved):
+						$detailResult = false;
+						break;
+					endif;
+				endforeach;
+
+				if($result > 0 && $detailResult):
+					$this->_connection->commit();
+					$this->flashMessenger()->addMessage("success^ Voucher revoked successfully");
+				else:
+					$this->_connection->rollback();
+					$this->flashMessenger()->addMessage("notice^ Failed to revoke voucher");
+				endif;
+			}catch(\Exception $e){
+				$this->_connection->rollback();
+				$this->flashMessenger()->addMessage("notice^ Failed to revoke voucher");
+			}
+			return $this->redirect()->toRoute('transaction', array('action' => 'index'));
+		endif;
+
 		$ViewModel = new ViewModel(array(
-			'title' => 'Delete Journal',
-			'trans'    =>$this->getDefinedTable(Accounts\TransactionTable::class)->get($this->_id),
+			'title' => 'Revoke Voucher',
+			'actionRoute' => $this->params()->fromRoute('action', 'revokevoucher'),
+			'trans' => $transaction,
 		));
+		$ViewModel->setTemplate('accounts/transaction/deletejournal');
 		$ViewModel->setTerminal(True);
 		return $ViewModel;
 	}
@@ -698,6 +750,8 @@ class TransactionController extends AbstractActionController
 		return new ViewModel(array(
 	    	'login_id'     =>$this->_login_id,
 			'edit_option'  =>$edit_option,
+			'revokedStatusId' => $this->getRevokedStatusId(),
+			'canRevokeVoucher' => $this->isPrivilegedUser(),
 			'transactionrow' => $this->getDefinedTable(Accounts\TransactionTable::class)->get($this->_id),
 			'transactiondetails' => $this->getDefinedTable(Accounts\TransactiondetailTable::class)->get(array('transaction' => $this->_id)),
 			'userObj' => $this->getDefinedTable(Administration\UsersTable::class),

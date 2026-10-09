@@ -89,7 +89,7 @@ $minYear='';
 					?>  
 					<tr data-href="<?php echo $this->button(4, $row['id']); ?>">
 						<td><?php echo $i++; ?></td>
-						<td><?php echo $this->subheadObj->getColumn($row['sub_head'],'code');?>-<?php echo $this->subheadObj->getColumn($row['sub_head'],'name'); ?></td>
+						<td><?php echo \Accounts\Support\AccountLabel::html($this->subheadObj->getColumn($row['sub_head'],'name'), $this->subheadObj->getColumn($row['sub_head'],'code')); ?></td>
 						<td>
 						<b><?php echo $row['voucher_dates']; ?>&nbsp;</b> 
 						</td>
@@ -176,4 +176,3 @@ $minYear='';
 			$('form').formValidation('revalidateField', $(this).attr('id'));
 		});
 </script>
-

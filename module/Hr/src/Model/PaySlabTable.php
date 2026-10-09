@@ -88,6 +88,11 @@ class PaySlabTable extends AbstractTableGateway
 	public function save($data)
 	{
 	    if ( !is_array($data) ) $data = $data->toArray();
+		foreach (array('rate', 'base', 'value') as $field) {
+			if (array_key_exists($field, $data) && is_string($data[$field]) && trim($data[$field]) === '') {
+				$data[$field] = null;
+			}
+		}
 	    $id = isset($data['id']) ? (int)$data['id'] : 0;
 	    
 	    if ( $id > 0 )

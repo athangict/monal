@@ -4,11 +4,13 @@ namespace Accounts\Controller;
 use Laminas\Mvc\Controller\AbstractActionController;
 use Laminas\View\Model\ViewModel;
 use Laminas\Db\TableGateway\TableGateway;
+use Laminas\Db\Sql\Where;
 use Laminas\Authentication\AuthenticationService;
 use Interop\Container\ContainerInterface;
 use Administration\Model As Administration;
 use Acl\Model As Acl;
 use Accounts\Model As Accounts;
+use Accounts\Support\AccountLabel;
 use Hr\Model As Hr;
 class ReportController extends AbstractActionController
 {   
@@ -117,6 +119,9 @@ class ReportController extends AbstractActionController
 			'start_date' => $start_date,
 			'end_date'  => $end_date,
 		);
+		$appSettings = $this->getDefinedTable(Administration\AppSettingTable::class)->getSettings();
+		$incomeTaxRate = isset($appSettings['income_tax_rate']) ? (float)$appSettings['income_tax_rate'] : 30.0;
+		$includeComprehensiveInNet = !empty($appSettings['include_oci_in_net']);
 		$existingPeriodSnapshot = $this->getDefinedTable(Accounts\PeriodsnapshotTable::class)->getByPeriod($end_date, $region, $location);
 		$hasExistingCloseSnapshot = !empty($existingPeriodSnapshot);
 		$canForceReclose = $this->hasPrivilegedMonthlyCloseRole();
@@ -241,6 +246,9 @@ class ReportController extends AbstractActionController
 			'start_date' => $start_date,
 			'end_date'  => $end_date,
 		);
+		$appSettings = $this->getDefinedTable(Administration\AppSettingTable::class)->getSettings();
+		$incomeTaxRate = isset($appSettings['income_tax_rate']) ? (float)$appSettings['income_tax_rate'] : 30.0;
+		$includeComprehensiveInNet = !empty($appSettings['include_oci_in_net']);
 		$existingPeriodSnapshot = $this->getDefinedTable(Accounts\PeriodsnapshotTable::class)->getByPeriod($end_date, $region, $location);
 		$hasExistingCloseSnapshot = !empty($existingPeriodSnapshot);
 		$canForceReclose = $this->hasPrivilegedMonthlyCloseRole();
@@ -265,6 +273,8 @@ class ReportController extends AbstractActionController
 			'regionObj' => $this->getDefinedTable(Administration\RegionTable::class),
 			'canForceReclose' => $canForceReclose,
 			'hasExistingCloseSnapshot' => $hasExistingCloseSnapshot,
+			'incomeTaxRate' => $incomeTaxRate,
+			'includeComprehensiveInNet' => $includeComprehensiveInNet,
 			'userID' => $this->_author,
 		));
 		return $ViewModel;
@@ -630,9 +640,9 @@ class ReportController extends AbstractActionController
 		$form = $this->getRequest()->getPost();
 		$head_id = $form['head'];
 		$subheads = $this->getDefinedTable(Accounts\SubheadTable::class)->get(array('head'=>$head_id));
-		$sub_heads .="<option value='-1'>All</option>";
+		$sub_heads = "<option value='-1'>All</option>";
 		foreach($subheads as $subhead):
-			$sub_heads .="<option value='".$subhead['id']."'>".$subhead['code']."</option>";
+			$sub_heads .="<option value='".$subhead['id']."'>".AccountLabel::html($subhead['name'], $subhead['code'])."</option>";
 		endforeach;
 		echo json_encode(array(
 			'subhead' => $sub_heads,
@@ -908,6 +918,13 @@ class ReportController extends AbstractActionController
 		$report = isset($form['report']) ? $form['report'] : '';
 		$level = isset($form['level']) ? $form['level'] : '';
 		$parentId = isset($form['parent_id']) ? (int)$form['parent_id'] : 0;
+		$headTypeId = isset($form['head_type_id']) ? $form['head_type_id'] : '';
+		if (!is_scalar($headTypeId) || ($headTypeId !== '' && !ctype_digit((string)$headTypeId))) {
+			$response = $this->getResponse();
+			$response->setStatusCode(400);
+			$response->getHeaders()->addHeaderLine('Content-Type', 'application/json');
+			return $response->setContent(json_encode(array('success' => 0, 'message' => 'Invalid Head Type.', 'rows' => '')));
+		}
 
 		$filters = array(
 			'activity' => isset($form['activity']) ? $form['activity'] : '-1',
@@ -915,6 +932,7 @@ class ReportController extends AbstractActionController
 			'location' => isset($form['location']) ? $form['location'] : '-1',
 			'start_date' => isset($form['start_date']) ? $form['start_date'] : date('Y-01-01'),
 			'end_date' => isset($form['end_date']) ? $form['end_date'] : date('Y-m-d'),
+			'head_type_id' => $headTypeId !== '' ? (int)$headTypeId : null,
 		);
 
 		if($parentId <= 0 || empty($report) || empty($level)):
@@ -923,7 +941,9 @@ class ReportController extends AbstractActionController
 		endif;
 
 		$rows = '';
-		if($report == 'trialbalance'):
+		if($level == 'headtype' && in_array($report, array('trialbalance', 'balancesheet', 'profitloss'), true)):
+			$rows = $this->buildReportHeadTypeLazyRows($report, $parentId, $filters);
+		elseif($report == 'trialbalance'):
 			$rows = $this->buildTrialBalanceLazyRows($level, $parentId, $filters);
 		elseif($report == 'balancesheet'):
 			$rows = $this->buildBalanceSheetLazyRows($level, $parentId, $filters);
@@ -933,6 +953,113 @@ class ReportController extends AbstractActionController
 
 		echo json_encode(array('success' => 1, 'rows' => $rows));
 		exit;
+	}
+
+	private function getReportHeads($report, $groupId, $filters)
+	{
+		$where = new Where();
+		$where->equalTo('group', $groupId);
+		if ($filters['head_type_id'] !== null) {
+			if ($filters['head_type_id'] === 0) {
+				$where->nest()->isNull('head_type')->or->equalTo('head_type', 0)->unnest();
+			} else {
+				$where->equalTo('head_type', $filters['head_type_id']);
+			}
+		}
+		$headObj = $this->getDefinedTable(Accounts\HeadTable::class);
+		if ($report === 'balancesheet') {
+			return $headObj->getTransactionHeadforBS($filters['activity'], $filters['region'], $filters['location'], $filters['start_date'], $filters['end_date'], $where);
+		}
+		return $headObj->getTransactionHead($filters['activity'], $filters['region'], $filters['location'], $filters['start_date'], $filters['end_date'], $where);
+	}
+
+	private function getReportHeadAmounts($report, $head, $filters)
+	{
+		$transactiondetailObj = $this->getDefinedTable(Accounts\TransactiondetailTable::class);
+		$classId = $this->getDefinedTable(Accounts\GroupTable::class)->getColumn($head['group'], 'class');
+		$activity = $filters['activity'];
+		$region = $filters['region'];
+		$location = $filters['location'];
+		$startDate = $filters['start_date'];
+		$endDate = $filters['end_date'];
+		$id = $head['id'];
+
+		if ($report === 'trialbalance') {
+			$amounts = array(
+				'debit' => (float)$transactiondetailObj->getSumbyHead($activity,$region,$location,$startDate,$endDate,'debit',$id),
+				'credit' => (float)$transactiondetailObj->getSumbyHead($activity,$region,$location,$startDate,$endDate,'credit',$id),
+				'opening' => 0.0,
+			);
+			if ($classId == 1 || $classId == 2) {
+				$amounts['opening'] = (float)$transactiondetailObj->getOpeningBalance($activity,$region,$location,$startDate,$endDate,$id,2);
+				$amounts['closing'] = (float)$transactiondetailObj->getClosingBalanceAL($activity,$region,$location,$startDate,$endDate,$id,2);
+			} else {
+				$amounts['closing'] = (float)$transactiondetailObj->getClosingBalanceIE($activity,$region,$location,$startDate,$endDate,$id,2);
+			}
+			return $amounts;
+		}
+
+		list($previousStart, $previousEnd) = $this->previousPeriod($startDate, $endDate);
+		if ($report === 'balancesheet') {
+			return array(
+				'present' => (float)$transactiondetailObj->getClosingBalanceforPresBS($activity,$region,$location,$startDate,$endDate,$id,$classId,2),
+				'previous' => (float)$transactiondetailObj->getClosingBalanceforPrevBS($activity,$region,$location,$previousStart,$previousEnd,$id,2),
+			);
+		}
+		return array(
+			'present' => (float)$transactiondetailObj->getClosingBalanceforPresPLSCLASS($activity,$region,$location,$startDate,$endDate,$id,$classId,2),
+			'previous' => (float)$transactiondetailObj->getClosingBalanceforPrevPLS($activity,$region,$location,$previousStart,$previousEnd,$id,2),
+		);
+	}
+
+	private function getReportHeadParentNode($groupId, $filters)
+	{
+		return $filters['head_type_id'] === null
+			? 'group-' . $groupId
+			: 'headtype-' . $groupId . '_' . $filters['head_type_id'];
+	}
+
+	private function buildReportHeadTypeLazyRows($report, $groupId, $filters)
+	{
+		$types = array();
+		foreach ($this->getDefinedTable(Accounts\HeadtypeTable::class)->getAll() as $type) {
+			$types[$type['id']] = $type['head_type'];
+		}
+		$totals = array();
+		foreach ($this->getReportHeads($report, $groupId, $filters) as $head) {
+			$amounts = $this->getReportHeadAmounts($report, $head, $filters);
+			if ($report === 'trialbalance' && !array_filter($amounts)) {
+				continue;
+			}
+			$typeId = (int)$head['head_type'];
+			if (!isset($totals[$typeId])) {
+				$totals[$typeId] = array_fill_keys(array_keys($amounts), 0.0);
+			}
+			foreach ($amounts as $column => $amount) {
+				$totals[$typeId][$column] += $amount;
+			}
+		}
+		ksort($totals, SORT_NUMERIC);
+		$rows = '';
+		foreach ($totals as $typeId => $amounts) {
+			$node = 'headtype-' . $groupId . '_' . $typeId;
+			$name = isset($types[$typeId]) ? $types[$typeId] : 'Unassigned Head Type';
+			$rows .= '<tr class="tb-row tb-headtype" data-level="headtype" data-node="'.$node.'" data-parent="group-'.$groupId.'">'
+				.'<td style="padding-left:24px"><a href="#" class="tb-toggle" data-node="'.$node.'"><span class="tb-caret">+</span> '.$this->esc($name).'</a></td>';
+			if ($report === 'trialbalance') {
+				$rows .= '<td style="text-align:right">'.$this->fmt(abs($amounts['opening'])).'</td>'
+					.'<td>'.($amounts['opening'] == 0 ? '' : ($amounts['opening'] < 0 ? 'Cr' : 'Dr')).'</td>'
+					.'<td style="text-align:right">'.$this->fmt($amounts['debit']).'</td>'
+					.'<td style="text-align:right">'.$this->fmt($amounts['credit']).'</td>'
+					.'<td style="text-align:right">'.$this->fmt(abs($amounts['closing'])).'</td>'
+					.'<td>'.($amounts['closing'] == 0 ? '' : ($amounts['closing'] < 0 ? 'Cr' : 'Dr')).'</td>';
+			} else {
+				$rows .= '<td style="text-align:right">'.number_format($amounts['present'],2,'.',',').'</td>'
+					.'<td style="text-align:right">'.number_format($amounts['previous'],2,'.',',').'</td>';
+			}
+			$rows .= '</tr>';
+		}
+		return $rows;
 	}
 
 	private function buildTrialBalanceLazyRows($level, $parentId, $filters)
@@ -980,18 +1107,12 @@ class ReportController extends AbstractActionController
 				endif;
 			endforeach;
 		elseif($level == 'head'):
-			foreach($headObj->getTransactionHead($activity,$region,$location,$startDate,$endDate,array('group'=>$parentId)) as $headrow):
-				$total_debit = $transactiondetailObj->getSumbyHead($activity,$region,$location,$startDate,$endDate,'debit',$headrow['id']);
-				$total_credit = $transactiondetailObj->getSumbyHead($activity,$region,$location,$startDate,$endDate,'credit',$headrow['id']);
-				$class_id = $groupObj->getColumn(array('id'=>$headrow['group'],'class'=>array(1,2)),'class');
-
-				if($class_id == '1' || $class_id == '2'):
-					$opening_balance = $transactiondetailObj->getOpeningBalance($activity,$region,$location,$startDate,$endDate,$headrow['id'],2);
-					$closing_balance = $transactiondetailObj->getClosingBalanceAL($activity,$region,$location,$startDate,$endDate,$headrow['id'],2);
-				else:
-					$opening_balance = 0;
-					$closing_balance = $transactiondetailObj->getClosingBalanceIE($activity,$region,$location,$startDate,$endDate,$headrow['id'],2);
-				endif;
+			foreach($this->getReportHeads('trialbalance', $parentId, $filters) as $headrow):
+				$amounts = $this->getReportHeadAmounts('trialbalance', $headrow, $filters);
+				$total_debit = $amounts['debit'];
+				$total_credit = $amounts['credit'];
+				$opening_balance = $amounts['opening'];
+				$closing_balance = $amounts['closing'];
 
 				$cr_or_dr_ob = ($opening_balance == '' || $opening_balance == '0') ? '' : (($opening_balance < 0) ? 'Cr' : 'Dr');
 				$cr_or_dr_cb = ($closing_balance == '' || $closing_balance == '0') ? '' : (($closing_balance < 0) ? 'Cr' : 'Dr');
@@ -999,8 +1120,8 @@ class ReportController extends AbstractActionController
 				if($closing_balance < 0): $closing_balance = -$closing_balance; endif;
 
 				if(($opening_balance!=0) || ($closing_balance!=0) || ($total_debit!=0) || ($total_credit!=0)):
-					$rows .= '<tr class="success tb-row tb-head" data-level="head" data-node="head-'.$headrow['id'].'" data-parent="group-'.$parentId.'">'
-						.'<td class="">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#" class="tb-toggle" data-node="head-'.$headrow['id'].'"><span class="tb-caret">+</span> '.$this->esc($headObj->getColumn($headrow['id'],'code')).'</a></td>'
+					$rows .= '<tr class="success tb-row tb-head" data-level="head" data-node="head-'.$headrow['id'].'" data-parent="'.$this->getReportHeadParentNode($parentId, $filters).'">'
+						.'<td style="padding-left:36px"><a href="#" class="tb-toggle" data-node="head-'.$headrow['id'].'"><span class="tb-caret">+</span> '.AccountLabel::html($headrow['name'], $headrow['code']).'</a></td>'
 						.'<td style="text-align:right">'.$this->fmt($opening_balance).'</td>'
 						.'<td>'.$cr_or_dr_ob.'</td>'
 						.'<td style="text-align:right">'.$this->fmt($total_debit).'</td>'
@@ -1033,7 +1154,7 @@ class ReportController extends AbstractActionController
 
 				if(($opening_balance!=0) || ($closing_balance!=0) || ($total_debit!=0) || ($total_credit!=0)):
 					$rows .= '<tr class="subheadrow tb-row tb-subhead" data-level="subhead" data-parent="head-'.$parentId.'">'
-						.'<td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'.$this->esc($subheadrow['code'].'-'.$subheadrow['name']).'</td>'
+						.'<td style="padding-left:48px">'.$this->esc($subheadrow['code'].'-'.$subheadrow['name']).'</td>'
 						.'<td style="text-align:right">'.$this->fmt($opening_balance).'</td>'
 						.'<td>'.$cr_or_dr_ob.'</td>'
 						.'<td style="text-align:right">'.$this->fmt($total_debit).'</td>'
@@ -1068,20 +1189,19 @@ class ReportController extends AbstractActionController
 				$class_id = $groupObj->getColumn($grouprow['id'],'class');
 				$pres = $transactiondetailObj->getClosingBalanceforPresBS($activity,$region,$location,$startDate,$endDate,$grouprow['id'],$class_id,3);
 				$prev = $transactiondetailObj->getClosingBalanceforPrevBS($activity,$region,$location,$pre_starting_date,$pre_ending_date,$grouprow['id'],$class_id,3);
-				$rows .= '<tr class="grouprow tb-row tb-group" data-level="group" data-node="group-'.$grouprow['id'].'" data-parent="class-'.$parentId.'">'
+				$rows .= '<tr class="info grouprow tb-row tb-group" data-level="group" data-node="group-'.$grouprow['id'].'" data-parent="class-'.$parentId.'">'
 					.'<td class="text-success"><strong><a href="#" class="tb-toggle" data-node="group-'.$grouprow['id'].'"><span class="tb-caret">+</span> '.$this->esc($grouprow['name']).'</a></strong></td>'
 					.'<td class="text-success" style="text-align:right"><strong>'.number_format((float)$pres,2,'.',',').'</strong></td>'
 					.'<td class="text-success" style="text-align:right"><strong>'.number_format((float)$prev,2,'.',',').'</strong></td>'
 					.'</tr>';
 			endforeach;
 		elseif($level == 'head'):
-			foreach($headObj->getTransactionHeadforBS($activity,$region,$location,$startDate,$endDate,array('group'=>$parentId)) as $headrow):
-				$group_id = $headObj->getColumn($headrow['id'],'group');
-				$class_id = $groupObj->getColumn($group_id,'class');
-				$pres = $transactiondetailObj->getClosingBalanceforPresBS($activity,$region,$location,$startDate,$endDate,$headrow['id'],$class_id,2);
-				$prev = $transactiondetailObj->getClosingBalanceforPrevBS($activity,$region,$location,$pre_starting_date,$pre_ending_date,$headrow['id'],2);
-				$rows .= '<tr class="headrow tb-row tb-head" data-level="head" data-node="head-'.$headrow['id'].'" data-parent="group-'.$parentId.'">'
-					.'<td class="text-secondary"><strong><a href="#" class="tb-toggle" data-node="head-'.$headrow['id'].'"><span class="tb-caret">+</span> '.$this->esc($headObj->getColumn($headrow['id'],'name')).'</a></strong></td>'
+			foreach($this->getReportHeads('balancesheet', $parentId, $filters) as $headrow):
+				$amounts = $this->getReportHeadAmounts('balancesheet', $headrow, $filters);
+				$pres = $amounts['present'];
+				$prev = $amounts['previous'];
+				$rows .= '<tr class="success headrow tb-row tb-head" data-level="head" data-node="head-'.$headrow['id'].'" data-parent="'.$this->getReportHeadParentNode($parentId, $filters).'">'
+					.'<td class="text-secondary" style="padding-left:36px"><strong><a href="#" class="tb-toggle" data-node="head-'.$headrow['id'].'"><span class="tb-caret">+</span> '.AccountLabel::html($headrow['name'], $headrow['code']).'</a></strong></td>'
 					.'<td style="text-align:right"><strong>'.number_format((float)$pres,2,'.',',').'</strong></td>'
 					.'<td style="text-align:right"><strong>'.number_format((float)$prev,2,'.',',').'</strong></td>'
 					.'</tr>';
@@ -1093,8 +1213,11 @@ class ReportController extends AbstractActionController
 				$class_id = $groupObj->getColumn($group_id,'class');
 				$pres = $transactiondetailObj->getClosingBalanceforPresBS($activity,$region,$location,$startDate,$endDate,$subheadrow['id'],$class_id,1);
 				$prev = $transactiondetailObj->getClosingBalanceforPrevBS($activity,$region,$location,$pre_starting_date,$pre_ending_date,$subheadrow['id'],1);
+				if((float)$pres == 0.0 && (float)$prev == 0.0):
+					continue;
+				endif;
 				$rows .= '<tr class="subheadrow tb-row tb-subhead" data-level="subhead" data-parent="head-'.$parentId.'">'
-					.'<td>&nbsp;&nbsp;&nbsp;&nbsp;'.$this->esc($subheadrow['code'].'-'.$subheadrow['name']).'</td>'
+					.'<td style="padding-left:48px">'.$this->esc($subheadrow['code'].'-'.$subheadrow['name']).'</td>'
 					.'<td style="text-align:right">'.number_format((float)$pres,2,'.',',').'</td>'
 					.'<td style="text-align:right">'.number_format((float)$prev,2,'.',',').'</td>'
 					.'</tr>';
@@ -1131,13 +1254,12 @@ class ReportController extends AbstractActionController
 					.'</tr>';
 			endforeach;
 		elseif($level == 'head'):
-			foreach($headObj->getTransactionHead($activity,$region,$location,$startDate,$endDate,array('group'=>$parentId)) as $headrow):
-				$group_id = $headObj->getColumn($headrow['id'],'group');
-				$class_id = $groupObj->getColumn($group_id,'class');
-				$pres = $transactiondetailObj->getClosingBalanceforPresPLSCLASS($activity,$region,$location,$startDate,$endDate,$headrow['id'],$class_id,2);
-				$prev = $transactiondetailObj->getClosingBalanceforPrevPLS($activity,$region,$location,$pre_starting_date,$pre_ending_date,$headrow['id'],2);
-				$rows .= '<tr class="success tb-row tb-head" data-level="head" data-node="head-'.$headrow['id'].'" data-parent="group-'.$parentId.'">'
-					.'<td class="text-success">&nbsp;&nbsp;<a href="#" class="tb-toggle" data-node="head-'.$headrow['id'].'"><span class="tb-caret">+</span> '.$this->esc($headObj->getColumn($headrow['id'],'name')).'</a></td>'
+			foreach($this->getReportHeads('profitloss', $parentId, $filters) as $headrow):
+				$amounts = $this->getReportHeadAmounts('profitloss', $headrow, $filters);
+				$pres = $amounts['present'];
+				$prev = $amounts['previous'];
+				$rows .= '<tr class="success tb-row tb-head" data-level="head" data-node="head-'.$headrow['id'].'" data-parent="'.$this->getReportHeadParentNode($parentId, $filters).'">'
+					.'<td class="text-success" style="padding-left:36px"><a href="#" class="tb-toggle" data-node="head-'.$headrow['id'].'"><span class="tb-caret">+</span> '.AccountLabel::html($headrow['name'], $headrow['code']).'</a></td>'
 					.'<td style="text-align:right">'.number_format((float)$pres,2,'.',',').'</td>'
 					.'<td style="text-align:right">'.number_format((float)$prev,2,'.',',').'</td>'
 					.'</tr>';
@@ -1150,7 +1272,7 @@ class ReportController extends AbstractActionController
 				$pres = $transactiondetailObj->getClosingBalanceforPresPLSCLASS($activity,$region,$location,$startDate,$endDate,$subheadrow['id'],$class_id,1);
 				$prev = $transactiondetailObj->getClosingBalanceforPrevPLS($activity,$region,$location,$pre_starting_date,$pre_ending_date,$subheadrow['id'],1);
 				$rows .= '<tr class="subheadrow tb-row tb-subhead" data-level="subhead" data-parent="head-'.$parentId.'">'
-					.'<td>&nbsp;&nbsp;&nbsp;&nbsp;'.$this->esc($subheadrow['code'].'-'.$subheadrow['name']).'</td>'
+					.'<td style="padding-left:48px">'.$this->esc($subheadrow['code'].'-'.$subheadrow['name']).'</td>'
 					.'<td style="text-align:right">'.number_format((float)$pres,2,'.',',').'</td>'
 					.'<td style="text-align:right">'.number_format((float)$prev,2,'.',',').'</td>'
 					.'</tr>';
@@ -1174,7 +1296,7 @@ class ReportController extends AbstractActionController
 
 	private function esc($value)
 	{
-		return htmlspecialchars((string)$value, ENT_QUOTES, 'UTF-8');
+		return AccountLabel::html($value);
 	}
 
 	/**GET TDS REPORT ACTION *****************************************************************************************************/
@@ -1267,14 +1389,19 @@ class ReportController extends AbstractActionController
 		return 0;
 	}
 
-	private function getNetProfitForPeriod($activity, $region, $location, $startDate, $endDate)
+	private function getNetProfitForPeriod($activity, $region, $location, $startDate, $endDate, $includeComprehensiveInNet = false)
 	{
-		$netProfit = 0.0;
+		$bucketTotals = array(
+			'income' => 0.0,
+			'expense' => 0.0,
+			'tax' => 0.0,
+			'comprehensive' => 0.0,
+		);
 		$profitLossClasses = $this->getDefinedTable(Accounts\ClassTable::class)->getProfitlossClass($activity, $region, $location, $startDate, $endDate);
 		foreach($profitLossClasses as $classRow):
 			$classId = isset($classRow['id']) ? $classRow['id'] : 0;
 			if($classId > 0):
-				$netProfit += (float)$this->getDefinedTable(Accounts\TransactiondetailTable::class)->getClosingBalanceforPresPLSCLASS(
+				$classAmount = (float)$this->getDefinedTable(Accounts\TransactiondetailTable::class)->getClosingBalanceforPresPLSCLASS(
 					$activity,
 					$region,
 					$location,
@@ -1284,9 +1411,52 @@ class ReportController extends AbstractActionController
 					$classId,
 					4
 				);
+				$bucket = $this->resolveProfitLossClassBucket($classRow);
+				if($bucket !== null):
+					$bucketTotals[$bucket] += $classAmount;
+				endif;
 			endif;
 		endforeach;
+		$netProfit = $bucketTotals['income'] - $bucketTotals['expense'] - $bucketTotals['tax'];
+		if($includeComprehensiveInNet):
+			$netProfit += $bucketTotals['comprehensive'];
+		endif;
 		return $netProfit;
+	}
+
+	private function resolveProfitLossClassBucket($classRow)
+	{
+		$classId = isset($classRow['id']) ? (int)$classRow['id'] : 0;
+		if($classId === 3):
+			return 'income';
+		elseif($classId === 4):
+			return 'expense';
+		elseif($classId === 9):
+			return 'tax';
+		elseif($classId === 5):
+			return 'comprehensive';
+		endif;
+
+		$className = strtolower(trim((string)($classRow['class'] ?? '')));
+		if($className === ''):
+			return null;
+		endif;
+		if(strpos($className, 'income') !== false && strpos($className, 'tax') === false):
+			return 'income';
+		elseif(strpos($className, 'expense') !== false):
+			return 'expense';
+		elseif(strpos($className, 'tax') !== false):
+			return 'tax';
+		elseif(strpos($className, 'comprehensive') !== false || strpos($className, 'oci') !== false):
+			return 'comprehensive';
+		endif;
+		return null;
+	}
+
+	private function includeComprehensiveInNet()
+	{
+		$appSettings = $this->getDefinedTable(Administration\AppSettingTable::class)->getSettings();
+		return !empty($appSettings['include_oci_in_net']);
 	}
 
 	private function getRetainedEarningsValue($activity, $region, $location, $startDate, $endDate)
@@ -1300,7 +1470,14 @@ class ReportController extends AbstractActionController
 		if(!empty($latestSnapshot) && isset($latestSnapshot['retained_earnings'])):
 			$openingRetained = (float)$latestSnapshot['retained_earnings'];
 		endif;
-		$periodNetProfit = $this->getNetProfitForPeriod($activity, $region, $location, $startDate, $endDate);
+		$periodNetProfit = $this->getNetProfitForPeriod(
+			$activity,
+			$region,
+			$location,
+			$startDate,
+			$endDate,
+			$this->includeComprehensiveInNet()
+		);
 		return $openingRetained + $periodNetProfit;
 	}
 
@@ -1339,7 +1516,14 @@ class ReportController extends AbstractActionController
 			if(!empty($latestSnapshot) && isset($latestSnapshot['retained_earnings'])):
 				$openingRetained = (float)$latestSnapshot['retained_earnings'];
 			endif;
-			$periodNetProfit = $this->getNetProfitForPeriod($activity, $region, $location, $periodStart, $periodEnd);
+			$periodNetProfit = $this->getNetProfitForPeriod(
+				$activity,
+				$region,
+				$location,
+				$periodStart,
+				$periodEnd,
+				$this->includeComprehensiveInNet()
+			);
 			$retainedEarnings = $openingRetained + $periodNetProfit;
 			$snapshotData = array(
 				'period_end' => $periodEnd,

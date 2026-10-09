@@ -71,6 +71,26 @@ class SubheadTable extends AbstractTableGateway
 	 * @param Int $id
 	 * @return Array
 	 */
+	public function getPayheadTypeSubheads($payheadType = null)
+	{
+		$where = array('sh.type' => 5);
+		if ($payheadType !== null) {
+			$where['sh.ref_id'] = $payheadType;
+		}
+		$headsByType = array();
+		foreach ($this->get($where) as $linkedSubhead) {
+			$headsByType[$linkedSubhead['ref_id']][$linkedSubhead['head_id']] = $linkedSubhead['head_id'];
+		}
+		$choices = array();
+		foreach ($headsByType as $typeId => $headIds) {
+			foreach ($this->get(array('sh.head' => array_values($headIds))) as $subhead) {
+				$subhead['payhead_type_id'] = $typeId;
+				$choices[] = $subhead;
+			}
+		}
+		return $choices;
+	}
+
 	public function getbanks($param)
 	{
 		$where = ( is_array($param) )? $param: array('id' => $param);
@@ -355,15 +375,9 @@ class SubheadTable extends AbstractTableGateway
 	 **/
 	public function getTransactionSubheadforBS($activity,$region,$location,$start_date,$end_date, $where)
 	{		
-		
-		$prevoius_start_year = date('y', strtotime($start_date)) - 1;
-		$prevoius_start_month = date('m', strtotime($start_date));
-		$prevoius_start_day = date('d', strtotime($start_date));
-		$pre_end_year = date('y', strtotime($end_date)) - 1;
-		$pre_end_month = date('m', strtotime($end_date));
-		$pre_end_day = date('d', strtotime($end_date));
-		$pre_starting_date = date('Y-m-d', strtotime($prevoius_start_year.'-'.$prevoius_start_month.'-'.$prevoius_start_day));
-		$pre_ending_date = date('Y-m-d', strtotime($pre_end_year.'-'.$pre_end_month.'-'.$pre_end_day));
+		$startYear = (int)date('Y', strtotime($start_date));
+		$lookbackYear = $startYear - 10;
+		$lookbackStartDate = date('Y-m-d', strtotime('01-01-'.$lookbackYear));
 		
 		$year = date('Y', strtotime($start_date));		
 		$sub = new Select("fa_closing_balance");	
@@ -373,8 +387,7 @@ class SubheadTable extends AbstractTableGateway
 		$sub0 = new Select("fa_transaction");
 		$sub0->columns(array("id"))
 			 ->where(array("status" => "4"))
-			 ->where->between('voucher_date', $start_date, $end_date)
-			 ->OR->where->between('voucher_date', $pre_starting_date, $pre_ending_date);
+			 ->where->between('voucher_date', $lookbackStartDate, $end_date);
 
 			 
 		$sub1 = new Select("fa_transaction_details");
@@ -697,4 +710,3 @@ class SubheadTable extends AbstractTableGateway
            return $columns;       
     }
 }
-

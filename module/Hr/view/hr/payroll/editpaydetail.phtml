@@ -35,9 +35,7 @@
 						elseif($against == '-2'):
 							$againstName = 'PIT Net Pay';
 							$Gross_amount = $this->temppayrollObj->getColumn(array('employee'=>$employee),'gross');
-							$PFDed = $this->paystructureObj->getColumn(array('employee'=>$employee, 'pay_head'=>7),'amount');
-							$GISDed = $this->paystructureObj->getColumn(array('employee'=>$employee, 'pay_head'=>6),'amount');
-							$baseamount = $Gross_amount - $PFDed - $GISDed;
+							$baseamount = $this->paystructureObj->getPitNetPay($employee, $Gross_amount);
 						endif;
 						$readonly = 'readonly';
 					?>
@@ -56,9 +54,7 @@
 						elseif($against == '-2'):
 							$againstName = 'PIT Net Pay';
 							$Gross_amount = $this->temppayrollObj->getColumn(array('employee'=>$employee),'gross');
-							$PFDed = $this->paystructureObj->getColumn(array('employee'=>$employee, 'pay_head'=>7),'amount');
-							$GISDed = $this->paystructureObj->getColumn(array('employee'=>$employee, 'pay_head'=>6),'amount');
-							$gross = $Gross_amount - $PFDed - $GISDed;
+							$gross = $this->paystructureObj->getPitNetPay($employee, $Gross_amount);
 						endif;
 						$readonly = 'readonly';
 					?>

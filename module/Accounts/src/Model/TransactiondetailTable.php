@@ -52,7 +52,7 @@ class TransactiondetailTable extends AbstractTableGateway
 			   ->join(array('t'=>'fa_transaction'),'t.id = td.transaction', array('transaction_id' => 'id', 'voucher_type'))
 			   ->join(array('l'=>'adm_location'), 'l.id = td.location', array('location', 'location_id' => 'id'))
 			   //->join(array('a'=>'adm_activity'), 'a.id = td.activity', array('activity', 'activity_id' => 'id'))
-			   ->join(array('h'=>'fa_head'), 'h.id = td.head', array('head' => 'code', 'head_id' => 'id'))
+			   ->join(array('h'=>'fa_head'), 'h.id = td.head', array('head' => 'code', 'head_name' => 'name', 'head_id' => 'id'))
 			   ->join(array('sh'=>'fa_sub_head'), 'sh.id = td.sub_head', array('sub_head' => 'code', 'sub_head_name' => 'name','sub_head_id' => 'id'))
 		       ->where($where);
 		
@@ -2991,14 +2991,14 @@ class TransactiondetailTable extends AbstractTableGateway
 	 * @param Int $param
 	 * @return Array
 	 */
-	public function getCashBookHead($param)
+	public function getCashBookHead($param, $includeName = false)
 	{
         $where = ( is_array($param) )? $param: array('td.id' => $param);
 	    $adapter = $this->adapter;
 		$sql = new Sql($adapter);
 		$select = $sql->select();
 		$select->from(array('td'=>$this->table))
-				->join(array('h'=>'fa_head'), 'h.id = td.head', array('head' => 'code'));
+				->join(array('h'=>'fa_head'), 'h.id = td.head', array('head' => 'code', 'head_name' => 'name'));
 		$select->columns(array(
 				'max' => new Expression('MAX(td.id)')
 		));
@@ -3009,7 +3009,7 @@ class TransactiondetailTable extends AbstractTableGateway
 	//	echo $selectString;exit;
 		$results = $adapter->query($selectString, $adapter::QUERY_MODE_EXECUTE)->toArray();
 		foreach ($results as $result):
-			$columns =  $result['head'];
+			$columns = $includeName ? $result['head'].'-'.$result['head_name'] : $result['head'];
 		endforeach;
 		return $columns;
 	}

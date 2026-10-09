@@ -42,7 +42,7 @@ $total_debit=0;?>
 									$selected_head = ($head['id'] == $data['ledger'])?"selected":"";
 							?>
 								<option value="<?php echo $head['id'];?>" <?php echo $selected_head;?>>
-									<?php echo $head['code'];?>
+									<?php echo \Accounts\Support\AccountLabel::html($head['name'], $head['code']);?>
 								</option>
 							<?php endforeach;?>
 						</select>
@@ -57,7 +57,7 @@ $total_debit=0;?>
 								$selected_sl = ($subhead['id']==$data['subledger'])?"selected":"";
 							?>
 								<option value="<?php echo $subhead['id'];?>" <?php echo $selected_sl;?>>
-									<?php echo $subhead['code'];?>
+									<?php echo \Accounts\Support\AccountLabel::html($subhead['name'], $subhead['code']);?>
 								</option>
 							<?php endforeach;?>				
 						</select>		
@@ -95,10 +95,10 @@ $total_debit=0;?>
 						<tr>
 							<td><?php echo $i++; ?> </td>
 							<td>
-								<span style="color:#666;font-size:95%;"><?php echo $this->headObj->getColumn($row['head'],'name');?></span>
+								<span style="color:#666;font-size:95%;"><?php echo \Accounts\Support\AccountLabel::html($this->headObj->getColumn($row['head'],'name'), $this->headObj->getColumn($row['head'],'code'));?></span>
 							</td>
 							<td>
-							   <span class=""><?php echo $this->subheadObj->getColumn($row['sub_head'],'name');?></span>
+							   <span class=""><?php echo \Accounts\Support\AccountLabel::html($this->subheadObj->getColumn($row['sub_head'],'name'), $this->subheadObj->getColumn($row['sub_head'],'code'));?></span>
 							</td>
 							<td>
 							   <span class=""><?php echo $row['rate'];?></span>
@@ -139,4 +139,3 @@ $(function(){
 	});
 });
 </script>
-

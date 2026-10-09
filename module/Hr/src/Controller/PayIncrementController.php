@@ -480,7 +480,9 @@ class PayIncrementController extends AbstractActionController
 		$deduction = $this->getDefinedTable(Hr\PayheadtypeTable::class)->getColumn($payhead_type, 'deduction');
 
 		if($deduction == 1):
-			$affected_ps = $this->getDefinedTable(Hr\PaystructureTable::class)->get(array('sd.employee'=>$employee, 'ph.against'=> $payhead_id));
+			$code = $this->getDefinedTable(Hr\PayheadTable::class)->getColumn($payhead_id, 'code');
+			$against = in_array(strtoupper($code), array('PF', 'GIS'), true) ? array($payhead_id, '-2') : $payhead_id;
+			$affected_ps = $this->getDefinedTable(Hr\PaystructureTable::class)->get(array('sd.employee'=>$employee, 'ph.against'=> $against));
 		else:
 			$affected_ps = $this->getDefinedTable(Hr\PaystructureTable::class)->get(array('sd.employee'=>$employee, 'ph.against'=> array($payhead_id,'-1','-2')));
 		endif;
@@ -639,14 +641,9 @@ class PayIncrementController extends AbstractActionController
 			}
 			if(sizeof($againstPitNet)>0){
 			   $Gross_amount=0;
-			   $PFDed=0;
-			   $GISDed=0;
 			   foreach($againstPitNet as $aff_ps):
 				    $Gross_amount = $this->getDefinedTable(Hr\TempPayrollTable::class)->getColumn(['employee' => $employee], 'gross') ?? 0;
-					$PFDed = $this->getDefinedTable(Hr\PaystructureTable::class)->getColumn(['employee' => $employee, 'pay_head' => 7], 'amount') ?? 0;
-					$GISDed = $this->getDefinedTable(Hr\PaystructureTable::class)->getColumn(['employee' => $employee, 'pay_head' => 6], 'amount') ?? 0;
-
-					$base_amount = $Gross_amount - $PFDed - $GISDed;
+					$base_amount = $this->getDefinedTable(Hr\PaystructureTable::class)->getPitNetPay($employee, $Gross_amount);
 				   if($aff_ps['type'] == 2){
 					  $amount = ($base_amount*$aff_ps['percent'])/100;
 						if($aff_ps['roundup'] == 1):

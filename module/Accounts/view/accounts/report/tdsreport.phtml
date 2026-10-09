@@ -31,7 +31,7 @@
 									<?php foreach($taxationOptions as $taxationOption): ?>
 										<label>
 											<input name="sub_head" id="sub_head" type="radio" value="<?php echo $taxationOption['sub_head']; ?>" class="ace" <?php echo ($sub_head == $taxationOption['sub_head']) ? 'checked' : ''; ?> />
-											<span class="lbl"> <?php echo $taxationOption['label']; ?></span>
+											<span class="lbl"> <?php echo \Accounts\Support\AccountLabel::html($taxationOption['label']); ?></span>
 										</label>
 									<?php endforeach; ?>
 								<?php endif; ?>
@@ -87,7 +87,7 @@
 											$partyRole=$this->partyObj->getColumn($partyid,'role');
 										endforeach;?>
 										<tr>
-											<td><?php echo $subhead;?></td>
+											<td><?php echo \Accounts\Support\AccountLabel::html($subhead);?></td>
 											<td><?php echo $this->partyroleObj->getColumn($partyRole,'role');?></td>
 											<td style="text-align:right"></td>
 											<td style="text-align:left"><?php echo $row['voucher_dates'];?></td>
@@ -118,7 +118,7 @@
 											<th colspan = "2" style="text-align:center">Amount Withheld</th>
 										</tr>
 										<tr>
-											<th><?php echo (trim($selectedTaxationLabel) !== '') ? $selectedTaxationLabel : 'Rate of Tax'; ?></th>
+											<th><?php echo (trim($selectedTaxationLabel) !== '') ? \Accounts\Support\AccountLabel::html($selectedTaxationLabel) : 'Rate of Tax'; ?></th>
 											<th>TDS</th>
 										</tr>
 									</thead>
@@ -147,7 +147,7 @@
 										endforeach;?>
 										<tr>
 											<td><?php echo $tpn;?></td>
-											<td><?php echo $subhead;?></td>
+											<td><?php echo \Accounts\Support\AccountLabel::html($subhead);?></td>
 											<td><?php echo $this->partyroleObj->getColumn($partyRole,'role');?></td>
 											<td style="text-align:right"></td>
 											<td style="text-align:left"><?php echo $row['voucher_dates'];?></td>

@@ -275,11 +275,11 @@ class AjaxresponseController extends AbstractActionController
 				$remainingAmount = max($sourceAmount - $usedAmount, 0);
 
 				if($sourceDebit > 0){
-					$debitAmount = number_format($remainingAmount, 3, '.', '');
-					$creditAmount = '0.000';
-				}else{
 					$creditAmount = number_format($remainingAmount, 3, '.', '');
 					$debitAmount = '0.000';
+				}else{
+					$debitAmount = number_format($remainingAmount, 3, '.', '');
+					$creditAmount = '0.000';
 				}
 			}
 		}

@@ -11,7 +11,7 @@
     endforeach;
 ?>
 
-<form method="post" action="<?php echo $this->url('chartaccount', array('action' => 'editheadtype', 'id' => $id)); ?>"  enctype="multipart/form-data" >                  
+<form id="#form" method="post" action="<?php echo $this->url('chartaccount', array('action' => 'editheadtype', 'id' => $id)); ?>"  enctype="multipart/form-data" >
     <div class="modal-header">
         <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
         <h4 class="modal-title"> <i class="fa fa-pencil-square-o"></i> Edit Head type</h4>
@@ -25,7 +25,16 @@
 					<div class="form-group">
 						<label for="head_type" class="control-label">Head Type</label>
 						<input type="text" class="form-control" name="head_type" id="head_type" value="<?php echo $head_type;?>" size="30" required > 
-					</div>    
+					</div>
+					<div class="form-group">
+						<label for="group" class="control-label">Group</label>
+						<select class="form-control" name="group" id="group" data-placeholder="Select Group" required>
+							<option value=""></option>
+							<?php foreach ($this->groups as $groupRow): ?>
+								<option value="<?php echo $groupRow['id']; ?>" <?php echo ($group == $groupRow['id']) ? 'selected' : ''; ?>><?php echo $this->escapeHtml($groupRow['name']); ?></option>
+							<?php endforeach; ?>
+						</select>
+					</div>
 				</div>    
 			</div>           
         </div>
@@ -41,10 +50,17 @@
 $('document').ready(function(){
 	const fv = FormValidation.formValidation(document.getElementById('#form'), {
 		fields: {
-			headtype: {
+			group: {
 				validators: {
 					notEmpty: {
-						message: 'Please provide District Name En.'
+						message: 'Please select Group.'
+					}
+				}
+			},
+			head_type: {
+				validators: {
+					notEmpty: {
+						message: 'Please provide Head Type.'
 					}
 				}
 			},

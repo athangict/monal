@@ -91,6 +91,25 @@ class PaystructureTable extends AbstractTableGateway
 		return $columns;
 	}
 	
+	public function getPitNetPay($employee, $gross)
+	{
+		if (!is_numeric($gross)) {
+			throw new \UnexpectedValueException('Gross Pay must be numeric to calculate PIT Net Pay.');
+		}
+		$net = (float) $gross;
+		foreach ($this->get(array('sd.employee' => $employee, 'ph.code' => array('PF', 'GIS'), 'pht.deduction' => 1)) as $deduction) {
+			$amount = $deduction['amount'];
+			if ($amount === null || $amount === '') {
+				continue;
+			}
+			if (!is_numeric($amount)) {
+				throw new \UnexpectedValueException('Invalid payroll amount for ' . $deduction['code'] . ' deduction.');
+			}
+			$net -= (float) $amount;
+		}
+		return $net;
+	}
+
 	/**
 	 * Save record
 	 * @param String $array

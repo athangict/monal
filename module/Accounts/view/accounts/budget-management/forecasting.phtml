@@ -5,6 +5,8 @@
  * 
  */
 	$this->headTitle($this->title);
+	$incomeTaxRate = isset($incomeTaxRate) ? (float)$incomeTaxRate : 30.00;
+	$incomeTaxFactor = $incomeTaxRate / 100;
 ?>
 <div class="row">
 	<div class="space-12"></div>
@@ -126,7 +128,7 @@
 													else:
 														$budget_amount_class=0.00;
 													endif;?>
-											<td style ="text-align:right"><?php echo number_format($budget_amount_class,2,'.',',');}?></td>	
+											<td style ="text-align:right"><?php echo number_format((float)($budget_amount_class ?? 0),2,'.',',');}?></td>	
 										</tr>
 										<?php 
 										if($data['tier'] <= 3):
@@ -144,7 +146,7 @@
 															}else{
 																$budget_amount_group =0.000;
 															}?>	
-														<td style ="text-align:right"><?php echo number_format($budget_amount_group,2,'.',',');}?></td>
+														<td style ="text-align:right"><?php echo number_format((float)($budget_amount_group ?? 0),2,'.',',');}?></td>
 												</tr>
 												<?php
 												if($data['tier'] <= 2):
@@ -162,7 +164,7 @@
 																	}else{
 																		$budget_amount_head =0.000;
 																	}?>	
-															<td style ="text-align:right"><?php echo number_format($budget_amount_head,2,'.',',');}?></td>
+															<td style ="text-align:right"><?php echo number_format((float)($budget_amount_head ?? 0),2,'.',',');}?></td>
 														</tr>
 														<?php 
 														if($data['tier'] <= 1):
@@ -181,7 +183,7 @@
 																		//echo '<pre>';print_r($budget_amount);
 																		//$pres_closing_balance =+ $classrow['budget_dr'];
 																	?>	
-																	<td style ="text-align:right"><?php echo number_format($budget_amount,2,'.',',');}?></td>
+																	<td style ="text-align:right"><?php echo number_format((float)($budget_amount ?? 0),2,'.',',');}?></td>
 																</tr>			
 															<?php 
 														   endforeach;
@@ -207,10 +209,10 @@
 												$total_expense= $exp['totalofclass'];
 										$pl=$total_income -$total_expense;
 									?>
-										<td style ="text-align:right"><?php echo number_format(($pl),2,'.',',');}?></td>
+										<td style ="text-align:right"><?php echo number_format((float)($pl ?? 0),2,'.',',');}?></td>
 								</tr>
 								<tr class="red classrow">
-									<td> Taxable ( 30% ) </td>
+									<td> Taxable ( <?php echo number_format($incomeTaxRate,2,'.','');?>% ) </td>
 									<?php 
 									if($data['tier'] > 0):
 										$tax1=0;
@@ -222,11 +224,11 @@
 											foreach($expense as $exp);
 												$total_expense= $exp['totalofclass'];
 										if(($total_income - $total_expense) > 0){
-											$tax1 =  ($total_income - $total_expense)*0.3;
+											$tax1 =  ($total_income - $total_expense) * $incomeTaxFactor;
 										}else{
 											$tax1 =0;
 										}?>
-										<td style ="text-align:right"><?php echo number_format($tax1,2,'.',',');}?></td>
+										<td style ="text-align:right"><?php echo number_format((float)($tax1 ?? 0),2,'.',',');}?></td>
 									<?php 
 									endif;?>
 								 </tr>
@@ -242,11 +244,11 @@
 											foreach($expense as $exp);
 												$total_expense= $exp['totalofclass'];
 										if(($total_income - $total_expense) > 0){
-											$tax1 =  ($total_income - $total_expense)*0.3;
+											$tax1 =  ($total_income - $total_expense) * $incomeTaxFactor;
 										}else{
 											$tax1 =0;
 										}?>
-										<td style ="text-align:right" ><?php echo number_format(($total_income - $total_expense - $tax1),2,'.',',');}?></td>
+										<td style ="text-align:right" ><?php echo number_format((float)(($total_income ?? 0) - ($total_expense ?? 0) - ($tax1 ?? 0)),2,'.',',');}?></td>
 									</tr>
 								</tbody>
 							</table>	

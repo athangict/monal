@@ -88,7 +88,7 @@ $minYear = date('Y', strtotime($minYear)); ?>
 				<?php $i=1+(($page-1)*25); foreach ($paginator as $row):
 				if($role==100 ||$role==99):
 					if($row['voucher_id']==4):?>
-						<tr>
+						<tr data-href="<?php echo $this->button(4,$row['id']); ?>">
 							<td><?php echo $i++; ?> </td>
 							<td>
 								<b><?php echo $row['voucher_no'];?>&nbsp;</b> 
@@ -103,7 +103,7 @@ $minYear = date('Y', strtotime($minYear)); ?>
 									echo $this->currency($row['voucher_amount']);
 								//endif;?>
 							</td>
-							<td><?php echo $this->button(1,$row['id']);?><?php if($role==100):echo $this->button(6,$row['id'],'','775');endif;?></td>
+							<td><?php echo $this->button(1,$row['id']);?></td>
 						</tr>
 				    <?php 
 				    endif;
@@ -124,7 +124,7 @@ $minYear = date('Y', strtotime($minYear)); ?>
 									echo $this->currency($row['voucher_amount']);
 								endif;?>
 							</td>
-							<td><?php echo $this->button(1,$row['id']);?><?php if($role==100):echo $this->button(6,$row['id'],'','775');endif;?></td>
+							<td><?php echo $this->button(1,$row['id']);?></td>
 						</tr>
 				    <?php 
 				    endif;
@@ -138,7 +138,10 @@ $minYear = date('Y', strtotime($minYear)); ?>
 	$("tr[data-href]").each(function(){ 
 		if($(this).attr('data-href')!='#'){
 			$(this).css('cursor','pointer');
-			$(this).bind('click',function() {
+			$(this).bind('click',function(event) {
+				if($(event.target).closest('a, button').length){
+					return;
+				}
 				window.document.location = $(this).attr("data-href");
 			});
 		}
@@ -148,4 +151,3 @@ $minYear = date('Y', strtotime($minYear)); ?>
 		orentation:"P",//L =landscape, P = potrait
 	});
 </script>
-

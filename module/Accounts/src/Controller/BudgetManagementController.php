@@ -121,6 +121,8 @@ class BudgetManagementController extends AbstractActionController
 			'region' => $region,
 			'location' => $loc,
 		);
+		$appSettings = $this->getDefinedTable(Administration\AppSettingTable::class)->getSettings();
+		$incomeTaxRate = isset($appSettings['income_tax_rate']) ? (float)$appSettings['income_tax_rate'] : 30.0;
 		
 		//echo '<pre>';print_r($data);exit;
 		return new ViewModel(array(
@@ -128,6 +130,7 @@ class BudgetManagementController extends AbstractActionController
 			'selected_year' => $year,
 			'min_year'	=> $min_year,
 			'data' =>$data,
+			'incomeTaxRate' => $incomeTaxRate,
 			'budgetforecastObj' => $this->getDefinedTable(Accounts\BudgetTable::class),
 			'subheadObj' => $this->getDefinedTable(Accounts\SubheadTable::class),
 			'transactiondetailObj' => $this->getDefinedTable(Accounts\TransactiondetailTable::class),

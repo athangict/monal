@@ -54,7 +54,7 @@
 								foreach ($this->headtype as $headtype):
 									$selected = ($headtype_id==$headtype['id'])?"selected":"";
 								?>
-									<option value="<?php echo $headtype['id'];?>" <?php echo $selected;?>>
+									<option value="<?php echo $headtype['id'];?>" data-group="<?php echo $this->escapeHtmlAttr($headtype['group']); ?>" <?php echo $selected;?>>
 										<?php echo $headtype['head_type']; ?>
 									</option>
 								<?php 
@@ -97,7 +97,7 @@ $('document').ready(function(){
 					}
 				}
 			},
-			headtype: {
+			head_type: {
 				validators: {
 					notEmpty: {
 						message: 'Please select Head Type.'
@@ -120,8 +120,9 @@ $('document').ready(function(){
 			$('div#'+ e.field.replace('[]','') +'_chosen').addClass('is-invalid');
 		}
 	});
-	$('form select').chosen().change(function () {
+	$(document.getElementById('#form')).find('select').chosen().change(function () {
 		fv.revalidateField($(this).attr('name'));
 	});
+	<?php echo $this->partial('accounts/chartaccount/head-type-filter.phtml'); ?>
 });
 </script>

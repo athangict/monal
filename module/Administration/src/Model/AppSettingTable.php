@@ -30,6 +30,8 @@ class AppSettingTable
             `smtp_password` text DEFAULT NULL,
             `support_email` varchar(255) DEFAULT NULL,
             `support_phone` varchar(80) DEFAULT NULL,
+            `income_tax_rate` decimal(5,2) DEFAULT 30.00,
+            `include_oci_in_net` tinyint(1) DEFAULT 0,
             `author` int(11) DEFAULT NULL,
             `created` datetime DEFAULT NULL,
             `modified` datetime DEFAULT NULL,
@@ -48,6 +50,8 @@ class AppSettingTable
             'smtp_password' => "ALTER TABLE `{$this->table}` ADD COLUMN `smtp_password` text DEFAULT NULL",
             'support_email' => "ALTER TABLE `{$this->table}` ADD COLUMN `support_email` varchar(255) DEFAULT NULL",
             'support_phone' => "ALTER TABLE `{$this->table}` ADD COLUMN `support_phone` varchar(80) DEFAULT NULL",
+            'income_tax_rate' => "ALTER TABLE `{$this->table}` ADD COLUMN `income_tax_rate` decimal(5,2) DEFAULT 30.00",
+            'include_oci_in_net' => "ALTER TABLE `{$this->table}` ADD COLUMN `include_oci_in_net` tinyint(1) DEFAULT 0",
         ];
 
         foreach ($columnMap as $column => $alterSql) {
@@ -92,6 +96,8 @@ class AppSettingTable
             'smtp_password' => '',
             'support_email' => '',
             'support_phone' => '',
+            'income_tax_rate' => 30.00,
+            'include_oci_in_net' => 0,
             'author' => null,
             'created' => null,
             'modified' => null,
@@ -116,6 +122,8 @@ class AppSettingTable
             'smtp_password' => $data['smtp_password'],
             'support_email' => $data['support_email'],
             'support_phone' => $data['support_phone'],
+            'income_tax_rate' => $data['income_tax_rate'],
+            'include_oci_in_net' => isset($data['include_oci_in_net']) ? (int)$data['include_oci_in_net'] : 0,
             'author' => $data['author'],
             'created' => $data['created'],
             'modified' => $data['modified'],
@@ -136,6 +144,8 @@ class AppSettingTable
             . "smtp_password=VALUES(smtp_password), "
             . "support_email=VALUES(support_email), "
             . "support_phone=VALUES(support_phone), "
+            . "income_tax_rate=VALUES(income_tax_rate), "
+            . "include_oci_in_net=VALUES(include_oci_in_net), "
             . "author=VALUES(author), "
             . "modified=VALUES(modified)";
 

@@ -97,7 +97,7 @@
 											$total_pres_expenditure = array();
 											$total_pres_income = array();?>
 											<tr class="grouprow">
-												<td class=""><?php echo $this->classObj->getColumn($class['id'],'code');?></td>
+												<td class=""><?php echo \Accounts\Support\AccountLabel::html($class['name']);?></td>
 												<?php
 													$suminclass= $this->tdetailsObj->sumbyclass($class['id'],$data['start_date'],$data['end_date'],$data['location'],$data['region'],'`debit`','`credit`');
 													foreach($suminclass as $sumc);
@@ -110,7 +110,7 @@
 											if($data['tier'] <= 3):
 												foreach($this->groupObj->get(array('class'=>$class['id'])) as $group):?>
 													<tr class="grouprow">
-														<td class="text-danger">&nbsp;<?php echo $this->groupObj->getColumn($group['id'],'code');?></td>
+														<td class="text-danger">&nbsp;<?php echo \Accounts\Support\AccountLabel::html($group['name']);?></td>
 														<?php 
 														$sumingroup= $this->tdetailsObj->sumbygroup($group['id'],$data['start_date'],$data['end_date'],$data['location'],$data['region'],'`debit`','`credit`');
 														foreach($sumingroup as $sumg);
@@ -123,7 +123,7 @@
 													if($data['tier'] <= 2):
 														foreach($this->headObj->get(array('group'=>$group['id'])) as $head):?>
 															<tr class="headrow">
-																<td class="text-success">&nbsp;&nbsp;<?php echo $this->headObj->getColumn($head['id'],'code');?></td>
+																<td class="text-success">&nbsp;&nbsp;<?php echo \Accounts\Support\AccountLabel::html($head['name'], $head['code']);?></td>
 																<?php 
 																$suminhead= $this->tdetailsObj->sumbyhead($head['id'],$data['start_date'],$data['end_date'],$data['location'],$data['region'],'`debit`','`credit`');
 																foreach($suminhead as $sumh);
@@ -136,7 +136,7 @@
 															if($data['tier'] <= 1):
 																foreach($this->subheadObj->get(array('head'=>$head['id'])) as $subhead):?>
 																	<tr class="subheadrow">
-																		<td>&nbsp;&nbsp;&nbsp;&nbsp;<?php echo $subhead['code'];?></td>
+																		<td>&nbsp;&nbsp;&nbsp;&nbsp;<?php echo \Accounts\Support\AccountLabel::html($subhead['name'], $subhead['code']);?></td>
 																		<?php 
 																		foreach($this->tdetailsObj->getsubheadbased($subhead['id'],$data['start_date'],$data['end_date'],$data['location'],$data['region'],'`debit`','`credit`') as $trans);
 																			$total_debit= $trans['debit'];

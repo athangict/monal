@@ -59,6 +59,30 @@ class BankaccountTable extends AbstractTableGateway
 	 * @param Int $id
 	 * @return Array
 	 */
+	public function getPayrollAccounts($location)
+	{
+		$sql = new Sql($this->adapter);
+		$select = $sql->select();
+		$select->from($this->table)
+			->columns(array('bank_account_id' => 'id', 'code', 'account'))
+			->where(array('location' => $location))
+			->order('code ASC');
+		return $this->adapter->query($sql->getSqlStringForSqlObject($select), Adapter::QUERY_MODE_EXECUTE)->toArray();
+	}
+
+	public function getPayrollMappings($location, $bankAccountId)
+	{
+		$sql = new Sql($this->adapter);
+		$select = $sql->select();
+		$select->from(array('ba' => $this->table))
+			->columns(array('bank_account_id' => 'id', 'code', 'account'))
+			->join(array('sh' => 'fa_sub_head'), 'sh.ref_id = ba.id', array('subhead_id' => 'id', 'subhead_name' => 'name'))
+			->join(array('h' => 'fa_head'), 'h.id = sh.head', array('head_id' => 'id', 'head_name' => 'name'))
+			->where(array('ba.location' => $location, 'ba.id' => $bankAccountId, 'sh.type' => 3))
+			->order(array('ba.code ASC', 'sh.code ASC'));
+		return $this->adapter->query($sql->getSqlStringForSqlObject($select), Adapter::QUERY_MODE_EXECUTE)->toArray();
+	}
+
 	public function getbank($param)
 	{
 		//$where = ( is_array($param) )? $param: array('id' => $param);
@@ -279,4 +303,3 @@ class BankaccountTable extends AbstractTableGateway
 		return $results;
 	}
 }		
-

@@ -103,7 +103,7 @@
 										foreach($location_detail as $row);?>
 										<td><?php echo $row['location'];?></td> 
 											<?php endif;?>
-										<td><?php echo $subheadrow['name'];?></td>
+										<td><?php echo \Accounts\Support\AccountLabel::html($subheadrow['name'], $subheadrow['code']);?></td>
 										<td class = "red" style="text-align:right"><?php echo number_format((float)$opening_balance, 2, '.', ',');?></td>
 										<td class = "green" style="text-align:right"><?php echo number_format((float)$total_debit, 2, '.', ',');?></td>
 										<td class = "green" style="text-align:right"><?php echo number_format((float)$total_credit, 2, '.', ',');?></td>
@@ -196,5 +196,4 @@
 		});
 	});
 </script>
-
 

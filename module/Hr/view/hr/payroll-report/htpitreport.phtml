@@ -143,26 +143,22 @@
 			<table class="table table-condensed table-bordered" id="htpi">
 				<thead>
 					<tr>
-						<th rowspan="2">#</th>
-						<th rowspan="2">NAME OF EMPLOYEE</th>
-						<th rowspan="2">CID NO.</th>
-						<th rowspan="2">TAX PAYER NO.</th>
-						<th rowspan="2">BASIC SALARY</th>
-						<th colspan="<?php echo $earning;?>" style="text-align:center">ALLOWANCES</th>
-						<th rowspan="2">GROSS SALARY</th>
-						<th rowspan="2">SALARY TAX</th>
-						<th rowspan="2">HEALTH CONTRIB.</th>
-						<th rowspan="2">TOTAL TAX</th>
-						<th rowspan="2">Remarks</th>
-						<th rowspan="2">Action</th>
-					</tr>
-					<tr>
-						<!-- Earnings columns -->
+						<th>#</th>
+						<th>NAME OF EMPLOYEE</th>
+						<th>CID NO.</th>
+						<th>TAX PAYER NO.</th>
+						<th>BASIC SALARY</th>
 						<?php foreach($earningHead as $row):
 							if($row['id']!=1 && $row['id']!=2 && $row['id']!=10 && $row['id']!=45 && $row['id']!=46 && $row['id']!=47):?>
 								<th><?php echo $row['code'];?></th>
 						<?php endif;
-							endforeach;?> 
+							endforeach;?>
+						<th>GROSS SALARY</th>
+						<th>SALARY TAX</th>
+						<th>HEALTH CONTRIB.</th>
+						<th>TOTAL TAX</th>
+						<th>Remarks</th>
+						<th>Action</th>
 					</tr>
 				</thead>
 				<tbody>
@@ -308,7 +304,7 @@
 					endif;?>	
 				     <tr>
 						<td></td>
-						<td></strong></td>
+						<td></td>
 						<td></td>
 						<td> <strong>Total:   </strong></td>
 						<td><strong><?php echo $this->decimal($tot_basic_salary);?></strong></td>

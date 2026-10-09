@@ -45,10 +45,7 @@
 						elseif($against == '-2'):
 							$againstName = 'PIT Net Pay';
 							$Gross_amount = $this->temppayrollObj->getColumn(array('employee'=>$employee),'gross');
-							$PFDed = $this->paystructureObj->getColumn(array('employee'=>$employee, 'pay_head'=>9),'amount');
-							$GISDed = $this->paystructureObj->getColumn(array('employee'=>$employee, 'pay_head'=>12),'amount');
-							$LTC = $this->paystructureObj->getColumn(array('employee'=>$employee, 'pay_head'=>6),'amount');
-							$baseamount = $Gross_amount - $PFDed - $GISDed;
+							$baseamount = $this->paystructureObj->getPitNetPay($employee, $Gross_amount);
 						endif;
 						$readonly = 'readonly';
 					?>
@@ -67,15 +64,7 @@
 						elseif($against == '-2'):
 							$againstName = 'PIT Net Pay';
 							$Gross_amount = $this->temppayrollObj->getColumn(array('employee'=>$employee),'gross');
-							$PFDed = $this->paystructureObj->getColumn(array('employee'=>$employee, 'pay_head'=>9),'amount');
-							$GISDed = $this->paystructureObj->getColumn(array('employee'=>$employee, 'pay_head'=>12),'amount');
-							$LTC = $this->paystructureObj->getColumn(array('employee'=>$employee, 'pay_head'=>6),'amount');
-							/*if(empty($NonTaxable)):
-								$NonTaxable=0;
-							else:
-								$NonTaxable = $this->paystructureObj->getColumn(array('employee'=>$employee, 'pay_head'=>21),'amount');
-							endif;*/
-							$baseamount = $Gross_amount - $PFDed - $GISDed;
+							$baseamount = $this->paystructureObj->getPitNetPay($employee, $Gross_amount);
 						endif;
 						$readonly = 'readonly';
 					?>

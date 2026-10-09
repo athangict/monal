@@ -20,7 +20,7 @@ class HeadTable extends AbstractTableGateway
 	 * Return All records of table
 	 * @return Array
 	 */
-	public function getAll()
+	public function getAll($order = 'code ASC')
 	{  
 	    $adapter = $this->adapter;
 	    $sql = new Sql($adapter);
@@ -29,7 +29,7 @@ class HeadTable extends AbstractTableGateway
 				->join(array('g'=>'fa_group'), 'g.id=h.group', array('group'=>'name', 'group_id'=>'id'))
 				->join(array('c'=>'fa_class'), 'c.id=g.class', array('class'=>'name', 'class_id'=>'id'))
 				->join(array('ht'=>'fa_head_type'), 'ht.id=h.head_type', array('head_type', 'headtype_id'=>'id'))
-				->order(array('code ASC'));
+				->order(array($order));
 	    
 	    $selectString = $sql->getSqlStringForSqlObject($select);
 		$results = $adapter->query($selectString, $adapter::QUERY_MODE_EXECUTE)->toArray();
@@ -657,4 +657,3 @@ class HeadTable extends AbstractTableGateway
 		return $column;
 	}
 }
-

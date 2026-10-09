@@ -44,7 +44,7 @@
 								?>
 								
 									<option value="<?php echo $head['id'];?>" <?php echo $selected_head;?>>
-										<?php echo $head['code'];?>
+										<?php echo \Accounts\Support\AccountLabel::html($head['name'], $head['code']);?>
 									</option>
 								<?php endforeach;?>
 							</select>
@@ -59,7 +59,7 @@
 										$selected_subhead = ($subhead['id']==$data['sub_head'])?'selected':'';
 								?>
 									<option value="<?php echo $subhead['id']?>" <?php echo $selected_subhead;?>>
-										<?php echo $subhead['code'].'-'.$subhead['name'];?>
+										<?php echo \Accounts\Support\AccountLabel::html($subhead['name'], $subhead['code']);?>
 									</option>
 								<?php endforeach;?>
 							</select>
@@ -98,16 +98,16 @@
 				<div class="space-6"></div>
 				<div class="row col-lg-12">
 					<div class="clearfix">
-						<label><i class="blue fa fa-cube"></i> <strong>Ledger : </strong></label><span><?php echo (!isset($data['head']))?'-select-':$this->headObj->getColumn($data['head'],'code');?></span>.&nbsp;&nbsp;
-						<label><i class="orange fa fa-cubes"></i> <strong>Sub-Ledger: </strong></label><span><?php echo ($data['sub_head']== -1 || !isset($data['sub_head']))?'All Sub-heads':$this->subheadObj->getColumn($data['sub_head'],'code');?></span>.&nbsp;&nbsp;
+						<label><i class="blue fa fa-cube"></i> <strong>Ledger : </strong></label><span><?php echo (!isset($data['head']))?'-select-':\Accounts\Support\AccountLabel::html($this->headObj->getColumn($data['head'],'name'), $this->headObj->getColumn($data['head'],'code'));?></span>.&nbsp;&nbsp;
+						<label><i class="orange fa fa-cubes"></i> <strong>Sub-Ledger: </strong></label><span><?php echo ($data['sub_head']== -1 || !isset($data['sub_head']))?'All Sub-heads':\Accounts\Support\AccountLabel::html($this->subheadObj->getColumn($data['sub_head'],'name'), $this->subheadObj->getColumn($data['sub_head'],'code'));?></span>.&nbsp;&nbsp;
 						<label><i class="red fa fa-map-marker"></i> <strong>Location: </strong></label><span><?php echo ($data["location"] == -1 || !isset($data['location']))? "All Locations": $this->locationObj->getColumn($data["location"], 'location');?></span>.&nbsp;&nbsp;
 						<label><i class="green fa fa-calendar"></i> <strong>Date: </strong></label><span><?php echo (!isset($data['start_date']))?'-select-':$data['start_date'].' to '.$data['end_date'];?></span>
 					</div>
 				</div>
 				<div class="row col-lg-12">
 					<div class="clearfix">
-					<input type="hidden" name="heads" id="heads" value="<?php echo (!isset($data['head']))?'-select-':$this->headObj->getColumn($data['head'],'code');?>">
-					<input type="hidden" name="sub_heads" id="sub_heads" value="<?php echo ($data['sub_head']== -1 || !isset($data['sub_head']))?'All Sub-heads':$this->subheadObj->getColumn($data['sub_head'],'code');?>">
+					<input type="hidden" name="heads" id="heads" value="<?php echo (!isset($data['head']))?'-select-':\Accounts\Support\AccountLabel::html($this->headObj->getColumn($data['head'],'name'), $this->headObj->getColumn($data['head'],'code'));?>">
+					<input type="hidden" name="sub_heads" id="sub_heads" value="<?php echo ($data['sub_head']== -1 || !isset($data['sub_head']))?'All Sub-heads':\Accounts\Support\AccountLabel::html($this->subheadObj->getColumn($data['sub_head'],'name'), $this->subheadObj->getColumn($data['sub_head'],'code'));?>">
 					<input type="hidden" name="act" id="act" value="<?php //echo ($data["activity"] == -1 || !isset($data['activity']))? "All Activities": $this->activityObj->getColumn($data["activity"], 'activity');?>">
 					<input type ="hidden" id = "loc" name = "loc" value = "<?php echo ($data["location"] == -1 || !isset($data['location']))? "All Locations": $this->locationObj->getColumn($data["location"], 'location');?>">
 					<input type="hidden" name="st_date" id="st_date" value="<?php echo $data['start_date']?>">

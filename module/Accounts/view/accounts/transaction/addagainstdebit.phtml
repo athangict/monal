@@ -120,7 +120,7 @@
 															<?php 
 																foreach ($heads as $head):
 															?>
-																<option value="<?php echo $head['id'];?>"><?php echo $head['code'];?></option>
+																<option value="<?php echo $head['id'];?>"><?php echo \Accounts\Support\AccountLabel::html($head['name'], $head['code']);?></option>
 															<?php 
 																endforeach;
 															?>
@@ -189,7 +189,7 @@
 															<?php 
 																foreach ($heads as $head):
 															?>
-																<option value="<?php echo $head['id'];?>"> <?php echo $head['code'];?></option>
+																<option value="<?php echo $head['id'];?>"> <?php echo \Accounts\Support\AccountLabel::html($head['name'], $head['code']);?></option>
 															<?php 
 																endforeach;
 															?>
@@ -268,6 +268,52 @@
 			['<?php echo $this->url("ajresponse", array("action" => "getsubhead")); ?>',
 			'<?php echo $this->url("ajresponse", array("action" => "gettransactions")); ?>',
 			'<?php echo $this->url("ajresponse", array("action" => "getamount")); ?>']});	
+
+		// Ensure reliable reference loading and amount population for payment against-debit flow.
+		$('#trdetails_table').off('change', 'select[id^="sub_head"]');
+		$('#trdetails_table').off('change', 'select[id^="reference"]');
+
+		$('#trdetails_table').on('change', 'select[id^="sub_head"]', function(){
+			var $row = $(this).closest('tr');
+			var $reference = $row.find('select[id^="reference"]');
+			var subHeadId = $(this).val();
+
+			if (!subHeadId) {
+				$reference.html('<option value="">NAN</option>');
+				$reference.trigger('chosen:updated');
+				return;
+			}
+
+			$.post(
+				'<?php echo $this->url("ajresponse", array("action" => "gettransactions")); ?>',
+				{ sub_head: subHeadId },
+				function(html){
+					$reference.html(html);
+					$reference.trigger('chosen:updated');
+				}
+			);
+		});
+
+		$('#trdetails_table').on('change', 'select[id^="reference"]', function(){
+			var refId = $(this).val();
+			var $row = $(this).closest('tr');
+			var $debit = $row.find('input[id^="debit"]');
+			var $credit = $row.find('input[id^="credit"]');
+
+			if (!refId || refId === '0') {
+				$debit.val('0.000').trigger('change');
+				$credit.val('0.000').trigger('change');
+				return;
+			}
+
+			$.getJSON(
+				'<?php echo $this->url("ajresponse", array("action" => "getamount")); ?>/' + refId,
+				function(data){
+					$debit.val(data.debit || '0.000').trigger('change');
+					$credit.val(data.credit || '0.000').trigger('change');
+				}
+			);
+		});
 		//formValidation
 		$('form')         
 		.formValidation({

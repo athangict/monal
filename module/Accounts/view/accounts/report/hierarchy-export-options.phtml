@@ -1,0 +1,20 @@
+var hierarchyExportOptions = {
+	modifier: { selected: null },
+	customizeData: function(data) {
+		data.body = $('#dataTables tbody tr:visible').map(function() {
+			return [$(this).children('td').map(function() {
+				var $cell = $(this).clone();
+				$cell.find('.tb-caret').remove();
+				return $cell.text().trim();
+			}).get()];
+		}).get();
+		var depths = { class: 0, group: 1, headtype: 2, head: 3, subhead: 4 };
+		$('#dataTables tbody tr:visible').each(function(index) {
+			var $row = $(this);
+			var depth = depths[$row.attr('data-level')] || 0;
+			var $caret = $row.find('.tb-caret').first();
+			var symbol = $caret.length ? ($caret.attr('data-state') === 'expanded' ? '- ' : '+ ') : '';
+			data.body[index][0] = new Array(depth * 4 + 1).join(' ') + symbol + data.body[index][0];
+		});
+	}
+};

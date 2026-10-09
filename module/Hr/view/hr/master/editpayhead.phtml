@@ -42,22 +42,7 @@
 					<label for="pay_head" class="control-label">Code</label>
 					<input class="form-control" name="code" id="code" value="<?php echo $code; ?>" required >
 				</div>
-				<div class="form-group">
-					<label for="fa_sub_head" class="control-label">Finance Sub Head</label>
-					<select class="form-control" id="fa_sub_head" name="fa_sub_head" data-placeholder="Select" required>
-					<option value=""></option>
-						<?php 
-						foreach ($fa_subhead as $fa_subheads):
-						 $selected = ($fa_sub_head == $fa_subheads['id'])? "selected":"";
-						?>
-							<option value="<?php echo $fa_subheads['id'];?>" <?php echo $selected;?>>
-								<?php echo $fa_subheads['name'];?>
-							</option>
-						<?php
-						endforeach;
-						?>
-					</select>
-				</div>
+				<?php echo $this->partial('hr/master/payhead-subhead-options.phtml', array('subheads' => $fa_subhead, 'selectedSubhead' => $fa_sub_head)); ?>
 				<div class="form-group">
     				<label for="type" class="control-label">Type </label>
     				<?php 
@@ -163,6 +148,16 @@
 $('document').ready(function(){
 	const fv = FormValidation.formValidation(document.getElementById('#form'), {
 		fields: {
+			payhead_type: {
+				validators: {
+					notEmpty: { message: 'Please select PayHead Type.' }
+				}
+			},
+			fa_sub_head: {
+				validators: {
+					notEmpty: { message: 'Please select a linked Finance Sub Head.' }
+				}
+			},
 			pay_head: {
 				validators: {
 					notEmpty: {
@@ -221,6 +216,7 @@ $('document').ready(function(){
 			$('div#'+ e.field.replace('[]','') +'_chosen').addClass('is-invalid');
 		}
 	});
+	<?php echo $this->partial('hr/master/payhead-subhead-filter.phtml'); ?>
 	if($("input[name='type']")==1){
 			$("#against_container").css('display','none');
 			$("#percentage_container").css('display','none');

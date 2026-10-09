@@ -139,7 +139,7 @@
 							<?php 
 							if($data['tier'] <= 4):?>
 							<tr class="classrow">
-								<td class=""><?php echo $classrow['name'];?> </td>
+								<td class=""><?php echo \Accounts\Support\AccountLabel::html($classrow['name']);?> </td>
 							<?php 
 						    endif;?>
 								<?php 
@@ -165,7 +165,7 @@
 							if($data['tier'] <= 3):  
 								foreach($this->groupObj->getTransactionGroup($data['activity'],$data['region'],$data['location'],$data['start_date'],$data['end_date'],array('class'=>$classrow['id'],'status'=>'8')) as $grouprow): // group ?>													
 									<tr class="grouprow">
-										<td class="text-danger">&nbsp;<?php echo $grouprow['name'];?></td>
+										<td class="text-danger">&nbsp;<?php echo \Accounts\Support\AccountLabel::html($grouprow['name']);?></td>
 										<?php 
 											$pres_closing_balance = $this->transactiondetailObj->getClosingBalanceforPresPLSA($data['activity'],$data['region'],$data['location'],$data['start_date'],$data['end_date'], $grouprow['id'], 3);	
 											$prev_closing_balance = $this->transactiondetailObj->getClosingBalanceforPrevPLSA($data['activity'],$data['region'],$data['location'],$pre_starting_date,$pre_ending_date, $grouprow['id'], 3);	
@@ -179,7 +179,7 @@
 									foreach($this->headauditObj->get(array('group'=>$grouprow['id'])) as $htype):
 										foreach($this->headObj->getTransactionHead($data['activity'],$data['region'],$data['location'],$data['start_date'],$data['end_date'], array('format_audit'=>$htype['id'])) as $headrow): // head ?>													
 											<tr class="headrow">
-												<td class="text-success">&nbsp;&nbsp;<?php echo $this->headauditObj->getColumn($headrow['format_audit'],'name');?></td>
+												<td class="text-success">&nbsp;&nbsp;<?php echo \Accounts\Support\AccountLabel::html($this->headauditObj->getColumn($headrow['format_audit'],'name'));?></td>
 												<?php 
 													$pres_closing_balance = $this->transactiondetailObj->getClosingBalanceforPresPLSA($data['activity'],$data['region'],$data['location'],$data['start_date'],$data['end_date'], $headrow['format_audit'], 2);
 													$prev_closing_balance = $this->transactiondetailObj->getClosingBalanceforPrevPLSA($data['activity'],$data['region'],$data['location'],$pre_starting_date,$pre_ending_date, $headrow['format_audit'], 2);
@@ -197,7 +197,7 @@
 												if($data['tier'] <= 1):
 													foreach($this->subheadObj->getTransactionSubhead($data['activity'],$data['region'],$data['location'],$data['start_date'],$data['end_date'], array('head'=>$headrow['id'])) as $subheadrow): // subhead ?>															
 														<tr class="subheadrow">
-															<td>&nbsp;&nbsp;&nbsp;&nbsp;<?php echo $subheadrow['name'];?></td>
+															<td>&nbsp;&nbsp;&nbsp;&nbsp;<?php echo \Accounts\Support\AccountLabel::html($subheadrow['name'], $subheadrow['code']);?></td>
 															<?php 
 																$pres_closing_balance = $this->transactiondetailObj->getClosingBalanceforPresPLS($data['activity'],$data['region'],$data['location'],$data['start_date'],$data['end_date'], $subheadrow['id'], 1);	
 																$prev_closing_balance = $this->transactiondetailObj->getClosingBalanceforPrevPLS($data['activity'],$data['region'],$data['location'],$pre_starting_date,$pre_ending_date, $subheadrow['id'], 1);	
@@ -217,7 +217,7 @@
 								endforeach;
 							endif; ?>
 							<tr class="classrow">
-								<td> Total <?php echo $classrow['name'];$grand_pres_total=0;?>: </td>
+								<td> Total <?php echo \Accounts\Support\AccountLabel::html($classrow['name']);$grand_pres_total=0;?>: </td>
 								<?php
 									if($classrow['id'] == 3):
 										$grand_pres_total = $total_pres_income;

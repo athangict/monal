@@ -263,6 +263,7 @@ class EmployeeController extends AbstractActionController
 		return new ViewModel(array(
 			'title' => 'Employee',
 			'employee' => $this->getDefinedTable(Hr\EmployeeTable::class),
+			'canAddEmployee' => in_array((string) $this->_highest_role, array_map('trim', explode(',', (string) $this->_login_role)), true),
 			'data' => $data,	
 			'employee_status' => $this->getDefinedTable(Hr\EmployeeStatusTable::class)->getAll(),
 			'department' => $this->getDefinedTable(Administration\DepartmentTable::class),
@@ -278,6 +279,11 @@ class EmployeeController extends AbstractActionController
 	public function addemployeeAction()
 	{
 		$this->init();
+		$loginRoles = array_map('trim', explode(',', (string) $this->_login_role));
+		if (!in_array((string) $this->_highest_role, $loginRoles, true)) {
+			$this->flashMessenger()->addMessage('error^ You dont have right to access this page!');
+			return $this->redirect()->toRoute('employee', array('action' => 'index'));
+		}
 		if($this->_id > 0):
 			return $this->redirect()->toRoute('employee', array('action' => 'view', 'id' => $this->_id));
 		endif;

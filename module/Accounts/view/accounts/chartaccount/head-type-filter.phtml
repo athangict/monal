@@ -1,0 +1,22 @@
+const headForm = $(document.getElementById('#form'));
+const groupSelect = headForm.find('[name="group"]');
+const headTypeSelect = headForm.find('[name="head_type"]');
+const headTypeOptions = headTypeSelect.find('option[value!=""]').clone();
+
+function filterHeadTypes() {
+	const groupId = groupSelect.val();
+	const selectedId = headTypeSelect.val();
+	const matchingOptions = headTypeOptions.filter(function () {
+		return groupId && $(this).attr('data-group') === groupId;
+	});
+	headTypeSelect.empty().append($('<option>', {
+		value: '',
+		text: !groupId ? 'Select Group first' : (matchingOptions.length ? '' : 'No Head Types in this Group')
+	})).append(matchingOptions.clone());
+	const keepSelection = matchingOptions.toArray().some(option => option.value === selectedId);
+	headTypeSelect.val(keepSelection ? selectedId : '').prop('disabled', !groupId).trigger('chosen:updated');
+	fv.resetField('head_type');
+}
+
+groupSelect.on('change', filterHeadTypes);
+filterHeadTypes();

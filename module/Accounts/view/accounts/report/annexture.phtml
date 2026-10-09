@@ -55,7 +55,7 @@
 								?>
 								
 									<option value="<?php echo $head['id'];?>" <?php echo $selected_head;?>>
-										<?php echo $head['code'];?>
+										<?php echo \Accounts\Support\AccountLabel::html($head['name'], $head['code']);?>
 									</option>
 								<?php endforeach;?>
 							</select>
@@ -77,11 +77,11 @@
 				<div class="hr hr-dotted"></div>
 				<div class="row col-lg-12">
 					<label><i class="green fa fa-calendar"></i> <strong>Date : </strong></label><span><?php echo (!isset($data['start_date']))?'-select-':$data['start_date'].' to '.$data['end_date'];?></span>
-					<label><i class="orange fa fa-cubes"></i> <strong>Head: </strong></label><span><?php echo ($data['head']=='-1' || !isset($data['head']))?'All heads':$this->headObj->getColumn($data['head'],'code');?></span>.&nbsp;&nbsp;
+					<label><i class="orange fa fa-cubes"></i> <strong>Head: </strong></label><span><?php echo ($data['head']=='-1' || !isset($data['head']))?'All heads':\Accounts\Support\AccountLabel::html($this->headObj->getColumn($data['head'],'name'), $this->headObj->getColumn($data['head'],'code'));?></span>.&nbsp;&nbsp;
 				</div>
 				<div class="row col-lg-12">
 					<div class="clearfix">
-						<input type="hidden" name="head" id="head" value="<?php echo ($data['head']=='-1' || !isset($data['head']))?'All':$this->headObj->getColumn($data['head'],'code');?>">
+						<input type="hidden" name="head" id="head" value="<?php echo ($data['head']=='-1' || !isset($data['head']))?'All':\Accounts\Support\AccountLabel::html($this->headObj->getColumn($data['head'],'name'), $this->headObj->getColumn($data['head'],'code'));?>">
 						<input type="hidden" name="st_date" id="st_date" value="<?php echo $data['start_date']?>">
 						<input type="hidden" name="ed_date" id="ed_date" value="<?php echo $data['end_date'];?>">
 					</div>
@@ -155,7 +155,7 @@
 										?>
 										<td><?php echo $locationName;?></td> 
 											<?php endif;?>
-										<td><?php echo $subheadrow['code'].'-'.$subheadrow['name'];?></td>
+										<td><?php echo \Accounts\Support\AccountLabel::html($subheadrow['name'], $subheadrow['code']);?></td>
 										<td class = "red" style="text-align:right"><?php echo number_format((float)$opening_balance, 2, '.', ',');?></td>
 										<td class = "green" style="text-align:right"><?php echo number_format((float)$total_debit, 2, '.', ',');?></td>
 										<td class = "green" style="text-align:right"><?php echo number_format((float)$total_credit, 2, '.', ',');?></td>

@@ -14,10 +14,7 @@
 		elseif($against == '-2'):
 			$againstName = 'PIT Net Pay';
 			$Gross_amount = $this->tempPayrollObj->getColumn(array('employee'=>$employee),'gross');
-			$PFDed = $this->paystructureObj->getColumn(array('employee'=>$employee, 'pay_head'=>9),'amount');
-			$GISDed = $this->paystructureObj->getColumn(array('employee'=>$employee, 'pay_head'=>12),'amount');
-			$LTC = $this->paystructureObj->getColumn(array('employee'=>$employee, 'pay_head'=>6),'amount');
-			$baseamount = $Gross_amount - $PFDed - $GISDed;
+			$baseamount = $this->paystructureObj->getPitNetPay($employee, $Gross_amount);
 		endif;
 	?>
 		<label for="percent">Percent ( against <?php echo $againstName; ?> : <b><?php echo $baseamount;?></b> ) </label>
@@ -34,32 +31,40 @@
 		elseif($against == '-2'):
 			$againstName = 'PIT Net Pay';
 			$Gross_amount = $this->tempPayrollObj->getColumn(array('employee'=>$employee),'gross');
-			$PFDed = $this->paystructureObj->getColumn(array('employee'=>$employee, 'pay_head'=>9),'amount');
-			$GISDed = $this->paystructureObj->getColumn(array('employee'=>$employee, 'pay_head'=>12),'amount');
-			$LTC = $this->paystructureObj->getColumn(array('employee'=>$employee, 'pay_head'=>6),'amount');
-			/*if(empty($NonTaxable)):
-				$NonTaxable=0;
-			else:
-				$NonTaxable = $this->paystructureObj->getColumn(array('employee'=>$employee, 'pay_head'=>21),'amount');
-			endif;*/
-			$basic = $Gross_amount - $PFDed - $GISDed;
+			$basic = $this->paystructureObj->getPitNetPay($employee, $Gross_amount);
 		endif;
 		$rate=0;  $base=0;  $value=0;  $min=0;
 	?>
 		<label for="basic"><?php echo $againstName;?> </label>
 		<input type="text" class="form-control" name="basic" id="basic" value="<?php echo $basic;?>" readonly > 
 		<?php 
-			foreach($this->payslabTable->get(array('pay_head' => $id)) as $payslab):
-				if(in_array($basic,range($payslab['from_range'],$payslab['to_range']))):
+			$matchedSlab = null;
+			$slabs = $this->payslabTable->get(array('pay_head' => $id));
+			foreach($slabs as $payslab):
+				if($basic >= $payslab['from_range'] && $basic <= $payslab['to_range']):
+					$matchedSlab = $payslab;
 					break;
 				endif;
 			endforeach;
-			if($payslab['formula'] == 1):
-				$rate = $payslab['rate'];
-				$base = $payslab['base'];
-				$min = $payslab['from_range'];
+			if ($matchedSlab === null):
+		?>
+			<div class="alert alert-danger" role="alert">
+				<?php echo empty($slabs)
+					? 'No pay slabs are configured for this Pay Head. Please configure the slabs before calculating the amount.'
+					: 'No pay slab matches this base amount. Please review the slab ranges before calculating the amount.'; ?>
+			</div>
+			<script>
+				$('#percent_div').closest('form').find('[name="amount"]').val('');
+			</script>
+		<?php
+				return;
+			endif;
+			if($matchedSlab['formula'] == 1):
+				$rate = $matchedSlab['rate'];
+				$base = $matchedSlab['base'];
+				$min = $matchedSlab['from_range'];
 			else:
-				$value=$payslab['value'];
+				$value=$matchedSlab['value'];
 			endif;
 		?>		
 		<input type="hidden" class="form-control" name="rate" id="rate" value="<?php echo $rate;?>">

@@ -1,0 +1,22 @@
+const payheadForm = $(document.getElementById('#form'));
+const payheadTypeSelect = payheadForm.find('[name="payhead_type"]');
+const financeSubheadSelect = payheadForm.find('[name="fa_sub_head"]');
+const financeSubheadOptions = financeSubheadSelect.find('option[value!=""]').clone();
+
+function filterFinanceSubheads() {
+	const typeId = payheadTypeSelect.val();
+	const selectedId = financeSubheadSelect.val();
+	const matchingOptions = financeSubheadOptions.filter(function () {
+		return typeId && $(this).attr('data-payhead-type') === typeId;
+	});
+	financeSubheadSelect.empty().append($('<option>', {
+		value: '',
+		text: !typeId ? 'Select PayHead Type first' : (matchingOptions.length ? '' : 'No linked Finance Sub Head')
+	})).append(matchingOptions.clone());
+	const keepSelection = matchingOptions.toArray().some(option => option.value === selectedId);
+	financeSubheadSelect.val(keepSelection ? selectedId : '').trigger('chosen:updated');
+	fv.resetField('fa_sub_head');
+}
+
+payheadTypeSelect.on('change', filterFinanceSubheads);
+filterFinanceSubheads();

@@ -111,7 +111,8 @@ class PayrollController extends AbstractActionController
 	{		
 		$emp_id = $this->_user->employee;
 		$locations = explode(',',$this->getDefinedTable(Acl\UsersTable::class)->getcolumn($this->_user->id,'admin_location'));
-		if($this->_login_role==$this->_highest_role):
+		$loginRoles = array_map('trim', explode(',', (string) $this->_login_role));
+		if(in_array((string) $this->_highest_role, $loginRoles, true)):
 			$employeelist = $this->getDefinedTable(Hr\EmployeeTable::class)->getAll();
 		else:
 			$employeelist = $this->getDefinedTable(Hr\EmployeeTable::class)->getAll($emp_id, $locations);
@@ -159,6 +160,7 @@ class PayrollController extends AbstractActionController
                 'deptObj' =>$this->getDefinedTable(Administration\DepartmentTable::class),
 				'actObj' =>$this->getDefinedTable(Administration\ActivityTable::class),
 				'transactionObj' =>$this->getDefinedTable(Accounts\TransactionTable::class),
+				'payrollBankAccounts' => $this->getDefinedTable(Accounts\BankaccountTable::class)->getPayrollAccounts($this->getPayrollLocation()),
 				'bookingbutton' => (sizeof($this->getDefinedTable(Hr\SalarybookingTable::class)->get(array('month'=> $month,'year'=> $year,'salary_advance'=>'1')))> 0)? True:False,
 				'advancebutton' => (sizeof($this->getDefinedTable(Hr\SalarybookingTable::class)->get(array('month'=> $month,'year'=> $year,'salary_advance'=>'2')))> 0)? True:False,
 		));
@@ -1471,27 +1473,54 @@ class PayrollController extends AbstractActionController
 	 * Process Bill Action
 	 *
 	 */
+	protected function getPayrollLocation()
+	{
+		$location = $this->getDefinedTable(Administration\UsersTable::class)->getColumn($this->_author, 'location');
+		if (!is_scalar($location) || !ctype_digit((string) $location) || (int) $location < 1) {
+			throw new \UnexpectedValueException('Please configure a valid user location before submitting payroll.');
+		}
+		return (int) $location;
+	}
+
 	public function commitpayrollAction()
 	{
 		$this->init();	
 		if($this->getRequest()->isPost()):		
 			$form = $this->getRequest()->getPost()->toArray();	
+			$payrollLocation = $this->getPayrollLocation();
+			$selectedBank = null;
+			$bankAccountId = isset($form['bank_account']) ? $form['bank_account'] : null;
+			if (is_scalar($bankAccountId) && ctype_digit((string) $bankAccountId)) {
+				foreach ($this->getDefinedTable(Accounts\BankaccountTable::class)->getPayrollAccounts($payrollLocation) as $bankAccount) {
+					if ((int) $bankAccount['bank_account_id'] === (int) $bankAccountId) {
+						$selectedBank = $bankAccount;
+						break;
+					}
+				}
+			}
+			if ($selectedBank === null) {
+				$this->flashMessenger()->addMessage('error^ Please select a bank account for your location.');
+				return $this->redirect()->toRoute('payroll', array('action'=>'payroll', 'id'=>$form['year'].'-'.$form['month']));
+			}
+			$bankMappings = $this->getDefinedTable(Accounts\BankaccountTable::class)->getPayrollMappings($payrollLocation, (int) $bankAccountId);
+			if (count($bankMappings) !== 1) {
+				$this->flashMessenger()->addMessage(count($bankMappings) === 0
+					? 'error^ The selected bank account has no valid Finance Head/Subhead mapping. Configure its Sub Head Details before submitting payroll.'
+					: 'error^ The selected bank account has multiple Finance Subhead mappings. Configure a single payment mapping before submitting payroll.');
+				return $this->redirect()->toRoute('payroll', array('action'=>'payroll', 'id'=>$form['year'].'-'.$form['month']));
+			}
+			$selectedBank = $bankMappings[0];
 			
 			$this->_connection->beginTransaction(); //***Transaction begins here***//
+			try {
 			/*Get users under destination location with sub role Depoy Manager*/
 				$region = $this->getDefinedTable(Administration\UsersTable::class)->getColumn(array('id'=>$this->_author),'region');
-				$loc = $this->getDefinedTable(Administration\LocationTable::class)->getcolumn($this->_user->location, 'prefix');
+				$loc = $this->getDefinedTable(Administration\LocationTable::class)->getcolumn($payrollLocation, 'prefix');
 				$prefix = $this->getDefinedTable(Accounts\JournalTable::class)->getcolumn(12,'prefix');
 				$date = date('ym',strtotime(date('Y-m-d')));
 				$tmp_VCNo = $loc.'-'.$prefix.$date;
 				
-				$results = $this->getDefinedTable(Accounts\TransactionTable::class)->getSerial($tmp_VCNo);
-				
-				$pltp_no_list = array();
-				foreach($results as $result):
-					array_push($pltp_no_list, substr($result['voucher_no'], 14));
-				endforeach;
-				$next_serial = max($pltp_no_list) + 1;
+				$next_serial = $this->getDefinedTable(Accounts\TransactionTable::class)->getNextSerial($tmp_VCNo);
 					
 				switch(strlen($next_serial)){
 					case 1: $next_dc_serial = "0000".$next_serial; break;
@@ -1503,7 +1532,7 @@ class PayrollController extends AbstractActionController
 				$voucher_no = $tmp_VCNo.$next_dc_serial;
 			//if($form['action'] == "1")  
 			   // {    /* Send bill */
-			$location= $this->_user->location;
+			$location= $payrollLocation;
 			$payrollNetAmount = $this->getDefinedTable(Hr\PayrollTable::class)->getSumGross('gross',array('year'=>$form['year'],'month'=>$form['month']));
 			$payrollNetPay = $this->getDefinedTable(Hr\PayrollTable::class)->getSumGross('net_pay',array('year'=>$form['year'],'month'=>$form['month']));
 		   //print_r($payrollNetPay);exit;
@@ -1542,6 +1571,9 @@ class PayrollController extends AbstractActionController
 							'modified' 			=>$this->_modified,
 						);
 						$flow=$this->getDefinedTable(Administration\FlowTransactionTable::class)->save($flow);
+						if (!$flow) {
+							throw new \RuntimeException('Failed to create payroll approval flow.');
+						}
 						$PayheadDistinct=$this->getDefinedTable(Hr\PaydetailTable::class)->getDistinct('ph.payhead_type',array('deduction'=>0));
 						$data1=array(
 						'year'=>$form['year'],
@@ -1570,6 +1602,9 @@ class PayrollController extends AbstractActionController
 						);
 					   $empexpensedata = $this->_safedataObj->rteSafe($empexpensedata);
 					   $result1 = $this->getDefinedTable(Accounts\TransactiondetailTable::class)->save($empexpensedata);
+					   if (!$result1) {
+						   throw new \RuntimeException('Failed to save payroll expense entry.');
+					   }
 					endforeach;
 					/**Current Liabilities */
 					$PayheadDed=$this->getDefinedTable(Hr\PaydetailTable::class)->getDistinctDeduction('ph.payhead_type',$data1,array('deduction'=>1));
@@ -1597,6 +1632,9 @@ class PayrollController extends AbstractActionController
 						
 						$cldata = $this->_safedataObj->rteSafe($cldata);
 						$result2 = $this->getDefinedTable(Accounts\TransactiondetailTable::class)->save($cldata);
+						if (!$result2) {
+							throw new \RuntimeException('Failed to save payroll deduction entry.');
+						}
 					endforeach;
 					$employeeDeduction=$this->getDefinedTable(Hr\PaydetailTable::class)->getEmployeeDed('location',$data1,array('ph.payhead_type'=>30));
 						foreach($employeeDeduction as $employeeDeductions):
@@ -1623,19 +1661,22 @@ class PayrollController extends AbstractActionController
 						);
 						$empdeductiondata = $this->_safedataObj->rteSafe($empdeductiondata);
 						$result3 = $this->getDefinedTable(Accounts\TransactiondetailTable::class)->save($empdeductiondata);
+						if (!$result3) {
+							throw new \RuntimeException('Failed to save employee deduction entry.');
+						}
 					endforeach;
 					$netpaydata = array(
 							'transaction' => $resultTrans,
 							'voucher_dates' => $data['voucher_date'],
 							'voucher_types' => 12,
 							'location' => $location,
-							'head' =>'36',
-							'sub_head' =>'172',
+							'head' => $selectedBank['head_id'],
+							'sub_head' => $selectedBank['subhead_id'],
 							'bank_ref_type' => '',
 							'debit' =>'0.00',
 							'credit' =>str_replace( ",", "",$payrollNetPay),
-							'ref_no'=> 'PAYROLL', 
-							'type' => '1',//user inputted  data
+							'ref_no'=> '', 
+							'type' => '1',//user inputted  
 							'status' => 3, // status applied
 							'activity'=>$location,
 							'author' =>$this->_author,
@@ -1646,7 +1687,7 @@ class PayrollController extends AbstractActionController
 						$result4 = $this->getDefinedTable(Accounts\TransactiondetailTable::class)->save($netpaydata);
 					}
 							
-				if($result1):
+				if(!empty($result1) && !empty($result4)):
 			    	$notification_data = array(
 					    'route'         => 'transaction',
 						'action'        => 'againstdebit',
@@ -1663,7 +1704,7 @@ class PayrollController extends AbstractActionController
 						$user = $this->getDefinedTable(Administration\UsersTable::class)->get(array('role'=>array('6')));
 						foreach($user as $row):						    
 						    $user_location_id = $this->getDefinedTable(Administration\UsersTable::class)->getColumn($row['id'], 'location');
-						    if($user_location_id == $sourceLocation ):						
+						    if($user_location_id == $location ):
 							    $notify_data = array(
 								    'notification' => $notificationResult,
 									'user'    	   => $row['id'],
@@ -1681,8 +1722,13 @@ class PayrollController extends AbstractActionController
 				$this->_connection->commit(); // commit transaction over success
 				$this->flashMessenger()->addMessage("success^Submitted the data");
 			else:
+				$this->_connection->rollback();
 			    $this->flashMessenger()->addMessage("error^ Cannot send request");			  
 			endif;
+			} catch (\Throwable $error) {
+				$this->_connection->rollback();
+				throw $error;
+			}
 			return $this->redirect()->toRoute('payroll',array('action'=>'payroll'));
 		endif; 		
 		$viewModel =  new ViewModel(array(
@@ -1896,7 +1942,9 @@ class PayrollController extends AbstractActionController
 		$deduction = $this->getDefinedTable(Hr\PayheadtypeTable::class)->getColumn($payhead_type, 'deduction');
 
 		if($deduction == 1):
-			$affected_ps = $this->getDefinedTable(Hr\PaystructureTable::Class)->get(array('sd.employee'=>$employee, 'ph.against'=> $payhead_id));
+			$code = $this->getDefinedTable(Hr\PayheadTable::class)->getColumn($payhead_id, 'code');
+			$against = in_array(strtoupper($code), array('PF', 'GIS'), true) ? array($payhead_id, '-2') : $payhead_id;
+			$affected_ps = $this->getDefinedTable(Hr\PaystructureTable::Class)->get(array('sd.employee'=>$employee, 'ph.against'=> $against));
 		else:
 			$affected_ps = $this->getDefinedTable(Hr\PaystructureTable::Class)->get(array('sd.employee'=>$employee, 'ph.against'=> array($payhead_id,'-1','-2')));
 		endif;
@@ -2056,9 +2104,7 @@ class PayrollController extends AbstractActionController
 			if(sizeof($againstPitNet)>0){
 			   foreach($againstPitNet as $aff_ps):
 				   $Gross_amount = $this->getDefinedTable(Hr\TempPayrollTable::class)->getColumn(array('employee'=>$employee),'gross');
-				   $PFDed = $this->getDefinedTable(Hr\PaystructureTable::Class)->getColumn(array('employee'=>$employee, 'pay_head'=>7),'amount');
-				   $GISDed = $this->getDefinedTable(Hr\PaystructureTable::Class)->getColumn(array('employee'=>$employee, 'pay_head'=>6),'amount');
-				   $base_amount = $Gross_amount - $PFDed - $GISDed;
+				   $base_amount = $this->getDefinedTable(Hr\PaystructureTable::class)->getPitNetPay($employee, $Gross_amount);
 				   if($aff_ps['type'] == 2){
 					  $amount = ($base_amount*$aff_ps['percent'])/100;
 						if($aff_ps['roundup'] == 1):

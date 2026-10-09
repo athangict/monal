@@ -61,19 +61,19 @@
 					<div class="form-group col-lg-4">
 						<div class="form-group" id="rate_container">
 							<label for="rate" class="control-label">Rate</label>
-							<input type="text" class="form-control" name="rate" id="rate" placeholder="Rate" required/> 
+							<input type="text" class="form-control" name="rate" id="rate" placeholder="Rate"/>
 						</div>
 					</div>
 					<div class="form-group col-lg-4">
 						<div class="form-group" id="base_container">
 							<label for="base" class="control-label">Base</label>
-							<input type="text" class="form-control" name="base" id="base" placeholder="Base" required/> 
+							<input type="text" class="form-control" name="base" id="base" placeholder="Base"/>
 						</div>
 					</div>
 					<div class="form-group col-lg-4">
 						<div class="form-group" id="value_container">
 							<label for="value" class="control-label">Value</label>
-							<input type="text" class="form-control" name="value" id="value" placeholder="Value" required/> 
+							<input type="text" class="form-control" name="value" id="value" placeholder="Value"/>
 						</div>
 					</div>
 				</div>
@@ -127,9 +127,6 @@ $('document').ready(function(){
 			},
 			rate: {
 				validators: {
-					notEmpty: {
-						message: 'Provide rate.'
-					},
 					regexp: {
 						regexp: /^\d*\.?\d*$/,
 						message: 'Please enter valid amount'
@@ -138,9 +135,6 @@ $('document').ready(function(){
 			},
 			base: {
 				validators: {
-					notEmpty: {
-						message: 'Please provide base amount.'
-					},
 					regexp: {
 						regexp: /^\d*\.?\d*$/,
 						message: 'Please enter valid amount'
@@ -149,9 +143,6 @@ $('document').ready(function(){
 			},
 			value: {
 				validators: {
-					notEmpty: {
-						message: 'Please enter amount.'
-					},
 					regexp: {
 						regexp: /^\d*\.?\d*$/,
 						message: 'Please enter valid amount'

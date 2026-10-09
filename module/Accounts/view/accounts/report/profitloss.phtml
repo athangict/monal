@@ -15,6 +15,47 @@
 	$grand_prev_total_expenditure=0;
 	$tax1=0;
 	$tax2=0;
+	$incomeTaxRate = isset($incomeTaxRate) ? (float)$incomeTaxRate : 30.00;
+	$incomeTaxFactor = $incomeTaxRate / 100;
+	$includeComprehensiveInNet = !empty($includeComprehensiveInNet);
+	$netCarryRuleLabel = $includeComprehensiveInNet
+		? 'Income - Expense - Tax + Comprehensive (OCI)'
+		: 'Income - Expense - Tax';
+	$resolvePlClassBucket = static function(array $classrow){
+		$classId = isset($classrow['id']) ? (int)$classrow['id'] : 0;
+		$classCode = strtoupper(trim((string)($classrow['code'] ?? '')));
+		$className = strtoupper(trim((string)($classrow['name'] ?? '')));
+		$label = trim($classCode.' '.$className);
+
+		if(strpos($label, 'PROFIT') !== false || strpos($label, 'LOSS') !== false):
+			return 'profitloss';
+		endif;
+		if(strpos($label, 'TAX') !== false):
+			return 'tax';
+		endif;
+		if(strpos($label, 'COMPREHENSIVE') !== false || $classCode === 'OCI' || $classCode === 'CI'):
+			return 'comprehensive';
+		endif;
+		if(
+			strpos($label, 'EXPENDITURE') !== false
+			|| strpos($label, 'EXPENSE') !== false
+			|| strpos($label, 'COST') !== false
+		):
+			return 'expenditure';
+		endif;
+		if(strpos($label, 'INCOME') !== false || strpos($label, 'REVENUE') !== false):
+			return 'income';
+		endif;
+
+		switch($classId):
+			case 3: return 'income';
+			case 4: return 'expenditure';
+			case 5: return 'comprehensive';
+			case 9: return 'tax';
+			case 10: return 'profitloss';
+			default: return '';
+		endswitch;
+	};
 ?>
 <?php echo $this->tabs_helper(array(684,691,685,686,687,688,689,690,699)); ?>
 <style>
@@ -23,30 +64,43 @@
 		outline: none !important;
 		box-shadow: none !important;
 	}
+	#dataTables {
+		width: 100% !important;
+	}
 	#monthly-close-form {
 		margin-top: 8px;
 	}
-	.monthly-close-actions {
-		display: flex;
-		flex-direction: column;
-		align-items: flex-end;
-		gap: 6px;
+	.report-action-wrap {
+		text-align: right;
 	}
-	.monthly-close-actions label {
-		margin: 0;
+	.report-action-buttons {
+		display: inline-flex;
+		gap: 4px;
 	}
-	.monthly-close-actions input[type="checkbox"] {
+	.force-reclose-inline {
+		display: block;
+		margin-bottom: 6px;
+	}
+	.force-reclose-inline input[type="checkbox"] {
 		vertical-align: middle;
 		margin-top: 0;
-	}
-	.generate-report-button {
-		margin-top: 26px;
 	}
 </style>
 <div class="card">
 	<div class="card-header">
 		<div class="row">
-			<div class="col-lg-12">
+			<div class="col-xs-12 col-lg-12">
+				<div class="alert alert-info" style="margin-bottom:10px;">
+					<strong>Net Profit/Loss Carry Rule:</strong> <?php echo $this->escapeHtml($netCarryRuleLabel); ?>
+					<?php if($includeComprehensiveInNet): ?>
+						<span class="label label-success" style="margin-left:8px;">OCI Included</span>
+					<?php else: ?>
+						<span class="label label-default" style="margin-left:8px;">OCI Excluded (Strict 4-Class)</span>
+					<?php endif; ?>
+					<div style="margin-top:6px;">
+						<small><strong>Note:</strong> To use OCI Included, create Comprehensive/OCI chart-of-account setup and post OCI transactions.</small>
+					</div>
+				</div>
 				<form data-toggle="validator" id="#form" method="post" action="<?php echo $this->url('report', array('action' => 'profitloss')); ?>"  enctype="multipart/form-data" >    
 					<div class="row">    
 						<div class="form-group col-lg-2">
@@ -88,9 +142,19 @@
 								endif;?>							
 							</select>
 						</div> 
-						<div class="form-group col-lg-2 col-lg-offset-2">
+						<div class="form-group col-lg-4 report-action-wrap">
 							<label class="control-label" aria-hidden="true">&nbsp;</label>
-							<button type="submit" class="btn btn-sm btn-success pull-right generate-report-button"><i class="fa fa-gear"></i> Generate </button>
+							<div>
+								<?php if(isset($canForceReclose, $hasExistingCloseSnapshot) && $canForceReclose && $hasExistingCloseSnapshot): ?>
+								<label class="force-reclose-inline">
+									<input type="checkbox" id="force_reclose_chk" value="1"> Force Re-close (Admin)
+								</label>
+								<?php endif; ?>
+								<div class="report-action-buttons">
+									<button type="submit" class="btn btn-sm btn-success"><i class="fa fa-gear"></i> Generate </button>
+									<button type="button" id="run-monthly-close-btn" class="btn btn-sm btn-primary"><i class="fa fa-refresh"></i> Run Monthly Close Snapshot</button>
+								</div>
+							</div>
 						</div>
 					</div> 
 				</form>
@@ -110,30 +174,20 @@
 					</div>
 					<input type="hidden" name="force_reclose" id="mc_force_reclose" value="0">
 					<?php endif; ?>
-					<div class="monthly-close-actions">
-						<?php if(isset($canForceReclose, $hasExistingCloseSnapshot) && $canForceReclose && $hasExistingCloseSnapshot): ?>
-						<label>
-							<input type="checkbox" id="force_reclose_chk" value="1"> Force Re-close (Admin)
-						</label>
-						<?php endif; ?>
-						<button type="submit" class="btn btn-sm btn-primary" onclick="return confirm('Run monthly close snapshot for selected period and scope?');">
-							<i class="fa fa-refresh"></i> Run Monthly Close Snapshot
-						</button>
-					</div>
 				</form>
 			</div>
 		</div>
 	</div>
 </div>
 <div class="row">
-	<div class="col-lg-12">	
+	<div class="col-xs-12 col-lg-12">	
 		<div class="clearfix">
 			<label> <i class="red fa fa-tags"></i> Activity: </label>  <span><?php echo $act = ($data["activity"] == -1)? "All Activities": $this->activityObj->getColumn($data["activity"], 'activity');?></span>
 			<label>  <i class="blue fa fa-globe"></i> Region: </label> <span><?php echo $loc = ($data["region"] == -1)? "All Regions": $this->regionObj->getColumn($data["region"], 'region');?></span>
 			<label>  <i class="orange fa fa-map-marker"></i> Location: </label> <span><?php echo $loc = ($data["location"] == -1)? "All Locations": $this->locationObj->getColumn($data["location"], 'location');?></span>
 		</div>
 		<div>
-			<table class="table table-condensed table-bordered" id = "dataTables">
+			<table class="table table-condensed table-bordered" id = "dataTables" style="width:100%;">
 				<thead>
 					<tr>
 						<th rowspan="2">Particulars</th>
@@ -176,7 +230,7 @@
 							<?php 
 							if($data['tier'] <= 4):?>
 							<tr class="warning tb-row tb-class" data-level="class" data-node="class-<?php echo $classrow['id'];?>">
-								<td class=""><a href="#" class="tb-toggle" data-node="class-<?php echo $classrow['id'];?>"><span class="tb-caret">+</span> <?php echo $classrow['name'];?></a></td>
+								<td class=""><a href="#" class="tb-toggle" data-node="class-<?php echo $classrow['id'];?>"><span class="tb-caret">+</span> <?php echo \Accounts\Support\AccountLabel::html($classrow['name']);?></a></td>
 							<?php 
 						    endif;?>
 								<?php 
@@ -219,7 +273,7 @@
 								#$group_id = $this->headObj->getColumn($headrow['id'],'group');
 								$class_id =$this->groupObj->getColumn($grouprow['id'],'class');?>													
 									<tr class="info tb-row tb-group" data-level="group" data-node="group-<?php echo $grouprow['id'];?>" data-parent="class-<?php echo $classrow['id'];?>" style="display:none;">
-										<td class="text-danger">&nbsp;<a href="#" class="tb-toggle" data-node="group-<?php echo $grouprow['id'];?>"><span class="tb-caret">+</span> <?php echo $grouprow['name'];?></a></td>
+										<td class="text-danger">&nbsp;<a href="#" class="tb-toggle" data-node="group-<?php echo $grouprow['id'];?>"><span class="tb-caret">+</span> <?php echo \Accounts\Support\AccountLabel::html($grouprow['name']);?></a></td>
 										<?php 
 											$pres_closing_balance = $this->transactiondetailObj->getClosingBalanceforPresPLSCLASS($data['activity'],$data['region'],$data['location'],$data['start_date'],$data['end_date'], $grouprow['id'],$class_id, 3);	
 											$prev_closing_balance = $this->transactiondetailObj->getClosingBalanceforPrevPLS($data['activity'],$data['region'],$data['location'],$pre_starting_date,$pre_ending_date, $grouprow['id'], 3);	
@@ -238,7 +292,7 @@
 											$group_id = $this->headObj->getColumn($headrow['id'],'group');
 											$class_id =$this->groupObj->getColumn($group_id,'class');?>													
 											<tr class="success tb-row tb-head" data-level="head" data-node="head-<?php echo $headrow['id'];?>" data-parent="group-<?php echo $grouprow['id'];?>" style="display:none;">
-												<td class="text-success">&nbsp;&nbsp;<a href="#" class="tb-toggle" data-node="head-<?php echo $headrow['id'];?>"><span class="tb-caret">+</span> <?php echo $this->headObj->getColumn($headrow['id'],'name');?></a></td>
+												<td class="text-success">&nbsp;&nbsp;<a href="#" class="tb-toggle" data-node="head-<?php echo $headrow['id'];?>"><span class="tb-caret">+</span> <?php echo \Accounts\Support\AccountLabel::html($headrow['name'], $headrow['code']);?></a></td>
 												<?php 
 													$pres_closing_balance = $this->transactiondetailObj->getClosingBalanceforPresPLSCLASS($data['activity'],$data['region'],$data['location'],$data['start_date'],$data['end_date'], $headrow['id'],$class_id, 2);
 													$prev_closing_balance = $this->transactiondetailObj->getClosingBalanceforPrevPLS($data['activity'],$data['region'],$data['location'],$pre_starting_date,$pre_ending_date, $headrow['id'], 2);
@@ -256,7 +310,7 @@
 													$group_id = $this->headObj->getColumn($head_id,'group');
 													$class_id =$this->groupObj->getColumn($group_id,'class');?>															
 													<tr class="subheadrow tb-row tb-subhead" data-level="subhead" data-parent="head-<?php echo $headrow['id'];?>" style="display:none;">
-														<td>&nbsp;&nbsp;&nbsp;&nbsp;<?php echo $subheadrow['code'].'-'.$subheadrow['name'];?></td>
+														<td>&nbsp;&nbsp;&nbsp;&nbsp;<?php echo \Accounts\Support\AccountLabel::html($subheadrow['name'], $subheadrow['code']);?></td>
 														<?php 
 															$pres_closing_balance = $this->transactiondetailObj->getClosingBalanceforPresPLSCLASS($data['activity'],$data['region'],$data['location'],$data['start_date'],$data['end_date'], $subheadrow['id'],$class_id, 1);	
 															$prev_closing_balance = $this->transactiondetailObj->getClosingBalanceforPrevPLS($data['activity'],$data['region'],$data['location'],$pre_starting_date,$pre_ending_date, $subheadrow['id'], 1);	
@@ -274,29 +328,30 @@
 								endforeach;
 							endif; ?>
 							<tr class="classrow">
-								<td> Total <?php echo $classrow['name'];$grand_pres_total=0;?>: </td>
+								<td> Total <?php echo \Accounts\Support\AccountLabel::html($classrow['name']);$grand_pres_total=0;?>: </td>
 								<?php
-									if($classrow['id'] == 3):
+									$classBucket = $resolvePlClassBucket($classrow);
+									if($classBucket === 'income'):
 										$grand_pres_total = $total_pres_income;
 										$grand_prev_total = $total_prev_income;
 										$grand_pres_total_income = $total_pres_income; 
 										$grand_prev_total_income = $total_prev_income;
-									elseif($classrow['id'] == 4):
+									elseif($classBucket === 'expenditure'):
 										$grand_pres_total = $total_pres_expenditure;
 										$grand_prev_total = $total_prev_expenditure;
 										$grand_pres_total_expenditure = $total_pres_expenditure;
 										$grand_prev_total_expenditure = $total_prev_expenditure;
-									elseif($classrow['id'] == 5):
+									elseif($classBucket === 'comprehensive'):
 										$grand_pres_total = $total_pres_incomeC;
 										$grand_prev_total = $total_prev_incomeC;
 										$grand_pres_totalC = $total_pres_incomeC; 
 										$grand_prev_totalC = $total_prev_incomeC;
-									elseif($classrow['id'] == 9):
+									elseif($classBucket === 'tax'):
 										$grand_pres_total = $total_pres_tax;
 										$grand_prev_total = $total_prev_tax;
 										$grand_pres_totaltax = $total_pres_tax; 
 										$grand_prev_totaltax = $total_prev_tax;
-									elseif($classrow['id'] == 10):
+									elseif($classBucket === 'profitloss'):
 										$grand_pres_total = $total_pres_pl;
 										$grand_prev_total = $total_prev_pl;
 										$grand_pres_profitloss = $total_pres_pl; 
@@ -352,11 +407,34 @@
 						endforeach;
 					endif;?>
 					<?php 
-					if($data['tier'] > 0):?>
+					if($data['tier'] > 0):
+						$grossPresProfitLoss = ($grand_pres_total_income - $grand_pres_total_expenditure);
+						$grossPrevProfitLoss = ($grand_prev_total_income - $grand_prev_total_expenditure);
+						$computedPresTax = (($grand_pres_total_income - $grand_pres_total_expenditure) > 0) ? (($grand_pres_total_income - $grand_pres_total_expenditure) * $incomeTaxFactor) : 0;
+						$computedPrevTax = (($grand_prev_total_income - $grand_prev_total_expenditure) > 0) ? (($grand_prev_total_income - $grand_prev_total_expenditure) * $incomeTaxFactor) : 0;
+						$resolvedPresTax = ((float)$grand_pres_totaltax != 0.0) ? (float)$grand_pres_totaltax : $computedPresTax;
+						$resolvedPrevTax = ((float)$grand_prev_totaltax != 0.0) ? (float)$grand_prev_totaltax : $computedPrevTax;
+						$netPresProfitLoss = $grossPresProfitLoss - $resolvedPresTax;
+						$netPrevProfitLoss = $grossPrevProfitLoss - $resolvedPrevTax;
+						if($includeComprehensiveInNet):
+							$netPresProfitLoss += $grand_pres_totalC;
+							$netPrevProfitLoss += $grand_prev_totalC;
+						endif;
+					?>
+						<tr class="blue classrow">
+							<td>Gross Profit/Loss</td>
+							<td style ="text-align:right" ><?php echo number_format($grossPresProfitLoss,2,'.',',');?></td>
+							<td style ="text-align:right" ><?php echo number_format($grossPrevProfitLoss,2,'.',',');?></td>
+						</tr>
+						<tr class="red classrow">
+							<td>Taxable ( <?php echo number_format($incomeTaxRate,2,'.','');?>% )</td>
+							<td style ="text-align:right" ><?php echo number_format($resolvedPresTax,2,'.',',');?></td>
+							<td style ="text-align:right" ><?php echo number_format($resolvedPrevTax,2,'.',',');?></td>
+						</tr>
 						<tr class="green classrow">
-							<td> Total Comprehensive Income</td>
-							<td style ="text-align:right" ><?php echo number_format(($grand_pres_total_income - $grand_pres_total_expenditure - $grand_pres_totaltax+$grand_pres_totalC),2,'.',',');?></td>
-							<td style ="text-align:right" ><?php echo number_format(($grand_prev_total_income - $grand_prev_total_expenditure - $grand_prev_totaltax+$grand_prev_totalC),2,'.',',');?></td>
+							<td>Net Profit/Loss</td>
+							<td style ="text-align:right" ><?php echo number_format($netPresProfitLoss,2,'.',',');?></td>
+							<td style ="text-align:right" ><?php echo number_format($netPrevProfitLoss,2,'.',',');?></td>
 						</tr>
 					<?php 
 				    endif; ?>
@@ -387,6 +465,11 @@ $(function(){
 		$('#mc_location').val($('#location').val());
 		if($('#force_reclose_chk').length){
 			$('#mc_force_reclose').val($('#force_reclose_chk').is(':checked') ? '1' : '0');
+		}
+	});
+	$('#run-monthly-close-btn').on('click', function(){
+		if(confirm('Run monthly close snapshot for selected period and scope?')){
+			$('#monthly-close-form').trigger('submit');
 		}
 	});
 	$('#force_reclose_chk').on('change', function(){
@@ -424,14 +507,15 @@ $(function(){
 			$('div#'+ e.field.replace('[]','') +'_chosen').addClass('is-invalid');
 		}
 	});	
+	<?php echo $this->partial('accounts/report/hierarchy-export-options.phtml'); ?>
 	$('#dataTables').DataTable({
 		"paging": false,
 		"buttons": [
-			{ extend: 'copy', exportOptions: { modifier: { selected: null }, rows: function (idx, data, node) { return $(node).is(':visible'); } } },
-			{ extend: 'csv', exportOptions: { modifier: { selected: null }, rows: function (idx, data, node) { return $(node).is(':visible'); } } },
-			{ extend: 'excel', exportOptions: { modifier: { selected: null }, rows: function (idx, data, node) { return $(node).is(':visible'); } } },
-			{ extend: 'pdf', exportOptions: { modifier: { selected: null }, rows: function (idx, data, node) { return $(node).is(':visible'); } } },
-			{ extend: 'print', exportOptions: { modifier: { selected: null }, rows: function (idx, data, node) { return $(node).is(':visible'); } } }
+			{ extend: 'copy', exportOptions: hierarchyExportOptions },
+			{ extend: 'csv', exportOptions: hierarchyExportOptions },
+			{ extend: 'excel', exportOptions: hierarchyExportOptions },
+			{ extend: 'pdf', exportOptions: hierarchyExportOptions },
+			{ extend: 'print', exportOptions: hierarchyExportOptions }
 		]
 	});
 
@@ -469,7 +553,8 @@ $(function(){
 
 	function getNextLevel(level) {
 		if (level === 'class') { return 'group'; }
-		if (level === 'group') { return 'head'; }
+		if (level === 'group') { return 'headtype'; }
+		if (level === 'headtype') { return 'head'; }
 		if (level === 'head') { return 'subhead'; }
 		return '';
 	}
@@ -493,7 +578,8 @@ $(function(){
 			{
 				report: 'profitloss',
 				level: nextLevel,
-				parent_id: getParentId(nodeId),
+				parent_id: getParentId(nodeId).split('_')[0],
+				head_type_id: $row.attr('data-level') === 'headtype' ? getParentId(nodeId).split('_')[1] : '',
 				activity: $('#location').val(),
 				region: $('#region').val(),
 				location: $('#location').val(),

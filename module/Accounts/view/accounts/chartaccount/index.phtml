@@ -39,7 +39,7 @@
 							$groups = $this->groupObj->get(array('class'=>$class['id']));
 							foreach($groups as $group):
 						?>
-						<a style="text-decoration:none;" data-toggle="collapse" data-parent="#group<?php echo $class['id'];?>" href="#head<?php echo $group['id'];?>">
+						<a style="text-decoration:none;" data-toggle="collapse" data-parent="#group<?php echo $class['id'];?>" href="#headtype<?php echo $group['id'];?>">
 							<li class="dd-item">
 								<div class="dd-handle btn-primary">
 									<i class="ace-icon fa <?php echo $icon;?>" data-icon-show="fa-plus" data-icon-hide="fa-minus"></i>
@@ -47,13 +47,29 @@
 								</div>
 							</li>
 						</a>
-						<ol class="collapse <?php echo $in;?>" id="head<?php echo $group['id'];?>">
+						<ol class="collapse <?php echo $in;?>" id="headtype<?php echo $group['id'];?>">
+							<?php
+								$ht = 1;
+								foreach ($headTypesByGroup[$group['id']] ?? array() as $headTypeId => $headType):
+									$headListId = 'head' . $group['id'] . '_' . $headTypeId;
+							?>
+							<a style="text-decoration:none;" data-toggle="collapse" data-parent="#headtype<?php echo $group['id'];?>" href="#<?php echo $headListId; ?>">
+								<li class="dd-item">
+									<div class="dd-handle account-headtype">
+										<i class="ace-icon fa <?php echo $icon;?>" data-icon-show="fa-plus" data-icon-hide="fa-minus"></i>
+										<?php echo $ht++ . "&nbsp;" . $this->escapeHtml(html_entity_decode($headType['name'], ENT_QUOTES, 'UTF-8')); ?>
+										<?php if ($headType['needsGroupAssignment']): ?>
+											<span class="label label-warning">Group assignment needs review</span>
+										<?php endif; ?>
+									</div>
+								</li>
+							</a>
+							<ol class="collapse <?php echo $in;?>" id="<?php echo $headListId; ?>">
 							<?php
 								$hd = 1;
-								$heads = $this->headObj->get(array('g.id'=>$group['id']));
-								foreach($heads as $head):
+								foreach($headType['heads'] as $head):
 							?>
-							<a style="text-decoration:none;" data-toggle="collapse" data-parent="#head<?php echo $group['id'];?>" href="#subhead<?php echo $head['id'];?>">
+							<a style="text-decoration:none;" data-toggle="collapse" data-parent="#<?php echo $headListId; ?>" href="#subhead<?php echo $head['id'];?>">
 								<li class="dd-item">
 									<div class="dd-handle btn-success">
 										<i class="ace-icon fa <?php echo $icon;?>" data-icon-show="fa-plus" data-icon-hide="fa-minus"></i>
@@ -77,6 +93,8 @@
 										</a>
 									</div>
 								</li>
+								<?php endforeach;?>
+							</ol>
 								<?php endforeach;?>
 							</ol>
 							<?php endforeach;?>
@@ -110,10 +128,17 @@
 								</span>				
 							</span>		
 							<ul class="tree-branch-children">
+								<li class="tree-branch tree-open" aria-expanded="true">
+									<span class="tree-item-name">
+										<span class="tree-label">
+											<i class="ace-icon fa fa-square fa-2x blue"></i> <strong>Group</strong>
+										</span>
+									</span>
+								<ul class="tree-branch-children">
 								<li class="tree-branch tree-open" aria-expanded="true">		
 									<span class="tree-item-name">				  			
 										<span class="tree-label">
-											<i class="ace-icon fa fa-square fa-2x blue"></i> <strong>Group</strong>
+											<i class="ace-icon fa fa-square fa-2x account-headtype-legend"></i> <strong>Head Type</strong>
 										</span>				
 									</span>						
 									<ul class="tree-branch-children">
@@ -133,6 +158,8 @@
 												</span>			
 											</li>
 										</ul>
+										</ul>
+										</li>
 									</ul>
 								</li>
 							</ul>				
@@ -149,5 +176,3 @@
 		</div>
 	</div>
 </div>
-
-

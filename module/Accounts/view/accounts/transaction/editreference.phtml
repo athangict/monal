@@ -153,7 +153,7 @@
 																foreach ($heads as $head):
 																	$selected_h =($head['id']==$tdetail1['head_id'])?'selected':'';
 															?>
-																<option value="<?php echo $head['id'];?>" <?php echo $selected_h;?> ><?php echo $head['code'];?></option>
+																<option value="<?php echo $head['id'];?>" <?php echo $selected_h;?> ><?php echo \Accounts\Support\AccountLabel::html($head['name'], $head['code']);?></option>
 															<?php 
 																endforeach;
 															?>
@@ -232,7 +232,7 @@
 														<select id="head" name="head[]" class="form-control tr_head" data-placeholder="Select">
 															<option value=""></option>
 															<?php  foreach ($heads as $head): ?>
-																<option value="<?php echo $head['id'];?>"><?php echo $head['code'];?></option>
+																<option value="<?php echo $head['id'];?>"><?php echo \Accounts\Support\AccountLabel::html($head['name'], $head['code']);?></option>
 															<?php  endforeach; ?>
 														</select>
 													</div>

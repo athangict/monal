@@ -10,6 +10,67 @@ looking to get their feet wet with Laminas MVC.
 
 - Stripe integration (Accounts module): [docs/stripe-integration.md](docs/stripe-integration.md)
 
+## Account hierarchy
+
+The Chart of Account tree displays five tiers:
+Class > Group > Head Type > Head > Subhead.
+Head Types are assigned to Groups through the Head Type forms.
+Create and Edit Head filter the Head Type choices by the selected Group.
+Saving a Head requires a Head Type assigned to that Group.
+Existing Heads remain under their current Group. Head Types with missing or
+inconsistent Group assignments are marked for review; the tree does not move
+accounts or alter balances.
+Trial Balance, Balance Sheet, and Profit & Loss use the same five-tier
+drill-down. Head Type subtotals sum their Heads within each existing Group,
+using the report's date and location filters and signed balances.
+Report exports and printing include the currently visible expanded tiers.
+Copy, CSV, Excel, PDF, and Print retain the report's +/- symbols and
+five-tier indentation.
+Voucher detail views and their printed output display Heads as Code-Name,
+matching the Sub Head Account format.
+Add and Edit transaction forms use the same shared Code-Name formatter for
+Head options, including additional transaction rows.
+Accounts reports use Code-Name for Head and Subhead labels, including filter
+choices, lazy-loaded rows, exports, and print. Stored HTML entities are decoded
+once and then escaped so ampersands display correctly without rendering markup.
+Run the report label regressions with:
+
+```text
+php vendor/phpunit/phpunit/phpunit --bootstrap vendor/autoload.php --no-configuration module/Accounts/test/Report
+```
+
+## Payroll slab preview
+
+Create and Edit Pay Slab allow blank Rate, Base, and Value fields.
+Blanks are stored as database NULL, not zero; explicit zero values remain zero.
+This does not change payroll calculation rules.
+
+Payroll Submit To Finance lists Bank Account records directly for the submitting
+user's location. On save, the selected bank's Finance Sub Head (Bank Account
+type 3) and parent Head are resolved. Missing or ambiguous mappings are
+reported before any voucher is created. The net-pay
+credit uses that subhead and its parent Head; no fixed account IDs are used.
+The first payroll voucher for a prefix starts at serial 00001.
+
+Add and Edit Pay Head show all Finance Sub Heads under the selected PayHead
+Type's linked Head. The Head link is resolved through payroll subheads (type 5)
+whose reference ID is that PayHead Type. Saving validates membership in that
+Head; existing mappings are retained when compatible.
+
+PIT Net Pay previews treat unassigned PF and GIS deductions as zero.
+PIT Net Pay is Gross Pay minus active Provisional Fund (code PF) and GIS
+deductions, resolved by Pay Head code rather than fixed database IDs.
+Previews, payroll recalculation, Pay Head updates, and pay increments share
+this calculation. Changes to PF/GIS also recalculate dependent PIT pay heads.
+Non-numeric amounts are rejected rather than silently converted to zero.
+Missing slabs or uncovered base amounts display a configuration error and
+clear the preview amount instead of using zero or an unrelated slab.
+Run the targeted regression tests with:
+
+```text
+php vendor/phpunit/phpunit/phpunit --bootstrap vendor/autoload.php --no-configuration module/Hr/test
+```
+
 ## Installation using Composer
 
 The easiest way to create a new Laminas MVC project is to use
