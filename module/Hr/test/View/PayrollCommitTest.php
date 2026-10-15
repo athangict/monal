@@ -14,14 +14,11 @@ use PHPUnit\Framework\TestCase;
 
 final class PayrollCommitTest extends TestCase
 {
-    public function testCommitCreditsSelectedBankMapping(): void
+    public function testCommitCreditsSelectedNetPayableMapping(): void
     {
-        $banks = $this->createMock(Accounts\BankaccountTable::class);
-        $banks->expects(self::once())->method('getPayrollAccounts')->with(1)->willReturn([
-            ['bank_account_id' => 10],
-        ]);
-        $banks->expects(self::once())->method('getPayrollMappings')->with(1, 10)->willReturn([
-            ['bank_account_id' => 10, 'head_id' => 55, 'subhead_id' => 101],
+        $payheadTypes = $this->createMock(Hr\PayheadtypeTable::class);
+        $payheadTypes->expects(self::once())->method('getPayrollNetPayableOptions')->with(true)->willReturn([
+            ['payhead_type_id' => 9, 'subhead_id' => 101, 'head_id' => 55],
         ]);
         $transactions = $this->createMock(Accounts\TransactionTable::class);
         $transactions->expects(self::once())->method('getNextSerial')->with('HQ-PY' . date('ym'))->willReturn(1);
@@ -57,7 +54,7 @@ final class PayrollCommitTest extends TestCase
         $notifications = $this->createMock(Acl\NotificationTable::class);
         $notifications->method('save')->willReturn(1);
         $controller = $this->makeController([
-            Accounts\BankaccountTable::class => $banks,
+            Hr\PayheadtypeTable::class => $payheadTypes,
             Accounts\TransactionTable::class => $transactions,
             Accounts\TransactiondetailTable::class => $details,
             Administration\UsersTable::class => $users,
@@ -78,30 +75,17 @@ final class PayrollCommitTest extends TestCase
         self::assertSame(0, $controller->connection->rollbacks);
     }
 
-    public function testInvalidBankIsRejectedBeforeStartingTransaction(): void
+    public function testInvalidNetPayableSelectionIsRejectedBeforeStartingTransaction(): void
     {
-        $banks = $this->createMock(Accounts\BankaccountTable::class);
-        $banks->method('getPayrollAccounts')->willReturn([]);
-        $controller = $this->makeController([Accounts\BankaccountTable::class => $banks], '999');
+        $payheadTypes = $this->createMock(Hr\PayheadtypeTable::class);
+        $payheadTypes->method('getPayrollNetPayableOptions')->with(true)->willReturn([]);
+        $controller = $this->makeController([Hr\PayheadtypeTable::class => $payheadTypes], '999');
         $controller->commitpayrollAction();
         self::assertSame(0, $controller->connection->begins);
-        self::assertStringContainsString('Please select a bank account', $controller->messages[0]);
+        self::assertStringContainsString('Please select salary net payable from pay head', $controller->messages[0]);
     }
 
-    public function testMissingOrAmbiguousMappingIsRejectedBeforeWrites(): void
-    {
-        foreach ([[], [['head_id' => 55, 'subhead_id' => 101], ['head_id' => 56, 'subhead_id' => 102]]] as $mappings) {
-            $banks = $this->createMock(Accounts\BankaccountTable::class);
-            $banks->method('getPayrollAccounts')->willReturn([['bank_account_id' => 10]]);
-            $banks->method('getPayrollMappings')->with(1, 10)->willReturn($mappings);
-            $controller = $this->makeController([Accounts\BankaccountTable::class => $banks], '10');
-            $controller->commitpayrollAction();
-            self::assertSame(0, $controller->connection->begins);
-            self::assertStringContainsString('mapping', $controller->messages[0]);
-        }
-    }
-
-    private function makeController(array $tables, string $bankAccount)
+    private function makeController(array $tables, string $netPayableSubhead)
     {
         $controller = new class($this->createMock(ContainerInterface::class)) extends PayrollController {
             public $tables;
@@ -131,7 +115,7 @@ final class PayrollCommitTest extends TestCase
         }
         $controller->request = new Request();
         $controller->request->setMethod('POST');
-        $controller->request->setPost(new Parameters(['year' => '2026', 'month' => '10', 'bank_account' => $bankAccount]));
+        $controller->request->setPost(new Parameters(['year' => '2026', 'month' => '10', 'net_payable_subhead' => $netPayableSubhead]));
         $controller->connection = new class {
             public $begins = 0;
             public $commits = 0;

@@ -21,6 +21,7 @@
 					<th>Pay Head Type</th>
 					<th>Code</th>
 					<th>Deduction</th>
+					<th>Sub Head</th>
 					<?php if($this->button(1)!=""):?>
 						<th class="no-sort no-printpdf">Action</th>
 					<?php endif;?>
@@ -35,6 +36,17 @@
 						<td><b><?php echo $rows['head_type']; ?></b></td>
 						<td><?php echo $rows['code']; ?></td>
 						<td><?php echo $deduction = ($rows['deduction'] == 1)?"Yes":"No"; ?></td>
+						<td>
+							<?php
+								$subheadCode = isset($rows['finance_sub_head_code']) ? trim((string) $rows['finance_sub_head_code']) : '';
+								$subheadName = isset($rows['finance_sub_head_name']) ? trim((string) $rows['finance_sub_head_name']) : '';
+								if ($subheadCode !== '' || $subheadName !== '') {
+									echo $this->escapeHtml(trim($subheadCode . ' - ' . $subheadName, ' -'));
+								} else {
+									echo '-';
+								}
+							?>
+						</td>
 						<?php if($this->button(1)!=""):?>
 							<td><?php echo $this->button(1, $rows['id']);?></td>
 						<?php endif;?>

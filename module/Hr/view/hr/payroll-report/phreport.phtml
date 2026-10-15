@@ -236,7 +236,7 @@ $minYear = ($this->minYear > 0)?$this->minYear:date('Y');
 				<tfoot>
 					<tr>
 						<td ></td>
-						<td ></b></td>
+						<td ></td>
 						<td ></td>
 						<td ><b>Total:</b></td>
 						<td ></td>
@@ -244,6 +244,7 @@ $minYear = ($this->minYear > 0)?$this->minYear:date('Y');
 							$payhead_amt = $this->paystructureObj->getSum('amount',array('pay_head' => $payhead));?>
 						<td><b><?php echo $payhead_amt;?></b></td>
 					    <?php endforeach;?>
+						<td></td>
 					</tr>
 				</tfoot>
 			</table>

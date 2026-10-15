@@ -144,20 +144,28 @@
 		<!--a class="btn btn-primary" href="<?php //echo $this->url('payroll',array('action'=>'bookadvancesalary','id'=>$ym));?>" <?php //echo $advance_disabled;?> > Book Advance Salary (<?php //echo DateTime::createFromFormat('!m', $this->month)->format('F').",".$this->year;?>)</a-->
 		<?php  if(empty($transaction)||$transaction<0):?>
 		<div class="form-group">
-			<label for="payroll_bank_account">Payment Bank Account</label>
-			<select class="form-control" name="bank_account" id="payroll_bank_account" required>
-				<option value="">Select Bank Account</option>
-				<?php foreach ($this->payrollBankAccounts as $bankAccount): ?>
-					<option value="<?php echo $bankAccount['bank_account_id']; ?>">
-						<?php echo $this->escapeHtml(html_entity_decode($bankAccount['code'] . ' - ' . $bankAccount['account'], ENT_QUOTES, 'UTF-8')); ?>
+			<label for="payroll_net_payable_subhead">Salary Net Payable (Pay Head)</label>
+			<select class="form-control" name="net_payable_subhead" id="payroll_net_payable_subhead" required>
+				<option value="">Select Salary Net Payable</option>
+				<?php foreach ($this->payrollNetPayableOptions as $netPayableOption): ?>
+					<option value="<?php echo $netPayableOption['subhead_id']; ?>">
+						<?php
+							echo $this->escapeHtml(
+								html_entity_decode(
+									$netPayableOption['payhead_type'] . ' - ' . $netPayableOption['subhead_code'] . ' - ' . $netPayableOption['subhead_name'],
+									ENT_QUOTES,
+									'UTF-8'
+								)
+							);
+						?>
 					</option>
 				<?php endforeach; ?>
 			</select>
-			<?php if (empty($this->payrollBankAccounts)): ?>
-				<div class="alert alert-warning">No bank accounts are available for your location. Add a Bank Account before submitting payroll.</div>
+			<?php if (empty($this->payrollNetPayableOptions)): ?>
+				<div class="alert alert-warning">No Salary Net Payable pay head mapping is available. Configure Sub Head Details for the relevant pay head type before submitting payroll.</div>
 			<?php endif; ?>
 		</div>
-		<button class="btn btn-danger" type="submit" <?php echo empty($this->payrollBankAccounts) ? 'disabled' : $disabled;?> > Submit To Finance (<?php echo DateTime::createFromFormat('!m', $this->month)->format('F').",".$this->year;?>)</button>
+		<button class="btn btn-danger" type="submit" <?php echo empty($this->payrollNetPayableOptions) ? 'disabled' : $disabled;?> > Submit To Finance (<?php echo DateTime::createFromFormat('!m', $this->month)->format('F').",".$this->year;?>)</button>
 		<?php endif;?>
 	</form>
 </center>

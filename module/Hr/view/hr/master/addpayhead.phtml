@@ -36,7 +36,6 @@
 					<label for="pay_head" class="control-label">Abbreviation</label>
 					<input class="form-control" name="code" id="code" placeholder="code" required >
 				</div>					
-				<?php echo $this->partial('hr/master/payhead-subhead-options.phtml', array('subheads' => $fa_subhead, 'selectedSubhead' => null)); ?>
 				<div class="form-group">
 					<label for="type" class="control-label">Type</label>
 					<div class="radio">
@@ -106,11 +105,6 @@ $('document').ready(function(){
 					notEmpty: { message: 'Please select PayHead Type.' }
 				}
 			},
-			fa_sub_head: {
-				validators: {
-					notEmpty: { message: 'Please select a linked Finance Sub Head.' }
-				}
-			},
 			pay_head: {
 				validators: {
 					notEmpty: {
@@ -169,7 +163,6 @@ $('document').ready(function(){
 			$('div#'+ e.field.replace('[]','') +'_chosen').addClass('is-invalid');
 		}
 	});
-	<?php echo $this->partial('hr/master/payhead-subhead-filter.phtml'); ?>
 	$("input[name='type']").change(function(e){
 		    if($(this).val() == '2') {
 		        $("#against").removeProp('disable');

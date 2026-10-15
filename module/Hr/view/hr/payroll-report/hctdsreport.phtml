@@ -7,9 +7,25 @@
 	//echo '<pre>';print_r($data);exit;
     $payrolls = $this->payrollObj->getforReportByLocs($data);
     $temp_payrolls = $this->temppayrollObj->getforReportByLoc($data);
+	$deductionIds = array();
+	foreach(array('TDS', 'HC', 'PF', 'GIS') as $code):
+		$heads = $this->payheadObj->get(array('ph.code'=>$code));
+		$deductionIds[$code] = count($heads) === 1 ? $heads[0]['id'] : null;
+	endforeach;
+	$missingTaxMapping = $deductionIds['TDS'] === null || $deductionIds['HC'] === null;
+	$deductionAmount = function($table, $filter, $code) use ($deductionIds) {
+		if($deductionIds[$code] === null):
+			return null;
+		endif;
+		$filter['pay_head'] = $deductionIds[$code];
+		return (float)$table->getColumn($filter, 'amount');
+	};
 ?>
-<?php //echo $this->partial('hr/payroll-report/partial.phtml', array('active' => 'pfreport')); ?><br/>
+<?php //echo $this->partial('hr/payroll-report/partial.phtml', array('active' => 'pfreport')); ?>
 <?php echo $this->tabs_helper(array(922,924,925,930,931,932,923,933)); ?>
+<?php if($missingTaxMapping):?>
+<div class="alert alert-warning">Configure exactly one payroll payhead with code TDS and one with code HC. Tax totals are incomplete until these mappings are configured.</div>
+<?php endif;?>
 <div class="widget widget-box transparent">
 	<div class="widget-header">
 		<h4 class="widget-title"> 	
@@ -76,10 +92,14 @@
 							?>
 						</select>
 					</div>
-					<div class="col-md-2 pull-right">
-						<div class="space-10"></div>
+					<div class="col-md-4">
 						<label for="redirect" class="control-label">&nbsp;</label>
-						<button type="submit" class="btn btn-sm btn-success"><i class="fa fa-refresh"></i> refresh </button>
+						<div>
+							<button type="submit" class="btn btn-sm btn-success"><i class="fa fa-refresh"></i> Generate </button>
+							<span class="receipt-number-action">
+								<?php echo str_replace("class='btn ", "class='btn btn-sm ", $this->button(2));?>
+							</span>
+						</div>
 					</div>
 				</div>
 			</form>
@@ -151,11 +171,11 @@
                                     $oass=$oas['amount'];}else{echo $oass=0.00;}echo number_format((float)$oass,2,'.',',');?></td>
                                 <td>0.00</td>
                                 <td><?php $gross= $bsa+$oass;echo number_format((float)$gross,2,'.',',');?></td>
-                                <td><?php $pf=$this->paydetailObj->getColumn(array('pay_roll'=>$payroll['id'],'pay_head'=>9),'amount');$pfd=(!empty($pf))?$pf:0.00;echo number_format((float)$pfd,2,'.',',');?></td>
-                                <td><?php $gis=$this->paydetailObj->getColumn(array('pay_roll'=>$payroll['id'],'pay_head'=>12),'amount');$gisd=(!empty($gis))?$gis:0.00;echo number_format((float)$gisd,2,'.',',');?></td>
+                                <td><?php $pfd=$deductionAmount($this->paydetailObj,array('pay_roll'=>$payroll['id']),'PF') ?? 0;echo number_format($pfd,2,'.',',');?></td>
+                                <td><?php $gisd=$deductionAmount($this->paydetailObj,array('pay_roll'=>$payroll['id']),'GIS') ?? 0;echo number_format($gisd,2,'.',',');?></td>
                                 <td><?php echo number_format((float)$gross-($gisd+$pfd),2,'.',',')?></td>
-                                <td><?php $td=$this->paydetailObj->getColumn(array('pay_roll'=>$payroll['id'],'pay_head'=>11),'amount');$tds=(!empty($td))?$td:0.00; echo number_format((float)$tds,2,'.',',');?></td>
-                                <td><?php $hc=$this->paydetailObj->getColumn(array('pay_roll'=>$payroll['id'],'pay_head'=>14),'amount');$hcd=(!empty($hc))?$hc:0.00;echo number_format((float)$hcd,2,'.',',');?></td>
+                                <td><?php $td=$deductionAmount($this->paydetailObj,array('pay_roll'=>$payroll['id']),'TDS');$tds=$td ?? 0;echo $td === null ? 'Not configured' : number_format($tds,2,'.',',');?></td>
+                                <td><?php $hc=$deductionAmount($this->paydetailObj,array('pay_roll'=>$payroll['id']),'HC');$hcd=$hc ?? 0;echo $hc === null ? 'Not configured' : number_format($hcd,2,'.',',');?></td>
                                <td><?php echo number_format((float)$tds+$hcd,2,'.',',')?></td>
                             </tr>
                     <?php $tot_tds+=$tds;$tot_hc+=$hcd;endforeach;?>
@@ -173,14 +193,16 @@
                                     $oass=$oas['amount'];}else{echo $oass=0.00;}echo number_format((float)$oass,2,'.',',');?></td>
                                 <td>0.00</td>
                                 <td><?php $gross= $bsa+$oass;echo number_format((float)$gross,2,'.',',');?></td>
-                                <td><?php $pf=$this->paystructureObj->getColumn(array('employee'=>$temp['employee_id'],'pay_head'=>9),'amount');$pfd=(!empty($pf))?$pf:0.00;echo number_format((float)$pfd,2,'.',',');?></td>
-                                <td><?php $gis=$this->paystructureObj->getColumn(array('employee'=>$temp['employee_id'],'pay_head'=>12),'amount');$gisd=(!empty($gis))?$gis:0.00;echo number_format((float)$gisd,2,'.',',');?></td>
+                                <td><?php $pfd=$deductionAmount($this->paystructureObj,array('employee'=>$temp['employee_id']),'PF') ?? 0;echo number_format($pfd,2,'.',',');?></td>
+                                <td><?php $gisd=$deductionAmount($this->paystructureObj,array('employee'=>$temp['employee_id']),'GIS') ?? 0;echo number_format($gisd,2,'.',',');?></td>
                                 <td><?php echo number_format((float)$gross-($gisd+$pfd),2,'.',',')?></td>
-                                <td><?php $td=$this->paystructureObj->getColumn(array('employee'=>$temp['employee_id'],'pay_head'=>11),'amount');$tds=(!empty($td))?$td:0.00; echo number_format((float)$tds,2,'.',',');?></td>
-                                <td><?php $hc=$this->paystructureObj->getColumn(array('employee'=>$temp['employee_id'],'pay_head'=>14),'amount');$hcd=(!empty($hc))?$hc:0.00;echo number_format((float)$hcd,2,'.',',');?></td>
+                                <td><?php $td=$deductionAmount($this->paystructureObj,array('employee'=>$temp['employee_id']),'TDS');$tds=$td ?? 0;echo $td === null ? 'Not configured' : number_format($tds,2,'.',',');?></td>
+                                <td><?php $hc=$deductionAmount($this->paystructureObj,array('employee'=>$temp['employee_id']),'HC');$hcd=$hc ?? 0;echo $hc === null ? 'Not configured' : number_format($hcd,2,'.',',');?></td>
                                <td><?php echo number_format((float)$tds+$hcd,2,'.',',')?></td>
                             </tr>
                     <?php $tot_tds+=$tds;$tot_hc+=$hcd; endforeach;  endif;  ?>
+                </tbody>
+                <tfoot>
                     <tr>
                         <td></td>
                         <td></td>
@@ -193,9 +215,9 @@
                         <td><b>Total</b></td>
                         <td><b><?php echo number_format((float)$tot_tds,2,'.',',');?></b></td>
                         <td><b><?php echo number_format((float)$tot_hc,2,'.',',');?></b></td>
-                        <td></td>
+                        <td><b><?php echo number_format($tot_tds+$tot_hc,2,'.',',');?></b></td>
                     </tr>
-                </tbody>
+                </tfoot>
             </table>
         </div>
     </div>
@@ -232,6 +254,7 @@
 		buttons: [
 			{
 				extend: 'copy',
+				footer: true,
 				exportOptions: {
 					columns: ':visible'
 				},
@@ -240,6 +263,7 @@
 			},
 			{
 				extend: 'excel',
+				footer: true,
 				title: title_table,
 				exportOptions: {
 					columns: ':visible'
@@ -249,6 +273,7 @@
 			},
 			{
 				extend: 'pdfHtml5',
+				footer: true,
 				title: title_table,
 				exportOptions: {
 					columns: ':visible'
@@ -260,6 +285,7 @@
 			},
 			{
 				extend: 'print',
+				footer: true,
 				title: title_table,
 				exportOptions: {
 					columns: ':visible'

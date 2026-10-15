@@ -15,8 +15,8 @@
 
 ?>
 <div class="modal-header">
+	<button type="button" class="close" data-dismiss="modal" aria-label="Close">&times;</button>
 	<h4 class="modal-title"><i class="<?php echo $button['icon']; ?>"></i> <b><?php echo $button['action']; ?></b>- Action towards Applicant:<b><?php echo $this->employeeObj->getColumn($leaves['employee'],'full_name'); ?></b></h4>
-	<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
 </div>  <!-- /modal-header -->
 <?php
 $flag = 1;     
@@ -75,6 +75,22 @@ if($flag != "1"){ ?>
                 </select> 
             </div>
 			<?php endif;?>
+			<?php if($button['id']==3): ?>
+			<div class="form-group mb-3">
+				<label class="form-label" for="bank_sub_head">Bank Account</label>
+				<select id="bank_sub_head" name="bank_sub_head" class="form-control" data-placeholder="Select" required>
+					<option value=""></option>
+					<?php foreach ($bankOptions as $bankOption): ?>
+						<option value="<?php echo $bankOption['id']; ?>">
+							<?php echo $bankOption['code'].' - '.$bankOption['name']; ?>
+						</option>
+					<?php endforeach; ?>
+				</select>
+				<?php if (empty($bankOptions)): ?>
+					<div class="alert alert-warning" style="margin-top:8px;">No bank account subheads found. Please configure Bank Account type subheads first.</div>
+				<?php endif; ?>
+			</div>
+			<?php endif;?>
 			<div class="form-group mb-3">
 				<label class="form-label" for="remarks">Remarks</label>
 				<textarea class="form-control" name="remarks" rows="2" placeholder="Remarks..." required></textarea>
@@ -84,7 +100,7 @@ if($flag != "1"){ ?>
 			</div>
 		</div>
 		<div class="modal-footer">
-			<button type="submit" class="btn <?php echo $button['class'];?>"><i class="icon <?php echo $button['icon']; ?>"></i> <?php echo $button['action'];?></button>
+			<button type="submit" class="btn <?php echo $button['class'];?>" <?php echo ($button['id']==3 && empty($bankOptions)) ? 'disabled' : ''; ?>><i class="icon <?php echo $button['icon']; ?>"></i> <?php echo $button['action'];?></button>
 			<button type="button" class="btn btn-warning" data-dismiss="modal" ><i class="fa fa-times"></i> Cancel </button> 
 		</div>
 	</form>

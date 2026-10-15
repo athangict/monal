@@ -13,13 +13,35 @@
 	
 ?>
 <?php foreach ($application as $row);
-$max_activity = $this->flowtransactionObj->getMax($column='activity', $where=array('application'=>$row['id']));
-$current_flow = $this->flowtransactionObj->get(array('application'=>$row['id'], 'activity'=>$max_activity));
+$current_flow = array();
+$activeExpenseFlows = array();
+foreach ($this->flowtransactionObj->get(array('application' => $row['id'], 'flow' => 5)) as $flowRow) {
+	if ((int) $flowRow['action_performed'] === 0) {
+		$activeExpenseFlows[] = $flowRow;
+	}
+}
+if (empty($activeExpenseFlows)) {
+	foreach ($this->flowtransactionObj->get(array('application' => $row['id'], 'flow' => 5, 'status' => $status)) as $flowRow) {
+		if (trim((string) $flowRow['action']) !== '') {
+			$activeExpenseFlows[] = $flowRow;
+		}
+	}
+}
+if (!empty($activeExpenseFlows)) {
+	$current_flow[] = end($activeExpenseFlows);
+}
 $edit_option = 0;
+$roleIds = array();
+foreach (explode(",", (string) $login_role) as $roleId) {
+	$roleId = trim($roleId);
+	if ($roleId !== '' && ctype_digit($roleId)) {
+		$roleIds[] = (int) $roleId;
+	}
+}
+$isHighestRole = in_array(99, $roleIds, true) || in_array(100, $roleIds, true);
 if(!empty($current_flow)) {
 	foreach($current_flow as $current);
-	$userRolesArray = explode(",", (string) $login_role);
-	$edit_option = (in_array($current['actor'],$userRolesArray))?1:0;
+	$edit_option = (in_array((int) $current['actor'], $roleIds, true) || $isHighestRole) ? 1 : 0;
 	//echo '<pre>';print_r($current_flow);
 }//exit;
 ?>

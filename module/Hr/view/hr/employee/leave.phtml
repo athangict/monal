@@ -113,8 +113,9 @@
 						$total_balance = $total_bal;
 					}
 					$leave_taken = $presentCasual + $presentEarned;
-					if($encashed<1){
-						$encashed=0;
+					$encashed = is_numeric($encashed) ? (float) $encashed : 0.0;
+					if($encashed < 1){
+						$encashed = 0;
 					}
 					$balance_leave = $total_balance - $encashed;
 					?>
@@ -240,5 +241,4 @@ $('document').ready(function(){
 	$('#dataTables').DataTable({"paging":   true,});
 });
 </script>
-
 

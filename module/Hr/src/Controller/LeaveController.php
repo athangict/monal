@@ -1090,7 +1090,8 @@ class LeaveController extends AbstractActionController
 			$action_id = $form['action'];
 			$leave_id = $form['leave'];
 			$remark = $form['remarks'];
-			$application_focal=$form['focal'];
+			$application_focal = isset($form['focal']) ? $form['focal'] : null;
+			$selectedBankSubHead = (isset($form['bank_sub_head']) && ctype_digit((string)$form['bank_sub_head'])) ? (int)$form['bank_sub_head'] : 0;
 			$current_flow = $this->getDefinedTable(Administration\FlowTransactionTable::class)->get($flow_id);
 			foreach($current_flow as $flow);
 			$next_activity_no = $flow['activity'] + 1;
@@ -1099,7 +1100,32 @@ class LeaveController extends AbstractActionController
 			foreach($privileges as $privilege);
 			$applicant = $this->getDefinedTable(Hr\LeaveEncashTable::class)->getColumn(array('id'=>$leave_id),'employee');
 			$user = $this->getDefinedTable(Administration\UsersTable::class)->getColumn(array('employee'=>$applicant),'id');
-			$location = $this->getDefinedTable(Administration\UsersTable::class)->getColumn(array('employee'=>$applicant),'location');
+			if(!is_scalar($user) || !ctype_digit((string)$user) || (int)$user < 1):
+				$user = $this->_author;
+			endif;
+			$employeeLocation = $this->getDefinedTable(Hr\EmployeeTable::class)->getColumn($applicant,'location');
+			$applicantLocation = $this->getDefinedTable(Administration\UsersTable::class)->getColumn(array('employee'=>$applicant),'location');
+			$authorLocation = $this->getDefinedTable(Administration\UsersTable::class)->getColumn(array('id'=>$this->_author),'location');
+			$location = 0;
+			$candidateLocations = array($applicantLocation, $authorLocation, $employeeLocation);
+			foreach($candidateLocations as $candidateLocation):
+				if(is_scalar($candidateLocation) && ctype_digit((string)$candidateLocation) && (int)$candidateLocation > 0):
+					$validLocationId = $this->getDefinedTable(Administration\LocationTable::class)->getColumn((int)$candidateLocation,'id');
+					if(is_scalar($validLocationId) && ctype_digit((string)$validLocationId) && (int)$validLocationId > 0):
+						$location = (int)$validLocationId;
+						break;
+					endif;
+				endif;
+			endforeach;
+			if($location < 1):
+				$defaultLocation = $this->getDefinedTable(Administration\LocationTable::class)->getColumn(array('status'=>1),'id');
+				if(is_scalar($defaultLocation) && ctype_digit((string)$defaultLocation) && (int)$defaultLocation > 0):
+					$location = (int)$defaultLocation;
+				else:
+					$this->flashMessenger()->addMessage("error^ Missing valid location mapping. Please configure applicant/approver location in location master.");
+					return $this->redirect()->toRoute('leave', array('action'=>'encashmentdtl', 'id' => $leave_id));
+				endif;
+			endif;
 			//print_r($user);exit;
 			//$this->_connection->beginTransaction();
 			$encash_update = array(
@@ -1158,8 +1184,18 @@ class LeaveController extends AbstractActionController
 					/**When Approved, it hits the transaction */	
 					if($action_id==3):
 						/** */
-						$region = $this->getDefinedTable(Administration\UsersTable::class)->getColumn(array('id'=>$this->_author),'region');
+						$region = $this->getDefinedTable(Administration\LocationTable::class)->getcolumn($location, 'region');
 						$loc = $this->getDefinedTable(Administration\LocationTable::class)->getcolumn($location, 'prefix');
+						if(!is_scalar($loc) || trim((string)$loc) === ''):
+							$loc = $this->getDefinedTable(Administration\LocationTable::class)->getcolumn($location, 'location_code');
+						endif;
+						if(!is_scalar($loc) || trim((string)$loc) === ''):
+							$loc = 'LOC';
+						endif;
+						if(!is_scalar($region) || !ctype_digit((string)$region)):
+							$authorRegion = $this->getDefinedTable(Administration\UsersTable::class)->getColumn(array('id'=>$this->_author),'region');
+							$region = (is_scalar($authorRegion) && ctype_digit((string)$authorRegion)) ? (int)$authorRegion : -1;
+						endif;
 						$prefix = $this->getDefinedTable(Accounts\JournalTable::class)->getcolumn(12,'prefix');
 						$date = date('ym',strtotime(date('Y-m-d')));
 						$tmp_VCNo = $loc.'-'.$prefix.$date;
@@ -1168,9 +1204,12 @@ class LeaveController extends AbstractActionController
 						
 						$pltp_no_list = array();
 						foreach($results as $result):
-							array_push($pltp_no_list, substr($result['voucher_no'], 14));
+							$serialPart = substr((string)$result['voucher_no'], -5);
+							if(ctype_digit($serialPart)):
+								$pltp_no_list[] = (int)$serialPart;
+							endif;
 						endforeach;
-						$next_serial = max($pltp_no_list) + 1;
+						$next_serial = !empty($pltp_no_list) ? (max($pltp_no_list) + 1) : 1;
 							
 						switch(strlen($next_serial)){
 							case 1: $next_dc_serial = "0000".$next_serial; break;
@@ -1184,6 +1223,79 @@ class LeaveController extends AbstractActionController
 					$encashAmount = $this->getDefinedTable(Hr\LeaveEncashTable::class)->getColumn(array('id'=>$leave_id),'payment_amount');
 					$basicAmount = $this->getDefinedTable(Hr\LeaveEncashTable::class)->getColumn(array('id'=>$leave_id),'basic');
 					$deduction = $this->getDefinedTable(Hr\LeaveEncashTable::class)->getColumn(array('id'=>$leave_id),'deduction');
+					$leaveEmployee = (int)$this->getDefinedTable(Hr\LeaveEncashTable::class)->getColumn(array('id'=>$leave_id),'employee');
+					$existingTransactionId = $this->getDefinedTable(Hr\LeaveEncashTable::class)->getColumn(array('id'=>$leave_id),'transaction_id');
+					if(is_scalar($existingTransactionId) && ctype_digit((string)$existingTransactionId) && (int)$existingTransactionId > 0):
+						$this->_connection->rollback();
+						$this->flashMessenger()->addMessage("notice^ Finance voucher already exists for this encashment. Duplicate approval posting skipped.");
+						return $this->redirect()->toRoute('leave', array('action'=>'encashmentdtl', 'id' => $leave_id));
+					endif;
+					$encashSubHead = $this->getDefinedTable(Hr\PayheadtypeTable::class)->getLeaveEncashmentSubheadId();
+					if($encashSubHead < 1):
+						$this->_connection->rollback();
+						$this->flashMessenger()->addMessage("error^ Configure one payroll Leave Encashment payhead type with code LE and a valid Finance provision subhead mapping.");
+						return $this->redirect()->toRoute('leave', array('action'=>'encashmentdtl', 'id' => $leave_id));
+					endif;
+					$encashHead = (int)$this->getDefinedTable(Accounts\SubheadTable::class)->getColumn($encashSubHead,'head');
+					if($encashHead < 1):
+						$this->_connection->rollback();
+						$this->flashMessenger()->addMessage("error^ Invalid finance head mapping for encashment subhead.");
+						return $this->redirect()->toRoute('leave', array('action'=>'encashmentdtl', 'id' => $leave_id));
+					endif;
+					$deductionAmount = (float) str_replace(',', '', (string) $deduction);
+					$deductionSubHead = (int)$this->getDefinedTable(Hr\LeaveEncashTable::class)->getColumn(array('id'=>$leave_id),'deduction_sub_head');
+					if($deductionAmount > 0 && $deductionSubHead < 1):
+						$taxPayhead = null;
+						foreach($this->getDefinedTable(Hr\PaystructureTable::class)->get(array('sd.employee' => $leaveEmployee, 'pht.deduction' => 1, 'ph.against' => '-2')) as $deductionHeadRow):
+							if(in_array((int)$deductionHeadRow['type'], array(2,3), true)):
+								$taxPayhead = $deductionHeadRow;
+								break;
+							endif;
+						endforeach;
+						if($taxPayhead !== null):
+							$payheadTypeId = $this->getDefinedTable(Hr\PayheadTable::class)->getColumn($taxPayhead['pay_head_id'], 'payhead_type');
+							$mappedSubHead = $this->getDefinedTable(Accounts\SubheadTable::class)->getColumn(array('ref_id' => $payheadTypeId, 'type' => 5), 'id');
+							if(is_scalar($mappedSubHead) && ctype_digit((string) $mappedSubHead) && (int)$mappedSubHead > 0):
+								$deductionSubHead = (int)$mappedSubHead;
+							endif;
+						endif;
+					endif;
+					$deductionHead = 0;
+					if($deductionAmount > 0):
+						if($deductionSubHead < 1):
+							$this->_connection->rollback();
+							$this->flashMessenger()->addMessage("error^ Missing finance subhead mapping for TDS deduction pay head. Please configure pay head mapping.");
+							return $this->redirect()->toRoute('leave', array('action'=>'encashmentdtl', 'id' => $leave_id));
+						endif;
+						$deductionHead = (int)$this->getDefinedTable(Accounts\SubheadTable::class)->getColumn($deductionSubHead,'head');
+						if($deductionHead < 1):
+							$this->_connection->rollback();
+							$this->flashMessenger()->addMessage("error^ Invalid finance head mapping for TDS deduction subhead.");
+							return $this->redirect()->toRoute('leave', array('action'=>'encashmentdtl', 'id' => $leave_id));
+						endif;
+					endif;
+					$bankSubHead = 0;
+					$bankHead = 0;
+					$bankAccounts = $this->getDefinedTable(Accounts\SubheadTable::class)->get(array('sh.type' => 3));
+					if($selectedBankSubHead < 1):
+						$this->_connection->rollback();
+						$this->flashMessenger()->addMessage("error^ Please select bank account for encashment posting.");
+						return $this->redirect()->toRoute('leave', array('action'=>'encashmentdtl', 'id' => $leave_id));
+					endif;
+					if(!empty($bankAccounts)):
+						foreach($bankAccounts as $bankAccount):
+							if((int)$bankAccount['id'] === $selectedBankSubHead):
+								$bankSubHead = (int)$bankAccount['id'];
+								$bankHead = (int)$bankAccount['head_id'];
+								break;
+							endif;
+						endforeach;
+					endif;
+					if($bankSubHead < 1 || $bankHead < 1):
+						$this->_connection->rollback();
+						$this->flashMessenger()->addMessage("error^ Invalid bank account selected for encashment.");
+						return $this->redirect()->toRoute('leave', array('action'=>'encashmentdtl', 'id' => $leave_id));
+					endif;
 					$encashdate = $this->getDefinedTable(Hr\LeaveEncashTable::class)->getColumn(array('id'=>$leave_id),'encash_date');
 							$data = array(
 								'voucher_date' 		=> $encashdate,
@@ -1222,8 +1334,8 @@ class LeaveController extends AbstractActionController
 									'voucher_dates' => $data['voucher_date'],
 									'voucher_types' => 12,
 									'location' => $location,
-									'head' =>'170',
-									'sub_head' =>'2594',
+									'head' =>$encashHead,
+									'sub_head' =>$encashSubHead,
 									'bank_ref_type' => '',
 									'debit' =>$basicAmount,
 									'credit' =>'0.00',
@@ -1238,21 +1350,23 @@ class LeaveController extends AbstractActionController
 								//print_r();exit;
 							$transactionDtls1 = $this->_safedataObj->rteSafe($transactionDtls1);
 							$result1 = $this->getDefinedTable(Accounts\TransactiondetailTable::class)->save($transactionDtls1);
-							/** Credit to HQ bank Account */
+							/** TDS deduction */
+							$result2 = 1;
+							if($deductionAmount > 0):
 							$transactionDtls2 = array(
 									'transaction' => $resultTrans,
 									'voucher_dates' => $data['voucher_date'],
 									'voucher_types' => 12,
 									'location' => $location,
-									'head' =>'150',
-									'sub_head' =>'2553',
+									'head' =>$deductionHead,
+									'sub_head' =>$deductionSubHead,
 									'bank_ref_type' => '',
 									'debit' =>'0.00',
 									'credit' =>$deduction,
-									'ref_no'=> 'Encashment', 
+									'ref_no'=> 'Leave Encashment.' . date('m.Y', strtotime($data['voucher_date'])),
 									'type' => '1',//user inputted  data
 									'status' => 3, // status applied
-									'activity'=>$data['voucher_amount'],
+									'activity'=>$location,
 									'author' =>$user,
 									'created' =>$this->_created,
 									'modified' =>$this->_modified,
@@ -1260,32 +1374,40 @@ class LeaveController extends AbstractActionController
 								//echo'<pre>';print_r($transactionDtls2);
 								$transactionDtls2 = $this->_safedataObj->rteSafe($transactionDtls2);
 								$result2 = $this->getDefinedTable(Accounts\TransactiondetailTable::class)->save($transactionDtls2);
+								endif;
+								/**BANK Account from where encashment amount will be credited */
 								$transactionDtls3 = array(
 									'transaction' => $resultTrans,
 									'voucher_dates' => $data['voucher_date'],
 									'voucher_types' => 12,
 									'location' => $location,
-									'head' =>'36',
-									'sub_head' =>'172',
+									'head' =>$bankHead,
+									'sub_head' =>$bankSubHead,
 									'bank_ref_type' => '',
 									'debit' =>'0.00',
 									'credit' =>$encashAmount,
 									'ref_no'=> 'Encashment', 
 									'type' => '1',//user inputted  data
 									'status' => 3, // status applied
-									'activity'=>$data['voucher_amount'],
+									'activity'=>$location,
 									'author' =>$user,
 									'created' =>$this->_created,
 									'modified' =>$this->_modified,
 								);
 								$transactionDtls3 = $this->_safedataObj->rteSafe($transactionDtls3);
 								$result3 = $this->getDefinedTable(Accounts\TransactiondetailTable::class)->save($transactionDtls3);
+								if(!($resultTrans > 0 && $flow > 0 && $result1 > 0 && $result2 > 0 && $result3 > 0)):
+									$this->_connection->rollback();
+									$this->flashMessenger()->addMessage("error^ Failed to create Finance voucher for encashment approval.");
+									return $this->redirect()->toRoute('leave', array('action'=>'encashmentdtl', 'id' => $leave_id));
+								endif;
 						//	endforeach;
 							//}
 							
 								$updateEncash = array(
 									'id' => $leave_id,
 									'transaction_id' => $resultTrans,
+									'encash_sub_head' => $encashSubHead,
 									'author' =>$this->_author,
 									'created' =>$this->_created,
 									'modified' =>$this->_modified,
@@ -1409,6 +1531,7 @@ class LeaveController extends AbstractActionController
 			'login_id'      => $this->_login_id,
 			'login_role'    => $this->_login_role,
 		); 		
+		$bankOptions = $this->getDefinedTable(Accounts\SubheadTable::class)->get(array('sh.type' => 3));
 		$viewModel = new ViewModel(array(			
 			'title' 		=> 'Leave Encashment Application',
 			'flow_id'            => $this->_id,
@@ -1422,7 +1545,8 @@ class LeaveController extends AbstractActionController
 			'focals' => $this->getDefinedTable(Administration\UsersTable::class)->getNotIn('0','employee'),
 			'focalsObj' 		 => $this->getDefinedTable(Administration\UsersTable::class),
 			'employeeObj'        => $this->getDefinedTable(Hr\EmployeeTable::class), 
-			'departmentObj'        => $this->getDefinedTable(Administration\ActivityTable::class),    
+			'departmentObj'        => $this->getDefinedTable(Administration\ActivityTable::class),
+			'bankOptions'          => $bankOptions,
 		));
 		$viewModel->setTerminal(True);
 		return $viewModel;
@@ -1510,47 +1634,50 @@ class LeaveController extends AbstractActionController
 		foreach($salaryDtls as $dtl):
 		     $total_earning += $dtl['amount'];
 		endforeach;
-	
-		/*Slab*/
-		$encashSlabs = $this->getDefinedTable(Hr\PaySlabTable::class)->getPaySlabForTotalEarning($total_earning);
-		//print_r($encashSlabs);exit;
-		foreach($encashSlabs as $encashSlab);
-			$PIT_deduct  = $encashSlab['id'];
-			
-			if($encashSlab['rate'] > 0 OR empty($encashSlab['rate'])){
-				if($encashSlab['rate'] != 0){		            
-				/*	if($total_earning > 150200){
-						$PIT_deduct = (((($total_earning- 83333) / 100) * $encashSlab['rate']) + $encashSlab['base']);
-					}else{	 */           
-						//$PIT_deduct = (((($total_earning -  $encashSlab['from_range']) / 100) * $encashSlab['rate']) + ($encashSlab['base']));
-					$from= $encashSlab['from_range'];
-					$count=0;
-					while($total_earning >= $from){
-						$count++;
-						if($count==1){
-							$PIT_deduct= $encashSlab['base'];
-						}else{
-							$PIT_deduct= ($encashSlab['rate'] * ($count-1))+ $encashSlab['base'];
-
-						}
-						$from+=100; 
-					}
-				//}
-				
-				}
-				else{
-					$PIT_deduct = $encashSlab['value']; 
-				}
-			}
-	/*	$deductions = $this->getDefinedTable(Hr\PaystructureTable::class)->get(array('sd.employee' => $employeeID, 'sd.pay_head' => '44'));		
-		
-		foreach($deductions as $deduct):
-		     $PIT_deduct  = $deduct['amount'];
-		endforeach;*/
+		$PIT_deduct = 0;
+		$taxPayhead = null;
+		foreach($this->getDefinedTable(Hr\PaystructureTable::class)->get(array('sd.employee' => $employeeID, 'pht.deduction' => 1, 'ph.against' => '-2')) as $deductionHead):
+			if(in_array((int)$deductionHead['type'], array(2,3), true)):
+				$taxPayhead = $deductionHead;
+				break;
+			endif;
+		endforeach;
+		if($taxPayhead !== null):
+			if((int)$taxPayhead['type'] === 2):
+				$PIT_deduct = ($total_earning / 100) * (float)$taxPayhead['percent'];
+			elseif((int)$taxPayhead['type'] === 3):
+				$matchedSlab = null;
+				foreach($this->getDefinedTable(Hr\PaySlabTable::class)->get(array('pay_head' => $taxPayhead['pay_head_id'])) as $payslab):
+					if($total_earning >= $payslab['from_range'] && $total_earning <= $payslab['to_range']):
+						$matchedSlab = $payslab;
+						break;
+					endif;
+				endforeach;
+				if($matchedSlab !== null):
+					if((int)$matchedSlab['formula'] === 1):
+						$rate = (float)$matchedSlab['rate'];
+						$base = (float)$matchedSlab['base'];
+						$min = (float)$matchedSlab['from_range'];
+						if($rate != 0):
+							if($total_earning > 158701):
+								$PIT_deduct = ((($total_earning - 83338) / 100) * $rate) + $base;
+							else:
+								$PIT_deduct = (intval(($total_earning - $min) / 100) * $rate) + $base;
+							endif;
+						endif;
+					else:
+						$PIT_deduct = (float)$matchedSlab['value'];
+					endif;
+				endif;
+			endif;
+			if((int)$taxPayhead['roundup'] === 1):
+				$PIT_deduct = round($PIT_deduct);
+			endif;
+		endif;
 		
 		echo json_encode(array(
 			'gross_salary' => $total_earning,
-			'PIT_deduct'   => ceil($PIT_deduct)
+			'PIT_deduct'   => $PIT_deduct
 		));
 		exit;
 	}
@@ -1574,6 +1701,22 @@ class LeaveController extends AbstractActionController
 		$this->init();
 		if($this->getRequest()->isPost()):
 			$form = $this->getRequest()->getPost()->toArray();		
+			$encashSubHead = $this->getDefinedTable(Hr\PayheadtypeTable::class)->getLeaveEncashmentSubheadId();
+			$deductionSubHead = null;
+			$taxPayhead = null;
+			foreach($this->getDefinedTable(Hr\PaystructureTable::class)->get(array('sd.employee' => $form['applicant'], 'pht.deduction' => 1, 'ph.against' => '-2')) as $deductionHead):
+				if(in_array((int)$deductionHead['type'], array(2,3), true)):
+					$taxPayhead = $deductionHead;
+					break;
+				endif;
+			endforeach;
+			if($taxPayhead !== null):
+				$payheadTypeId = $this->getDefinedTable(Hr\PayheadTable::class)->getColumn($taxPayhead['pay_head_id'], 'payhead_type');
+				$mappedSubHead = $this->getDefinedTable(Accounts\SubheadTable::class)->getColumn(array('ref_id' => $payheadTypeId, 'type' => 5), 'id');
+				if(is_scalar($mappedSubHead) && ctype_digit((string) $mappedSubHead) && (int)$mappedSubHead > 0):
+					$deductionSubHead = (int)$mappedSubHead;
+				endif;
+			endif;
 		    $encashedDate = $this->getDefinedTable(Hr\LeaveEncashTable::class)->getMax($column='encash_date', $where=array('employee'=>$form['applicant'],'status'=>array(2,8)));
 			if(strlen($encashedDate)>0){
 				$today = date('Y-m-d');
@@ -1595,10 +1738,10 @@ class LeaveController extends AbstractActionController
 				'leave_balance'      => $form['leave_balance'],
 				'leave_balance_date' => date('Y-m-d'),
 				'payment_amount'     => $form['payment_amount'],
-				//'encash_sub_head'    => '',
+				'encash_sub_head'    => $encashSubHead,
 				'deduction'   		 => $form['deduction'],
 				'basic'   		 => $form['gross_salary'],
-				//'deduction_sub_head' => '',
+				'deduction_sub_head' => $deductionSubHead,
 				'status'             => '1',
 				'remarks'  		     => $form['remarks'],
 				'author'             => $this->_author,

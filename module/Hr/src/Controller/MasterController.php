@@ -572,21 +572,21 @@ class MasterController extends AbstractActionController
 		$ViewModel->setTerminal(True);
 		return $ViewModel;	
 	}
-	private function isValidPayheadSubhead($payheadType, $subhead)
+	private function getPayheadTypeFinanceSubhead($payheadType)
 	{
-		if (!is_scalar($payheadType) || !ctype_digit((string) $payheadType) || (int) $payheadType < 1
-			|| !is_scalar($subhead) || !ctype_digit((string) $subhead) || (int) $subhead < 1) {
-			return false;
+		if (!is_scalar($payheadType) || !ctype_digit((string) $payheadType) || (int) $payheadType < 1) {
+			return null;
 		}
-		if (!$this->getDefinedTable(Hr\PayheadtypeTable::class)->get((int) $payheadType)) {
-			return false;
+		$payheadTypeTable = $this->getDefinedTable(Hr\PayheadtypeTable::class);
+		if (!$payheadTypeTable->get((int) $payheadType)) {
+			return null;
 		}
-		foreach ($this->getDefinedTable(Accounts\SubheadTable::class)->getPayheadTypeSubheads((int) $payheadType) as $choice) {
-			if ((int) $choice['id'] === (int) $subhead) {
-				return true;
-			}
+		$subheadId = $payheadTypeTable->getFinanceSubheadId((int) $payheadType);
+		if ($subheadId === null) {
+			return null;
 		}
-		return false;
+		$matches = $this->getDefinedTable(Accounts\SubheadTable::class)->get(array('sh.id' => $subheadId, 'sh.type' => 5));
+		return empty($matches) ? null : (int) $subheadId;
 	}
 
 	/**
@@ -614,8 +614,9 @@ class MasterController extends AbstractActionController
 	
 		if($this->getRequest()->isPost()){
 			$form = $this->getRequest()->getPost();
-			if (!$this->isValidPayheadSubhead($form['payhead_type'], $form['fa_sub_head'])) {
-				$this->flashMessenger()->addMessage('error^ Please select a Finance Sub Head linked to the selected PayHead Type.');
+			$mappedSubhead = $this->getPayheadTypeFinanceSubhead($form['payhead_type']);
+			if ($mappedSubhead === null) {
+				$this->flashMessenger()->addMessage('error^ Please configure Finance Sub Head in the selected PayHead Type before adding PayHead.');
 				return $this->redirect()->toRoute('master', array('action'=>'payhead'));
 			}
 			if(empty($form['dlwp'])):
@@ -631,7 +632,7 @@ class MasterController extends AbstractActionController
 			$data = array(
 					'pay_head' => $form['pay_head'],
 					'payhead_type' => $form['payhead_type'],
-					'fa_sub_head' => $form['fa_sub_head'],
+					'fa_sub_head' => $mappedSubhead,
 					'code' => $form['code'],
 					'type' => $form['type'],
 					'dlwp' => $dlwp,
@@ -655,7 +656,6 @@ class MasterController extends AbstractActionController
 				'title'	=> 'Add Payhead',
 				'payheads' => $this->getDefinedTable(Hr\PayheadTable::class)->getAll(),
 				'payheadtypes' => $this->getDefinedTable(Hr\PayheadtypeTable::class)->getAll(),
-				'fa_subhead' => $this->getDefinedTable(Accounts\SubheadTable::class)->getPayheadTypeSubheads(),
 		));
 		$ViewModel->setTerminal(True);
 		return $ViewModel;
@@ -670,8 +670,9 @@ class MasterController extends AbstractActionController
 		if($this->getRequest()->isPost())
 		{
 			$form=$this->getRequest()->getPost();
-			if (!$this->isValidPayheadSubhead($form['payhead_type'], $form['fa_sub_head'])) {
-				$this->flashMessenger()->addMessage('error^ Please select a Finance Sub Head linked to the selected PayHead Type.');
+			$mappedSubhead = $this->getPayheadTypeFinanceSubhead($form['payhead_type']);
+			if ($mappedSubhead === null) {
+				$this->flashMessenger()->addMessage('error^ Please configure Finance Sub Head in the selected PayHead Type before updating PayHead.');
 				return $this->redirect()->toRoute('master', array('action'=>'payhead'));
 			}
 			if(empty($form['dlwp'])):
@@ -692,7 +693,7 @@ class MasterController extends AbstractActionController
 					'code' => $form['code'],
 					'type' => $form['type'],
 					'dlwp' => $dlwp,
-					'fa_sub_head' => $form['fa_sub_head'],
+					'fa_sub_head' => $mappedSubhead,
 					'roundup' => $roundup,
 					'against' => ($form['against']==NULL)?0:$form['against'],
 					'percentage' => ($form['percentage']== Null)?0:$form['percentage'],
@@ -779,7 +780,6 @@ class MasterController extends AbstractActionController
 				'payheadtypes' => $this->getDefinedTable(Hr\PayheadtypeTable::class)->getAll(),
 				'payhead' => $this->getDefinedTable(Hr\PayheadTable::class)->get($this->_id),
 				'payheads' => $this->getDefinedTable(Hr\PayheadTable::class)->getAll(),
-				'fa_subhead' => $this->getDefinedTable(Accounts\SubheadTable::class)->getPayheadTypeSubheads(),
 		
 		));
 		$ViewModel->setTerminal(True);
@@ -795,7 +795,7 @@ class MasterController extends AbstractActionController
 	
 		return new ViewModel(array(
 				'title' => 'Payhead Type',				
-				'payheadtypes' => $this->getDefinedTable(Hr\PayheadtypeTable::class)->getAll(),
+				'payheadtypes' => $this->getDefinedTable(Hr\PayheadtypeTable::class)->getAllWithFinanceSubhead(),
 		));
 	
 	}	
@@ -834,6 +834,19 @@ class MasterController extends AbstractActionController
 				$subheaddata = $this->_safedataObj->rteSafe($subheaddata);
 				$result1 = $this->getDefinedTable(Accounts\SubheadTable::class)->save($subheaddata);
 				if($result1 > 0):
+					if ($this->getDefinedTable(Hr\PayheadtypeTable::class)->hasFinanceSubheadColumn()) {
+						$mapResult = $this->getDefinedTable(Hr\PayheadtypeTable::class)->save(array(
+							'id' => $result,
+							'fa_sub_head' => $result1,
+							'author' => $this->_author,
+							'modified' => $this->_modified,
+						));
+						if ($mapResult <= 0) {
+							$this->_connection->rollback(); // rollback transaction over failure
+							$this->flashMessenger()->addMessage("error^ Failed to map Finance Sub Head with Pay head type");
+							return $this->redirect()->toRoute('master',array('action'=>'payheadtype'));
+						}
+					}
 					$this->_connection->commit(); // commit transaction on success
 					$this->flashMessenger()->addMessage("success^ New Pay head type successfully added");
 				else:
@@ -931,6 +944,19 @@ class MasterController extends AbstractActionController
 				$subheaddata = $this->_safedataObj->rteSafe($subheaddata);
 				$result1 = $this->getDefinedTable(Accounts\SubheadTable::class)->save($subheaddata);
 				if($result1 > 0):
+					if ($this->getDefinedTable(Hr\PayheadtypeTable::class)->hasFinanceSubheadColumn()) {
+						$mapResult = $this->getDefinedTable(Hr\PayheadtypeTable::class)->save(array(
+							'id' => $result,
+							'fa_sub_head' => $result1,
+							'author' => $this->_author,
+							'modified' => $this->_modified,
+						));
+						if ($mapResult <= 0) {
+							$this->_connection->rollback(); // rollback transaction over failure
+							$this->flashMessenger()->addMessage("error^ Failed to update Pay head type");
+							return $this->redirect()->toRoute('master',array('action'=>'payheadtype'));
+						}
+					}
 					$this->_connection->commit(); // commit transaction on success
 					$this->flashMessenger()->addMessage("success^ Pay head type successfully updated");
 				else:

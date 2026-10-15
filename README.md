@@ -71,6 +71,58 @@ Run the targeted regression tests with:
 php vendor/phpunit/phpunit/phpunit --bootstrap vendor/autoload.php --no-configuration module/Hr/test
 ```
 
+## Pay Register layout
+
+Remittance Report account numbers use employee PF/GIS records for payhead
+codes PF/GIS and employee TPN for TDS/PIT or tax-base deductions (against -2).
+This applies to saved and draft payrolls without fixed payhead IDs.
+Missing account values display "Not configured"; other saved deductions retain
+their payroll references.
+The Remittance Report labels draft data only when no saved deduction rows
+are being displayed; leftover temporary payroll does not mark saved rows as draft.
+
+The Pay Register shows Earnings and Deductions column groups only when
+displayed payheads exist. Summary columns remain Total Deduction, Total Earning,
+and Net Pay. Report totals are in the table footer, excluded from employee
+pagination counts and included in Copy, CSV, Excel, PDF, and Print exports.
+Draft payhead columns use each displayed payhead's own payroll structure amount.
+The PIT Report also keeps totals in its footer, excluding them from employee
+sorting and pagination while retaining them in exports and printing.
+Its header, employee rows, and footer align within a horizontally scrollable table.
+Salary Tax and Health Contribution resolve payhead codes TDS and HC rather
+than fixed database IDs. Totals sum the displayed payroll rows, including
+filtered draft rows. Missing or ambiguous tax payheads display a configuration
+warning. Remarks show the latest Salary voucher reference saved through
+Update Remarks for the selected month and year, for saved and draft payrolls.
+The TDS & HC Report also resolves TDS, HC, PF, and GIS by payhead code.
+Unconfigured GIS contributes zero when no GIS payhead exists. Missing tax
+payheads display a configuration warning. Its footer includes TDS, HC, and
+their combined total, excluded from employee pagination and retained in exports.
+
+Run the layout regressions with:
+
+```text
+php vendor\bin\phpunit --bootstrap vendor\autoload.php --do-not-cache-result module\Hr\test\View\PayRegisterLayoutTest.php
+```
+
+## Leave encashment posting
+
+Configure exactly one payroll PayHead Type with code `LE` (Leave Encashment)
+and link its Finance Sub Head to the leave encashment provision account.
+The debit account is resolved from this mapping, not the Basic Pay account.
+Explicit PayHead Type mappings take priority over legacy payroll subheads
+(type 5) linked through the reference ID. Database IDs may differ between projects.
+Approval resolves the current mapping again for existing drafts and rejects
+missing, duplicate, or invalid mappings without creating a voucher.
+Basic Pay still supplies the encashment amount; TDS and the selected bank
+remain the credit accounts. Existing posted vouchers are not changed automatically.
+
+Run the mapping regressions with:
+
+```text
+php vendor\bin\phpunit --bootstrap vendor\autoload.php --do-not-cache-result module\Hr\test\Model\LeaveEncashmentMappingTest.php
+```
+
 ## Installation using Composer
 
 The easiest way to create a new Laminas MVC project is to use

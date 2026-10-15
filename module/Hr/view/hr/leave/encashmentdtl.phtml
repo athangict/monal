@@ -5,14 +5,35 @@
  * 
  */
 $this->headTitle($this->title);
-foreach($this->encashDtls as $row); 
-foreach($this->employeeObj->get($row['employee']) as $emp);
+$row = null;
+foreach($this->encashDtls as $encashRow){
+	$row = $encashRow;
+	break;
+}
+if(!$row){
+?>
+<div class="alert alert-warning">Leave encashment record was not found or may have been removed.</div>
+<?php
+return;
+}
+$emp = array(
+	'full_name' => '',
+	'emp_id' => '',
+	'location' => '',
+	'designation' => '',
+	'email' => '',
+	'mobile' => '',
+);
+foreach($this->employeeObj->get($row['employee']) as $employeeRow){
+	$emp = $employeeRow;
+	break;
+}
 $flag = false;
+$userEmp = $this->usersObj->getColumn($this->userID, 'employee');
 $checkleaveOfficial = $this->usersObj->get(array('id'=>$this->userID, 'role'=>100));   
 if(sizeof($checkleaveOfficial) >0 && sizeof($this->encashDtls)>0){
   $flag = true;
 }else{	
-   $userEmp = $this->usersObj->getColumn($this->userID, 'employee'); 
   if($userEmp == $row['employee'])
   {
 	$flag = true;
@@ -30,7 +51,7 @@ if(sizeof($checkleaveOfficial) >0 && sizeof($this->encashDtls)>0){
 				   </a>
 				   &nbsp;&nbsp;
 				<h3 class="widget-title grey lighter">
-					Leave Encashment Application &nbsp;&nbsp; <span class="orange">Dated:-<?php echo date('d-m-y',strtotime($row['encash_date']));?></span>
+					Leave Encashment Application &nbsp;&nbsp; <span class="orange">Dated:-<?php echo !empty($row['encash_date']) ? date('d-m-y',strtotime($row['encash_date'])) : '-';?></span>
 					&nbsp;&nbsp;<?php $this->status($row['status']); ?> 					
 				</h3>
 				<div class="widget-toolbar hidden-xs">
@@ -130,19 +151,25 @@ if(sizeof($checkleaveOfficial) >0 && sizeof($this->encashDtls)>0){
 						</div>
 						<div class="col-lg-4"><br/>&nbsp;
 						<?php
-						  $employeeUser = $this->usersObj->getColumn(array('employee'=>$emp['id']), 'id');	
+						  $isApplicant = ((int)$userEmp === (int)$row['employee']);
+						  $isLeaveOfficial = (sizeof($checkleaveOfficial) > 0);
+						  $isCommitted = ((int)$row['status'] === 4) || (sizeof($this->activityObj->get(array('process'=>520,'process_id'=>$row['id'],'status'=>4))) > 0);
 						  $activity = $this->flowtransactionObj->getMax($column='activity', $where=array('application'=>$row['id'],'process'=>520));
 						  $flows = $this->flowtransactionObj->get(array('application'=>$row['id'],'activity'=>$activity,'process'=>520));
-						  foreach($flows as $flow);	
+						  $flow = null;
+						  foreach($flows as $flowRow){
+							$flow = $flowRow;
+							break;
+						  }	
 						 // print_r($row['id']);exit;
-							if($this->userID  == $employeeUser && $row['status']==1):?>
+							if(($isApplicant || $isLeaveOfficial) && (int)$row['status']===1 && !$isCommitted && $flow !== null):?>
 								<form method="post" action="<?php echo $this->url('leave', array('action' => 'encashmentdtl')); ?>">	
 									<a data-toggle="modal" data-target="#modal" href="<?php echo $this->url('leave', array('action'=>'encashprocess', 'id'=>$row['id'].'-'.'1'.'-'.$flow['id']));?>" class="btn btn-success"> 
 									<i class="fa fa-check-square-o"></i> Apply Encashment </a>								
 									<button type="submit" value="1" name="cancel" class="btn btn-danger" onClick="return confirm('Are you sure to Cancel this leave?')"> 
 									<i class="fa fa-times"></i> Cancel  </button>	
 								  </form>	<?php
-								 elseif($this->userID == $flow['role_id'] && $row['status']!=8):							      
+								 elseif($flow !== null && $this->userID == $flow['role_id'] && $row['status']!=8 && !$isCommitted):							      
 									$actions = explode('|', (string) $flow['action']);
 									for($i=0; $i < sizeof($actions); $i++):
 										$buttons = $this->flowactionObj->get($actions[$i]);

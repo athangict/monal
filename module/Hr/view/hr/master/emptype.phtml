@@ -30,14 +30,14 @@
 					$i = 1; 
 					foreach ($this->emptype as $emptype):
 				?>
-						<tr>
-							<td><?php echo $i++; ?> </td>
-							<td><b><?php echo $emptype['emp_type']; ?><b></td>                              
-							<td><b><?php echo $emptype['code']; ?><b></td>  
-							<?php if($this->button(1)!=""):?>
-								<td><?php echo $this->button(1, $emptype['id']);?></td>
-							<?php endif;?>   
-						 </tr>
+					<tr>
+						<td><?php echo $i++; ?> </td>
+						<td><b><?php echo $emptype['emp_type']; ?><b></td>                              
+						<td><b><?php echo $emptype['code']; ?><b></td>  
+						<?php if($this->button(1)!=""):?>
+							<td><?php echo $this->button(1, $emptype['id']);?></td>
+						<?php endif;?>   
+						</tr>
 				<?php endforeach;?>
 			</tbody>
 		</table>

@@ -11,6 +11,12 @@
 //extract($this->data);
 //echo '<pre>';print_r($payroll);exit;
 $minYear = ($this->minYear > 0)?$this->minYear:date('Y');
+$payheadCode = strtoupper(trim((string)$this->payheadObj->getColumn($payheads, 'code')));
+$accountFields = array('PF' => 'pf', 'GIS' => 'gis', 'TDS' => 'tpn', 'PIT' => 'tpn');
+$accountField = $accountFields[$payheadCode] ?? null;
+if($accountField === null && (string)$this->payheadObj->getColumn($payheads, 'against') === '-2'):
+	$accountField = 'tpn';
+endif;
 ?>
 <div class="widget widget-box transparent">
 	<div class="widget-header">
@@ -108,7 +114,7 @@ $minYear = ($this->minYear > 0)?$this->minYear:date('Y');
 				    <input type="hidden" name="ph_date" id="ph_date" value="<?php echo date("F", strtotime(date("d-$month-y"))).','.$data['year'];?>" />
 					<strong>For the Month of : <?php echo date("F", strtotime(date("d-$month-y"))); ?>, <?php echo $year; ?>
 						<?php 
-							 $temp_payrolls= $this->temppayrollObj->getforReportByLoc($data);
+							 $temp_payrolls = empty($payroll) ? $this->temppayrollObj->getforReportByLoc($data) : array();
 								if(sizeof($temp_payrolls) > 0)://Draft?>
 									<span class="label label-danger">DRAFT</span>
 						<?php	elseif(empty($payroll) && empty($temp_payrolls)): //Not Generated ?>
@@ -140,17 +146,12 @@ $minYear = ($this->minYear > 0)?$this->minYear:date('Y');
 						    $levelID=$this->employeeObj->getColumn($pr['employee'],'position_level');
 							//$paydetail_id = $this->paydetailObj->getColumn(array('pay_roll'=> $pr['id'], 'pay_head' =>$payheads),'id');
 							
-							$tpnID=$this->tpnObj->get(['employee'=>$pr['employee']]);
-							foreach($tpnID as $tpna)
-							$tpn =$tpna['tpn'];
-							$pf =$tpna['pf'];
-							$gis =$tpna['gis'];
-							if($payheads=='12'){
-								$acc=$gis;
-							}
-							if($payheads=='9'){
-								$acc=$pf;
-							}
+							$acc = null;
+							if($accountField !== null):
+								foreach($this->tpnObj->get(['employee'=>$pr['employee']]) as $tpna):
+									$acc = $tpna[$accountField] ?? null;
+								endforeach;
+							endif;
 							//echo '<pre>';print_r($acc);
 							//echo '<pre>';print_r($payroll);exit;
 							?>
@@ -165,16 +166,23 @@ $minYear = ($this->minYear > 0)?$this->minYear:date('Y');
 						<td><?php  //echo $pr['actual_amount'];
 						// $amount=(!empty($amt))?$amt:0.00;
 						 echo number_format((float)$pr['actual_amount'],2,'.',',');?></td>
-						<td><?php if($payheads=='12'||$payheads=='9'):
-										echo $acc;
+						<td><?php if($accountField !== null):
+										echo ($acc !== null && trim((string)$acc) !== '') ? $this->escapeHtml($acc) : 'Not configured';
 									else:
-										echo $pr['ref_no'];
+										$reference = $pr['ref_no'] ?? null;
+										echo ($reference !== null && trim((string)$reference) !== '') ? $this->escapeHtml($reference) : 'Not configured';
 									endif;?></td>
 					</tr>
 					<?php $total+=$pr['actual_amount'];endforeach;?>
 					<?php else: $temp= $this->temppayrollObj->getforReportByLoc($data);
 					foreach($temp as $temps):
-					$levelID=$this->employeeObj->getColumn($temps['employee'],'position_level');//echo '<pre>';print_r($levelID);exit;?>
+					$levelID=$this->employeeObj->getColumn($temps['employee'],'position_level');
+					$acc = null;
+					if($accountField !== null):
+						foreach($this->tpnObj->get(['employee'=>$temps['employee_id']]) as $tpna):
+							$acc = $tpna[$accountField] ?? null;
+						endforeach;
+					endif;?>
 					<tr>
 						<td><?php echo $i++;?></td>
 						<td><?php echo $temps['emp_id'];?></td>
@@ -186,7 +194,7 @@ $minYear = ($this->minYear > 0)?$this->minYear:date('Y');
 						<td><?php $amt  = $this->paystructureObj->getColumn(array('employee'=> $temps['employee_id'], 'pay_head' =>$payheads),'amount');
 						 $amount=(!empty($amt))?$amt:0.00;
 						 echo number_format((float)$amount,2,'.',',');?></td>
-						<td></td>
+						<td><?php echo ($acc !== null && trim((string)$acc) !== '') ? $this->escapeHtml($acc) : 'Not configured';?></td>
 					</tr>
 					<?php $total+=$amount;endforeach;endif;?>
 				</tbody>

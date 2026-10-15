@@ -9,3 +9,4 @@ final class AccountLabel
 		return htmlspecialchars(html_entity_decode($label, ENT_QUOTES, 'UTF-8'), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
 	}
 }
+

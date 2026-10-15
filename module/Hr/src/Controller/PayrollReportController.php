@@ -286,7 +286,8 @@ class PayrollReportController extends AbstractActionController
 			$month = date('m');
 			$region = '-1';
 			$location = '-1';
-			$payheads = 9;
+			$deductionHeads = $this->getDefinedTable(Hr\PayheadTable::class)->get(array('pht.deduction'=>1));
+			$payheads = empty($deductionHeads) ? 0 : $deductionHeads[0]['id'];
 		}
 		if($year == 0):
 			$max_year = $this->getDefinedTable(Hr\PayrollTable::class)->getMax('year');
@@ -682,7 +683,7 @@ class PayrollReportController extends AbstractActionController
 		
 		
 		$ViewModel = new ViewModel(array(
-				'title' 			=> 'Update Voucher',
+				'title' 			=> $this->getDefinedTable(Acl\AclTable::class)->getColumn(array('route'=>'preport', 'action'=>'updatevoucher'), 'menu'),
 				'voucher'			=> $this->getDefinedTable(Hr\PitVoucherTable::class),
 			));		 
 			$ViewModel->setTerminal(True);
@@ -697,6 +698,7 @@ class PayrollReportController extends AbstractActionController
 		$arr = explode('-', (string) $this->_id);
 		return new ViewModel(array(
 				'title' 			=> 'Salary Slip',
+				'minYear' 			=> $this->getDefinedTable(Hr\PayrollTable::class)->getMin('year'),
 				'empId' 			=> $arr[0],
 				'year' 				=> $arr[1],
 				'employeeObj' 		=> $this->getDefinedTable(Hr\EmployeeTable::class),

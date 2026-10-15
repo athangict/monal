@@ -9,7 +9,7 @@
 <form method="post" id="#form" action="<?php echo $this->url('preport', array('action' => 'updatevoucher')); ?>"  enctype="multipart/form-data" >    
     <div class="modal-header">
         <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-        <h4 class="modal-title"> <i class="fa fa-asterisk"></i> Update Voucher  <?php //echo date("F", strtotime(date("1-$this->month-$this->year"))).', '.$this->year; ?> </h4>
+        <h4 class="modal-title"> <i class="fa fa-asterisk"></i> <?php echo $this->escapeHtml($this->title); ?> </h4>
     </div>     
     <div class="modal-body">       
 		<div class="panel panel-default">                       

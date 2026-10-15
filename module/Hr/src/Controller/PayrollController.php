@@ -160,7 +160,7 @@ class PayrollController extends AbstractActionController
                 'deptObj' =>$this->getDefinedTable(Administration\DepartmentTable::class),
 				'actObj' =>$this->getDefinedTable(Administration\ActivityTable::class),
 				'transactionObj' =>$this->getDefinedTable(Accounts\TransactionTable::class),
-				'payrollBankAccounts' => $this->getDefinedTable(Accounts\BankaccountTable::class)->getPayrollAccounts($this->getPayrollLocation()),
+                'payrollNetPayableOptions' => $this->getDefinedTable(Hr\PayheadtypeTable::class)->getPayrollNetPayableOptions(true),
 				'bookingbutton' => (sizeof($this->getDefinedTable(Hr\SalarybookingTable::class)->get(array('month'=> $month,'year'=> $year,'salary_advance'=>'1')))> 0)? True:False,
 				'advancebutton' => (sizeof($this->getDefinedTable(Hr\SalarybookingTable::class)->get(array('month'=> $month,'year'=> $year,'salary_advance'=>'2')))> 0)? True:False,
 		));
@@ -220,18 +220,31 @@ class PayrollController extends AbstractActionController
 	{
 		$this->init();
 		$this->_id = isset($this->_id)?$this->_id:date('Y-m-d');
-		list($year, $month) = explode('-', (string) $this->_id);	  
+		list($year, $month) = explode('-', (string) $this->_id);
+		$year = (is_scalar($year) && ctype_digit((string) $year)) ? (int) $year : 0;
+		$month = (is_scalar($month) && ctype_digit((string) $month)) ? (int) $month : 0;
 	
 		if($year == 0):
 			$max_year = $this->getDefinedTable(Hr\PayrollTable::class)->getMax('year');
 			$max_month = $this->getDefinedTable(Hr\PayrollTable::class)->getMax('month', array('year' => $max_year));
-			$year = ($max_month == 12)? $max_year+1 : $max_year;
+			if (!is_numeric($max_year) || (int) $max_year < 1) {
+				$year = (int) date('Y');
+			} else {
+				$year = ((int) $max_month == 12)? (int) $max_year+1 : (int) $max_year;
+			}
 		endif;
 		if($month == 0):
 			$max_year = $this->getDefinedTable(Hr\PayrollTable::class)->getMax('year');
 			$max_month = $this->getDefinedTable(Hr\PayrollTable::class)->getMax('month', array('year' => $max_year));
-			$month = ($max_month == 12)? 1 : $max_month+1;
+			if (!is_numeric($max_month) || (int) $max_month < 1 || (int) $max_month > 12) {
+				$month = (int) date('m');
+			} else {
+				$month = ((int) $max_month == 12)? 1 : (int) $max_month+1;
+			}
 		endif;
+		if ($month < 1 || $month > 12) {
+			$month = (int) date('m');
+		}
 		if($this->getDefinedTable(Hr\PayrollTable::class)->isPresent(array('month'=>$month, 'year'=>$year))):
 			$this->redirect()->toRoute('payroll',array('id'=>$year.'-'.$month));
 		endif;
@@ -923,13 +936,27 @@ class PayrollController extends AbstractActionController
 	public function submitpayrollAction()
 	{
 		$this->init();
+		$fallbackYear = (int) date('Y');
+		$fallbackMonth = (int) date('m');
+		if (is_string($this->_id) && preg_match('/^(\d{4})-(\d{1,2})$/', $this->_id, $matches)) {
+			$fallbackYear = (int) $matches[1];
+			$fallbackMonth = (int) $matches[2];
+		}
+		$redirectYearMonth = $fallbackYear.'-'.$fallbackMonth;
 		$this->_connection->beginTransaction(); //***Transaction begins here***//
 		foreach($this->getDefinedTable(Hr\TempPayrollTable::class)->getAll() as $temp_payroll):
+			$payrollYear = (is_scalar($temp_payroll['year']) && ctype_digit((string) $temp_payroll['year']) && (int) $temp_payroll['year'] > 0)
+				? (int) $temp_payroll['year']
+				: $fallbackYear;
+			$payrollMonth = (is_scalar($temp_payroll['month']) && ctype_digit((string) $temp_payroll['month']) && (int) $temp_payroll['month'] > 0 && (int) $temp_payroll['month'] <= 12)
+				? (int) $temp_payroll['month']
+				: $fallbackMonth;
+			$redirectYearMonth = $payrollYear.'-'.$payrollMonth;
 			$payroll_data = array(
 				'employee' => $temp_payroll['employee'],
 				'emp_his' => $temp_payroll['emp_his'],
-				'year' => $temp_payroll['year'],
-				'month' => $temp_payroll['month'],
+				'year' => $payrollYear,
+				'month' => $payrollMonth,
 				'working_days' => $temp_payroll['working_days'],
 				'leave_without_pay' => $temp_payroll['leave_without_pay'],
 				//'activity' => $temp_payroll['activity'],
@@ -991,9 +1018,9 @@ class PayrollController extends AbstractActionController
 		else:
 			$this->_connection->rollback(); // rollback transaction over failure
 			$this->flashMessenger()->addMessage("error^ Failed while submitting payroll, Try again after some time");	
-			return $this->redirect()->toRoute('payroll', array('action'=>'definepayroll'));
+			return $this->redirect()->toRoute('payroll', array('action'=>'payroll', 'id' => $redirectYearMonth));
 		endif;
-		return $this->redirect()->toRoute('payroll', array('action'=>'index'));
+		return $this->redirect()->toRoute('payroll', array('action'=>'payroll', 'id' => $redirectYearMonth));
 	}
 	
 	/**
@@ -1488,35 +1515,28 @@ class PayrollController extends AbstractActionController
 		if($this->getRequest()->isPost()):		
 			$form = $this->getRequest()->getPost()->toArray();	
 			$payrollLocation = $this->getPayrollLocation();
-			$selectedBank = null;
-			$bankAccountId = isset($form['bank_account']) ? $form['bank_account'] : null;
-			if (is_scalar($bankAccountId) && ctype_digit((string) $bankAccountId)) {
-				foreach ($this->getDefinedTable(Accounts\BankaccountTable::class)->getPayrollAccounts($payrollLocation) as $bankAccount) {
-					if ((int) $bankAccount['bank_account_id'] === (int) $bankAccountId) {
-						$selectedBank = $bankAccount;
+			$selectedNetPayable = null;
+			$netPayableSubheadId = isset($form['net_payable_subhead']) ? $form['net_payable_subhead'] : null;
+			if (is_scalar($netPayableSubheadId) && ctype_digit((string) $netPayableSubheadId)) {
+				foreach ($this->getDefinedTable(Hr\PayheadtypeTable::class)->getPayrollNetPayableOptions(true) as $netPayableOption) {
+					if ((int) $netPayableOption['subhead_id'] === (int) $netPayableSubheadId) {
+						$selectedNetPayable = $netPayableOption;
 						break;
 					}
 				}
 			}
-			if ($selectedBank === null) {
-				$this->flashMessenger()->addMessage('error^ Please select a bank account for your location.');
+			if ($selectedNetPayable === null) {
+				$this->flashMessenger()->addMessage('error^ Please select salary net payable from pay head.');
 				return $this->redirect()->toRoute('payroll', array('action'=>'payroll', 'id'=>$form['year'].'-'.$form['month']));
 			}
-			$bankMappings = $this->getDefinedTable(Accounts\BankaccountTable::class)->getPayrollMappings($payrollLocation, (int) $bankAccountId);
-			if (count($bankMappings) !== 1) {
-				$this->flashMessenger()->addMessage(count($bankMappings) === 0
-					? 'error^ The selected bank account has no valid Finance Head/Subhead mapping. Configure its Sub Head Details before submitting payroll.'
-					: 'error^ The selected bank account has multiple Finance Subhead mappings. Configure a single payment mapping before submitting payroll.');
-				return $this->redirect()->toRoute('payroll', array('action'=>'payroll', 'id'=>$form['year'].'-'.$form['month']));
-			}
-			$selectedBank = $bankMappings[0];
 			
 			$this->_connection->beginTransaction(); //***Transaction begins here***//
 			try {
+				$payrollVoucherType = 11; // Expense Requisition
 			/*Get users under destination location with sub role Depoy Manager*/
 				$region = $this->getDefinedTable(Administration\UsersTable::class)->getColumn(array('id'=>$this->_author),'region');
 				$loc = $this->getDefinedTable(Administration\LocationTable::class)->getcolumn($payrollLocation, 'prefix');
-				$prefix = $this->getDefinedTable(Accounts\JournalTable::class)->getcolumn(12,'prefix');
+				$prefix = $this->getDefinedTable(Accounts\JournalTable::class)->getcolumn($payrollVoucherType,'prefix');
 				$date = date('ym',strtotime(date('Y-m-d')));
 				$tmp_VCNo = $loc.'-'.$prefix.$date;
 				
@@ -1537,11 +1557,12 @@ class PayrollController extends AbstractActionController
 			$payrollNetPay = $this->getDefinedTable(Hr\PayrollTable::class)->getSumGross('net_pay',array('year'=>$form['year'],'month'=>$form['month']));
 		   //print_r($payrollNetPay);exit;
 		   $yearMonth=$form['year'].'-'.$form['month'];
+		   $monthYearRef = $form['month'].'.'.$form['year'];
 			$day=1;
 			$voucher_date=$yearMonth.'-'.$day;
 					$data = array(
 						'voucher_date' 		=> $voucher_date,
-						'voucher_type' 		=> 12,
+						'voucher_type' 		=> $payrollVoucherType,
 						'region'   			=>$region,
 						'doc_id'   			=>"Payroll",
 						'voucher_no' 		=> $voucher_no,
@@ -1564,7 +1585,7 @@ class PayrollController extends AbstractActionController
 							'routing' 			=> 2,
 							'status' 			=> 3, // status initiated 
 							'routing_status'	=>2,
-							'action_performed'	=>1,
+							'action_performed'	=>0,
 							'description'		=>"Payroll",
 							'author' 			=>$this->_author,
 							'created' 			=>$this->_created,  
@@ -1585,14 +1606,14 @@ class PayrollController extends AbstractActionController
 						$empexpensedata = array(
 							'transaction' => $resultTrans,
 							'voucher_dates' => $data['voucher_date'],
-							'voucher_types' => 12,
+							'voucher_types' => $payrollVoucherType,
 							'location' => $Payheads['location'],
 							'head' =>$head,
 							'sub_head' =>$subhead,
 							'bank_ref_type' => '',
 							'debit' =>$Payheads['amount'],
 							'credit' =>'0.00',
-							'ref_no'=> 'PAYROLL', 
+							'ref_no'=> '', 
 							'type' => '1',//user inputted  data  
 							'status' => 3, // status appied
 							'activity'=>$Payheads['location'],
@@ -1611,17 +1632,18 @@ class PayrollController extends AbstractActionController
 						foreach($PayheadDed as $PayheadDeds):
 							$subhead=$this->getDefinedTable(Accounts\SubheadTable::class)->getColumn(array('ref_id'=>$PayheadDeds['id'],'type'=>'5'),'id');
 							$head=$this->getDefinedTable(Accounts\SubheadTable::class)->getColumn(array('ref_id'=>$PayheadDeds['id'],'type'=>'5'),'head');
+							$subheadName = trim((string) $this->getDefinedTable(Accounts\SubheadTable::class)->getColumn($subhead, 'name'));
 						$cldata = array(
 							'transaction' => $resultTrans,
 							'voucher_dates' => $data['voucher_date'],
-							'voucher_types' => 12,
+							'voucher_types' => $payrollVoucherType,
 							'location' => $location,
 							'head' =>$head,
 							'sub_head' =>$subhead,
 							'bank_ref_type' => '',
 							'debit' =>'0.00',
 							'credit' =>$PayheadDeds['amount'],
-							'ref_no'=> 'PAYROLL', 
+							'ref_no'=> $subheadName . '.' . $monthYearRef, 
 							'type' => '1',//user inputted  data
 							'status' => 3, // status applied
 							'activity'=>$location,
@@ -1640,18 +1662,19 @@ class PayrollController extends AbstractActionController
 						foreach($employeeDeduction as $employeeDeductions):
 							$subhead=$this->getDefinedTable(Accounts\SubheadTable::class)->getColumn(array('ref_id'=>$employeeDeductions['id'],'type'=>'5'),'id');
 							$head=$this->getDefinedTable(Accounts\SubheadTable::class)->getColumn(array('ref_id'=>$employeeDeductions['id'],'type'=>'5'),'head');
+							$subheadName = trim((string) $this->getDefinedTable(Accounts\SubheadTable::class)->getColumn($subhead, 'name'));
 							
 						$empdeductiondata = array(
 							'transaction' => $resultTrans,
 							'voucher_dates' => $data['voucher_date'],
-							'voucher_types' => 12,
+							'voucher_types' => $payrollVoucherType,
 							'location' => $employeeDeductions['location'],
 							'head' =>$head,
 							'sub_head' =>$subhead,
 							'bank_ref_type' => '',
 							'debit' =>'0.00',
 							'credit' =>$employeeDeductions['amount'],
-							'ref_no'=> 'PAYROLL', 
+							'ref_no'=> $subheadName . '.' . $monthYearRef, 
 							'type' => '1',//user inputted  data
 							'status' => 3, // status applied
 							'activity'=>$employeeDeductions['location'],
@@ -1668,14 +1691,14 @@ class PayrollController extends AbstractActionController
 					$netpaydata = array(
 							'transaction' => $resultTrans,
 							'voucher_dates' => $data['voucher_date'],
-							'voucher_types' => 12,
+							'voucher_types' => $payrollVoucherType,
 							'location' => $location,
-							'head' => $selectedBank['head_id'],
-							'sub_head' => $selectedBank['subhead_id'],
+							'head' => $selectedNetPayable['head_id'],
+							'sub_head' => $selectedNetPayable['subhead_id'],
 							'bank_ref_type' => '',
 							'debit' =>'0.00',
 							'credit' =>str_replace( ",", "",$payrollNetPay),
-							'ref_no'=> '', 
+							'ref_no'=> 'NP-' . $yearMonth, 
 							'type' => '1',//user inputted  
 							'status' => 3, // status applied
 							'activity'=>$location,
@@ -2407,7 +2430,7 @@ class PayrollController extends AbstractActionController
 									'routing' 			=> 2,
 									'status' 			=> 3, // status applied 
 									'routing_status'	=>2,
-									'action_performed'	=>1,
+									'action_performed'	=>0,
 									'description'		=>"PBVI",
 									'author' 			=>$this->_author,
 									'created' 			=>$this->_created,  

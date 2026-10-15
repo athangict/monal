@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 /**
  * 
  * Report -- of Payroll
@@ -9,8 +9,8 @@
 <?php //echo $this->partial('hr/payroll-report/partial.phtml', array('active' => 'payregister')); ?>
 <?php echo $this->tabs_helper(array(922,924,925,930,931,932,923,933)); ?>
 <?php	
-	$earning=ceil(count($earningHead)/1); //no of earning columns
-	$deduction=ceil(count($deductionHead)/1); //no of deduction columns
+	$earning=count($this->earningHead);
+	$deduction=count($this->deductionHead);
 $minYear = ($this->minYear > 0)?$this->minYear:date('Y');
 
 ?>
@@ -153,7 +153,7 @@ $minYear = ($this->minYear > 0)?$this->minYear:date('Y');
 				</div>
 			</div>	
 			<div class="space-12"></div>
-			<table class="table table-condensed table-bordered" id="example">
+			<table class="table table-condensed table-bordered" id="example" style="width:100%">
 				<thead>
 					<tr>
 						<th rowspan="2">#</th>
@@ -162,8 +162,12 @@ $minYear = ($this->minYear > 0)?$this->minYear:date('Y');
 						<th rowspan="2">Position.</th>
 						<th rowspan="2">Department.</th>
 						<th rowspan="2">Grade</th>
+						<?php if($earning > 0):?>
 						<th colspan="<?php echo $earning;?>" style="text-align:center">Earnings</th>
+						<?php endif;?>
+						<?php if($deduction > 0):?>
 						<th colspan="<?php echo $deduction;?>" style="text-align:center">Deductions</th>
+						<?php endif;?>
 						<th colspan="3" style="text-align:center ;"class="info">Summary</th>
 					</tr>
 					<tr>
@@ -284,7 +288,7 @@ $minYear = ($this->minYear > 0)?$this->minYear:date('Y');
 							// Earning Heads
 							foreach ($this->earningHead as $key => $head):
 								$amount = $this->paystructureObj->getColumn([
-									'employee' => $temp_payroll['employee_id'], 'pay_head' => $row['id']
+									'employee' => $temp_payroll['employee_id'], 'pay_head' => $head['id']
 								], 'amount') ?: 0;
 
 								$earning_head[] = $amount;
@@ -294,7 +298,7 @@ $minYear = ($this->minYear > 0)?$this->minYear:date('Y');
 							// Deduction Heads
 							foreach ($this->deductionHead as $key => $head):
 								$amount = $this->paystructureObj->getColumn([
-									'employee' => $temp_payroll['employee_id'], 'pay_head' => $row['id']
+									'employee' => $temp_payroll['employee_id'], 'pay_head' => $head['id']
 								], 'amount') ?: 0;
 
 								$deduction_head[] = $amount;
@@ -344,12 +348,9 @@ $minYear = ($this->minYear > 0)?$this->minYear:date('Y');
 							<td style="text-align:right;"><?php echo $this->decimal($net_pay); ?></td>
 						</tr>
 						<?php endforeach;
-					else:?>
-					<div class="alert alert-success fade in">  
-						<strong>Not Prepared</strong>
-					</div>
-			
-					<?php endif;?>
+					endif;?>
+				</tbody>
+				<tfoot>
 						<tr>
 							<th style="border-top: 1px solid #5add55;"></th>
 							<th style="border-top: 1px solid #5add55;"></th>
@@ -369,7 +370,7 @@ $minYear = ($this->minYear > 0)?$this->minYear:date('Y');
 						<th style="text-align:right;"><?php echo $this->decimal($total_gross); ?></th>
 						<th style="text-align:right;"><?php echo $this->decimal($total_net); ?></th>
 						</tr>
-				</tbody>
+				</tfoot>
 			</table>
 		</div>
 	</div>
@@ -387,12 +388,10 @@ $minYear = ($this->minYear > 0)?$this->minYear:date('Y');
 			[ 10, 25, 50, -1 ],
 			[ '10 rows', '25 rows', '50 rows', 'Show all' ]
 		],
-		columnDefs: [ {
-			visible: false
-		} ],
 		buttons: [
 			{
 				extend: 'copy',
+				footer: true,
 				exportOptions: {
 					columns: ':visible'
 				},
@@ -401,6 +400,7 @@ $minYear = ($this->minYear > 0)?$this->minYear:date('Y');
 			},
 			{
 				extend: 'csv',
+				footer: true,
 				title: title_table,
 				exportOptions: {
 					columns: ':visible'
@@ -410,6 +410,7 @@ $minYear = ($this->minYear > 0)?$this->minYear:date('Y');
 			},
 			{
 				extend: 'excel',
+				footer: true,
 				title: title_table,
 				exportOptions: {
 					columns: ':visible'
@@ -419,6 +420,7 @@ $minYear = ($this->minYear > 0)?$this->minYear:date('Y');
 			},
 			{
 				extend: 'pdfHtml5',
+				footer: true,
 				title: title_table,
 				exportOptions: {
 					columns: ':visible'
@@ -430,6 +432,7 @@ $minYear = ($this->minYear > 0)?$this->minYear:date('Y');
 			},
 			{
 				extend: 'print',
+				footer: true,
 				title: title_table,
 				exportOptions: {
 					columns: ':visible'
@@ -463,4 +466,3 @@ $minYear = ($this->minYear > 0)?$this->minYear:date('Y');
 	});*/
 	
 </script>​
-
