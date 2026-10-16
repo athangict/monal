@@ -6,10 +6,6 @@ This is a skeleton application using the Laminas MVC layer and module
 systems. This application is meant to be used as a starting place for those
 looking to get their feet wet with Laminas MVC.
 
-## Project Docs
-
-- Stripe integration (Accounts module): [docs/stripe-integration.md](docs/stripe-integration.md)
-
 ## Account hierarchy
 
 The Chart of Account tree displays five tiers:

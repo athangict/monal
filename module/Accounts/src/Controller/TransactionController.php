@@ -111,6 +111,28 @@ class TransactionController extends AbstractActionController
 
 	}
 
+	protected function logVoucherActivity($process, $voucherId, $remarks)
+	{
+		$status = $this->getDefinedTable(Accounts\TransactionTable::class)->getColumn($voucherId, 'status');
+		if ($status === null || $status === false || $status === '') {
+			return false;
+		}
+
+		$activity = array(
+			'process' => $process,
+			'process_id' => $voucherId,
+			'status' => $status,
+			'remarks' => $remarks,
+			'role' => $this->_login_role,
+			'author' => $this->_author,
+			'created' => $this->_created,
+			'modified' => $this->_modified,
+		);
+		$activity = $this->_safedataObj->rteSafe($activity);
+
+		return $this->getDefinedTable(Acl\ActivityLogTable::class)->save($activity) > 0;
+	}
+
 	/**
 	 * Normalize submitted detail IDs from dynamic row forms.
 	 * Returns unique positive integer IDs only.
@@ -442,6 +464,11 @@ class TransactionController extends AbstractActionController
 				endif;
 				/**END OF SDR TRANSACTION */
 				if($result1 > 0):
+					if (!$this->logVoucherActivity(418, $result, 'Journal Voucher created')) {
+						$this->_connection->rollback();
+						$this->flashMessenger()->addMessage("error^ Failed to record the Journal Voucher activity log.");
+						return $this->redirect()->toRoute('transaction');
+					}
 					$this->_connection->commit();
 					$this->flashMessenger()->addMessage("success^ New Transaction successfully added | ".$voucher_no);
 					return $this->redirect()->toRoute('transaction', array('action' =>'viewtransaction', 'id' => $result));
@@ -680,6 +707,11 @@ class TransactionController extends AbstractActionController
 					$this->flashMessenger()->addMessage("error^ Invalid detail row selection detected. Please reload and try again.");
 					return $this->redirect()->toRoute('transaction', array('action' =>'viewtransaction', 'id' => $this->_id));
 				endif;
+				if (!$this->logVoucherActivity(418, $result, 'Journal Voucher updated')) {
+					$this->_connection->rollback();
+					$this->flashMessenger()->addMessage("error^ Failed to record the Journal Voucher activity log.");
+					return $this->redirect()->toRoute('transaction', array('action' =>'viewtransaction', 'id' => $this->_id));
+				}
 				$this->_connection->commit(); 
 				$this->flashMessenger()->addMessage("success^ Transaction successfully updated | ".$voucher_no);
 				return $this->redirect()->toRoute('transaction', array('action' =>'viewtransaction', 'id' => $this->_id));
@@ -770,6 +802,7 @@ class TransactionController extends AbstractActionController
 			'modified' => $this->_modified,
 		);		
 		$result = $this->getDefinedTable(Accounts\TransactionTable::class)->save($data);
+		$transactionResult = $result;
 		$voucher_no = $this->getDefinedTable(Accounts\TransactionTable::class)->getColumn($this->_id, 'voucher_no');
 		if($result>0){
 			$ids = $this->getDefinedTable(Accounts\TransactiondetailTable::class)->get(array('transaction'=>$this->_id));
@@ -783,8 +816,10 @@ class TransactionController extends AbstractActionController
 			    $result = $this->getDefinedTable(Accounts\TransactiondetailTable::class)->save($data);
 		    endforeach;
 		}
-		if($result):
+		if($transactionResult && $this->logVoucherActivity(418, $this->_id, 'Journal Voucher committed')):
 			$this->flashMessenger()->addMessage("success^ Transaction Commited Successfully | ".$voucher_no);
+		elseif($transactionResult):
+			$this->flashMessenger()->addMessage("error^ Transaction committed, but failed to record the activity log.");
 		endif;
 		return $this->redirect()->toRoute("transaction", array("action"=>"viewtransaction", "id" => $this->_id));
 	}
@@ -1021,6 +1056,11 @@ class TransactionController extends AbstractActionController
 				endif;
 				/**END OF SDR TRANSACTION */
 				if($result1 > 0):
+					if (!$this->logVoucherActivity(422, $result, 'Expense Requisition created')) {
+						$this->_connection->rollback();
+						$this->flashMessenger()->addMessage("error^ Failed to record the Expense Requisition activity log.");
+						return $this->redirect()->toRoute('transaction');
+					}
 					$this->_connection->commit(); // commit transaction on success
 					$this->flashMessenger()->addMessage("success^ New Requisition successfully added | ".$voucher_no);
 					return $this->redirect()->toRoute('transaction', array('action' =>'viewcredit', 'id' => $result));
@@ -1168,6 +1208,11 @@ class TransactionController extends AbstractActionController
 					$this->flashMessenger()->addMessage("error^ Invalid detail row selection detected. Please reload and try again.");
 					return $this->redirect()->toRoute('transaction', array('action' =>'viewcredit', 'id' => $this->_id));
 				endif;
+				if (!$this->logVoucherActivity(422, $result, 'Expense Requisition updated')) {
+					$this->_connection->rollback();
+					$this->flashMessenger()->addMessage("error^ Failed to record the Expense Requisition activity log.");
+					return $this->redirect()->toRoute('transaction', array('action' =>'viewcredit', 'id' => $this->_id));
+				}
 				$this->_connection->commit(); // commit transaction on success
 				$this->flashMessenger()->addMessage("success^ Requisition successfully updated | ".$voucher_no);
 				return $this->redirect()->toRoute('transaction', array('action' =>'viewcredit', 'id' => $this->_id));
@@ -1409,6 +1454,11 @@ class TransactionController extends AbstractActionController
 					endif;
 				endfor;
 				if($result1 > 0):
+					if (!$this->logVoucherActivity(427, $result, 'Expense Release Voucher created')) {
+						$this->_connection->rollback();
+						$this->flashMessenger()->addMessage("error^ Failed to record the Expense Release activity log.");
+						return $this->redirect()->toRoute('transaction');
+					}
 					$this->_connection->commit(); // commit transaction on success
 					$this->flashMessenger()->addMessage("success^ New Transaction successfully added | ".$voucher_no);
 					return $this->redirect()->toRoute('transaction', array('action' =>'viewexpense', 'id' => $result));
@@ -1546,6 +1596,11 @@ class TransactionController extends AbstractActionController
 					$this->flashMessenger()->addMessage("error^ Invalid detail row selection detected. Please reload and try again.");
 					return $this->redirect()->toRoute('transaction', array('action' =>'viewexpense', 'id' => $this->_id));
 				endif;
+				if (!$this->logVoucherActivity(427, $result, 'Expense Release Voucher updated')) {
+					$this->_connection->rollback();
+					$this->flashMessenger()->addMessage("error^ Failed to record the Expense Release activity log.");
+					return $this->redirect()->toRoute('transaction', array('action' =>'viewexpense', 'id' => $this->_id));
+				}
 				$this->_connection->commit(); // commit transaction on success
 				$this->flashMessenger()->addMessage("success^ Transaction successfully updated | ".$voucher_no);
 				return $this->redirect()->toRoute('transaction', array('action' =>'viewexpense', 'id' => $this->_id));
@@ -1632,7 +1687,7 @@ class TransactionController extends AbstractActionController
 			$app_data = $this->_safedataObj->rteSafe($app_data);
 			$this->_connection->beginTransaction();
 			$app_result = $this->getDefinedTable(Accounts\TransactionTable::class)->save($app_data);
-			if($app_result):
+			if($activity_result):
 				$activity_data = array(
 					'process'      => $process_id,
 					'process_id'   => $application_id,
@@ -1645,7 +1700,7 @@ class TransactionController extends AbstractActionController
 				);
 				$activity_data = $this->_safedataObj->rteSafe($activity_data);
 				$activity_result = $this->getDefinedTable(Acl\ActivityLogTable::class)->save($activity_data);
-				if($app_result):
+				if($activity_result):
 					if($privilege['route_to_role']):
 						$flow_data = array(
 							'flow'          => $flow['flow'],
@@ -1721,6 +1776,7 @@ class TransactionController extends AbstractActionController
 			'modified' => $this->_modified,
 		);		
 		$result = $this->getDefinedTable(Accounts\TransactionTable::class)->save($data);
+		$transactionResult = $result;
 		$voucher_no = $this->getDefinedTable(Accounts\TransactionTable::class)->getColumn($this->_id, 'voucher_no');
 		if($result>0){
 			$ids = $this->getDefinedTable(Accounts\TransactiondetailTable::class)->get(array('transaction'=>$this->_id));
@@ -1734,8 +1790,10 @@ class TransactionController extends AbstractActionController
 			    $result = $this->getDefinedTable(Accounts\TransactiondetailTable::class)->save($data);
 		    endforeach;
 		}
-		if($result):
+		if($transactionResult && $this->logVoucherActivity(422, $this->_id, 'Expense Requisition committed')):
 			$this->flashMessenger()->addMessage("success^ Credit Transaction Commited Successfully | ".$voucher_no);
+		elseif($transactionResult):
+			$this->flashMessenger()->addMessage("error^ Transaction committed, but failed to record the activity log.");
 		endif;
 		return $this->redirect()->toRoute("transaction", array("action"=>"viewcredit", "id" => $this->_id));
 	}
@@ -1852,7 +1910,7 @@ class TransactionController extends AbstractActionController
 				);
 				$activity_data = $this->_safedataObj->rteSafe($activity_data);
 				$activity_result = $this->getDefinedTable(Acl\ActivityLogTable::class)->save($activity_data);
-				if($app_result):
+				if($activity_result):
 					if($privilege['route_to_role']):
 						$flow_data = array(
 							'flow'          => $flow['flow'],
@@ -2160,6 +2218,11 @@ class TransactionController extends AbstractActionController
 					endif;
 				endfor;
 				if($result1 > 0):
+					if (!$this->logVoucherActivity(424, $result, 'Receipt Voucher created')) {
+						$this->_connection->rollback();
+						$this->flashMessenger()->addMessage("error^ Failed to record the Receipt Voucher activity log.");
+						return $this->redirect()->toRoute('transaction');
+					}
 					$this->_connection->commit(); // commit transaction on success
 					$this->flashMessenger()->addMessage("success^ New Receipt successfully added | ".$voucher_no);
 					return $this->redirect()->toRoute('transaction', array('action' =>'viewdebit', 'id' => $result));
@@ -2306,6 +2369,11 @@ class TransactionController extends AbstractActionController
 					$this->flashMessenger()->addMessage("error^ Invalid detail row selection detected. Please reload and try again.");
 					return $this->redirect()->toRoute('transaction', array('action' =>'viewdebit', 'id' => $this->_id));
 				endif;
+				if (!$this->logVoucherActivity(424, $result, 'Receipt Voucher updated')) {
+					$this->_connection->rollback();
+					$this->flashMessenger()->addMessage("error^ Failed to record the Receipt Voucher activity log.");
+					return $this->redirect()->toRoute('transaction', array('action' =>'viewdebit', 'id' => $this->_id));
+				}
 				$this->_connection->commit(); // commit transaction on success
 				$this->flashMessenger()->addMessage("success^ Receipt successfully updated | ".$voucher_no);
 				return $this->redirect()->toRoute('transaction', array('action' =>'viewdebit', 'id' => $this->_id));
@@ -2372,6 +2440,7 @@ class TransactionController extends AbstractActionController
 			'modified' => $this->_modified,
 		);		
 		$result = $this->getDefinedTable(Accounts\TransactionTable::class)->save($data);
+		$transactionResult = $result;
 		$voucher_no = $this->getDefinedTable(Accounts\TransactionTable::class)->getColumn($this->_id, 'voucher_no');
 		if($result>0){
 			$ids = $this->getDefinedTable(Accounts\TransactiondetailTable::class)->get(array('transaction'=>$this->_id));
@@ -2385,8 +2454,10 @@ class TransactionController extends AbstractActionController
 			    $result = $this->getDefinedTable(Accounts\TransactiondetailTable::class)->save($data);
 		    endforeach;
 		}
-		if($result):
+		if($transactionResult && $this->logVoucherActivity(424, $this->_id, 'Receipt Voucher committed')):
 			$this->flashMessenger()->addMessage("success^ Receipt Commited Successfully | ".$voucher_no);
+		elseif($transactionResult):
+			$this->flashMessenger()->addMessage("error^ Transaction committed, but failed to record the activity log.");
 		endif;
 		return $this->redirect()->toRoute("transaction", array("action"=>"viewdebit", "id" => $this->_id));
 	}
@@ -2619,6 +2690,11 @@ class TransactionController extends AbstractActionController
 					$this->getDefinedTable(Accounts\SdrTable::class)->save($sdr_details);
 				endif;
 				if($result1 > 0):
+					if (!$this->logVoucherActivity(425, $result, 'Contra Voucher created')) {
+						$this->_connection->rollback();
+						$this->flashMessenger()->addMessage("error^ Failed to record the Contra Voucher activity log.");
+						return $this->redirect()->toRoute('transaction');
+					}
 					$this->_connection->commit(); // commit transaction on success
 					$this->flashMessenger()->addMessage("success^ New Contra successfully added | ".$voucher_no);
 					return $this->redirect()->toRoute('transaction', array('action' =>'viewcontra', 'id' => $result));
@@ -2762,6 +2838,11 @@ class TransactionController extends AbstractActionController
 					$this->flashMessenger()->addMessage("error^ Invalid detail row selection detected. Please reload and try again.");
 					return $this->redirect()->toRoute('transaction', array('action' =>'viewcontra', 'id' => $this->_id));
 				endif;
+				if (!$this->logVoucherActivity(425, $result, 'Contra Voucher updated')) {
+					$this->_connection->rollback();
+					$this->flashMessenger()->addMessage("error^ Failed to record the Contra Voucher activity log.");
+					return $this->redirect()->toRoute('transaction', array('action' =>'viewcontra', 'id' => $this->_id));
+				}
 				$this->_connection->commit(); // commit transaction on success
 				$this->flashMessenger()->addMessage("success^ Contra successfully updated | ".$voucher_no);
 				return $this->redirect()->toRoute('transaction', array('action' =>'viewcontra', 'id' => $this->_id));
@@ -2828,6 +2909,7 @@ class TransactionController extends AbstractActionController
 			'modified' => $this->_modified,
 		);		
 		$result = $this->getDefinedTable(Accounts\TransactionTable::class)->save($data);
+		$transactionResult = $result;
 		$voucher_no = $this->getDefinedTable(Accounts\TransactionTable::class)->getColumn($this->_id, 'voucher_no');
 		if($result>0){
 			$ids = $this->getDefinedTable(Accounts\TransactiondetailTable::class)->get(array('transaction'=>$this->_id));
@@ -2841,8 +2923,10 @@ class TransactionController extends AbstractActionController
 			    $result = $this->getDefinedTable(Accounts\TransactiondetailTable::class)->save($data);
 		    endforeach;
 		}
-		if($result):
+		if($transactionResult && $this->logVoucherActivity(425, $this->_id, 'Contra Voucher committed')):
 			$this->flashMessenger()->addMessage("success^ Contra Transaction Commited Successfully | ".$voucher_no);
+		elseif($transactionResult):
+			$this->flashMessenger()->addMessage("error^ Transaction committed, but failed to record the activity log.");
 		endif;
 		return $this->redirect()->toRoute("transaction", array("action"=>"viewcontra", "id" => $this->_id));
 	}
@@ -3086,6 +3170,11 @@ class TransactionController extends AbstractActionController
 					endif;
 				endfor;
 				if($result1 > 0):
+					if (!$this->logVoucherActivity(430, $result, 'Reference Voucher created')) {
+						$this->_connection->rollback();
+						$this->flashMessenger()->addMessage("error^ Failed to record the Reference Voucher activity log.");
+						return $this->redirect()->toRoute('transaction');
+					}
 					$this->_connection->commit(); // commit transaction on success
 					$this->flashMessenger()->addMessage("success^ New Transaction successfully added | ".$voucher_no);
 					return $this->redirect()->toRoute('transaction', array('action' =>'viewreference', 'id' => $result));
@@ -3238,6 +3327,11 @@ class TransactionController extends AbstractActionController
 					$this->flashMessenger()->addMessage("error^ Invalid detail row selection detected. Please reload and try again.");
 					return $this->redirect()->toRoute('transaction', array('action' =>'viewreference', 'id' => $this->_id));
 				endif;
+				if (!$this->logVoucherActivity(430, $result, 'Reference Voucher updated')) {
+					$this->_connection->rollback();
+					$this->flashMessenger()->addMessage("error^ Failed to record the Reference Voucher activity log.");
+					return $this->redirect()->toRoute('transaction', array('action' =>'viewreference', 'id' => $this->_id));
+				}
 				$this->_connection->commit(); // commit transaction on success
 				$this->flashMessenger()->addMessage("success^ Transaction successfully updated | ".$voucher_no);
 				return $this->redirect()->toRoute('transaction', array('action' =>'viewreference', 'id' => $this->_id));
@@ -3301,6 +3395,7 @@ class TransactionController extends AbstractActionController
 			'modified' => $this->_modified,
 		);		
 		$result = $this->getDefinedTable(Accounts\TransactionTable::class)->save($data);
+		$transactionResult = $result;
 		$voucher_no = $this->getDefinedTable(Accounts\TransactionTable::class)->getColumn($this->_id, 'voucher_no');
 		if($result>0){
 			$ids = $this->getDefinedTable(Accounts\TransactiondetailTable::class)->get(array('transaction'=>$this->_id));
@@ -3314,7 +3409,7 @@ class TransactionController extends AbstractActionController
 			    $results = $this->getDefinedTable(Accounts\TransactiondetailTable::class)->save($data);
 			endforeach;
 		}
-		if($results):
+		if($transactionResult):
 			foreach($ids as $tasid):
 				$againstID =  $this->getDefinedTable(Accounts\TransactiondetailTable::class)->getColumn($tasid['id'], 'against');
 				$creditAmount =  $this->getDefinedTable(Accounts\TransactiondetailTable::class)->getColumn($tasid['id'], 'credit');
@@ -3340,7 +3435,11 @@ class TransactionController extends AbstractActionController
 					endif;
 				endif;
 		    endforeach;//exit;
-			$this->flashMessenger()->addMessage("success^  Transaction Commited Successfully | ".$voucher_no);
+			if($this->logVoucherActivity(430, $this->_id, 'Reference Voucher committed')):
+				$this->flashMessenger()->addMessage("success^  Transaction Commited Successfully | ".$voucher_no);
+			else:
+				$this->flashMessenger()->addMessage("error^ Transaction committed, but failed to record the activity log.");
+			endif;
 		endif;
 		return $this->redirect()->toRoute("transaction", array("action"=>"viewreference", "id" => $this->_id));
 	}
@@ -3521,6 +3620,23 @@ class TransactionController extends AbstractActionController
 					endif;
 				endfor;
 				if($result1 > 0):
+					$activity_data = array(
+						'process' => 427,
+						'process_id' => $result,
+						'status' => 2,
+						'remarks' => 'Payment Voucher created',
+						'role' => $this->_login_role,
+						'author' => $this->_author,
+						'created' => $this->_created,
+						'modified' => $this->_modified,
+					);
+					$activity_data = $this->_safedataObj->rteSafe($activity_data);
+					$activity_result = $this->getDefinedTable(Acl\ActivityLogTable::class)->save($activity_data);
+					if(!$activity_result):
+						$this->_connection->rollback();
+						$this->flashMessenger()->addMessage("error^ Failed to record the Payment Voucher activity log.");
+						return $this->redirect()->toRoute('transaction');
+					endif;
 					$this->_connection->commit(); // commit transaction on success
 					$this->flashMessenger()->addMessage("success^ New Transaction successfully added | ".$voucher_no);
 					return $this->redirect()->toRoute('transaction', array('action' =>'viewagainstdebit', 'id' => $result));
@@ -3680,6 +3796,23 @@ class TransactionController extends AbstractActionController
 					$this->flashMessenger()->addMessage("error^ Invalid detail row selection detected. Please reload and try again.");
 					return $this->redirect()->toRoute('transaction', array('action' =>'viewagainstdebit', 'id' => $this->_id));
 				endif;
+				$activity_data = array(
+					'process' => 427,
+					'process_id' => $result,
+					'status' => $status,
+					'remarks' => 'Payment Voucher updated',
+					'role' => $this->_login_role,
+					'author' => $this->_author,
+					'created' => $this->_created,
+					'modified' => $this->_modified,
+				);
+				$activity_data = $this->_safedataObj->rteSafe($activity_data);
+				$activity_result = $this->getDefinedTable(Acl\ActivityLogTable::class)->save($activity_data);
+				if(!$activity_result):
+					$this->_connection->rollback();
+					$this->flashMessenger()->addMessage("error^ Failed to record the Payment Voucher activity log.");
+					return $this->redirect()->toRoute('transaction', array('action' =>'viewagainstdebit', 'id' => $this->_id));
+				endif;
 				$this->_connection->commit(); // commit transaction on success
 				$this->flashMessenger()->addMessage("success^ Transaction successfully updated | ".$voucher_no);
 				return $this->redirect()->toRoute('transaction', array('action' =>'viewagainstdebit', 'id' => $this->_id));
@@ -3825,6 +3958,7 @@ class TransactionController extends AbstractActionController
 			'modified' => $this->_modified,
 		);		
 		$result = $this->getDefinedTable(Accounts\TransactionTable::class)->save($data);
+		$transactionResult = $result;
 		$voucher_no = $this->getDefinedTable(Accounts\TransactionTable::class)->getColumn($this->_id, 'voucher_no');
 		if($result>0){
 			$ids = $this->getDefinedTable(Accounts\TransactiondetailTable::class)->get(array('transaction'=>$this->_id));
@@ -3838,10 +3972,12 @@ class TransactionController extends AbstractActionController
 			    $result = $this->getDefinedTable(Accounts\TransactiondetailTable::class)->save($data);
 		    endforeach;
 		}
-		if($result):
+		if($transactionResult && $this->logVoucherActivity(427, $this->_id, 'Payment Voucher committed')):
 			$this->flashMessenger()->addMessage("success^ Contra Transaction Commited Successfully | ".$voucher_no);
+		elseif($transactionResult):
+			$this->flashMessenger()->addMessage("error^ Transaction committed, but failed to record the activity log.");
 		endif;
-		return $this->redirect()->toRoute("transaction", array("action"=>"viewagainst", "id" => $this->_id));
+		return $this->redirect()->toRoute("transaction", array("action"=>"viewagainstdebit", "id" => $this->_id));
 	}
 	/**
 	 *  IWR ------------------------------------------------------------------------------------------------------------
@@ -4008,6 +4144,11 @@ class TransactionController extends AbstractActionController
 					endif;
 				endfor;
 				if($result1 > 0):
+					if (!$this->logVoucherActivity(431, $result, 'Payment IWR created')) {
+						$this->_connection->rollback();
+						$this->flashMessenger()->addMessage("error^ Failed to record the Payment IWR activity log.");
+						return $this->redirect()->toRoute('transaction');
+					}
 					$this->_connection->commit(); // commit transaction on success
 					$this->flashMessenger()->addMessage("success^ New Payment IWR successfully added | ".$voucher_no);
 					return $this->redirect()->toRoute('transaction', array('action' =>'viewiwr', 'id' => $result));
@@ -4155,6 +4296,11 @@ class TransactionController extends AbstractActionController
 					$this->flashMessenger()->addMessage("error^ Invalid detail row selection detected. Please reload and try again.");
 					return $this->redirect()->toRoute('transaction', array('action' =>'viewiwr', 'id' => $this->_id));
 				endif;
+				if (!$this->logVoucherActivity(431, $result, 'Payment IWR updated')) {
+					$this->_connection->rollback();
+					$this->flashMessenger()->addMessage("error^ Failed to record the Payment IWR activity log.");
+					return $this->redirect()->toRoute('transaction', array('action' =>'viewiwr', 'id' => $this->_id));
+				}
 				$this->_connection->commit(); // commit transaction on success
 				$this->flashMessenger()->addMessage("success^ Payment IWR successfully updated | ".$voucher_no);
 				return $this->redirect()->toRoute('transaction', array('action' =>'viewiwr', 'id' => $this->_id));
@@ -4218,6 +4364,7 @@ class TransactionController extends AbstractActionController
 			'modified' => $this->_modified,
 		);		
 		$result = $this->getDefinedTable(Accounts\TransactionTable::class)->save($data);
+		$transactionResult = $result;
 		$voucher_no = $this->getDefinedTable(Accounts\TransactionTable::class)->getColumn($this->_id, 'voucher_no');
 		if($result>0){
 			$ids = $this->getDefinedTable(Accounts\TransactiondetailTable::class)->get(array('transaction'=>$this->_id));
@@ -4230,8 +4377,10 @@ class TransactionController extends AbstractActionController
 			    $result = $this->getDefinedTable(Accounts\TransactiondetailTable::class)->save($data);
 		    endforeach;
 		}
-		if($result):
+		if($transactionResult && $this->logVoucherActivity(431, $this->_id, 'Payment IWR committed')):
 			$this->flashMessenger()->addMessage("success^ IWR Commited Successfully | ".$voucher_no);
+		elseif($transactionResult):
+			$this->flashMessenger()->addMessage("error^ Transaction committed, but failed to record the activity log.");
 		endif;
 		return $this->redirect()->toRoute("transaction", array("action"=>"viewiwr", "id" => $this->_id));
 	}
@@ -4553,6 +4702,11 @@ class TransactionController extends AbstractActionController
 					endif;
 				endfor;
 				if($result1 > 0):
+					if (!$this->logVoucherActivity(431, $result, 'Payment IWR Receipt created')) {
+						$this->_connection->rollback();
+						$this->flashMessenger()->addMessage("error^ Failed to record the Payment IWR Receipt activity log.");
+						return $this->redirect()->toRoute('transaction');
+					}
 					$this->_connection->commit(); // commit transaction on success
 					$this->flashMessenger()->addMessage("success^ New Payment IWR Receipt successfully added | ".$voucher_no);
 					return $this->redirect()->toRoute('transaction', array('action' =>'viewiwrreceipt', 'id' => $result));
@@ -4689,6 +4843,11 @@ class TransactionController extends AbstractActionController
 					$this->flashMessenger()->addMessage("error^ Invalid detail row selection detected. Please reload and try again.");
 					return $this->redirect()->toRoute('transaction', array('action' =>'viewiwrreceipt', 'id' => $this->_id));
 				endif;
+				if (!$this->logVoucherActivity(431, $result, 'Payment IWR Receipt updated')) {
+					$this->_connection->rollback();
+					$this->flashMessenger()->addMessage("error^ Failed to record the Payment IWR Receipt activity log.");
+					return $this->redirect()->toRoute('transaction', array('action' =>'viewiwrreceipt', 'id' => $this->_id));
+				}
 				$this->_connection->commit(); 
 				$this->flashMessenger()->addMessage("success^ Payment IWR successfully updated | ".$voucher_no);
 				return $this->redirect()->toRoute('transaction', array('action' =>'viewiwrreceipt', 'id' => $this->_id));
@@ -4771,6 +4930,9 @@ class TransactionController extends AbstractActionController
 				);	
 			    $results1 = $this->getDefinedTable(Accounts\CommissionTable::class)->save($dataCom);
 		    endforeach;
+			if(!$this->logVoucherActivity(431, $this->_id, 'Payment IWR Receipt committed')):
+				$this->flashMessenger()->addMessage("error^ IWR Receipt committed, but failed to record the activity log.");
+			endif;
 		}
 		if($results1):
 			foreach($ids as $tasid):

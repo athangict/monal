@@ -26,18 +26,23 @@ if(sizeof($current_flow) > 0){
 <div class="space"></div>
 <div class="col-lg-12">
 	<div class="widget-box transparent" id="report-wrapper">
-		<div class="widget-header widget-header-large">
+		<div class="widget-header widget-header-large voucher-detail-header">
 			<h5 class="widget-title grey lighter">
 				<i class="ace-icon fa fa-file-text-o green"></i>
 				<b><?php echo $voucher_type;?> | <?php echo $voucher_no;?> | <?php $this->status($status);?></b>
 			</h5>
 			<div class="widget-toolbar hidden-xs">
-				<a style='cursor:pointer' id="print">
+				<a class="voucher-header-action" style='cursor:pointer' id="print">
 					<i class="ace-icon fa fa-file-pdf-o red"></i>
 				</a>
 			</div>
 			<div class="widget-toolbar hidden-xs">
-				<a class="btn btn-white btn-warning btn-bold btn-xs" title="Add new Payment"
+				<a class="voucher-header-action btn btn-xs btn-danger" data-toggle="modal" data-target="#modal" href="<?php echo $this->url('application', array('action' => 'activitylog', 'id' => '427-'.$row['id'])); ?>" title="View Activity Logs">
+					<i class="ace-icon fa fa-list-alt"></i>
+				</a>
+			</div>
+			<div class="widget-toolbar hidden-xs">
+				<a class="voucher-header-action btn btn-white btn-warning btn-bold btn-xs" title="Add new Payment"
 					href="<?php echo $this->url('transaction', array('action'=>'addagainstdebit')); ?>">
 				&nbsp;<i class="fa fa-plus"></i>&nbsp;</a>
 			</div>
@@ -208,6 +213,11 @@ if(sizeof($current_flow) > 0){
 				</div>
 			</div>
 		</div>
+	</div>
+</div>
+<div id="modal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+	<div class="modal-dialog">
+		<div class="modal-content"></div>
 	</div>
 </div>
 <script type="text/javascript">

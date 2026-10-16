@@ -31,12 +31,12 @@
 					foreach ($this->empstatus as $row):
 				?>
 						<tr>
-							<td><?php echo $i++; ?> </td>
-							<td><b><?php echo $row['status']; ?><b></td> 
-							<td><?php echo $row['color']; ?></td> 
+							<td><?php echo $i++; ?></td>
+							<td><strong><?php echo $row['status']; ?></strong></td>
+							<td><?php echo $row['color']; ?></td>
 							<?php if($this->button(1)!=""):?>
 								<td><?php echo $this->button(1, $row['id']);?></td>
-							<?php endif;?>                            
+							<?php endif;?>
 						</tr>
 				<?php endforeach;?>
 			</tbody>
